@@ -26,9 +26,7 @@ with open("README.md", "r") as f:
   long_description = f.read()
 
 # get requirements list
-requirements = [
-    requirement.strip() for requirement in open('requirements.txt').readlines()
-]
+requirements = ["numpy>=1.18.0" ]
 
 setup(
     name='time_evolving_mpo',
