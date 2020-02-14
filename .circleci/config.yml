@@ -20,7 +20,7 @@ jobs:
           name: Running tests
           command: |
             . venv/bin/activate
-            python3 -m pytest --cov=./tempo
+            python3 -m pytest --cov=./time_evolving_mpo
             python3 -m coverage xml
       - store_artifacts:
           path: test-reports/
