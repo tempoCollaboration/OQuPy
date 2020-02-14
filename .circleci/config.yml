@@ -25,3 +25,6 @@ jobs:
       - store_artifacts:
           path: test-reports/
           destination: time_evolving_mpo
+      - run:
+          name: Upload coverage report
+          command: bash <(curl -s https://codecov.io/bash)
