@@ -3,7 +3,7 @@ The main code structure is currently under development and therefore the
 **project is not yet ready for code contributions.** If you have any question,
 suggestion or general thoughts on this library we'd very much appreciate if you
 share them with us. For this please feel free to file an issue in the
-[`Issues`](https://github.com/gefux/TimeEvolvingMPO/issues) section on github.
+[Issues](https://github.com/gefux/TimeEvolvingMPO/issues) section on github.
 Once we are off the ground with the code your code contributions are wellcome
 as well.
 
@@ -22,8 +22,8 @@ The current setup uses:
 
 
 ## How to contribute to the code or documentation
-Please use the [`Issues`](https://github.com/gefux/TimeEvolvingMPO/issues) and
-[`Pull requests`](https://github.com/gefux/TimeEvolvingMPO/pulls) system on github.
+Please use the [Issues](https://github.com/gefux/TimeEvolvingMPO/issues) and
+[Pull requests](https://github.com/gefux/TimeEvolvingMPO/pulls) system on github.
 If you haven't done this sort of thing before, this link
 (https://egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github)
 is a nice and compact tutorial on how to contribute to OpenSource projects
