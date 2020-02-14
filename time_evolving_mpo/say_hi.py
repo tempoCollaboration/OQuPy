@@ -20,7 +20,7 @@ from time_evolving_mpo.version import __version__
 HI_MSG = \
 """
 Hi there!
-This is tempo version {} speaking!
+This is TimeEvolvingMPO version {} speaking!
 """.format(__version__)
 
 def say_hi() -> None:
