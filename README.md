@@ -42,11 +42,11 @@
  for that).
 
  ## Authors and Sources
- The project is written and maintained by
- Gerald E. Fux (gefux) <gerald.e.fux@gmail.com>. Substantial contributions to
- the project have been made by
- (see [`AUTHORS.md`](https://github.com/gefux/TimeEvolvingMPO/blob/master/AUTHORS.md)
- and [Contributors](https://github.com/gefux/TimeEvolvingMPO/graphs/contributors) for
- an extensive list):
-
+ The project is written and maintained by:
+ 
+ * Gerald E. Fux (gefux) <gerald.e.fux@gmail.com>. 
  * **N/A**(N/A)
+ 
+ See [`AUTHORS.md`](https://github.com/gefux/TimeEvolvingMPO/blob/master/AUTHORS.md)
+ and [Contributors](https://github.com/gefux/TimeEvolvingMPO/graphs/contributors) for
+ an extensive list.
