@@ -7,3 +7,9 @@ install:
 # command to run tests
 script:
   - tox
+# commants to deploy
+deploy:
+  provider: script
+  script: bash <(curl -s https://codecov.io/bash)
+  on:
+    branch: master
