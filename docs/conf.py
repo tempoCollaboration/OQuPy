@@ -18,11 +18,13 @@
 # -- Project information -----------------------------------------------------
 
 project = 'TimeEvolvingMPO'
-copyright = '2020, Gerald E. Fux'
-author = 'Gerald E. Fux'
+copyright = '2020, TEMPO Collaboration'
+author = 'TEMPO Collaboration'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.0'
+with open('../time_evolving_mpo/version.py') as f:
+  exec(f.read(), globals())
+release = __version__
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,10 +1,9 @@
 TEMPO Tutorial
 ==============
 
-.. image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/gefux/TimeEvolvingMPO/master?filepath=tutorial.ipynb
+ToDo: BINDER IS MISSING
 
-Click this button above to start a tutorial in a jupyter notebook on
+Click this button above (ToDo) to start a tutorial in a jupyter notebook on
 [binder](https://mybinder.org) without the need to install anything to your
 computer.
 
@@ -33,4 +32,4 @@ This should give you the following message:
 .. code-block:: none
 
   Hi there!
-  This is TimeEvolvingMPO version 0.0.0 speaking!
+  This is TimeEvolvingMPO version 0.0.1-1 speaking!
