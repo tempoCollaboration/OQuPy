@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2020 The TimeEvolvingMPO Authors
+# Copyright 2020 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@ requirements = ["numpy>=1.18.0" ]
 setup(
     name='time_evolving_mpo',
     version=__version__,
-    url='http://github.com/gefux/TimeEvolvingMPO',
-    author='Gerald E. Fux',
-    author_email='gerald.e.fux@gmail.com',
+    url='http://github.com/tempoCollaboration/TimeEvolvingMPO',
+    author='TEMPO Collaboration',
+    author_email='tempo.collaboration@gmail.com',
     python_requires=('>=3.6.0'),
     install_requires=requirements,
     license='Apache 2.0',
