@@ -1,6 +1,8 @@
-numpy>=1.18.0
 pytest
 pytest-cov
 pylint
 Sphinx==2.4.1
 sphinx_rtd_theme==0.4.3
+setuptools
+wheel
+numpy>=1.18.0
