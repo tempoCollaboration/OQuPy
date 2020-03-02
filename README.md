@@ -1,10 +1,14 @@
 # TimeEvolvingMPO
 
-*This library is under consturction!*
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
+[![Build Status](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO.svg?branch=master)](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO)
+[![codecov](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO/branch/master/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO)
+[![Documentation Status](https://readthedocs.org/projects/timeevolvingmpo/badge/?version=latest)](https://timeevolvingmpo.readthedocs.io/en/latest/?badge=latest)
+
 
 A python3 library to efficiently compute non-markovian open quantum systems.
 
-**ToDo:** Add badges!
+*This library is under consturction!*
 
 
 ## Installation
@@ -19,7 +23,7 @@ for more information.
 
 
 ## Tutorial
-ToDo: BINDER IS MISSING
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
 
 Click the `launch binder` button above to start a tutorial in browser based
 jupyter notebook (no installation required) or checkout the
