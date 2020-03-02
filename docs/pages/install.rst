@@ -47,7 +47,7 @@ This should give you the following message:
 .. code-block:: none
 
   Hi there!
-  This is TimeEvolvingMPO version 0.0.0 speaking!
+  This is TimeEvolvingMPO version 0.0.1-1 speaking!
 
 Uninstall TimeEvolvingMPO
 -------------------------
