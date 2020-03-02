@@ -1,9 +1,10 @@
 TEMPO Tutorial
 ==============
 
-ToDo: BINDER IS MISSING
+.. image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb
 
-Click this button above (ToDo) to start a tutorial in a jupyter notebook on
+Click this button above to start a tutorial in a jupyter notebook on
 [binder](https://mybinder.org) without the need to install anything to your
 computer.
 
