@@ -30,18 +30,42 @@ system on github. If you haven't done this sort of thing before, this link
 is a nice and compact tutorial on how to contribute to OpenSource projects
 with Pull requests.
 
-### Get set up
-#### Git
-ToDo: Describe the git & pull request business
 
-```bash
-$ # make sure you have python3.6 installed
-$ sudo apt-get install python3.6
-$ # make sure you have tox installed
-$ python3 -m pip install tox
-```
+### Overview:
 
-### Test all
+1. Discuss the issue in the [Issue section](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues)
+2. Create a fork of this repository on Github
+3. Setup your local environment
+4. Clone your fork to your local machine
+5. Create a new branch pr/topic-name
+6. Make your changes and tick the boxes
+7. Check your code: run tests
+8. Tidy up: Rebase and squash
+9. Create a [pull requests](https://github.com/tempoCollaboration/TimeEvolvingMPO/pulls)
+10. Make changes to your pull request
+
+### 1. Discuss the issue in the Issue section
+ToDo
+
+### 2. Create a fork of this repository on Github
+ToDo
+
+### 3. Setup your local environment
+ToDo
+
+### 4. Clone your fork to your local machine
+ToDo
+
+### 5. Create a new branch pr/topic-name
+ToDo
+
+### 6. Make your changes and tick the boxes
+ToDo
+
+### 7. Check your code: run tests
+ToDo
+
+#### 7.1 test all
 Before you make any pull request check how things are by navigating to the
 repositories directory and simply typing:
 ```bash
@@ -56,7 +80,7 @@ like:
   congratulations :)
 ```
 
-#### pytest
+#### 7.2 test pytest only
 You can run the pytests on python3.6 with:
 ```bash
 $ tox -e py36
@@ -66,7 +90,7 @@ and you can pick a specific test to run with:
 $ tox -e py36 say_hi_test.py
 ```
 
-#### pylint
+#### 7.3 test pylint only
 This checks the code [code style](https://www.python.org/dev/peps/pep-0008/)
 with pylint:
 ```bash
@@ -77,7 +101,7 @@ and you can check the style of a specific file with:
 $ tox -e style say_hi.py
 ```
 
-#### sphinx
+#### 7.4 test sphinx only
 This invoces a sphinx-build to build the HTML documentation
 ```bash
 $ tox -e docs
@@ -86,3 +110,11 @@ You can view the generated documentation by opening it in a browser:
 ```bash
 $ firefox ./docs/_build/html/index.html &
 ```
+### 8. Tidy up: Rebase and squash
+ToDo
+
+### 9. Create a pull requests
+ToDo
+
+### 10. Make changes to your pull request
+ToDo
