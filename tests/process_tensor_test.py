@@ -21,6 +21,8 @@ from time_evolving_mpo import ProcessTensor
 from time_evolving_mpo import apply_control_to_process_tensor
 from time_evolving_mpo import apply_system_to_process_tensor
 from time_evolving_mpo import compute_process_tensor
+from time_evolving_mpo import ProcessTensorParameters
+from time_evolving_mpo import guess_process_tensor_parameters
 
 
 def test_process_tensor():
@@ -36,3 +38,10 @@ def test_apply_system_to_process_tensor():
 
 def test_compute_process_tensor():
     compute_process_tensor()
+
+def test_process_tensor_parameters():
+    ProcessTensorParameters()
+
+def test_guess_process_tensor_parameters():
+    res = guess_process_tensor_parameters()
+    assert isinstance(res,ProcessTensorParameters)

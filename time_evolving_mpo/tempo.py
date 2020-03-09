@@ -19,7 +19,7 @@ ToDo
 from time_evolving_mpo.dynamics import Dynamics
 
 
-class TempoSys:
+class Tempo:
     """
     ToDo
     """
@@ -48,3 +48,23 @@ class TempoSys:
         """
         pass # ToDo
         return NotImplemented, NotImplemented # ToDo
+
+
+
+class TempoParameters:
+    """
+    ToDo
+    """
+    def __init__(self, *args, **kwargs): # ToDo
+        """
+        ToDo
+        """
+        pass # ToDo
+
+
+def guess_tempo_parameters(*args, **kwargs): # ToDo
+    """
+    ToDo
+    """
+    pass # ToDo
+    return TempoParameters() #ToDo

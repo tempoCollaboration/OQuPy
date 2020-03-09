@@ -65,3 +65,22 @@ def compute_process_tensor(*args, **kwargs): # ToDo
     """
     pass # ToDo
     return ProcessTensor()
+
+
+class ProcessTensorParameters:
+    """
+    ToDo
+    """
+    def __init__(self, *args, **kwargs): # ToDo
+        """
+        ToDo
+        """
+        pass # ToDo
+
+
+def guess_process_tensor_parameters(*args, **kwargs): # ToDo
+    """
+    ToDo
+    """
+    pass # ToDo
+    return ProcessTensorParameters() #ToDo

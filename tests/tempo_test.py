@@ -12,18 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.guess_parameters module.
+Tests for the time_evovling_mpo.tempo module.
 """
 
 import pytest
 
-from time_evolving_mpo import guess_parameters_process_tensor
-from time_evolving_mpo import guess_parameters_tempo
+from time_evolving_mpo import Tempo
+from time_evolving_mpo import TempoParameters
+from time_evolving_mpo import guess_tempo_parameters
 
-def test_guess_parameters_process_tensor():
-    res = guess_parameters_process_tensor()
-    assert res == NotImplemented
+def test_tempo():
+    tempo_A=Tempo()
+    tempo_A.check_convergence()
+    tempo_A.compute()
+    tempo_A.get_dynamics()
 
-def test_guess_parameters_tempo():
-    res = guess_parameters_tempo()
-    assert res == NotImplemented
+def test_tempo_parameters():
+    TempoParameters()
+
+def test_guess_tempo_parameters():
+    res = guess_tempo_parameters()
+    assert isinstance(res,TempoParameters)
