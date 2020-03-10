@@ -21,12 +21,16 @@ with open('time_evolving_mpo/version.py') as f:
   exec(f.read(), globals())
 
 # get short and long description
-short_description = "A python3 library to efficiently compute non-markovian open quantum systems."
+short_description = \
+"A python3 library to efficiently compute non-markovian open quantum systems."
+
 with open("README.md", "r") as f:
   long_description = f.read()
 
 # get requirements list
-requirements = ["numpy>=1.18.0" ]
+requirements = ["numpy>=1.18.0",
+                "scipy>=1.4.0",
+                ]
 
 setup(
     name='time_evolving_mpo',

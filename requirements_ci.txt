@@ -6,3 +6,4 @@ sphinx_rtd_theme==0.4.3
 setuptools
 wheel
 numpy>=1.18.0
+scipy>=1.4.0
