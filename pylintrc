@@ -131,6 +131,9 @@ disable=print-statement,
         unused-argument,                  # added by hand
         unnecessary-pass,                 # added by hand
         too-few-public-methods,           # added by hand
+        abstract-method,                  # added by hand
+        super-init-not-called,            # added by hand
+        snake-case,                       # added by hand
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
