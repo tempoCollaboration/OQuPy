@@ -53,6 +53,7 @@ Uninstall TimeEvolvingMPO
 -------------------------
 
 Uninstall TimeEvolvingMPO via the terminal:
+
 .. code-block:: none
 
  $ python3 -m pip uninstall time_evolving_mps
