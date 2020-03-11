@@ -18,6 +18,7 @@ A python3 library to efficiently compute non-markovian open quantum systems.
    pages/install
    pages/tutorial
    pages/api_modules
+   pages/other_modules
 
 Indices and tables
 ==================
