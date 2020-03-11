@@ -19,6 +19,7 @@ import pytest
 import numpy as np
 
 from time_evolving_mpo import NumericsError
+from time_evolving_mpo import NumericsWarning
 from time_evolving_mpo.integrate import semi_infinite_hard_cutoff
 from time_evolving_mpo.integrate import semi_infinite_gaussian_cutoff
 from time_evolving_mpo.integrate import semi_infinite_exponential_cutoff
@@ -106,4 +107,5 @@ def test_gauss_laguerre_adaptive(a):
 
 def test_gauss_laguerre_adaptive_error():
     with pytest.raises(NumericsError):
-        gauss_laguerre_adaptive(f_5, rescale=100.0)
+        with pytest.warns(NumericsWarning):
+            gauss_laguerre_adaptive(f_5, rescale=100.0)
