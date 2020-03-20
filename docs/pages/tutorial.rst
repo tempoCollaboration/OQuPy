@@ -1,5 +1,5 @@
-TEMPO Tutorial
-==============
+Tutorial
+========
 
 .. image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb

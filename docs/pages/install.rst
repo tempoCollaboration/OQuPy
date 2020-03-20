@@ -3,6 +3,7 @@
 Install TimeEvolvingMPO
 =======================
 
+
 How To Install
 --------------
 
@@ -32,6 +33,7 @@ How To Install
 This should do it! (If not check if this is a known issue on github and file
 one if it isn't. Thanks!)
 
+
 Test Installation
 -----------------
 
@@ -49,10 +51,11 @@ This should give you the following message:
   Hi there!
   This is TimeEvolvingMPO version 0.0.1-1 speaking!
 
+
 Uninstall TimeEvolvingMPO
 -------------------------
 
-Uninstall TimeEvolvingMPO via the terminal:
+Uninstall TimeEvolvingMPO with pip:
 
 .. code-block:: none
 
