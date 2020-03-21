@@ -20,9 +20,7 @@ import numpy as np
 
 from time_evolving_mpo import NumericsError
 from time_evolving_mpo import NumericsWarning
-from time_evolving_mpo.integrate import semi_infinite_hard_cutoff
-from time_evolving_mpo.integrate import semi_infinite_gaussian_cutoff
-from time_evolving_mpo.integrate import semi_infinite_exponential_cutoff
+from time_evolving_mpo.integrate import integrate_semi_infinite
 from time_evolving_mpo.integrate import gauss_laguerre
 from time_evolving_mpo.integrate import gauss_laguerre_adaptive
 
@@ -41,59 +39,28 @@ def f_4(x):
 def f_5(x):
     return np.exp(np.sqrt(x)) * np.sin(10.0*x) * np.cos(97.0*x)
 
-
-# -- test hard cutoff --------------------------------------------------------
-
-list_hard = [(f_1, 4.0),
-             (f_2, 1.885618083164127),
-             (f_3, 5.407528184656318),
-             (f_4, -0.035290536062485574),
-            ]
-
-@pytest.mark.parametrize("a",list_hard)
-def test_semi_infinite_hard_cutoff(a):
-    result = semi_infinite_hard_cutoff(a[0], cutoff=2.0)
-    np.testing.assert_almost_equal(result[0],a[1])
-
-def test_semi_infinite_hard_cutoff_error():
-    with pytest.raises(NumericsError):
-        semi_infinite_hard_cutoff(f_5, cutoff=100.0)
-
-
-# -- test gaussian cutoff -----------------------------------------------------
-
-list_gaussian = [(f_1, 8.0),
-                 (f_2, 1.73300092018477),
-                 (f_3, 5.138069815426973),
-                 (f_4, 0.1199149620765398),
-                ]
-
-@pytest.mark.parametrize("a",list_gaussian)
-def test_semi_infinite_gaussian_cutoff(a):
-    result = semi_infinite_gaussian_cutoff(a[0], cutoff=2.0)
-    np.testing.assert_almost_equal(result[0],a[1])
-
-def test_semi_infinite_gaussian_cutoff_error():
-    with pytest.raises(NumericsError):
-        semi_infinite_gaussian_cutoff(f_5, cutoff=100.0)
-
-
-# -- test exponential cutoff --------------------------------------------------
-
 list_exponential = [(f_1, 96.0),
                     (f_2, 2.5066282746310002),
                     (f_3, 8.954103623407388),
                     (f_4, 0.12093517077496016),
                    ]
 
-@pytest.mark.parametrize("a",list_exponential)
-def test_semi_infinite_exponential_cutoff(a):
-    result = semi_infinite_exponential_cutoff(a[0], cutoff=2.0)
-    np.testing.assert_almost_equal(result[0],a[1])
+# -- test semi infinite integrate ---------------------------------------------
 
-def test_semi_infinite_exponential_cutoff_error():
+@pytest.mark.parametrize("a",list_exponential)
+def test_integrate_semi_infinite(a):
+    integrand = lambda x : a[0](x) * np.exp(-x/2.0)
+    result = integrate_semi_infinite(integrand,epsrel=2**(-20))
+    np.testing.assert_almost_equal(result,a[1])
+
+def test_integrate_semi_infinite():
+    integrand = lambda x : f_5(x) * np.exp(-x/2.0)
     with pytest.raises(NumericsError):
-        semi_infinite_exponential_cutoff(f_5, cutoff=100.0)
+        with pytest.warns(NumericsWarning):
+            integrate_semi_infinite(integrand)
+
+
+# -- test gauss laguerre ------------------------------------------------------
 
 @pytest.mark.parametrize("a",list_exponential[:1])
 def test_gauss_laguerre(a):
@@ -103,7 +70,7 @@ def test_gauss_laguerre(a):
 @pytest.mark.parametrize("a",list_exponential[:1])
 def test_gauss_laguerre_adaptive(a):
     result = gauss_laguerre_adaptive(a[0], rescale=2.0)
-    np.testing.assert_almost_equal(result[0],a[1])
+    np.testing.assert_almost_equal(result,a[1])
 
 def test_gauss_laguerre_adaptive_error():
     with pytest.raises(NumericsError):

@@ -22,121 +22,57 @@ from typing import Callable, Optional, Tuple
 import numpy as np
 from scipy.integrate import quad
 
-from time_evolving_mpo import NumericsWarning
-from time_evolving_mpo import NumericsError
+from time_evolving_mpo.exceptions import NumericsWarning
+from time_evolving_mpo.exceptions import NumericsError
 
 
-# ------- integrate function with hard cutoff -------------------------------
+# --- integrate function for interval 0 to infty ------------------------------
 
-def semi_infinite_hard_cutoff(
+def integrate_semi_infinite(
         integrand: Callable,
-        cutoff: float,
         epsrel: Optional[float] = 2**-26) -> Tuple[float, float]:
-    r""" Numerical integration from 0 to a hard cutoff.
+    r"""
+    Numerical integration from 0 to infinity. This function performs the
+    numerical integration of
 
-    This function performs the numerical integration of:
-    :math:`\int_0^{x_c} f(x) dx`, with
-    *integrand* :math:`f(x)` and  *cutoff* :math:`x_c`.
+    .. math::
 
-    Args:
-        integrand: A numpy-vectorizable callable function.
-        cutoff: The upper limit of the integration interval.
-        epsrel: Relative error tollerance.
+        \int_0^\infty f(x) dx ,
 
-    Returns:
-        The integral and an estimate of the absolute numerical error.
+    with `integrand` :math:`f(x)` and  `cutoff` :math:`x_c`.
 
-    Raises:
-        NumericsError: If anything goes wrong during the integration.
+    Parameters
+    ----------
+    integrand : vectorized callable
+        A numpy-vectorized callable function.
+    epsrel : float (default = 1.49e-08)
+        Relative error tollerance.
+
+    Returns
+    -------
+    integral : float
+        The integral
+
+    Raises
+    ------
+    `NumericsError` :
+        If anything goes wrong during the integration.
     """
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
             result = quad(integrand,
                           0.0,
-                          cutoff,
-                          epsabs=0.0,
-                          epsrel=epsrel,
-                          limit=2**10)
-        except Exception as error:
-            raise NumericsError("Integration error: \n{}".format(error))
-    return result
-
-
-# ------- integrate function with gaussian cutoff ----------------------------
-
-def semi_infinite_gaussian_cutoff(
-        integrand: Callable,
-        cutoff: float,
-        epsrel: Optional[float] = 2**-26) -> Tuple[float, float]:
-    r""" Numerical integration from 0 to infinity with a exponential cutoff.
-
-    This function performs the numerical integration of
-    :math:`\int_0^\inf f(x)\exp\left[ -\left( x/x_c \right)^2 \right] dx`, with
-    *integrand* :math:`f(x)` and  *cutoff* :math:`x_c`.
-
-    Args:
-        integrand: A numpy-vectorizable callable function.
-        cutoff: The gaussian cutoff :math:`x_c`.
-        epsrel: Relative error tollerance.
-
-    Returns:
-        The integral and an estimate of the absolute numerical error.
-
-    Raises:
-        NumericsError: If anything goes wrong during the integration.
-    """
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        try:
-            full_integrand = lambda w: integrand(w) * np.exp(-(w/cutoff)**2)
-            result = quad(full_integrand,
-                          0.0,
                           np.inf,
                           epsabs=0.0,
                           epsrel=epsrel,
                           limit=2**10)
         except Exception as error:
             raise NumericsError("Integration error: \n{}".format(error))
-    return result
+    return result[0]
 
 
-# ------- integrate function with exponential cutoff --------------------------
-
-def semi_infinite_exponential_cutoff(
-        integrand: Callable,
-        cutoff: float,
-        epsrel: Optional[float] = 2**-26) -> Tuple[float, float]:
-    r""" Numerical integration from 0 to infinity with a gaussian cutoff.
-
-    This function performs the numerical integration of
-    :math:`\int_0^\inf f(x) \exp\left[ -x/x_c \right] dx`, with
-    *integrand* :math:`f(x)` and  *cutoff* :math:`x_c`.
-
-    Args:
-        integrand: A numpy-vectorizable callable function.
-        cutoff: The exponential cutoff :math:`x_c`.
-        epsrel: Relative error tollerance.
-
-    Returns:
-        The integral and an estimate of the absolute numerical error.
-
-    Raises:
-        NumericsError: If anything goes wrong during the integration.
-    """
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        try:
-            full_integrand = lambda w: integrand(w) * np.exp(-w/cutoff)
-            result = quad(full_integrand,
-                          0.0,
-                          np.inf,
-                          epsabs=0.0,
-                          epsrel=epsrel,
-                          limit=2**10)
-        except Exception as error:
-            raise NumericsError("Integration error: \n{}".format(error))
-    return result
+# --- integrate gauss laguerre ------------------------------------------------
 
 
 @lru_cache(2**8)
@@ -149,19 +85,29 @@ def gauss_laguerre(
         integrand: Callable,
         deg: int,
         rescale: Optional[float] = 1.0) -> float:
-    r"""Integration with Gauss-Laguerre quadrature of fixed degree.
+    r"""
+    Integration with Gauss-Laguerre quadrature of fixed degree. This function
+    performs the numerical integration of
 
-    This function performs the numerical integration of
-    :math:`\int_0^\inf f(x) \exp\left[ -x/x_c \right] dx`, with
-    *integrand* :math:`f(x)` and  *rescale* :math:`x_c` employing the
-    Gauss-Laguerre quadrature of degree *deg*.
+    .. math::
 
-    Args:
-        integrand: A numpy-vectorizable callable function.
-        deg: The degree of Laguerre polynominals.
-        rescale: The rescaling of the exponential :math:`x_c`.
+        \int_0^\infty f(x) \exp\left[ -x/x_c \right] dx ,
 
-    Returns:
+    with `integrand` :math:`f(x)` and  `rescale` :math:`x_c` employing the
+    Gauss-Laguerre quadrature of degree `deg`.
+
+    Parameters
+    ----------
+    integrand : vectorized callable
+        A numpy-vectorized callable function.
+    deg : int
+        The degree of Laguerre polynominals.
+    rescale : float
+        The rescaling of the exponential :math:`x_c`.
+
+    Returns
+    -------
+    interal : float
         The integral.
     """
     positions, weights = _gauss_laguerre_quad(deg)
@@ -175,27 +121,42 @@ def gauss_laguerre_adaptive(
         min_deg: Optional[int] = 10,
         warn_deg: Optional[int] = 100,
         max_deg: Optional[int] = 150) -> Tuple[float, float]:
-    r"""Adaptive integration with Gauss-Laguerre quadrature.
+    r"""
+    Adaptive integration with Gauss-Laguerre quadrature. This function performs
+    the numerical integration of
 
-    This function performs the numerical integration of
-    :math:`\int_0^\inf f(x) \exp\left[ -x/x_c \right] dx`, with
-    *integrand* :math:`f(x)` and  *rescale* :math:`x_c` employing the
+    .. math::
+
+        \int_0^\infty f(x) \exp\left[ -x/x_c \right] dx ,
+
+    with `integrand` :math:`f(x)` and  `rescale` :math:`x_c` employing the
     Gauss-Laguerre quadrature.
 
-    Args:
-        integrand: A numpy-vectorizable callable function.
-        rescale: The rescaling of the exponential :math:`x_c`.
-        epsrel: Relative error tollerance.
-        min_deg: Minimal degree of Laguerre polynominals.
-        warn_deg: Warn with NumericsWarning when degree of Laguerre
-            polynominals exceeds *warn_deg*
-        max_deg: Maximal degree of Laguerre polynominals.
+    Parameters
+    ----------
+    integrand : vectorized callable
+        A numpy-vectorized callable function.
+    rescale : float
+        The rescaling of the exponential :math:`x_c`.
+    epsrel : float (default = 1.49e-08)
+        Relative error tollerance.
+    min_deg : int (default = 10)
+        Minimal degree of Laguerre polynominals.
+    warn_deg : int (default = 100)
+        Warn with NumericsWarning when degree of Laguerre polynominals exceeds
+        `warn_deg`
+    max_deg : int (default = 150)
+        Maximal degree of Laguerre polynominals.
 
-    Returns:
-        The integral and an estimate of the absolute numerical error.
+    Returns
+    -------
+    integral : float
+        The integral.
 
-    Raises:
-        NumericsError: If anything goes wrong during the integration.
+    Raises
+    ------
+    `NumericsError`
+        If anything goes wrong during the integration.
     """
     deg = min_deg
     current_result = gauss_laguerre(integrand,
@@ -221,4 +182,4 @@ def gauss_laguerre_adaptive(
         if rel_error <= epsrel:
             do_while_condition = False
 
-    return current_result, abs_error
+    return current_result
