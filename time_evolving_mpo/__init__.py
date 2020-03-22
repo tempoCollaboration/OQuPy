@@ -31,3 +31,5 @@ from time_evolving_mpo.spectral_density import StandardSD
 
 from time_evolving_mpo.exceptions import NumericsError
 from time_evolving_mpo.exceptions import NumericsWarning
+
+import time_evolving_mpo.operators

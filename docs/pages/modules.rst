@@ -16,6 +16,13 @@ tempo.integrate
     :members:
 
 
+tempo.operators
+---------------
+
+.. automodule:: time_evolving_mpo.operators
+    :members:
+
+
 tempo.spectral_density
 ----------------------
 
