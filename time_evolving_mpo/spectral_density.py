@@ -22,8 +22,7 @@ import numpy as np
 from numpy import cos, sin, tanh, exp, vectorize
 
 from time_evolving_mpo.integrate import integrate_semi_infinite
-
-SEPERATOR = "----------------------------------------\n"
+from time_evolving_mpo.config import SEPERATOR
 
 # --- the cutoffs -------------------------------------------------------------
 
@@ -239,7 +238,7 @@ class BaseSD:
         ``'lower-triangle'``.
 
         Parameters
-        --------------------------------------------------
+        ----------
         time_1 : float
             Lower bound of integration interval of :math:`dt'`.
         delta : float

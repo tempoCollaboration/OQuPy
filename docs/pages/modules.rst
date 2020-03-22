@@ -1,6 +1,13 @@
 Modules
 =======
 
+tempo.bath
+----------
+
+.. automodule:: time_evolving_mpo.bath
+    :members:
+
+
 tempo.exceptions
 ----------------
 
