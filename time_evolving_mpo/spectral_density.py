@@ -15,14 +15,14 @@
 Module for spectral densities.
 """
 
-from typing import Callable, Optional, Text
+from typing import Callable, Dict, Optional, Text
 from typing import Any as ArrayLike
 
 import numpy as np
 from numpy import cos, sin, tanh, exp, vectorize
 
 from time_evolving_mpo.integrate import integrate_semi_infinite
-from time_evolving_mpo.config import SEPERATOR
+from time_evolving_mpo.base_api import BaseAPIClass
 
 # --- the cutoffs -------------------------------------------------------------
 
@@ -154,11 +154,8 @@ INTEGRAND_DICT = {
 
 # --- spectral density classes ------------------------------------------------
 
-class BaseSD:
+class BaseSD(BaseAPIClass):
     """Base class for spectral densities."""
-    def __init__(self) -> None:
-        """Spectral density base class constructor."""
-        self.name = 'base spectral density'
 
     def spectral_density(self, omega: ArrayLike) -> ArrayLike:
         r"""
@@ -177,7 +174,8 @@ class BaseSD:
             :math:`\omega`.
         """
         raise NotImplementedError(
-            "{} has no spectral_density implementation.".format(self.name))
+            "{} has no spectral_density implementation.".format(
+                type(self).__name__))
 
     def correlation(
             self,
@@ -211,7 +209,7 @@ class BaseSD:
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         raise NotImplementedError(
-            "{} has no correlation implementation.".format(self.name))
+            "{} has no correlation implementation.".format(type(self).__name__))
 
     def correlation_2d_integral(
             self,
@@ -258,7 +256,7 @@ class BaseSD:
         """
         raise NotImplementedError(
             "{} has no correlation_2d_integral implementation.".format(
-                self.name))
+                type(self).__name__))
 
 
 class CustomFunctionSD(BaseSD):
@@ -305,11 +303,11 @@ class CustomFunctionSD(BaseSD):
             self,
             j_function: Callable[[float], float],
             cutoff: float,
-            cutoff_type: Text = 'exponential') -> None:
+            cutoff_type: Text = 'exponential',
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
         """Create spectral density with a custom function and a cutoff. """
-
-        super().__init__()
-        self.name = 'custom function spectral density'
 
         # check input: j_function
         try:
@@ -337,10 +335,11 @@ class CustomFunctionSD(BaseSD):
         self._spectral_density = \
             lambda omega: self.j_function(omega) * self._cutoff_function(omega)
 
+        super().__init__(name, description, description_dict)
+
     def __str__(self) -> Text:
         ret = []
-        ret.append(SEPERATOR)
-        ret.append("Custom Function Spectral Density object:\n")
+        ret.append(super().__str__())
         ret.append("  cutoff        = {} \n".format(self.cutoff))
         ret.append("  cutoff_type   = {} \n".format(self.cutoff_type))
         return "".join(ret)
@@ -512,7 +511,10 @@ class StandardSD(CustomFunctionSD):
             alpha: float,
             zeta: float,
             cutoff: float,
-            cutoff_type: Text = 'exponential') -> None:
+            cutoff_type: Text = 'exponential',
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
         """Create a standard spectral density."""
 
         # check input: alpha
@@ -538,16 +540,17 @@ class StandardSD(CustomFunctionSD):
 
         # use parent class for all the rest.
         j_function = lambda w: 2.0 * alpha * w**zeta * self.cutoff**(1-zeta)
-        super().__init__(j_function, cutoff=cutoff, cutoff_type=cutoff_type)
-        self.name = 'standard spectral density'
+        super().__init__(j_function,
+                         cutoff=cutoff,
+                         cutoff_type=cutoff_type,
+                         name=name,
+                         description=description,
+                         description_dict=description_dict)
 
     def __str__(self) -> Text:
         ret = []
-        ret.append(SEPERATOR)
-        ret.append("Standard Spectral Density object:\n")
+        ret.append(super().__str__())
         ret.append("  alpha         = {} \n".format(self.alpha))
         ret.append("  zeta          = {} \n".format(self.zeta))
-        ret.append("  cutoff        = {} \n".format(self.cutoff))
-        ret.append("  cutoff_type   = {} \n".format(self.cutoff_type))
 
         return "".join(ret)

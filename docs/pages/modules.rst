@@ -1,10 +1,18 @@
 Modules
 =======
 
+tempo.base_api
+----------------------
+
+.. automodule:: time_evolving_mpo.base_api
+    :members:
+
+
 tempo.bath
 ----------
 
 .. automodule:: time_evolving_mpo.bath
+    :show-inheritance:
     :members:
 
 
