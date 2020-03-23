@@ -60,9 +60,12 @@ class Bath:
             description_dict: Optional[Dict] = None) -> None:
         """Create a bath object. """
         # input check for coupling_operator.
-        self._coupling_operator = array(coupling_operator, dtype=NP_DTYPE)
-        self._coupling_operator.setflags(write=False)
-        assert len(self._coupling_operator.shape) == 2, \
+        try:
+            __coupling_operator = array(coupling_operator, dtype=NP_DTYPE)
+            __coupling_operator.setflags(write=False)
+        except:
+            raise AssertionError("Coupling operator must be numpy array")
+        assert len(__coupling_operator.shape) == 2, \
             "Coupling operator is not a matrix."
         assert self._coupling_operator.shape[0] == \
             self._coupling_operator.shape[1], \

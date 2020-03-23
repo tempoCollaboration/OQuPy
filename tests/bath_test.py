@@ -68,6 +68,9 @@ def test_bath():
 
     # try bad examples
     with pytest.raises(AssertionError):
+        coupling_op = "bla"
+        Bath(coupling_op, spectral_density)
+    with pytest.raises(AssertionError):
         coupling_op = np.array([1.0,0.0])
         Bath(coupling_op, spectral_density)
     with pytest.raises(AssertionError):
