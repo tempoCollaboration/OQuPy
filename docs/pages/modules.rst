@@ -44,3 +44,10 @@ tempo.spectral_density
 .. automodule:: time_evolving_mpo.spectral_density
     :show-inheritance:
     :members:
+
+
+tempo.util
+----------
+
+.. automodule:: time_evolving_mpo.util
+    :members:
