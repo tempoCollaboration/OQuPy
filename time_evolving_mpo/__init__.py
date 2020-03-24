@@ -33,6 +33,7 @@ from time_evolving_mpo.spectral_density import CustomFunctionSD
 from time_evolving_mpo.spectral_density import StandardSD
 
 from time_evolving_mpo.system import System
+from time_evolving_mpo.system import TimeDependentSystem
 
 from time_evolving_mpo.tempo import Tempo
 from time_evolving_mpo.tempo import TempoParameters

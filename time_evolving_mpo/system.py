@@ -12,16 +12,270 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-ToDo
+Module on physical information of the system.
 """
 
+from typing import Callable, Dict, List, Optional, Text
+from typing import Any as ArrayLike
+from copy import copy
+from functools import lru_cache
 
-class System:
+from numpy import array, dot, ndarray, vectorize
+
+from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.base_api import BaseAPIClass
+from time_evolving_mpo.util import commutator, acommutator, left_right_super
+
+
+def _check_hamiltonian(hamiltonian):
+    """Input checking for a single hamiltonian."""
+    try:
+        __hamiltonian = array(hamiltonian, dtype=NP_DTYPE)
+        __hamiltonian.setflags(write=False)
+    except:
+        raise AssertionError("Coupling operator must be numpy array")
+    assert len(__hamiltonian.shape) == 2, \
+        "Coupling operator is not a matrix."
+    assert __hamiltonian.shape[0] == \
+        __hamiltonian.shape[1], \
+        "Coupling operator is not a square matrix."
+    return __hamiltonian
+
+
+def _liouvillian(hamiltonian, gammas, lindblad_operators):
+    """Lindbladian for a specific hamiltonian, gammas and lindblad_operators."""
+    liouvillian = -1j * commutator(hamiltonian)
+    for n, gamma in enumerate(gammas):
+        op = lindblad_operators[n]
+        op_dagger = op.conjugate().T
+        liouvillian += gamma * (left_right_super(op, op_dagger) \
+                                - 0.5 * acommutator(dot(op_dagger, op)))
+    return liouvillian
+
+
+class BaseSystem(BaseAPIClass):
+    """Base class for systems."""
+    pass
+
+
+class System(BaseSystem):
+    r"""
+    Represents the system only (without any coupling to a non-markovian bath).
+    It is, however possible, to include Lindblad terms in the master equation.
+    The equations of motion for a system density matrix (without any coupling
+    to a non-markovian bath) is then:
+
+    .. math::
+
+        \frac{d}{dt}\rho(t) = &-i [\hat{H}, \rho(t)] \\
+            &+ \sum_n^N \gamma_n \left(
+                \hat{A}_n \rho(t) \hat{A}_n^\dagger
+                - \frac{1}{2} \hat{A}_n^\dagger \hat{A}_n \rho(t)
+                - \frac{1}{2} \rho(t) \hat{A}_n^\dagger \hat{A}_n \right)
+
+    with `hamiltionian` :math:`\hat{H}`, the rates `gammas` :math:`\gamma_n` and
+    `linblad_operators` :math:`\hat{A}_n`.
     """
-    ToDo
+    def __init__(
+            self,
+            hamiltonian: ArrayLike,
+            gammas: Optional[List[float]] = None,
+            lindblad_operators: Optional[List[ArrayLike]] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """Create a System object."""
+        # input check for hamiltonian.
+        self._hamiltonian = _check_hamiltonian(hamiltonian)
+        self._dimension = self._hamiltonian.shape[0]
+
+        # input check gammas and lindblad_operators
+        if gammas is None:
+            gammas = []
+        if lindblad_operators is None:
+            lindblad_operators = []
+        assert isinstance(gammas, list), \
+            "Argument `gammas` must be a list)]."
+        assert isinstance(lindblad_operators, list), \
+            "Argument `lindblad_operators` must be a list."
+        assert len(gammas) == len(lindblad_operators), \
+            "Lists `gammas` and `lindblad_operators` must have the same length."
+        try:
+            __gammas = []
+            for gamma in gammas:
+                __gammas.append(float(gamma))
+        except:
+            raise AssertionError("All elements of `gamma` must be floats.")
+        try:
+            __lindblad_operators = []
+            for lindblad_operator in lindblad_operators:
+                __lindblad_operators.append(
+                    array(lindblad_operator, dtype=NP_DTYPE))
+        except:
+            raise AssertionError(
+                "All elements of `lindblad_operators` must be numpy arrays.")
+        self._gammas = __gammas
+        self._lindblad_operators = __lindblad_operators
+
+        super().__init__(name, description, description_dict)
+
+    @lru_cache(2**0)
+    def liouvillian(self) -> ndarray:
+        r"""
+        Returns the Liouvillian super-operator :math:`\mathcal{L}` with
+
+        .. math::
+
+            \mathcal{L}\rho = -i [\hat{H}, \rho]
+                + \sum_n^N \gamma_n \left(
+                    \hat{A}_n \rho \hat{A}_n^\dagger
+                    - \frac{1}{2} \hat{A}_n^\dagger \hat{A}_n \rho
+                    - \frac{1}{2} \rho \hat{A}_n^\dagger \hat{A}_n
+                  \right) .
+
+        Returns
+        -------
+        liouvillian : ndarray
+            Liouvillian :math:`\mathcal{L}`.
+        """
+        return _liouvillian(self._hamiltonian,
+                            self._gammas,
+                            self._lindblad_operators)
+
+    @property
+    def hamiltonian(self) -> ndarray:
+        """The system hamiltonian."""
+        return copy(self._hamiltonian)
+
+    @property
+    def gammas(self) -> List[float]:
+        """List of gammas."""
+        return copy(self._gammas)
+
+    @property
+    def lindblad_operators(self) -> List[ndarray]:
+        """List of lindblad operators."""
+        return copy(self._lindblad_operators)
+
+
+class TimeDependentSystem(BaseSystem):
+    r"""
+    Represents an explicitly time dependent system (without any coupling to a
+    non-markovian bath). It is, however possible, to include (also explicitly
+    time dependent) Lindblad terms in the master equation.
+    The equations of motion for a system density matrix (without any coupling
+    to a non-markovian bath) is then:
+
+    .. math::
+
+        \frac{d}{dt}\rho(t) = &-i [\hat{H}(t), \rho(t)] \\
+            &+ \sum_n^N \gamma_n(t) \left(
+                \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
+                - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
+                - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t) \right)
+
+    with the time dependent `hamiltionian` :math:`\hat{H}(t)`, the  time
+    dependent rates `gammas` :math:`\gamma_n(t)` and the time dependent
+    `linblad_operators` :math:`\hat{A}_n(t)`.
     """
-    def __init__(self, *args, **kwargs): # ToDo
+    def __init__(
+            self,
+            hamiltonian: ArrayLike,
+            gammas: \
+                Optional[List[Callable[[float], float]]] = None,
+            lindblad_operators: \
+                Optional[List[Callable[[float], ArrayLike]]] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """Create a System object."""
+        # input check for hamiltonian.
+        try:
+            __hamiltonian = vectorize(hamiltonian)
+            _check_hamiltonian(__hamiltonian(1.0))
+        except:
+            raise AssertionError(
+                "Time dependent hamiltonian must be vectorizable callable.")
+        self._hamiltonian = __hamiltonian
+        self._dimension = self._hamiltonian(1.0)
+
+        # input check gammas and lindblad_operators
+        if gammas is None:
+            gammas = []
+        if lindblad_operators is None:
+            lindblad_operators = []
+        assert isinstance(gammas, list), \
+            "Argument `gammas` must be a list)]."
+        assert isinstance(lindblad_operators, list), \
+            "Argument `lindblad_operators` must be a list."
+        assert len(gammas) == len(lindblad_operators), \
+            "Lists `gammas` and `lindblad_operators` must have the same length."
+        try:
+            __gammas = []
+            for gamma in gammas:
+                float(gamma(1.0))
+                __gamma = vectorize(gamma)
+                __gammas.append(__gamma)
+        except:
+            raise AssertionError(
+                "All elements of `gammas` must be vectorizable " \
+                 + "callables returning floats.")
+        try:
+            __lindblad_operators = []
+            for lindblad_operator in lindblad_operators:
+                __lindblad_operator = vectorize(lindblad_operator)
+                array(__lindblad_operator(1.0))
+                __lindblad_operators.append(__lindblad_operator)
+        except:
+            raise AssertionError(
+                "All elements of `lindblad_operators` must be vectorizable " \
+                + "callables returning numpy arrays.")
+        self._gammas = __gammas
+        self._lindblad_operators = __lindblad_operators
+
+        super().__init__(name, description, description_dict)
+
+    def liouvillian(self, t: float) -> ndarray:
+        r"""
+        Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` with
+
+        .. math::
+
+            \mathcal{L}(t)\rho = -i [\hat{H}(t), \rho]
+                + \sum_n^N \gamma_n \left(
+                    \hat{A}_n(t) \rho \hat{A}_n^\dagger(t)
+                    - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho
+                    - \frac{1}{2} \rho \hat{A}_n^\dagger(t) \hat{A}_n(t)
+                  \right),
+
+        with time :math:`t`.
+
+        Parameters
+        ----------
+        t: float
+            time :math:`t`.
+
+        Returns
+        -------
+        liouvillian : ndarray
+            Liouvillian :math:`\mathcal{L}(t)` at time :math:`t`.
         """
-        ToDo
-        """
-        pass # ToDo
+        hamiltonian = self._hamiltonian(t)
+        gammas = [gamma(t) for gamma in self._gammas]
+        lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
+        return _liouvillian(hamiltonian, gammas, lindblad_operators)
+
+    @property
+    def hamiltonian(self) -> Callable[[float], ndarray]:
+        """The system hamiltonian."""
+        return copy(self._hamiltonian)
+
+    @property
+    def gammas(self) -> List[Callable[[float], float]]:
+        """List of gammas."""
+        return copy(self._gammas)
+
+    @property
+    def lindblad_operators(self) -> List[Callable[[float], ndarray]]:
+        """List of lindblad operators."""
+        return copy(self._lindblad_operators)
