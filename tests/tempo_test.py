@@ -17,19 +17,4 @@ Tests for the time_evovling_mpo.tempo module.
 
 import pytest
 
-from time_evolving_mpo import Tempo
-from time_evolving_mpo import TempoParameters
-from time_evolving_mpo import guess_tempo_parameters
-
-def test_tempo():
-    tempo_A=Tempo()
-    tempo_A.check_convergence()
-    tempo_A.compute()
-    tempo_A.get_dynamics()
-
-def test_tempo_parameters():
-    TempoParameters()
-
-def test_guess_tempo_parameters():
-    res = guess_tempo_parameters()
-    assert isinstance(res,TempoParameters)
+pass
