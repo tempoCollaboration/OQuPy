@@ -11,6 +11,11 @@ computer.
 If you want to try things locally on your laptop:
 install `TimeEvolvingMPO` by following the instructions at :ref:`install-label`.
 
+.. todo::
+
+      - Remove the say_hi() stuff
+      - Add a the simplest non-trivial example.
+      - Add a more verbose example.
 
 Say hi!
 -------
