@@ -25,8 +25,10 @@ from time_evolving_mpo.system import BaseSystem
 
 
 def test_base_system():
-    BaseSystem()
-
+    dimension = 3
+    sys = BaseSystem(dimension)
+    sys.dimension
+    
 def test_system():
     sys_A = System(0.4*operators.pauli("x"))
     sys_A.liouvillian()

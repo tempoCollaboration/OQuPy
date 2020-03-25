@@ -55,8 +55,49 @@ def _liouvillian(hamiltonian, gammas, lindblad_operators):
 
 class BaseSystem(BaseAPIClass):
     """Base class for systems."""
-    pass
+    def __init__(
+            self,
+            dimension: int,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """Create a BaseSystem object."""
+        self._dimension = dimension
+        super().__init__(name, description, description_dict)
 
+    @property
+    def dimension(self) -> ndarray:
+        """Hilbert space dimension of the system"""
+        return self._dimension
+
+    def liouvillian(self, t: Optional[float] = None) -> ndarray:
+        r"""
+        Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` with
+
+        .. math::
+
+            \mathcal{L}(t)\rho = -i [\hat{H}(t), \rho]
+                + \sum_n^N \gamma_n \left(
+                    \hat{A}_n(t) \rho \hat{A}_n^\dagger(t)
+                    - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho
+                    - \frac{1}{2} \rho \hat{A}_n^\dagger(t) \hat{A}_n(t)
+                  \right),
+
+        with time :math:`t`.
+
+        Parameters
+        ----------
+        t: float (default = None)
+            time :math:`t`.
+
+        Returns
+        -------
+        liouvillian : ndarray
+            Liouvillian :math:`\mathcal{L}(t)` at time :math:`t`.
+        """
+        raise NotImplementedError(
+            "Class {} has no liouvillian implementation.".format(
+                type(self).__name__))
 
 class System(BaseSystem):
     r"""
@@ -87,7 +128,7 @@ class System(BaseSystem):
         """Create a System object."""
         # input check for hamiltonian.
         self._hamiltonian = _check_hamiltonian(hamiltonian)
-        self._dimension = self._hamiltonian.shape[0]
+        __dimension = self._hamiltonian.shape[0]
 
         # input check gammas and lindblad_operators
         if gammas is None:
@@ -117,10 +158,10 @@ class System(BaseSystem):
         self._gammas = __gammas
         self._lindblad_operators = __lindblad_operators
 
-        super().__init__(name, description, description_dict)
+        super().__init__(__dimension, name, description, description_dict)
 
     @lru_cache(2**0)
-    def liouvillian(self) -> ndarray:
+    def liouvillian(self, t: Optional[float] = None) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}` with
 
@@ -197,7 +238,7 @@ class TimeDependentSystem(BaseSystem):
             raise AssertionError(
                 "Time dependent hamiltonian must be vectorizable callable.")
         self._hamiltonian = __hamiltonian
-        self._dimension = self._hamiltonian(1.0)
+        __dimension = self._hamiltonian(1.0)
 
         # input check gammas and lindblad_operators
         if gammas is None:
@@ -233,9 +274,9 @@ class TimeDependentSystem(BaseSystem):
         self._gammas = __gammas
         self._lindblad_operators = __lindblad_operators
 
-        super().__init__(name, description, description_dict)
+        super().__init__(__dimension, name, description, description_dict)
 
-    def liouvillian(self, t: float) -> ndarray:
+    def liouvillian(self, t: Optional[float] = None) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` with
 
@@ -252,14 +293,22 @@ class TimeDependentSystem(BaseSystem):
 
         Parameters
         ----------
-        t: float
+        t: float (default = None)
             time :math:`t`.
 
         Returns
         -------
         liouvillian : ndarray
             Liouvillian :math:`\mathcal{L}(t)` at time :math:`t`.
+
+        Raises
+        ------
+        ValueError
+            If `t = None`
         """
+        if t is None:
+            raise ValueError("Liouvillian depends on time: Argument `t` "
+                             + "must be float.")
         hamiltonian = self._hamiltonian(t)
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
