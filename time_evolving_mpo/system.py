@@ -45,8 +45,7 @@ def _check_hamiltonian(hamiltonian):
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
     """Lindbladian for a specific hamiltonian, gammas and lindblad_operators."""
     liouvillian = -1j * commutator(hamiltonian)
-    for n, gamma in enumerate(gammas):
-        op = lindblad_operators[n]
+    for gamma, op in zip(gammas, lindblad_operators):
         op_dagger = op.conjugate().T
         liouvillian += gamma * (left_right_super(op, op_dagger) \
                                 - 0.5 * acommutator(dot(op_dagger, op)))
