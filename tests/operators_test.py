@@ -25,12 +25,25 @@ PAULI = {"id":[[1, 0], [0, 1]],
          "y":[[0, -1j], [1j, 0]],
          "z":[[1, 0], [0, -1]]}
 
-def test_operators_pauli():
-    for name in PAULI:
-        result = operators.pauli(name)
-        np.testing.assert_almost_equal(result,PAULI[name])
+SPIN_DM = {"up":[[1, 0], [0, 0]],
+           "down":[[0, 0], [0, 1]],
+           "plus":[[0.5, 0.5], [0.5, 0.5]],
+           "minus":[[0.5, -0.5], [-0.5, 0.5]],
+           "plus-y":[[0.5, -0.5j], [0.5j, 0.5]],
+           "minus-y":[[0.5, 0.5j], [-0.5j, 0.5]],
+           "mixed":[[0.5, 0.0], [0.0, 0.5]]}
 
 def test_identity():
     for n in {1,2,7}:
         result = operators.identity(n)
         np.testing.assert_almost_equal(result,np.identity(n))
+
+def test_operators_pauli():
+    for name in PAULI:
+        result = operators.pauli(name)
+        np.testing.assert_equal(result,PAULI[name])
+
+def test_operators_spin_dm():
+    for name in SPIN_DM:
+        result = operators.spin_dm(name)
+        np.testing.assert_equal(result,SPIN_DM[name])

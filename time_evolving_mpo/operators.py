@@ -26,6 +26,14 @@ PAULI = {"id":[[1, 0], [0, 1]],
          "y":[[0, -1j], [1j, 0]],
          "z":[[1, 0], [0, -1]]}
 
+SPIN_DM = {"up":[[1, 0], [0, 0]],
+           "down":[[0, 0], [0, 1]],
+           "plus":[[0.5, 0.5], [0.5, 0.5]],
+           "minus":[[0.5, -0.5], [-0.5, 0.5]],
+           "plus-y":[[0.5, -0.5j], [0.5j, 0.5]],
+           "minus-y":[[0.5, 0.5j], [-0.5j, 0.5]],
+           "mixed":[[0.5, 0.0], [0.0, 0.5]]}
+
 def identity(n: int):
     """
     Identity matrix of dimension `n` x `n`.
@@ -41,6 +49,7 @@ def identity(n: int):
     """
     return np.identity(n, dtype=NP_DTYPE)
 
+
 def pauli(name: Text):
     """
     Pauli matrix of type `name`.
@@ -54,3 +63,19 @@ def pauli(name: Text):
     The  pauli matrix. : np.array
     """
     return np.array(PAULI[name], dtype=NP_DTYPE)
+
+
+def spin_dm(name: Text):
+    """
+    Spin 1/2 state of type `name`.
+
+    Parameters
+    ----------
+    name: str{ ``'up'``, ``'down'``, ``'plus'``, ``'minus'``, \
+    ``'plus-y'``, ``'minus-y'``, ``mixed``}
+
+    Returns
+    -------
+    The density matrix. : np.array
+    """
+    return np.array(SPIN_DM[name], dtype=NP_DTYPE)
