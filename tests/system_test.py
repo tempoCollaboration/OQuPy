@@ -28,7 +28,10 @@ def test_base_system():
     dimension = 3
     sys = BaseSystem(dimension)
     sys.dimension
-    
+
+    with pytest.raises(NotImplementedError):
+        sys.liouvillian()
+
 def test_system():
     sys_A = System(0.4*operators.pauli("x"))
     sys_A.liouvillian()
@@ -91,6 +94,8 @@ def test_time_dependent_system():
                    name="bla",
                    description="blub",
                    description_dict={"the answer":42})
+    with pytest.raises(ValueError):
+        sys_B.liouvillian()
     sys_B.liouvillian(2.0)
     str(sys_B)
     assert isinstance(sys_B.hamiltonian, np.vectorize)

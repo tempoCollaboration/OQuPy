@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.control module.
 import pytest
 
 def test_import():
-    import time_evolving_mpo.process_tensor
+    import time_evolving_mpo.control
 
 # from time_evolving_mpo import Control
 #

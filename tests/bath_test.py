@@ -37,16 +37,17 @@ def test_bath():
     description_dict = {"alpha": alpha, "wc": wc}
 
     # try a minimal example
-    bath_A = Bath(coupling_operator, spectral_density)
+    bath_A = Bath(coupling_operator, spectral_density, temperature)
     bath_A.name = name
     bath_A.descripton = description
     bath_A.description_dict = description_dict
 
     # see if the properties work
     str(bath_A)
-    bath_A.coupling_operator
-    bath_A.spectral_density
-    bath_A.temperature
+    np.testing.assert_equal(bath_A.coupling_operator, coupling_operator)
+    assert bath_A.dimension == 2
+    assert bath_A.spectral_density.zeta == 1.0
+    assert bath_A.temperature == temperature
     del bath_A.name
     del bath_A.description
     del bath_A.description_dict
