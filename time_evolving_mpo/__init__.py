@@ -1,5 +1,7 @@
 """
-ToDo: The TimeEvolvingMPO docstring!
+A python3 library to efficiently compute non-markovian open quantum systems.
+
+.. todo:: Write abstract
 """
 from time_evolving_mpo.version import __version__
 from time_evolving_mpo.say_hi import say_hi

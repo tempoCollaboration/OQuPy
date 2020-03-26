@@ -1,5 +1,5 @@
-Modules
-=======
+All Modules
+===========
 
 tempo.base_api
 ----------------------
@@ -74,4 +74,14 @@ tempo.util
 ----------
 
 .. automodule:: time_evolving_mpo.util
+    :members:
+
+
+tempo.backends
+--------------
+
+base_backend
+~~~~~~~~~~~~
+
+.. automodule:: time_evolving_mpo.backends.base_backend
     :members:

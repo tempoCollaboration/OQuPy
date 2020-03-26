@@ -1,7 +1,7 @@
 .. _install-label:
 
-Install TimeEvolvingMPO
-=======================
+Installation
+============
 
 
 How To Install
@@ -39,6 +39,10 @@ Test Installation
 
 Open a interactive python3 session and type:
 
+.. todo::
+
+  Replace the tempo.say_hi() stuff with ``tempo.__version__`` or such like.
+
 .. code-block:: python
 
   >>> import time_evolving_mps as tempo
@@ -52,8 +56,8 @@ This should give you the following message:
   This is TimeEvolvingMPO version 0.0.1-1 speaking!
 
 
-Uninstall TimeEvolvingMPO
--------------------------
+Uninstall
+---------
 
 Uninstall TimeEvolvingMPO with pip:
 
