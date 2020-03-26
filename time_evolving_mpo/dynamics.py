@@ -12,44 +12,262 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-ToDo
+Module on the discrete time evolution of a density matrix.
 """
 
-class Dynamics:
-    """
-    ToDo
-    """
-    def __init__(self, *args, **kwargs): # ToDo
-        """
-        ToDo
-        """
-        pass # ToDo
+from typing import Dict, List, Optional, Text, Tuple
+from copy import copy
 
-    def export(self, *args, **kwargs): # ToDo
-        """
-        ToDo
-        """
-        pass # ToDo
+from numpy import array, identity, ndarray
+from numpy import trace
+from numpy import real as npreal
+from numpy import max as npmax
+from numpy import min as npmin
 
-    def get_expectations(self, *args, **kwargs): # ToDo
-        """
-        ToDo
-        """
-        pass # ToDo
-        return NotImplemented, NotImplemented # ToDo
+from time_evolving_mpo.base_api import BaseAPIClass
+from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.util import save_object, load_object
 
 
-def distance(*args, **kwargs): # ToDo
+class Dynamics(BaseAPIClass):
     """
-    ToDo
+    Represents a specific time evolution of a density matrix.
+
+    Parameters
+    ----------
+    times: List[float] (default = None)
+        A list of points in time.
+    states: List[ndarray] (default = None)
+        A list of states at the times `times`.
+    name: Text
+        An optional name for the dynamics.
+    description: Text
+        An optional description of the dynamics.
+    description_dict: dict
+        An optional dictionary with descriptive data.
     """
-    pass # ToDo
-    return NotImplemented, NotImplemented #ToDo
+    def __init__(
+            self,
+            times: Optional[List[float]] = None,
+            states: Optional[List[ndarray]] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """Create a dynamics object. """
+        # input check times and states
+        if times is None:
+            times = []
+        if states is None:
+            states = []
+        assert isinstance(times, list), \
+            "Argument `times` must be a list)]."
+        assert isinstance(states, list), \
+            "Argument `times` must be a list)]."
+        assert len(times) == len(states), \
+            "Lists `times` and `states` must have the same length."
+        self._times = []
+        self._states = []
+        self._shape = None
+        for time, state in zip(times, states):
+            self.add(time, state)
+
+        super().__init__(name, description, description_dict)
+
+    def __str__(self) -> Text:
+        ret = []
+        ret.append(super().__str__())
+        ret.append("  length        = {} timesteps \n".format(len(self)))
+        if len(self) > 0:
+            ret.append("  min time      = {} \n".format(
+                npmin(self._times)))
+            ret.append("  max time      = {} \n".format(
+                npmax(self._times)))
+        return "".join(ret)
+
+    def __len__(self) -> int:
+        return len(self._times)
+
+    def _sort(self) -> None:
+        """Sort the time evolution (chronologically)"""
+        tuples = zip(self._times, self._states)
+        __times, __states = zip(*sorted(tuples)) # ToDo: make more elegant
+        self._times = list(__times)
+        self._states = list(__states)
+
+    @property
+    def times(self) -> ndarray:
+        """Times of the dynamics. """
+        return array(self._times)
+
+    @property
+    def states(self) -> ndarray:
+        """States of the dynamics. """
+        return array(self._states)
+
+    @property
+    def shape(self) -> ndarray:
+        """Numpy shape of the states. """
+        return copy(self._shape)
+
+    def add(
+            self,
+            time: float,
+            state: ndarray) -> None:
+        """
+        Append a state at a specific time to the time evolution.
+
+        Parameters
+        ----------
+        time: float
+            The point in time.
+        state: ndarray
+            The state at the time `time`.
+        """
+        try:
+            __time = float(time)
+        except:
+            raise AssertionError("Argument `time` must be float.")
+        try:
+            __state = array(state, dtype=NP_DTYPE)
+        except:
+            raise AssertionError("Argument `state` must be ndarray.")
+        if self._shape is None:
+            __shape = __state.shape
+            assert len(__shape) == 2, \
+                "State must be a square matrix. " \
+                + "But the dimensions are {}.".format(__shape)
+            assert __shape[0] == __shape[1], \
+                "State must be a square matrix. " \
+                + "But the dimensions are {}.".format(__shape)
+            self._shape = __shape
+        else:
+            assert __state.shape == self._shape, \
+                "Appended state doesn't have the same shape as previous " \
+                + "states ({}, but should be {})".format(__state.shape,
+                                                         self._shape)
+
+        self._times.append(__time)
+        self._states.append(__state)
+
+        # ToDo: do this more elegantly and less resource draining.
+        if len(self) > 1 and (self._times[-1] < npmax(self._times[:-1])):
+            self._sort()
+
+    def export(
+            self,
+            filename: Text,
+            overwrite: bool = False) -> None:
+        """
+        Save dynamics to a file (format TempoDynamicsFormat version 1.0).
+
+        Parameters
+        ----------
+        filename: Text
+            Path and filename to file that should be created.
+        overwrite: bool (default = False)
+            If set `True` then file is overwritten in case it already exists.
+        """
+        dyn = {"version": "1.0",
+               "name": self.name,
+               "description": self.description,
+               "description_dict": self.description_dict,
+               "times": self.times,
+               "states": self.states}
+        save_object(dyn, filename, overwrite)
+
+    def expectations(
+            self,
+            operator: Optional[ndarray] = None,
+            real: Optional[bool] = False) -> Tuple[ndarray, ndarray]:
+        r"""
+        Return the time evolution of the expectation value of specific
+        operator. The expectation for :math:`t` is
+
+        .. math::
+
+            \langle \hat{O}(t) \rangle = \mathrm{Tr}\{ \hat{O} \rho(t) \}
+
+        with `operator` :math:`\hat{O}`.
+
+        Parameters
+        ----------
+        operator: ndarray (default = None)
+            The operator :math:`\hat{O}`. If `operator` is `None` then the
+            trace of rho(t) is returned.
+        real: bool (default = False)
+            If set True then only the real part of the expectation is returned.
+
+        Returns
+        -------
+        times: ndarray
+            The points in time :math:`t`
+        expectations: ndarray
+            Expectation values :math:`\langle \hat{O}(t) \rangle `.
+        """
+        if len(self) == 0:
+            return None, None
+        if operator is None:
+            __operator = identity(self._shape[0], dtype=NP_DTYPE)
+        else:
+            try:
+                __operator = array(operator, dtype=NP_DTYPE)
+            except:
+                raise AssertionError("Argument `operator` must be ndarray.")
+            assert __operator.shape == self._shape, \
+                "Argument `operator` must have the same shape as the " \
+                + "states. Has shape {}, ".format(__operator.shape) \
+                + "but should be {}.".format(self._shape)
+
+        expectations_list = []
+        for state in self._states:
+            expectations_list.append(trace(__operator @ state))
+
+        times = array(self._times)
+        if real:
+            expectations = npreal(array(expectations_list))
+        else:
+            expectations = array(expectations_list)
+        return times, expectations
+
+# def distance(*args, **kwargs): # ToDo
+#     """
+#     ToDo
+#     """
+#     pass # ToDo
+#     return NotImplemented, NotImplemented #ToDo
 
 
-def norms(*args, **kwargs): # ToDo
+def import_dynamics(filename: Text) -> Dynamics:
     """
-    ToDo
+    Load dynamics from a file (format TempoDynamicsFormat version 1.0).
+
+    Parameters
+    ----------
+    filename: Text
+        Path and filename to file that should read in.
+
+    Returns
+    -------
+    dynamics: Dynamics
+        The time evolution stored in the file `filename`.
     """
-    pass # ToDo
-    return NotImplemented #ToDo
+    dyn = load_object(filename)
+    assert "version" in dyn, \
+        "Can't import dynamics from file {} ".format(filename) \
+        + "because it doesn't have a 'version' field."
+    assert dyn["version"] == "1.0", \
+        "Can't import dynamics from file {} ".format(filename) \
+        + "as it appears to be an incompatible version."
+    return Dynamics(times=list(dyn["times"]),
+                    states=list(dyn["states"]),
+                    name=dyn["name"],
+                    description=dyn["description"],
+                    description_dict=dyn["description_dict"])
+
+
+# def norms(*args, **kwargs): # ToDo
+#     """
+#     ToDo
+#     """
+#     pass # ToDo
+#     return NotImplemented #ToDo

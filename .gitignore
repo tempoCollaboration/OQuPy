@@ -1,3 +1,6 @@
+# TEMPO file formats
+*.tempoDynamics
+
 # local development
 local_dev/
 

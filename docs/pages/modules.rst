@@ -16,6 +16,14 @@ tempo.bath
     :members:
 
 
+tempo.dynamics
+--------------
+
+.. automodule:: time_evolving_mpo.dynamics
+    :show-inheritance:
+    :members:
+
+
 tempo.exceptions
 ----------------
 
