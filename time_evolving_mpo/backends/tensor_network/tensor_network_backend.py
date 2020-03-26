@@ -1,4 +1,4 @@
-# Copyright 2020 The TimeEvolvingMPO Authors
+# Copyright 2020 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module to define global configuration for the time_evovling_mpo package.
+Module for TensorNetwork backend.
 """
 
-# Numpy datatype
-NP_DTYPE = "complex128"
 
-# Seperator string for __str__ functions
-SEPERATOR = "----------------------------------------------\n"
-
-# The default backend for tensor network calculations
-BACKEND = 'tensor-network'
-
-# Dict of all backends and their default configuration
-BACKEND_CONFIG = {
-    'numpy': {},
-    'tensor-network': {'backend':"numpy"},
-    }
+class TensorNetworkBackend:
+    """
+    ToDo
+    """
+    pass

@@ -54,6 +54,14 @@ tempo.system
     :members:
 
 
+tempo.tempo
+-----------
+
+.. automodule:: time_evolving_mpo.tempo
+    :show-inheritance:
+    :members:
+
+
 tempo.util
 ----------
 

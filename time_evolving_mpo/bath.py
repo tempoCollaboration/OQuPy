@@ -103,6 +103,11 @@ class Bath(BaseAPIClass):
         return copy(self._coupling_operator)
 
     @property
+    def dimension(self) -> ndarray:
+        """Hilbert space dimension of the coupling operator."""
+        return copy(self._dimension)
+
+    @property
     def spectral_density(self) -> Callable:
         """The spectral density of the bath."""
         return copy(self._spectral_density)
