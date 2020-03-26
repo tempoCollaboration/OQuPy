@@ -21,6 +21,7 @@ import numpy as np
 
 from time_evolving_mpo.util import commutator, acommutator
 from time_evolving_mpo.util import left_super, right_super, left_right_super
+from time_evolving_mpo.util import save_object, load_object
 
 
 # -- testing super operators --------------------------------------------------
@@ -63,3 +64,15 @@ def test_left_right_super():
     sol = a@x@b
     res = left_right_super(a,b)@x_vector
     np.testing.assert_almost_equal(res.reshape(N,N),sol)
+
+
+some_obj_A = ["hi","there!"]
+some_obj_B = 3
+
+def test_save_object():
+    filename = "tests/data/temp.saveObjectTest"
+    save_object(some_obj_A, filename, overwrite=True)
+    with pytest.raises(FileExistsError):
+        save_object(some_obj_B, filename, overwrite=False)
+    obj = load_object(filename)
+    assert obj[0] == "hi"

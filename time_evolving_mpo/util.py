@@ -15,6 +15,9 @@
 Module for utillities.
 """
 
+import pickle
+from typing import Any, Text
+
 from numpy import identity, kron, ndarray
 
 
@@ -45,3 +48,25 @@ def left_right_super(
         right_operator: ndarray) -> ndarray:
     """Construct left and right acting superoperator from operators."""
     return kron(left_operator, right_operator.T)
+
+
+# -- save and load from file --------------------------------------------------
+
+def save_object(obj: Any, filename: Text, overwrite: bool) -> None:
+    """
+    Save an object to a file using pickle.
+
+    """
+    if overwrite:
+        mode = 'wb'
+    else:
+        mode = 'xb'
+    with open(filename, mode) as file:
+        pickle.dump(obj, file)
+
+def load_object(filename: Text) -> Any:
+    """
+    ToDo
+    """
+    with open(filename, 'rb') as file:
+        return pickle.load(file)
