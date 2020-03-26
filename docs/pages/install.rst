@@ -27,7 +27,7 @@ How To Install
 
   .. code-block:: none
 
-    $ python3 -m pip install time_evolving_mps
+    $ python3 -m pip install time_evolving_mpo
 
 
 This should do it! (If not check if this is a known issue on github and file
@@ -59,4 +59,4 @@ Uninstall TimeEvolvingMPO with pip:
 
 .. code-block:: none
 
- $ python3 -m pip uninstall time_evolving_mps
+ $ python3 -m pip uninstall time_evolving_mpo
