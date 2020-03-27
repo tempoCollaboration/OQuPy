@@ -5,6 +5,23 @@ A python3 library to efficiently compute non-markovian open quantum systems.
 """
 from time_evolving_mpo.version import __version__
 
+# all API functionallity is in __all__
+__all__ = [
+    'Bath',
+    'CustomFunctionSD',
+    'Dynamics',
+    'guess_tempo_parameters',
+    'import_dynamics',
+    'NumericsError',
+    'NumericsWarning',
+    'operators',
+    'StandardSD',
+    'System',
+    'Tempo',
+    'TempoParameters',
+    'TimeDependentSystem',
+    ]
+
 # -- Modules in alphabetical order --------------------------------------------
 
 from time_evolving_mpo.bath import Bath
