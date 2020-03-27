@@ -19,8 +19,8 @@ import pytest
 
 import numpy as np
 
-from time_evolving_mpo import Bath
-from time_evolving_mpo import StandardSD
+from time_evolving_mpo.bath import Bath
+from time_evolving_mpo.spectral_density import StandardSD
 from time_evolving_mpo import operators
 
 def test_bath():

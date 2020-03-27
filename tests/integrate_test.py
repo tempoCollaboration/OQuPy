@@ -18,8 +18,8 @@ Tests for the time_evovling_mpo.integrate module.
 import pytest
 import numpy as np
 
-from time_evolving_mpo import NumericsError
-from time_evolving_mpo import NumericsWarning
+from time_evolving_mpo.exceptions import NumericsError
+from time_evolving_mpo.exceptions import NumericsWarning
 from time_evolving_mpo.integrate import integrate_semi_infinite
 from time_evolving_mpo.integrate import gauss_laguerre
 from time_evolving_mpo.integrate import gauss_laguerre_adaptive

@@ -18,8 +18,8 @@ Tests for the time_evovling_mpo.system module.
 import pytest
 import numpy as np
 
-from time_evolving_mpo import System
-from time_evolving_mpo import TimeDependentSystem
+from time_evolving_mpo.system import System
+from time_evolving_mpo.system import TimeDependentSystem
 from time_evolving_mpo import operators
 from time_evolving_mpo.system import BaseSystem
 

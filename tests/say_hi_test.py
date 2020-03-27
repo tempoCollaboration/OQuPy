@@ -17,7 +17,7 @@ Tests for the time_evovling_mpo.say_hi module.
 
 import pytest
 
-from time_evolving_mpo import say_hi
+from time_evolving_mpo.say_hi import say_hi
 
 def test_say_hi():
     say_hi()

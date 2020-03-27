@@ -19,8 +19,8 @@ import pytest
 import numpy as np
 
 from time_evolving_mpo.spectral_density import BaseSD
-from time_evolving_mpo import CustomFunctionSD
-from time_evolving_mpo import StandardSD
+from time_evolving_mpo.spectral_density import CustomFunctionSD
+from time_evolving_mpo.spectral_density import StandardSD
 
 
 square_function = lambda w: 0.1 * w**2
