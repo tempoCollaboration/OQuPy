@@ -97,6 +97,14 @@ class Bath(BaseAPIClass):
 
         super().__init__(name, description, description_dict)
 
+    def __str__(self) -> Text:
+        ret = []
+        ret.append(super().__str__())
+        ret.append("  dimension     = {} \n".format(self.dimension))
+        ret.append("  spectral den. = {} \n".format(self.spectral_density.name))
+        ret.append("  temperature   = {} \n".format(self.temperature))
+        return "".join(ret)
+
     @property
     def coupling_operator(self) -> ndarray:
         """The system operator to which the bath couples."""
