@@ -39,21 +39,16 @@ Test Installation
 
 Open a interactive python3 session and type:
 
-.. todo::
-
-  Replace the tempo.say_hi() stuff with ``tempo.__version__`` or such like.
-
 .. code-block:: python
 
   >>> import time_evolving_mps as tempo
-  >>> tempo.say_hi()
+  >>> tempo.__version__
 
 This should give you the following message:
 
 .. code-block:: none
 
-  Hi there!
-  This is TimeEvolvingMPO version 0.0.1-1 speaking!
+  '0.0.1-2'
 
 
 Uninstall

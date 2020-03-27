@@ -13,29 +13,5 @@ install `TimeEvolvingMPO` by following the instructions at :ref:`install-label`.
 
 .. todo::
 
-      - Remove the say_hi() stuff
       - Add a the simplest non-trivial example.
       - Add a more verbose example.
-
-Say hi!
--------
-
-The TEMPO library is currently under construction. This example serves merely
-as a placeholder for the tutorial to come. However, you can check that you can
-access the (almost) empty library by executing the `tempo.say_hi()` example
-below.
-
-
-Open a interactive python3 session and type:
-
-.. code-block:: python
-
-  >>> import time_evolving_mpo as tempo
-  >>> tempo.say_hi()
-
-This should give you the following message:
-
-.. code-block:: none
-
-  Hi there!
-  This is TimeEvolvingMPO version 0.0.1-1 speaking!
