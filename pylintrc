@@ -127,12 +127,12 @@ disable=print-statement,
         dict-items-not-iterating,
         dict-keys-not-iterating,
         dict-values-not-iterating,
-        super-init-not-called,            # added by hand
-        fixme,                            # added for development
-        unnecessary-pass,                 # added for development
-        unused-argument,                  # added for development
-        too-few-public-methods,           # added for development
-        abstract-method,                  # added for development
+        super-init-not-called,            # GEFux: added by hand
+        fixme,                            # GEFux: added for development
+        unnecessary-pass,                 # GEFux: added for development
+        unused-argument,                  # GEFux: added for development
+        too-few-public-methods,           # GEFux: added for development
+        abstract-method,                  # GEFux: added for development
 
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -283,6 +283,7 @@ attr-naming-style=snake_case
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style
 #attr-rgx=
+attr-rgx=^([_a-z0-9]+)?$ # GEFux: I'm not so sure about this one!
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,
@@ -372,7 +373,7 @@ variable-naming-style=snake_case
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style
-variable-rgx=^([_a-z0-9]+)?$ # I'm not so sure about this one!
+variable-rgx=^([_a-z0-9]+)?$ # GEFux: I'm not so sure about this one!
 
 
 [MISCELLANEOUS]
@@ -490,10 +491,10 @@ known-third-party=enchant
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=15
+max-args=15 # GEFux
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=15
+max-attributes=15 # GEFux
 
 # Maximum number of boolean expressions in a if statement
 max-bool-expr=5
@@ -508,7 +509,7 @@ max-locals=15
 max-parents=7
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=20 # GEFux
 
 # Maximum number of return / yield for function / method body
 max-returns=6
