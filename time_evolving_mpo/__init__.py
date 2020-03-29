@@ -18,6 +18,7 @@ __all__ = [
     'StandardSD',
     'System',
     'Tempo',
+    'tempo_compute',
     'TempoParameters',
     'TimeDependentSystem',
     ]
@@ -54,3 +55,4 @@ from time_evolving_mpo.system import TimeDependentSystem
 from time_evolving_mpo.tempo import Tempo
 from time_evolving_mpo.tempo import TempoParameters
 from time_evolving_mpo.tempo import guess_tempo_parameters
+from time_evolving_mpo.tempo import tempo_compute

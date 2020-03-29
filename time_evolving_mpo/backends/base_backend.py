@@ -19,7 +19,7 @@ from typing import Callable, Dict, Optional, Tuple
 from numpy import ndarray
 
 
-class TempoBaseBackend:
+class BaseTempoBackend:
     """
     Base class for tempo backends.
 
@@ -27,7 +27,7 @@ class TempoBaseBackend:
     ----------
     initial_state: ndarray
         The initial density matrix (as a vector).
-    influences: callable(int) -> ndarray
+    influence: callable(int) -> ndarray
         Callable that takes an integer `step` and returns the influence super
         operator of that `step`.
     propagators: callable(int) -> ndarray, ndarray
@@ -46,18 +46,26 @@ class TempoBaseBackend:
     def __init__(
             self,
             initial_state: ndarray,
-            influences: Callable[[int], ndarray],
+            influence: Callable[[int], ndarray],
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
             dkmax: int,
             epsrel: float):
-        """
-        ToDo
-        """
-        raise NotImplementedError(
-            "Class {} should not call TempoBaseBackend constructor.".format(
-                type(self).__name__))
+        """Create a BaseBackend object. """
+        self._initial_state = initial_state
+        self._influence = influence
+        self._propagators = propagators
+        self._sum_north = sum_north
+        self._dkmax = dkmax
+        self._epsrel = epsrel
+        self._step = None
+        self._state = None
+
+    @property
+    def step(self) -> int:
+        """The current step in the TEMPO computation. """
+        return self._step
 
     def initialize(self) -> Tuple[int, ndarray]:
         """
@@ -102,7 +110,7 @@ class BaseBackend:
     """
     def __init__(self, config: Optional[Dict] = None):
         """Create a BaseBackend object."""
-        self._tempo_backend_class = TempoBaseBackend
+        self._tempo_backend_class = BaseTempoBackend
         raise NotImplementedError(
             "Class {} should not call BaseBackend constructor.".format(
                 type(self).__name__))
@@ -110,15 +118,15 @@ class BaseBackend:
     def get_tempo_backend(
             self,
             initial_state: ndarray,
-            influences: Callable[[int], ndarray],
+            influence: Callable[[int], ndarray],
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
             dkmax: int,
-            epsrel: float) -> TempoBaseBackend:
+            epsrel: float) -> BaseTempoBackend:
         """Returns an TempoBaseBackend object. """
         return self._tempo_backend_class(initial_state,
-                                         influences,
+                                         influence,
                                          propagators,
                                          sum_north,
                                          sum_west,

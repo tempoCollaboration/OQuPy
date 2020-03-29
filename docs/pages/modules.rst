@@ -85,3 +85,9 @@ base_backend
 
 .. automodule:: time_evolving_mpo.backends.base_backend
     :members:
+
+example_backend
+~~~~~~~~~~~~~~~
+
+.. automodule:: time_evolving_mpo.backends.example.example_backend
+    :members:

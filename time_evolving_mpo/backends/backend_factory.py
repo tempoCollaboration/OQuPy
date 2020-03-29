@@ -20,24 +20,19 @@ from typing import Dict, Optional, Text
 from time_evolving_mpo.config import BACKEND, BACKEND_CONFIG
 from time_evolving_mpo.backends.base_backend \
     import BaseBackend
-from time_evolving_mpo.backends.numpy.numpy_backend \
-    import NumpyBackend
-from time_evolving_mpo.backends.tensor_network.tensor_network_backend \
-    import TensorNetworkBackend
+from time_evolving_mpo.backends.example.example_backend \
+    import ExampleBackend
 
 
 BACKEND_DICT = {
-    'numpy': NumpyBackend,
-    'tensor-network': TensorNetworkBackend,
+    'example': ExampleBackend,
     }
 
 
 def get_backend(
         name: Optional[Text] = None,
         config: Optional[Dict] = None) -> BaseBackend:
-    """
-    ToDo
-    """
+    """Returns a backend object. """
     # input checks
     if name is None:
         name = BACKEND

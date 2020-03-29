@@ -22,11 +22,11 @@ NP_DTYPE = "complex128"
 SEPERATOR = "----------------------------------------------\n"
 
 # The default backend for tensor network calculations
-BACKEND = 'tensor-network'
+BACKEND = 'example'
 
 # Dict of all backends and their default configuration
 BACKEND_CONFIG = {
-    'tensor-network': {},
+    'example': {'sleep_time':0.02},
     }
 
 # 'silent', 'simple' or 'bar' as a default to show the progress of computations
