@@ -26,6 +26,8 @@ BACKEND = 'tensor-network'
 
 # Dict of all backends and their default configuration
 BACKEND_CONFIG = {
-    'numpy': {},
-    'tensor-network': {'backend':"numpy"},
+    'tensor-network': {},
     }
+
+# 'silent', 'simple' or 'bar' as a default to show the progress of computations
+PROGRESS_TYPE = 'bar'

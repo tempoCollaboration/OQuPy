@@ -15,10 +15,16 @@
 Module for utillities.
 """
 
+import sys
 import pickle
 from typing import Any, Text
+from threading import Timer
+from time import time
+from datetime import timedelta
 
 from numpy import identity, kron, ndarray
+
+from time_evolving_mpo.config import PROGRESS_TYPE
 
 
 # -- superoperators ----------------------------------------------------------
@@ -70,3 +76,149 @@ def load_object(filename: Text) -> Any:
     """
     with open(filename, 'rb') as file:
         return pickle.load(file)
+
+
+# -- progess bar --------------------------------------------------------------
+
+class BaseProgress:
+    """Base class to display computation progress. """
+    def __init__(self, max_value):
+        """Create a BaseProgress object. """
+        raise NotImplementedError()
+
+    def __enter__(self):
+        """Contextmanager enter. """
+        raise NotImplementedError()
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """Contextmanager exit. """
+        raise NotImplementedError()
+
+    def update(self, step=None):
+        """Update the progress. """
+        raise NotImplementedError()
+
+
+class ProgressSilent(BaseProgress):
+    """Class NOT to display the computation progress. """
+    def __init__(self, max_value):
+        """Create a ProgressSilent object. """
+        self.max_value = max_value
+        self.step = None
+
+    def __enter__(self):
+        """Contextmanager enter. """
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """Contextmanager exit. """
+        pass
+
+    def update(self, step=None):
+        """Update the progress. """
+        self.step = step
+
+
+class ProgressSimple(BaseProgress):
+    """Class to display the computation progress step by step. """
+    def __init__(self, max_value):
+        """Create a ProgressSimple object. """
+        self.max_value = max_value
+        self.step = None
+        self._start_time = None
+        self._previouse_time = None
+
+    def __enter__(self):
+        """Contextmanager enter. """
+        self._start_time = time()
+        self._previouse_time = time()
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """Contextmanager exit. """
+        current_time = time()
+        total_t = current_time - self._start_time
+        print("Total elapsed time:  {:9.1f}s".format(total_t), flush=True)
+
+    def update(self, step=None):
+        """Update the progress. """
+        current_time = time()
+        dt = current_time - self._previouse_time
+        total_t = current_time - self._start_time
+        self.step = step
+        print("Step {:5d} of {:5d},  total time: {:9.1f}s (+{:8.2f}s)".format(
+            self.step, self.max_value, total_t, dt), flush=True)
+        self._previouse_time = current_time
+
+
+PROGRESS_BAR_LENGTH = 40
+
+class ProgressBar(BaseProgress):
+    """Class to display the computation progress with a nice progress bar. """
+    def __init__(self, max_value):
+        """Create a ProgressBar object. """
+        self._timer = None
+        self._start_time = time()
+        self._file = sys.stdout
+        self._max_value = max_value
+        self._length = PROGRESS_BAR_LENGTH
+        self._step = None
+
+    def __enter__(self):
+        """Contextmanager enter. """
+        self._timer = Timer(1.0, self._print_status)
+        self._timer.start()
+        return self
+
+    def _print_status(self):
+        if self._step is None:
+            step = 0
+        else:
+            step = self._step
+        frac = float(step)/float(self._max_value)
+        delta_t = time() - self._start_time
+        time_string = "{:0>8}".format(str(timedelta(seconds=int(delta_t))))
+        done_int = int(frac*self._length)
+        bar_string = "\r{:5.1f}% {:4d} of {:4d} [{}{}] {}"
+        bar_string = bar_string.format(frac*100,
+                                       step,
+                                       self._max_value,
+                                       "#" * done_int,
+                                       "-" * (self._length - done_int),
+                                       time_string)
+        self._file.write(bar_string)
+        self._file.flush()
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """Contextmanager exit. """
+        self._timer.cancel()
+        self._print_status()
+        delta_t = time() - self._start_time
+        print("\nElapsed time: {:.1f}s".format(delta_t),
+              file=self._file,
+              flush=True)
+
+    def update(self, step=None):
+        """Update the progress. """
+        self._timer.cancel()
+        self._timer = Timer(1.0, self.update)
+        self._timer.start()
+        if step is not None:
+            self._step = step
+        self._print_status()
+
+
+PROGRESS_DICT = {
+    "silent": ProgressSilent,
+    "simple": ProgressSimple,
+    "bar": ProgressBar,
+    }
+
+def get_progress(progress_type: Text = None) -> BaseProgress:
+    """Get a progress class from the progress_type. """
+    if progress_type is None:
+        progress_type = PROGRESS_TYPE
+    assert progress_type in PROGRESS_DICT, \
+        "Unknown progess_type='{}', know are {}".format(
+            progress_type, PROGRESS_DICT.keys())
+    return PROGRESS_DICT[progress_type]
