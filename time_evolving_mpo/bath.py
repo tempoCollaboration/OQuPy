@@ -32,15 +32,15 @@ class Bath(BaseAPIClass):
 
     Parameters
     ----------
-    coupling_operator: ArrayLike
+    coupling_operator: ndarray
         The system operator to which the bath is coupling to.
     spectral_density: BaseSD
         The bath's spectral density.
     temperature: float
         The bath's temperature.
-    name: Text
+    name: str
         An optional name for the bath.
-    description: Text
+    description: str
         An optional description of the bath.
     description_dict: dict
         An optional dictionary with descriptive data.
@@ -60,7 +60,7 @@ class Bath(BaseAPIClass):
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a bath object. """
+        """Create a Bath object. """
         # input check for coupling_operator.
         try:
             __coupling_operator = array(coupling_operator, dtype=NP_DTYPE)
@@ -107,20 +107,20 @@ class Bath(BaseAPIClass):
 
     @property
     def coupling_operator(self) -> ndarray:
-        """The system operator to which the bath couples."""
+        """The system operator to which the bath couples. """
         return copy(self._coupling_operator)
 
     @property
     def dimension(self) -> ndarray:
-        """Hilbert space dimension of the coupling operator."""
+        """Hilbert space dimension of the coupling operator. """
         return copy(self._dimension)
 
     @property
-    def spectral_density(self) -> Callable:
-        """The spectral density of the bath."""
+    def spectral_density(self) -> BaseSD:
+        """The spectral density of the bath. """
         return copy(self._spectral_density)
 
     @property
     def temperature(self) -> float:
-        """The temperature of the bath."""
+        """The temperature of the bath. """
         return copy(self._temperature)

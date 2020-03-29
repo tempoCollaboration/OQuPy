@@ -41,11 +41,12 @@ def identity(n: int):
     Parameters
     ----------
     n: int
-        dimension of the square matrix
+        Dimension of the square matrix.
 
     Returns
     -------
-    The n x n identity matrix. : np.array
+    identity : ndarray
+        Identity matrix of dimension `n` x `n`.
     """
     return np.identity(n, dtype=NP_DTYPE)
 
@@ -60,7 +61,8 @@ def pauli(name: Text):
 
     Returns
     -------
-    The  pauli matrix. : np.array
+    pauli : ndarray
+        Pauli matrix of type `name`.
     """
     return np.array(PAULI[name], dtype=NP_DTYPE)
 
@@ -76,6 +78,7 @@ def spin_dm(name: Text):
 
     Returns
     -------
-    The density matrix. : np.array
+    density_matrix : ndarray
+        Spin density matrix.
     """
     return np.array(SPIN_DM[name], dtype=NP_DTYPE)

@@ -26,9 +26,9 @@ class BaseAPIClass:
 
     Parameters
     ----------
-    name: Text
+    name: str
         An optional name for the object.
-    description: Text
+    description: str
         An optional description of the object.
     description_dict: dict
         An optional dictionary with descriptive data.
@@ -38,7 +38,7 @@ class BaseAPIClass:
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a base api object. """
+        """Create a BaseAPIClass object. """
         # input check for propeties are in the propertie setters.
         self.name = name
         self.description = description
@@ -49,13 +49,13 @@ class BaseAPIClass:
         ret.append(SEPERATOR)
         ret.append("{} object: ".format(type(self).__name__)+self.name+"\n")
         ret.append(" {}\n".format(self.description))
-        if len(self.description_dict) > 0:
-            ret.append(" {}\n".format(self.description_dict))
+        # if len(self.description_dict) > 0:
+        #     ret.append(" {}\n".format(self.description_dict))
         return "".join(ret)
 
     @property
     def name(self):
-        """Name of the object."""
+        """Name of the object. """
         return self._name
 
     @name.setter
@@ -72,7 +72,7 @@ class BaseAPIClass:
 
     @property
     def description(self):
-        """Detailed description of the object."""
+        """Detailed description of the object. """
         return self._description
 
     @description.setter
@@ -90,9 +90,7 @@ class BaseAPIClass:
 
     @property
     def description_dict(self):
-        """
-        A dictionary for descriptive data.
-        """
+        """A dictionary for descriptive data. """
         return self._description_dict
 
     @description_dict.setter

@@ -16,6 +16,7 @@ Module on the discrete time evolution of a density matrix.
 """
 
 from typing import Dict, List, Optional, Text, Tuple
+from typing import Any as ArrayLike
 from copy import copy
 
 from numpy import array, identity, ndarray
@@ -39,9 +40,9 @@ class Dynamics(BaseAPIClass):
         A list of points in time.
     states: List[ndarray] (default = None)
         A list of states at the times `times`.
-    name: Text
+    name: str
         An optional name for the dynamics.
-    description: Text
+    description: str
         An optional description of the dynamics.
     description_dict: dict
         An optional dictionary with descriptive data.
@@ -53,7 +54,7 @@ class Dynamics(BaseAPIClass):
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a dynamics object. """
+        """Create a Dynamics object. """
         # input check times and states
         if times is None:
             times = []
@@ -88,7 +89,7 @@ class Dynamics(BaseAPIClass):
         return len(self._times)
 
     def _sort(self) -> None:
-        """Sort the time evolution (chronologically)"""
+        """Sort the time evolution (chronologically). """
         tuples = zip(self._times, self._states)
         __times, __states = zip(*sorted(tuples)) # ToDo: make more elegant
         self._times = list(__times)
@@ -112,7 +113,7 @@ class Dynamics(BaseAPIClass):
     def add(
             self,
             time: float,
-            state: ndarray) -> None:
+            state: ArrayLike) -> None:
         """
         Append a state at a specific time to the time evolution.
 
@@ -162,7 +163,7 @@ class Dynamics(BaseAPIClass):
 
         Parameters
         ----------
-        filename: Text
+        filename: str
             Path and filename to file that should be created.
         overwrite: bool (default = False)
             If set `True` then file is overwritten in case it already exists.
@@ -243,7 +244,7 @@ def import_dynamics(filename: Text) -> Dynamics:
 
     Parameters
     ----------
-    filename: Text
+    filename: str
         Path and filename to file that should read in.
 
     Returns

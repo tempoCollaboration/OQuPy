@@ -51,7 +51,7 @@ def integrate_semi_infinite(
     Returns
     -------
     integral : float
-        The integral
+        The integral.
 
     Raises
     ------
@@ -77,7 +77,7 @@ def integrate_semi_infinite(
 
 @lru_cache(2**8)
 def _gauss_laguerre_quad(deg: int) -> Tuple[np.ndarray, np.ndarray]:
-    """Returns the positions and weights of the Gauss-Laguerre qudrature."""
+    """Returns the positions and weights of the Gauss-Laguerre qudrature. """
     return np.polynomial.laguerre.laggauss(deg)
 
 

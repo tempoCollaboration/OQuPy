@@ -155,7 +155,7 @@ INTEGRAND_DICT = {
 # --- spectral density classes ------------------------------------------------
 
 class BaseSD(BaseAPIClass):
-    """Base class for spectral densities."""
+    """Base class for spectral densities. """
 
     def spectral_density(self, omega: ArrayLike) -> ArrayLike:
         r"""
@@ -163,13 +163,13 @@ class BaseSD(BaseAPIClass):
 
         Parameters
         ----------
-        omega : array_like
+        omega : ndarray
             The frequency :math:`\omega` for which we want to know the
             spectral density.
 
         Returns
         -------
-        spectral_density : array_like
+        spectral_density : ndarray
             The resulting spectral density :math:`J(\omega)` at the frequency
             :math:`\omega`.
         """
@@ -196,7 +196,7 @@ class BaseSD(BaseAPIClass):
 
         Parameters
         ----------
-        tau : array_like
+        tau : ndarray
             Time difference :math:`\tau`
         temperature : float
             The temperature :math:`T`.
@@ -205,7 +205,7 @@ class BaseSD(BaseAPIClass):
 
         Returns
         -------
-        correlation : array_like
+        correlation : ndarray
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         raise NotImplementedError(
@@ -243,8 +243,9 @@ class BaseSD(BaseAPIClass):
             Length of integration intevals.
         temperature : float
             The temperature :math:`T`.
-        shape : str{``'square'``, ``'upper-triangle'``, ``'lower-triangle'``}
-            The shape of the 2D integral.
+        shape : str (default = ``'square'``)
+            The shape of the 2D integral. Shapes are: {``'square'``,
+            ``'upper-triangle'``, ``'lower-triangle'``}
         epsrel : float (default = 1.49e-08)
             Relative error tollerance.
 
@@ -287,8 +288,9 @@ class CustomFunctionSD(BaseSD):
         The spectral density :math:`j` without the cutoff.
     cutoff : float
         The cutoff frequency :math:`\omega_c`.
-    cutoff_type : str{``'hard'``, ``'exponential'``, ``'gaussian'``}
-        The cutoff type.
+    cutoff_type : str (default = ``'exponential'``)
+        The cutoff type. Types are: {``'hard'``, ``'exponential'``,
+        ``'gaussian'``}
     """
     # Attributes
     # ----------
@@ -307,7 +309,7 @@ class CustomFunctionSD(BaseSD):
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create spectral density with a custom function and a cutoff. """
+        """Create a CustomFunctionSD (spectral density) object. """
 
         # check input: j_function
         try:
@@ -350,13 +352,13 @@ class CustomFunctionSD(BaseSD):
 
         Parameters
         ----------
-        omega : array_like
+        omega : ndarray
             The frequency :math:`\omega` for which we want to know the
             spectral density.
 
         Returns
         -------
-        spectral_density : array_like
+        spectral_density : ndarray
             The resulting spectral density :math:`J(\omega)` at the frequency
             :math:`\omega`.
         """
@@ -382,7 +384,7 @@ class CustomFunctionSD(BaseSD):
 
         Parameters
         ----------
-        tau : array_like
+        tau : ndarray
             Time difference :math:`\tau`
         temperature : float
             The temperature :math:`T`.
@@ -391,7 +393,7 @@ class CustomFunctionSD(BaseSD):
 
         Returns
         -------
-        correlation : array_like
+        correlation : ndarray
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         # real and imaginary part of the integrand
@@ -502,8 +504,9 @@ class StandardSD(CustomFunctionSD):
         if :math:`\zeta>1` and *subohmic* if :math:`\zeta<1`
     cutoff : float
         The cutoff frequency :math:`\omega_c`.
-    cutoff_type : str{``'hard'``, ``'exponential'``, ``'gaussian'``}
-        The cutoff type.
+    cutoff_type : str (default = ``'exponential'``)
+        The cutoff type. Types are: {``'hard'``, ``'exponential'``,
+        ``'gaussian'``}
     """
 
     def __init__(
@@ -515,7 +518,7 @@ class StandardSD(CustomFunctionSD):
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a standard spectral density."""
+        """Create a StandardSD (spectral density) object. """
 
         # check input: alpha
         try:

@@ -28,7 +28,7 @@ from time_evolving_mpo.util import commutator, acommutator, left_right_super
 
 
 def _check_hamiltonian(hamiltonian):
-    """Input checking for a single hamiltonian."""
+    """Input checking for a single hamiltonian. """
     try:
         __hamiltonian = array(hamiltonian, dtype=NP_DTYPE)
         __hamiltonian.setflags(write=False)
@@ -43,7 +43,8 @@ def _check_hamiltonian(hamiltonian):
 
 
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
-    """Lindbladian for a specific hamiltonian, gammas and lindblad_operators."""
+    """Lindbladian for a specific hamiltonian, gammas and lindblad_operators.
+    """
     liouvillian = -1j * commutator(hamiltonian)
     for gamma, op in zip(gammas, lindblad_operators):
         op_dagger = op.conjugate().T
@@ -53,7 +54,7 @@ def _liouvillian(hamiltonian, gammas, lindblad_operators):
 
 
 class BaseSystem(BaseAPIClass):
-    """Base class for systems."""
+    """Base class for systems. """
     def __init__(
             self,
             dimension: int,
@@ -66,7 +67,7 @@ class BaseSystem(BaseAPIClass):
 
     @property
     def dimension(self) -> ndarray:
-        """Hilbert space dimension of the system"""
+        """Hilbert space dimension of the system. """
         return self._dimension
 
     def liouvillian(self, t: Optional[float] = None) -> ndarray:
@@ -115,6 +116,15 @@ class System(BaseSystem):
 
     with `hamiltionian` :math:`\hat{H}`, the rates `gammas` :math:`\gamma_n` and
     `linblad_operators` :math:`\hat{A}_n`.
+
+    Parameters
+    ----------
+    hamiltonian: ndarray
+        System-only Hamiltonian :math:`\hat{H}`.
+    gammas: List(float)
+        The rates :math:`\gamma_n`.
+    lindblad_operators: list(ndarray)
+        The Lindblad operators :math:`\hat{A}_n`.
     """
     def __init__(
             self,
@@ -124,7 +134,7 @@ class System(BaseSystem):
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a System object."""
+        """Create a System object. """
         # input check for hamiltonian.
         self._hamiltonian = _check_hamiltonian(hamiltonian)
         __dimension = self._hamiltonian.shape[0]
@@ -217,6 +227,15 @@ class TimeDependentSystem(BaseSystem):
     with the time dependent `hamiltionian` :math:`\hat{H}(t)`, the  time
     dependent rates `gammas` :math:`\gamma_n(t)` and the time dependent
     `linblad_operators` :math:`\hat{A}_n(t)`.
+
+    Parameters
+    ----------
+    hamiltonian: callable
+        System-only Hamiltonian :math:`\hat{H}(t)`.
+    gammas: List(callable)
+        The rates :math:`\gamma_n(t)`.
+    lindblad_operators: list(callable)
+        The Lindblad operators :math:`\hat{A}_n(t)`.
     """
     def __init__(
             self,
@@ -315,15 +334,15 @@ class TimeDependentSystem(BaseSystem):
 
     @property
     def hamiltonian(self) -> Callable[[float], ndarray]:
-        """The system hamiltonian."""
+        """The system hamiltonian. """
         return copy(self._hamiltonian)
 
     @property
     def gammas(self) -> List[Callable[[float], float]]:
-        """List of gammas."""
+        """List of gammas. """
         return copy(self._gammas)
 
     @property
     def lindblad_operators(self) -> List[Callable[[float], ndarray]]:
-        """List of lindblad operators."""
+        """List of lindblad operators. """
         return copy(self._lindblad_operators)

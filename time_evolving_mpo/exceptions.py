@@ -16,9 +16,9 @@ Custom TEMPO Warings and Errors.
 """
 
 class NumericsError(Exception):
-    """Custom TEMPO Error class to indicate numerical issues."""
+    """Custom TEMPO Error class to indicate numerical issues. """
     pass
 
 class NumericsWarning(UserWarning):
-    """Custom TEMPO Warning class to indicate numerical issues."""
+    """Custom TEMPO Warning class to indicate numerical issues. """
     pass

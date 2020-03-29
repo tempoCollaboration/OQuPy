@@ -30,39 +30,36 @@ from time_evolving_mpo.config import PROGRESS_TYPE
 # -- superoperators ----------------------------------------------------------
 
 def commutator(operator: ndarray) -> ndarray:
-    """Construct commutator superoperator from operator."""
+    """Construct commutator superoperator from operator. """
     dim = operator.shape[0]
     return kron(operator, identity(dim)) - kron(identity(dim), operator.T)
 
 def acommutator(operator: ndarray) -> ndarray:
-    """Construct anti-commutator superoperator from operator."""
+    """Construct anti-commutator superoperator from operator. """
     dim = operator.shape[0]
     return kron(operator, identity(dim)) + kron(identity(dim), operator.T)
 
 def left_super(operator: ndarray) -> ndarray:
-    """Construct left acting superoperator from operator."""
+    """Construct left acting superoperator from operator. """
     dim = operator.shape[0]
     return kron(operator, identity(dim))
 
 def right_super(operator: ndarray) -> ndarray:
-    """Construct right acting superoperator from operator."""
+    """Construct right acting superoperator from operator. """
     dim = operator.shape[0]
     return kron(identity(dim), operator.T)
 
 def left_right_super(
         left_operator: ndarray,
         right_operator: ndarray) -> ndarray:
-    """Construct left and right acting superoperator from operators."""
+    """Construct left and right acting superoperator from operators. """
     return kron(left_operator, right_operator.T)
 
 
 # -- save and load from file --------------------------------------------------
 
 def save_object(obj: Any, filename: Text, overwrite: bool) -> None:
-    """
-    Save an object to a file using pickle.
-
-    """
+    """Save an object to a file using pickle. """
     if overwrite:
         mode = 'wb'
     else:
@@ -71,9 +68,7 @@ def save_object(obj: Any, filename: Text, overwrite: bool) -> None:
         pickle.dump(obj, file)
 
 def load_object(filename: Text) -> Any:
-    """
-    ToDo
-    """
+    """Load an object from a file using pickle. """
     with open(filename, 'rb') as file:
         return pickle.load(file)
 
