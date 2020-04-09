@@ -30,6 +30,7 @@ with open("README.md", "r") as f:
 # get requirements list
 requirements = ["numpy>=1.18.0",
                 "scipy>=1.4.0",
+                "tensornetwork==0.3.0",
                 ]
 
 setup(
