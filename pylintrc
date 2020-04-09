@@ -129,6 +129,10 @@ disable=print-statement,
         dict-values-not-iterating,
         super-init-not-called,            # GEFux: added by hand
         duplicate-code,                   # GEFux: added by hand
+        too-many-statements,              # GEFux: added by hand
+        too-many-locals,                  # GEFux: added by hand
+        pointless-statement,              # GEFux: added by hand
+        chained-comparison,               # GEFux: added by hand
         fixme,                            # GEFux: added for development
         unnecessary-pass,                 # GEFux: added for development
         unused-argument,                  # GEFux: added for development
