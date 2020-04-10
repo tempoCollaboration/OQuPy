@@ -22,10 +22,13 @@ from time_evolving_mpo.backends.base_backend \
     import BaseBackend
 from time_evolving_mpo.backends.example.example_backend \
     import ExampleBackend
+from time_evolving_mpo.backends.tensor_network.tensor_network_backend \
+    import TensorNetworkBackend
 
 
 BACKEND_DICT = {
     'example': ExampleBackend,
+    'tensor-network': TensorNetworkBackend,
     }
 
 
