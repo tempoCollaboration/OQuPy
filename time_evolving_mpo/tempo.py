@@ -25,7 +25,7 @@ from typing import Any as ArrayLike
 import warnings
 
 from copy import copy
-from numpy import array, ndarray, exp, outer
+from numpy import array, ndarray, diag, exp, outer
 from scipy.linalg import expm
 
 from time_evolving_mpo.backends.backend_factory import get_backend
@@ -295,9 +295,13 @@ class Tempo(BaseAPIClass):
             epsrel=self._parameters.epsrel)
         op_p = self._coupling_acomm
         op_m = self._coupling_comm
-        influence = exp(-outer(eta_dk.real*op_m + 1j*eta_dk.imag*op_p, op_m)).T
 
-        return influence
+        if dk == 0:
+            infl = diag(exp(-op_m*(eta_dk.real*op_m + 1j*eta_dk.imag*op_p)))
+        else:
+            infl = exp(-outer(eta_dk.real*op_m + 1j*eta_dk.imag*op_p, op_m))
+
+        return infl
 
     def _propagators(self, step: int):
         """Create the system propagators (first and second half) for the time
