@@ -367,6 +367,7 @@ GUESS_WARNING_MSG = "Estimating parameters for TEMPO calculation. " \
     + "Please refere to the TEMPO documentation and check convergence by " \
     + "varying the parameters for TEMPO manually."
 
+PLACEHOLDER_MSG = "This is just a placeholder and not really implemented yet."
 def guess_tempo_parameters(
         system: BaseSystem,
         bath: Bath,
@@ -406,12 +407,11 @@ def guess_tempo_parameters(
         "Argument 'tollerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
     pass # ToDo
-    warnings.warn("This is just a placeholder and not really implemented yet.",
-                  UserWarning)
+    warnings.warn(PLACEHOLDER_MSG, UserWarning)
     return TempoParameters(
         dt=0.05,
-        dkmax=5,
-        epsrel=0.0001,
+        dkmax=20,
+        epsrel=2**(-15),
         name="Roughly estimated parameters",
         description="Estimated with 'guess_tempo_parameters()'")
 
