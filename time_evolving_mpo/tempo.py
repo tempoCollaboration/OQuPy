@@ -103,12 +103,19 @@ class TempoParameters(BaseAPIClass):
     @dkmax.setter
     def dkmax(self, new_dkmax: float) -> None:
         try:
-            __dkmax = int(new_dkmax)
+            if new_dkmax is None:
+                __dkmax = None
+            else:
+                __dkmax = int(new_dkmax)
         except:
-            raise AssertionError("Argument 'dkmax' must be int.")
-        assert __dkmax > 0, \
-            "Argument 'dkmax' must be bigger than 0."
+            raise AssertionError("Argument 'dkmax' must be int or None.")
+        assert __dkmax is None or __dkmax > 0, \
+            "Argument 'dkmax' must be bigger than or equal to 0 or None."
         self._dkmax = __dkmax
+
+    @dkmax.deleter
+    def dkmax(self) -> None:
+        self._dkmax = None
 
     @property
     def epsrel(self) -> float:
