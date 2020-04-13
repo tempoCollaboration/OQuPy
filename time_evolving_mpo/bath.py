@@ -14,7 +14,7 @@
 """
 Module on physical information on the bath and it's coupling to the system.
 """
-from typing import Callable, Dict, Optional, Text
+from typing import Dict, Optional, Text
 from typing import Any as ArrayLike
 from copy import copy
 
@@ -55,7 +55,7 @@ class Bath(BaseAPIClass):
     def __init__(
             self,
             coupling_operator: ArrayLike,
-            spectral_density: Callable[[float], float],
+            spectral_density: BaseSD,
             temperature: Optional[float] = 0.0,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
