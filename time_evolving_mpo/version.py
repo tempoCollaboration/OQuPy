@@ -15,4 +15,4 @@
 This module just defines what version of tempo we are currently looking at.
 """
 
-__version__ = '0.0.1-2'
+__version__ = '0.0.3'
