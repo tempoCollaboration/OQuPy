@@ -20,10 +20,12 @@ import numpy as np
 
 from time_evolving_mpo import operators
 
-PAULI = {"id":[[1, 0], [0, 1]],
+SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],
          "y":[[0, -1j], [1j, 0]],
-         "z":[[1, 0], [0, -1]]}
+         "z":[[1, 0], [0, -1]],
+         "+":[[0, 1], [0, 0]],
+         "-":[[0, 0], [1, 0]]}
 
 SPIN_DM = {"up":[[1, 0], [0, 0]],
            "down":[[0, 0], [0, 1]],
@@ -38,10 +40,10 @@ def test_identity():
         result = operators.identity(n)
         np.testing.assert_almost_equal(result,np.identity(n))
 
-def test_operators_pauli():
-    for name in PAULI:
-        result = operators.pauli(name)
-        np.testing.assert_equal(result,PAULI[name])
+def test_operators_sigma():
+    for name in SIGMA:
+        result = operators.sigma(name)
+        np.testing.assert_equal(result,SIGMA[name])
 
 def test_operators_spin_dm():
     for name in SPIN_DM:

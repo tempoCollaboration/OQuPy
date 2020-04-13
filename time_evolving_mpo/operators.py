@@ -21,10 +21,12 @@ import numpy as np
 
 from time_evolving_mpo.config import NP_DTYPE
 
-PAULI = {"id":[[1, 0], [0, 1]],
+SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],
          "y":[[0, -1j], [1j, 0]],
-         "z":[[1, 0], [0, -1]]}
+         "z":[[1, 0], [0, -1]],
+         "+":[[0, 1], [0, 0]],
+         "-":[[0, 0], [1, 0]]}
 
 SPIN_DM = {"up":[[1, 0], [0, 0]],
            "down":[[0, 0], [0, 1]],
@@ -51,20 +53,20 @@ def identity(n: int):
     return np.identity(n, dtype=NP_DTYPE)
 
 
-def pauli(name: Text):
+def sigma(name: Text):
     """
-    Pauli matrix of type `name`.
+    Spin matrix sigma of type `name`.
 
     Parameters
     ----------
-    name: str{ ``'id'``, ``'x'``, ``'y'``, ``'z'``}
+    name: str{ ``'id'``, ``'x'``, ``'y'``, ``'z'``, ``'+'``, ``'-'``}
 
     Returns
     -------
-    pauli : ndarray
-        Pauli matrix of type `name`.
+    sigma : ndarray
+        Spin matrix of type `name`.
     """
-    return np.array(PAULI[name], dtype=NP_DTYPE)
+    return np.array(SIGMA[name], dtype=NP_DTYPE)
 
 
 def spin_dm(name: Text):

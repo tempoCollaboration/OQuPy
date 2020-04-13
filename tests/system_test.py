@@ -33,14 +33,14 @@ def test_base_system():
         sys.liouvillian()
 
 def test_system():
-    sys_A = System(0.4*operators.pauli("x"))
+    sys_A = System(0.4*operators.sigma("x"))
     sys_A.liouvillian()
 
-    sys_B = System(operators.pauli("z"),
+    sys_B = System(operators.sigma("z"),
                    [0.2,0.1,0.05],
-                   [operators.pauli("x"),
-                    operators.pauli("y"),
-                    operators.pauli("z")],
+                   [operators.sigma("x"),
+                    operators.sigma("y"),
+                    operators.sigma("z")],
                    name="bla",
                    description="blub",
                    description_dict={"the answer":42})
@@ -60,37 +60,37 @@ def test_system_bad_input():
     with pytest.raises(AssertionError):
         System(np.random.rand(2,3))
     with pytest.raises(AssertionError):
-        System(operators.pauli("z"),
+        System(operators.sigma("z"),
                0.1,
-               [operators.pauli("x"),
-                operators.pauli("y"),
-                operators.pauli("z")])
+               [operators.sigma("x"),
+                operators.sigma("y"),
+                operators.sigma("z")])
     with pytest.raises(AssertionError):
-        System(operators.pauli("z"),
+        System(operators.sigma("z"),
                ["bla",0.1,0.05],
-               [operators.pauli("x"),
-                operators.pauli("y"),
-                operators.pauli("z")])
+               [operators.sigma("x"),
+                operators.sigma("y"),
+                operators.sigma("z")])
     with pytest.raises(AssertionError):
-        System(operators.pauli("z"),
+        System(operators.sigma("z"),
                [0.2,0.1,0.05],
                0.1)
     with pytest.raises(AssertionError):
-        System(operators.pauli("z"),
+        System(operators.sigma("z"),
                [0.2,0.1,0.05],
-               [operators.pauli("x"),
+               [operators.sigma("x"),
                 "bla",
-                operators.pauli("z")])
+                operators.sigma("z")])
 
 def test_time_dependent_system():
-    sys_A = TimeDependentSystem(lambda t: t*operators.pauli("x"))
+    sys_A = TimeDependentSystem(lambda t: t*operators.sigma("x"))
     sys_A.liouvillian(2.0)
 
-    sys_B = TimeDependentSystem(lambda t: t*operators.pauli("z"),
+    sys_B = TimeDependentSystem(lambda t: t*operators.sigma("z"),
                    [lambda t: t*0.2, lambda t: t*0.1, lambda t: t*0.05],
-                   [lambda t: t*operators.pauli("x"),
-                    lambda t: t*operators.pauli("y"),
-                    lambda t: t*operators.pauli("z")],
+                   [lambda t: t*operators.sigma("x"),
+                    lambda t: t*operators.sigma("y"),
+                    lambda t: t*operators.sigma("z")],
                    name="bla",
                    description="blub",
                    description_dict={"the answer":42})
@@ -112,24 +112,24 @@ def test_time_dependent_system_bad_input():
     with pytest.raises(AssertionError):
         TimeDependentSystem(lambda t: t*np.random.rand(2,3))
     with pytest.raises(AssertionError):
-        TimeDependentSystem(lambda t: t*operators.pauli("z"),
+        TimeDependentSystem(lambda t: t*operators.sigma("z"),
                0.1,
-               [lambda t: t*operators.pauli("x"),
-                lambda t: t*operators.pauli("y"),
-                lambda t: t*operators.pauli("z")])
+               [lambda t: t*operators.sigma("x"),
+                lambda t: t*operators.sigma("y"),
+                lambda t: t*operators.sigma("z")])
     with pytest.raises(AssertionError):
-        TimeDependentSystem(lambda t: t*operators.pauli("z"),
+        TimeDependentSystem(lambda t: t*operators.sigma("z"),
                [lambda t: t*0.2, 0.1, lambda t: t*0.05],
-               [lambda t: t*operators.pauli("x"),
-                lambda t: t*operators.pauli("y"),
-                lambda t: t*operators.pauli("z")])
+               [lambda t: t*operators.sigma("x"),
+                lambda t: t*operators.sigma("y"),
+                lambda t: t*operators.sigma("z")])
     with pytest.raises(AssertionError):
-        TimeDependentSystem(lambda t: t*operators.pauli("z"),
+        TimeDependentSystem(lambda t: t*operators.sigma("z"),
                [lambda t: t*0.2, lambda t: t*0.1, lambda t: t*0.05],
                0.1)
     with pytest.raises(AssertionError):
-        TimeDependentSystem(lambda t: t*operators.pauli("z"),
+        TimeDependentSystem(lambda t: t*operators.sigma("z"),
                [lambda t: t*0.2, lambda t: t*0.1, lambda t: t*0.05],
-               [lambda t: t*operators.pauli("x"),
-                operators.pauli("y"),
-                lambda t: t*operators.pauli("z")])
+               [lambda t: t*operators.sigma("x"),
+                operators.sigma("y"),
+                lambda t: t*operators.sigma("z")])

@@ -31,7 +31,7 @@ def test_bath():
                                   zeta=1.0,
                                   cutoff=wc,
                                   cutoff_type="exponential")
-    coupling_operator = operators.pauli("z")
+    coupling_operator = np.array([[1,0],[0,-1]])
     name = "ohmic"
     description = """ Ohmic spectral density. \n J(w) = 2 alpha w exp(-w/wc) """
     description_dict = {"alpha": alpha, "wc": wc}
