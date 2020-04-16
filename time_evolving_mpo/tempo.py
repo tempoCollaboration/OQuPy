@@ -353,15 +353,17 @@ class Tempo(BaseAPIClass):
             self._init_dynamics()
             self._dynamics.add(self._time(step), state.reshape(dim, dim))
 
-        max_step = int((end_time - self._start_time)/self._parameters.dt)
-        max_step = max(0, max_step)
+        start_step = self._tempo_backend.step
+        end_step = int((end_time - self._start_time)/self._parameters.dt)
+        num_step = max(0, end_step - start_step)
 
         progress = get_progress(progress_type)
-        with progress(max_step) as prog_bar:
+        with progress(num_step) as prog_bar:
             while self._time(self._tempo_backend.step) < __end_time:
                 step, state = self._tempo_backend.compute_step()
                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
-                prog_bar.update(self._tempo_backend.step)
+                prog_bar.update(self._tempo_backend.step - start_step)
+            prog_bar.update(self._tempo_backend.step - start_step)
 
     def get_dynamics(self) -> Dynamics:
         """Returns a copy of the computed dynamics. """

@@ -170,7 +170,10 @@ class ProgressBar(BaseProgress):
             step = 0
         else:
             step = self._step
-        frac = float(step)/float(self._max_value)
+        try:
+            frac = float(step)/float(self._max_value)
+        except ZeroDivisionError:
+            frac = 1.0
         delta_t = time() - self._start_time
         time_string = "{:0>8}".format(str(timedelta(seconds=int(delta_t))))
         done_int = int(frac*self._length)
