@@ -61,9 +61,9 @@ class Dynamics(BaseAPIClass):
         if states is None:
             states = []
         assert isinstance(times, list), \
-            "Argument `times` must be a list)]."
+            "Argument `times` must be a list."
         assert isinstance(states, list), \
-            "Argument `times` must be a list)]."
+            "Argument `states` must be a list."
         assert len(times) == len(states), \
             "Lists `times` and `states` must have the same length."
         self._times = []
