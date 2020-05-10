@@ -10,6 +10,15 @@ Welcome to TimeEvolvingMPO's documentation!
 
 A python3 library to efficiently compute non-markovian open quantum systems.
 
++--------------------+----------------------------------------------------------------------------------------------+
+| **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                        |
++--------------------+----------------------------------------------------------------------------------------------+
+| **Documentation**  | https://TimeEvolvingMPO.readthedocs.io                                                       |
++--------------------+----------------------------------------------------------------------------------------------+
+| **PyPI**           | https://pypi.org/project/time-evolving-mpo/                                                  |
++--------------------+----------------------------------------------------------------------------------------------+
+| **Tutorial**       | https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb |
++--------------------+----------------------------------------------------------------------------------------------+
 
 .. toctree::
    :maxdepth: 2
