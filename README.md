@@ -10,6 +10,13 @@ A python3 library to efficiently compute non-markovian open quantum systems.
 
 *This library is under consturction!*
 
+## Links
+
+* Github:         <https://github.com/tempoCollaboration/TimeEvolvingMPO>
+* Documentation:  <https://TimeEvolvingMPO.readthedocs.io>
+* PyPI:           <https://pypi.org/project/time-evolving-mpo/>
+* Tutorial:       <https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb>
+
 
 ## Installation
 You can install TimeEvolvingMPO using pip like this:
@@ -25,13 +32,9 @@ for more information.
 ## Tutorial
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
 
-Click the `launch binder` button above to start a tutorial in browser based
+Click the `launch binder` button above to start a tutorial in a browser based
 jupyter notebook (no installation required) or checkout the
 [tutorial in the documentation](https://TimeEvolvingMPO.readthedocs.io/en/latest/pages/tutorial.html).
-
-
-## Documentation
-Documentation is available at <https://TimeEvolvingMPO.readthedocs.io>.
 
 
 ## Contributing
