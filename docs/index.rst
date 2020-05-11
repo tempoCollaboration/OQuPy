@@ -10,6 +10,16 @@ Welcome to TimeEvolvingMPO's documentation!
 
 .. automodule:: time_evolving_mpo
 
++--------------------+----------------------------------------------------------------------------------------------+
+| **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                        |
++--------------------+----------------------------------------------------------------------------------------------+
+| **Documentation**  | https://TimeEvolvingMPO.readthedocs.io                                                       |
++--------------------+----------------------------------------------------------------------------------------------+
+| **PyPI**           | https://pypi.org/project/time-evolving-mpo/                                                  |
++--------------------+----------------------------------------------------------------------------------------------+
+| **Tutorial**       | https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb |
++--------------------+----------------------------------------------------------------------------------------------+
+
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
