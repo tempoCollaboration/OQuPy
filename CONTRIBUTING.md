@@ -246,7 +246,7 @@ All the rest of the communication will happen there.
 
 You can expect to hear back from a maintainer within one to two weeks. If your
 contribution checks all the boxes in
-`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
+[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
 the maintainer will merge your changes into the project. If some aspects of the
 contribution need to be changed, the maintainer might ask you if you'd be
 willing to perform these changes. In this case you can simply make further
