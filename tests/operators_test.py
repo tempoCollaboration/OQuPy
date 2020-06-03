@@ -49,3 +49,10 @@ def test_operators_spin_dm():
     for name in SPIN_DM:
         result = operators.spin_dm(name)
         np.testing.assert_equal(result,SPIN_DM[name])
+
+def test_operators_create_destroy():
+    for n in {1,2,7}:
+        adag = operators.create(n)
+        a = operators.destroy(n)
+        result = adag@a
+        np.testing.assert_almost_equal(result,np.diag(range(n)))

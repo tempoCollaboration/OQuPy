@@ -84,3 +84,37 @@ def spin_dm(name: Text):
         Spin density matrix.
     """
     return np.array(SPIN_DM[name], dtype=NP_DTYPE)
+
+
+def create(n: int):
+    """
+    Bosonic creation operator of dimension `n` x `n`.
+
+    Parameters
+    ----------
+    n: int
+        Dimension of the Hilbert space.
+
+    Returns
+    -------
+    create : ndarray
+        Creation operator matrix of dimension `n` x `n`.
+    """
+    return destroy(n).T
+
+
+def destroy(n: int):
+    """
+    Bosonic annihilation operator of dimension `n` x `n`.
+
+    Parameters
+    ----------
+    n: int
+        Dimension of the Hilbert space.
+
+    Returns
+    -------
+    create : ndarray
+        Annihilation operator matrix of dimension `n` x `n`.
+    """
+    return np.diag(np.sqrt(range(1, n), dtype=NP_DTYPE), 1)
