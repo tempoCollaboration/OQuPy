@@ -31,6 +31,11 @@ tempo.exceptions
     :show-inheritance:
     :members:
 
+tempo.file_formats
+------------------
+
+.. automodule:: time_evolving_mpo.file_formats
+    :members:
 
 tempo.integrate
 ---------------

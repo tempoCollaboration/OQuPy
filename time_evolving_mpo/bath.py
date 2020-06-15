@@ -21,7 +21,7 @@ from copy import copy
 from numpy import allclose, array, diag, ndarray
 
 from time_evolving_mpo.spectral_density import BaseSD
-from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.base_api import BaseAPIClass
 
 
@@ -63,7 +63,7 @@ class Bath(BaseAPIClass):
         """Create a Bath object. """
         # input check for coupling_operator.
         try:
-            __coupling_operator = array(coupling_operator, dtype=NP_DTYPE)
+            __coupling_operator = array(coupling_operator, dtype=NpDtype)
             __coupling_operator.setflags(write=False)
         except:
             raise AssertionError("Coupling operator must be numpy array")

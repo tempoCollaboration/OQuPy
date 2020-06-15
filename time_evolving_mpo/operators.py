@@ -19,7 +19,7 @@ from typing import Text
 
 import numpy as np
 
-from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.config import NpDtype
 
 SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],
@@ -50,7 +50,7 @@ def identity(n: int):
     identity : ndarray
         Identity matrix of dimension `n` x `n`.
     """
-    return np.identity(n, dtype=NP_DTYPE)
+    return np.identity(n, dtype=NpDtype)
 
 
 def sigma(name: Text):
@@ -66,7 +66,7 @@ def sigma(name: Text):
     sigma : ndarray
         Spin matrix of type `name`.
     """
-    return np.array(SIGMA[name], dtype=NP_DTYPE)
+    return np.array(SIGMA[name], dtype=NpDtype)
 
 
 def spin_dm(name: Text):
@@ -83,7 +83,7 @@ def spin_dm(name: Text):
     density_matrix : ndarray
         Spin density matrix.
     """
-    return np.array(SPIN_DM[name], dtype=NP_DTYPE)
+    return np.array(SPIN_DM[name], dtype=NpDtype)
 
 
 def create(n: int):
@@ -117,4 +117,4 @@ def destroy(n: int):
     create : ndarray
         Annihilation operator matrix of dimension `n` x `n`.
     """
-    return np.diag(np.sqrt(range(1, n), dtype=NP_DTYPE), 1)
+    return np.diag(np.sqrt(range(1, n), dtype=NpDtype), 1)

@@ -70,7 +70,7 @@ some_obj_A = ["hi","there!"]
 some_obj_B = 3
 
 def test_save_object():
-    filename = "tests/data/temp.saveObjectTest"
+    filename = "tests/data/test_temp.saveObjectTest"
     save_object(some_obj_A, filename, overwrite=True)
     with pytest.raises(FileExistsError):
         save_object(some_obj_B, filename, overwrite=False)

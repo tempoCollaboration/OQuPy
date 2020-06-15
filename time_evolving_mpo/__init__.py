@@ -37,6 +37,8 @@ from time_evolving_mpo.dynamics import import_dynamics
 from time_evolving_mpo.exceptions import NumericsError
 from time_evolving_mpo.exceptions import NumericsWarning
 
+import time_evolving_mpo.file_formats
+
 import time_evolving_mpo.operators
 
 # from time_evolving_mpo.process_tensor import ProcessTensor

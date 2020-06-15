@@ -31,7 +31,7 @@ from scipy.linalg import expm
 from time_evolving_mpo.backends.backend_factory import get_backend
 from time_evolving_mpo.bath import Bath
 from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.dynamics import Dynamics
 from time_evolving_mpo.system import BaseSystem
 from time_evolving_mpo.util import commutator, acommutator
@@ -191,7 +191,7 @@ class Tempo(BaseAPIClass):
         self._parameters = parameters
 
         try:
-            __initial_state = array(initial_state, dtype=NP_DTYPE)
+            __initial_state = array(initial_state, dtype=NpDtype)
             __initial_state.setflags(write=False)
         except:
             raise AssertionError("Initial state must be numpy array")

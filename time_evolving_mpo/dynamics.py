@@ -26,7 +26,8 @@ from numpy import max as npmax
 from numpy import min as npmin
 
 from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.config import NpDtype, NpDtypeReal
+from time_evolving_mpo.file_formats import assert_tempo_dynamics_dict
 from time_evolving_mpo.util import save_object, load_object
 
 
@@ -98,12 +99,12 @@ class Dynamics(BaseAPIClass):
     @property
     def times(self) -> ndarray:
         """Times of the dynamics. """
-        return array(self._times)
+        return array(self._times, dtype=NpDtypeReal)
 
     @property
     def states(self) -> ndarray:
         """States of the dynamics. """
-        return array(self._states)
+        return array(self._states, dtype=NpDtype)
 
     @property
     def shape(self) -> ndarray:
@@ -129,7 +130,7 @@ class Dynamics(BaseAPIClass):
         except:
             raise AssertionError("Argument `time` must be float.")
         try:
-            __state = array(state, dtype=NP_DTYPE)
+            __state = array(state, dtype=NpDtype)
         except:
             raise AssertionError("Argument `state` must be ndarray.")
         if self._shape is None:
@@ -174,6 +175,7 @@ class Dynamics(BaseAPIClass):
                "description_dict": self.description_dict,
                "times": self.times,
                "states": self.states}
+        assert_tempo_dynamics_dict(dyn)
         save_object(dyn, filename, overwrite)
 
     def expectations(
@@ -208,10 +210,10 @@ class Dynamics(BaseAPIClass):
         if len(self) == 0:
             return None, None
         if operator is None:
-            __operator = identity(self._shape[0], dtype=NP_DTYPE)
+            __operator = identity(self._shape[0], dtype=NpDtype)
         else:
             try:
-                __operator = array(operator, dtype=NP_DTYPE)
+                __operator = array(operator, dtype=NpDtype)
             except:
                 raise AssertionError("Argument `operator` must be ndarray.")
             assert __operator.shape == self._shape, \
@@ -259,6 +261,7 @@ def import_dynamics(filename: Text) -> Dynamics:
     assert dyn["version"] == "1.0", \
         "Can't import dynamics from file {} ".format(filename) \
         + "as it appears to be an incompatible version."
+    assert_tempo_dynamics_dict(dyn)
     return Dynamics(times=list(dyn["times"]),
                     states=list(dyn["states"]),
                     name=dyn["name"],

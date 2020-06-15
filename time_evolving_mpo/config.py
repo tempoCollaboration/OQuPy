@@ -15,8 +15,11 @@
 Module to define global configuration for the time_evovling_mpo package.
 """
 
+from numpy import float64, complex128
+
 # Numpy datatype
-NP_DTYPE = "complex128"
+NpDtype = complex128
+NpDtypeReal = float64
 
 # Seperator string for __str__ functions
 SEPERATOR = "----------------------------------------------\n"

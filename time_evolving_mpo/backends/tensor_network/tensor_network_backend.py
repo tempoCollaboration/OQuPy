@@ -20,7 +20,7 @@ from copy import copy
 
 from numpy import ndarray, array
 
-from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.backends.tensor_network import mps_mpo as mm
 from time_evolving_mpo.backends.base_backend import BaseBackend
 from time_evolving_mpo.backends.base_backend import BaseTempoBackend
@@ -28,7 +28,7 @@ from time_evolving_mpo.backends.tensor_network.util import create_delta
 from time_evolving_mpo.backends.tensor_network.util import add_singleton
 
 
-MPS_SINGLETON = array([[[1.0]]], dtype=NP_DTYPE)
+MPS_SINGLETON = array([[[1.0]]], dtype=NpDtype)
 
 
 class TensorNetworkTempoBackend(BaseTempoBackend):

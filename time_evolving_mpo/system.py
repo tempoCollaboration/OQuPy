@@ -22,7 +22,7 @@ from functools import lru_cache
 
 from numpy import array, dot, ndarray, vectorize
 
-from time_evolving_mpo.config import NP_DTYPE
+from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.base_api import BaseAPIClass
 from time_evolving_mpo.util import commutator, acommutator, left_right_super
 
@@ -30,7 +30,7 @@ from time_evolving_mpo.util import commutator, acommutator, left_right_super
 def _check_hamiltonian(hamiltonian):
     """Input checking for a single hamiltonian. """
     try:
-        __hamiltonian = array(hamiltonian, dtype=NP_DTYPE)
+        __hamiltonian = array(hamiltonian, dtype=NpDtype)
         __hamiltonian.setflags(write=False)
     except:
         raise AssertionError("Coupling operator must be numpy array")
@@ -160,7 +160,7 @@ class System(BaseSystem):
             __lindblad_operators = []
             for lindblad_operator in lindblad_operators:
                 __lindblad_operators.append(
-                    array(lindblad_operator, dtype=NP_DTYPE))
+                    array(lindblad_operator, dtype=NpDtype))
         except:
             raise AssertionError(
                 "All elements of `lindblad_operators` must be numpy arrays.")
