@@ -29,13 +29,6 @@ pass
 #         """
 #         pass # ToDo
 #
-#     def check_convergence(self, *args, **kwargs): # ToDo
-#         """
-#         ToDo
-#         """
-#         pass # ToDo
-#         return NotImplemented, NotImplemented # ToDo
-#
 #     def export(self, *args, **kwargs): # ToDo
 #         """
 #         ToDo
@@ -84,3 +77,9 @@ pass
 #     """
 #     pass # ToDo
 #     return ProcessTensorParameters() #ToDo
+#
+#
+# def import_process_tensor(filename: Text) -> ProcessTensor:
+#     """
+#     ToDo
+#     """
