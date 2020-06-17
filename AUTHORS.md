@@ -1,17 +1,19 @@
 # List of authors and sources
 
-The project is written and maintained by:
+This python project has been initialised by [Gerald E. Fux](gerald.e.fux@gmail.com) with the support of the TEMPO collaboration (see list below).
 
+## Maintainers of the project
 * **Gerald E. Fux** ([gefux](https://github.com/gefux)) <gerald.e.fux@gmail.com>.
-* **N/A** (N/A)
+* **Peter Kirton** ([peterkirton](https://github.com/peterkirton)) <peter.kirton@strath.ac.uk>
 
 ## Substantial contributions to the project
 
-* **N/A** (N/A) - [some part of the programm]
+* **Gerald E. Fux** ([gefux](https://github.com/gefux)) - [core design and implementation of core functionality]
 
 ## Further contributions to the project
 
-* **N/A** (N/A)
+* **Peter Kirton** ([peterkirton](https://github.com/peterkirton))
+
 
 ## Members of the TEMPO collaboration
 Listed alphabetically:
