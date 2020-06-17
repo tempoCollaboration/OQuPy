@@ -86,23 +86,7 @@ account which you can modify to your liking. You can then
 to suggest your changes to this project.
 
 
-### 3. Setup your local environment
-As a development environment you will need `git`, `python3.6` and `tox` installed.
-
-You will need `git` to
-[pull, commit and push](https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control)
-changes to the repository, while `tox` allows you to run tests on the package
-in an virtual environment (to avoid that the result of the tests depends on the
-local setup). If you are unfamiliar with `git`,
-[this](https://swcarpentry.github.io/git-novice/) is a good place to start
-learning about it.
-
-Currently the code is tested against `python3.6`, which makes it
-neccessary to have this version of the python interpreter installed in the
-development environment.
-
-
-### 4. Clone your fork to your local machine
+### 3. Clone your fork to your local machine
 Next, you will need to
 [clone](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository)
 to your fork to your local machine and add the original repository as a remote
@@ -126,6 +110,30 @@ repository) and pushing to the `origin` remote repository (your fork).
 $ git checkout master
 $ git pull upstream master
 $ git push origin master
+```
+
+### 4. Setup your local environment
+As a development environment you will need `git`, `python3.6`, `pip3` and `tox`
+installed.
+
+You need `git` to
+[pull, commit and push](https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control)
+changes to the repository, while `tox` allows you to run tests on the package
+in an virtual environment (to avoid that the result of the tests depends on the
+local setup). If you are unfamiliar with `git`,
+[this](https://swcarpentry.github.io/git-novice/) is a good place to start
+learning about it. Currently the code is tested against `python3.6`, which makes it
+neccessary to have this version of the python interpreter installed in the
+development environment.
+
+You may wish to create a virtual environment dedicated to the development
+of this package with `conda` or `venv` to avoid interference with other
+applications.
+
+Finally, install the required python package dependencies with (executed in the
+repositories main directory):
+```
+$ python3 -m pip install -r requirements_ci.txt
 ```
 
 ### 5. Create a new branch pr/topic-name
@@ -220,8 +228,8 @@ that there have been other code contributions since you created the pull
 request branch, rebasing the branch can help avoiding merge conflicts later.
 Both, squashing and rebasing can be performed with the command
 `git rebase -i ...` and are described
-[here](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History). This command
-is destructive (i.e. it is possible to loose information), and therefore you
+[here](https://git-scm.com/book/en/v2/Git-Branching-Rebasing). This command
+is destructive (i.e. it is possible to lose information), and therefore you
 should create a local backup before using it. However, if you are
 unsure, feel free to skip this tidying up process.  
 
@@ -246,7 +254,7 @@ All the rest of the communication will happen there.
 
 You can expect to hear back from a maintainer within one to two weeks. If your
 contribution checks all the boxes in
-[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
+`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
 the maintainer will merge your changes into the project. If some aspects of the
 contribution need to be changed, the maintainer might ask you if you'd be
 willing to perform these changes. In this case you can simply make further
