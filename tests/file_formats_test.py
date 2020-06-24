@@ -16,16 +16,72 @@ Tests for the time_evovling_mpo.file_formats module.
 """
 
 import pytest
+import os, contextlib
 
 from time_evolving_mpo.file_formats import check_tempo_dynamics_file
+from time_evolving_mpo.file_formats import check_process_tensor_file
+from time_evolving_mpo.file_formats import print_tempo_dynamics_file
+from time_evolving_mpo.file_formats import print_process_tensor_file
 
+# -----------------------------------------------------------------------------
 
-GOOD_FILE_DYNAMICS_V1 = "tests/data/test_v1_0_good_file.tempoDynamics"
-BAD_FILE_DYNAMICS_V1 = "tests/data/test_v1_0_bad_file.tempoDynamics"
+def supress_stdout(func):
+    def wrapper(*a, **ka):
+        with open(os.devnull, 'w') as devnull:
+            with contextlib.redirect_stdout(devnull):
+                func(*a, **ka)
+    return wrapper
 
+# -----------------------------------------------------------------------------
 
-def test_check_tempo_dynamics_file_good():
-    assert check_tempo_dynamics_file(GOOD_FILE_DYNAMICS_V1)
+BAD_FILES_TEMPO_DYNAMICS_V1 = [
+    "tests/data/test_v1_0_bad_file_A.tempoDynamics",
+    "tests/data/test_v1_0_bad_file_B.tempoDynamics",
+    "tests/data/test_v1_0_bad_file_C.tempoDynamics",
+    ]
+GOOD_FILES_TEMPO_DYNAMICS_V1 = [
+    "tests/data/test_v1_0_good_file_A.tempoDynamics",
+    "tests/data/test_v1_0_good_file_B.tempoDynamics",
+    "tests/data/test_v1_0_good_file_C.tempoDynamics",
+    ]
+GOOD_FILES_PROCESS_TENSOR_V1 = [
+    "tests/data/test_v1_0_good_file_A.processTensor",
+    "tests/data/test_v1_0_good_file_B.processTensor",
+    "tests/data/test_v1_0_good_file_C.processTensor",
+    "tests/data/test_v1_0_good_file_D.processTensor",
+    ]
+BAD_FILES_PROCESS_TENSOR_V1 = [
+    "tests/data/test_v1_0_bad_file_A.processTensor",
+    ]
 
-def test_check_tempo_dynamics_file_bad():
-    assert check_tempo_dynamics_file(BAD_FILE_DYNAMICS_V1) is False
+# -----------------------------------------------------------------------------
+
+def test_check_tempo_dynamics_files_good():
+    for filename in GOOD_FILES_TEMPO_DYNAMICS_V1:
+        assert check_tempo_dynamics_file(filename)
+
+def test_check_tempo_dynamics_files_bad():
+    for filename in BAD_FILES_TEMPO_DYNAMICS_V1:
+        assert check_tempo_dynamics_file(filename) is False
+
+@supress_stdout
+def test_print_tempo_dynamics_files():
+    for filename in GOOD_FILES_TEMPO_DYNAMICS_V1:
+        print_tempo_dynamics_file(filename)
+
+# -----------------------------------------------------------------------------
+
+def test_check_process_tensor_files_good():
+    for filename in GOOD_FILES_PROCESS_TENSOR_V1:
+        assert check_process_tensor_file(filename)
+
+def test_check_process_tensor_files_bad():
+    for filename in BAD_FILES_PROCESS_TENSOR_V1:
+        assert check_process_tensor_file(filename) is False
+
+@supress_stdout
+def test_print_process_tensor_files():
+    for filename in GOOD_FILES_PROCESS_TENSOR_V1:
+        print_process_tensor_file(filename)
+
+# -----------------------------------------------------------------------------
