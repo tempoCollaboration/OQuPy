@@ -48,7 +48,7 @@ to this project below.
 6. Make your changes and tick the boxes
 7. Check your code: run tests
 8. Tidy up: Rebase and squash
-9. Create a [pull requests](https://github.com/tempoCollaboration/TimeEvolvingMPO/pulls)
+9. Create a [pull request](https://github.com/tempoCollaboration/TimeEvolvingMPO/pulls)
 10. Make changes to your pull request
 
 
