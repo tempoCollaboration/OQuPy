@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module on physical information for the bath and its coupling to the system.
+Module on physical information on the bath and it's coupling to the system.
 """
 from typing import Dict, Optional, Text
 from typing import Any as ArrayLike
