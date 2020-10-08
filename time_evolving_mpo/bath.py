@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module on physical information on the bath and it's coupling to the system.
+Module on physical information on the bath and its coupling to the system.
 """
 from typing import Dict, Optional, Text
 from typing import Any as ArrayLike
@@ -27,13 +27,13 @@ from time_evolving_mpo.base_api import BaseAPIClass
 
 class Bath(BaseAPIClass):
     """
-    Represents the bath degees of freedom with a specific coupling operator
+    Represents the bath degrees of freedom with a specific coupling operator
     (to the system), a specific spectral density and a specific temperature.
 
     Parameters
     ----------
     coupling_operator: ndarray
-        The system operator to which the bath is coupling to.
+        The system operator to which the bath couples.
     spectral_density: BaseSD
         The bath's spectral density.
     temperature: float
@@ -60,7 +60,7 @@ class Bath(BaseAPIClass):
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a Bath object. """
+        """Creates a Bath object. """
         # input check for coupling_operator.
         try:
             __coupling_operator = array(coupling_operator, dtype=NpDtype)
