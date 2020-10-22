@@ -68,7 +68,7 @@ def integrate_semi_infinite(
                           epsrel=epsrel,
                           limit=2**10)
         except Exception as error:
-            raise NumericsError("Integration error: \n{}".format(error))
+            raise NumericsError("Integration error: \n{}".format(error)) from error
     return result[0]
 
 

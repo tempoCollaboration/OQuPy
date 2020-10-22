@@ -32,8 +32,8 @@ def _check_hamiltonian(hamiltonian):
     try:
         __hamiltonian = array(hamiltonian, dtype=NpDtype)
         __hamiltonian.setflags(write=False)
-    except:
-        raise AssertionError("Coupling operator must be numpy array")
+    except Exception as e:
+        raise AssertionError("Coupling operator must be numpy array") from e
     assert len(__hamiltonian.shape) == 2, \
         "Coupling operator is not a matrix."
     assert __hamiltonian.shape[0] == \
@@ -154,16 +154,18 @@ class System(BaseSystem):
             __gammas = []
             for gamma in gammas:
                 __gammas.append(float(gamma))
-        except:
-            raise AssertionError("All elements of `gamma` must be floats.")
+        except Exception as e:
+            raise AssertionError("All elements of `gamma` must be floats.") \
+                from e
         try:
             __lindblad_operators = []
             for lindblad_operator in lindblad_operators:
                 __lindblad_operators.append(
                     array(lindblad_operator, dtype=NpDtype))
-        except:
+        except Exception as e:
             raise AssertionError(
-                "All elements of `lindblad_operators` must be numpy arrays.")
+                "All elements of `lindblad_operators` must be numpy arrays.") \
+                    from e
         self._gammas = __gammas
         self._lindblad_operators = __lindblad_operators
 
@@ -252,9 +254,10 @@ class TimeDependentSystem(BaseSystem):
         try:
             __hamiltonian = vectorize(hamiltonian)
             _check_hamiltonian(__hamiltonian(1.0))
-        except:
+        except Exception as e:
             raise AssertionError(
-                "Time dependent hamiltonian must be vectorizable callable.")
+                "Time dependent hamiltonian must be vectorizable callable.") \
+                    from e
         self._hamiltonian = __hamiltonian
         __dimension = self._hamiltonian(1.0)
 
@@ -275,20 +278,20 @@ class TimeDependentSystem(BaseSystem):
                 float(gamma(1.0))
                 __gamma = vectorize(gamma)
                 __gammas.append(__gamma)
-        except:
+        except Exception as e:
             raise AssertionError(
                 "All elements of `gammas` must be vectorizable " \
-                 + "callables returning floats.")
+                 + "callables returning floats.") from e
         try:
             __lindblad_operators = []
             for lindblad_operator in lindblad_operators:
                 __lindblad_operator = vectorize(lindblad_operator)
                 array(__lindblad_operator(1.0))
                 __lindblad_operators.append(__lindblad_operator)
-        except:
+        except Exception as e:
             raise AssertionError(
                 "All elements of `lindblad_operators` must be vectorizable " \
-                + "callables returning numpy arrays.")
+                + "callables returning numpy arrays.") from e
         self._gammas = __gammas
         self._lindblad_operators = __lindblad_operators
 
