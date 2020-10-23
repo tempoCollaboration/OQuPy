@@ -315,16 +315,16 @@ class CustomFunctionSD(BaseSD):
         try:
             __j_function = vectorize(j_function)
             float(__j_function(1.0))
-        except:
-            raise AssertionError(
-                "Spectral density must be vectorizable and must return float.")
+        except Exception as e:
+            raise AssertionError("Spectral density must be vectorizable " \
+                + "and must return float.") from e
         self.j_function = __j_function
 
         # check input: cutoff
         try:
             __cutoff = float(cutoff)
-        except:
-            raise AssertionError("Cutoff must be a float.")
+        except Exception as e:
+            raise AssertionError("Cutoff must be a float.") from e
         self.cutoff = __cutoff
 
         # check input: cutoff_type
@@ -523,22 +523,22 @@ class StandardSD(CustomFunctionSD):
         # check input: alpha
         try:
             __alpha = float(alpha)
-        except:
-            raise AssertionError("Alpha must be a float.")
+        except Exception as e:
+            raise AssertionError("Alpha must be a float.") from e
         self.alpha = __alpha
 
         # check input: zeta
         try:
             __zeta = float(zeta)
-        except:
-            raise AssertionError("Nu must be a float.")
+        except Exception as e:
+            raise AssertionError("Nu must be a float.") from e
         self.zeta = __zeta
 
         # check input: cutoff
         try:
             __cutoff = float(cutoff)
-        except:
-            raise AssertionError("Cutoff must be a float.")
+        except Exception as e:
+            raise AssertionError("Cutoff must be a float.") from e
         self.cutoff = __cutoff
 
         # use parent class for all the rest.

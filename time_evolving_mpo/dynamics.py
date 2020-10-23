@@ -127,12 +127,12 @@ class Dynamics(BaseAPIClass):
         """
         try:
             __time = float(time)
-        except:
-            raise AssertionError("Argument `time` must be float.")
+        except Exception as e:
+            raise AssertionError("Argument `time` must be float.") from e
         try:
             __state = array(state, dtype=NpDtype)
-        except:
-            raise AssertionError("Argument `state` must be ndarray.")
+        except Exception as e:
+            raise AssertionError("Argument `state` must be ndarray.") from e
         if self._shape is None:
             __shape = __state.shape
             assert len(__shape) == 2, \
@@ -214,8 +214,9 @@ class Dynamics(BaseAPIClass):
         else:
             try:
                 __operator = array(operator, dtype=NpDtype)
-            except:
-                raise AssertionError("Argument `operator` must be ndarray.")
+            except Exception as e:
+                raise AssertionError("Argument `operator` must be ndarray.") \
+                    from e
             assert __operator.shape == self._shape, \
                 "Argument `operator` must have the same shape as the " \
                 + "states. Has shape {}, ".format(__operator.shape) \

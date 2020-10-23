@@ -65,8 +65,9 @@ class Bath(BaseAPIClass):
         try:
             __coupling_operator = array(coupling_operator, dtype=NpDtype)
             __coupling_operator.setflags(write=False)
-        except:
-            raise AssertionError("Coupling operator must be numpy array")
+        except Exception as e:
+            raise AssertionError("Coupling operator must be numpy array") \
+                from e
         assert len(__coupling_operator.shape) == 2, \
             "Coupling operator is not a matrix."
         assert __coupling_operator.shape[0] == \
@@ -88,8 +89,8 @@ class Bath(BaseAPIClass):
         # input check for temperature.
         try:
             __temperature = float(temperature)
-        except:
-            raise AssertionError("Temperature must be a float.")
+        except Exception as e:
+            raise AssertionError("Temperature must be a float.") from e
         if __temperature < 0.0:
             raise ValueError("Temperature must be >= 0.0 (but is {})".format(
                 __temperature))

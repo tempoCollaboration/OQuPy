@@ -1,7 +1,7 @@
 # Copyright 2020 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
+# you may not use this file  in compliance with the License.
 # You may obtain a copy of the License at
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
@@ -88,8 +88,8 @@ class TempoParameters(BaseAPIClass):
     def dt(self, new_dt: float) -> None:
         try:
             __dt = float(new_dt)
-        except:
-            raise AssertionError("Argument 'dt' must be float.")
+        except Exception as e:
+            raise AssertionError("Argument 'dt' must be float.") from e
         assert __dt > 0.0, \
             "Argument 'dt' must be bigger than 0."
         self._dt = __dt
@@ -107,8 +107,9 @@ class TempoParameters(BaseAPIClass):
                 __dkmax = None
             else:
                 __dkmax = int(new_dkmax)
-        except:
-            raise AssertionError("Argument 'dkmax' must be int or None.")
+        except Exception as e:
+            raise AssertionError("Argument 'dkmax' must be int or None.") \
+                from e
         assert __dkmax is None or __dkmax > 0, \
             "Argument 'dkmax' must be bigger than or equal to 0 or None."
         self._dkmax = __dkmax
@@ -126,8 +127,8 @@ class TempoParameters(BaseAPIClass):
     def epsrel(self, new_epsrel: float) -> None:
         try:
             __epsrel = float(new_epsrel)
-        except:
-            raise AssertionError("Argument 'epsrel' must be float.")
+        except Exception as e:
+            raise AssertionError("Argument 'epsrel' must be float.") from e
         assert __epsrel > 0.0, \
             "Argument 'epsrel' must be bigger than 0."
         self._epsrel = __epsrel
@@ -193,8 +194,8 @@ class Tempo(BaseAPIClass):
         try:
             __initial_state = array(initial_state, dtype=NpDtype)
             __initial_state.setflags(write=False)
-        except:
-            raise AssertionError("Initial state must be numpy array")
+        except Exception as e:
+            raise AssertionError("Initial state must be numpy array") from e
         assert len(__initial_state.shape) == 2, \
             "Initial state is not a matrix."
         assert __initial_state.shape[0] == \
@@ -205,8 +206,8 @@ class Tempo(BaseAPIClass):
 
         try:
             __start_time = float(start_time)
-        except:
-            raise AssertionError("Start time must be a float.")
+        except Exception as e:
+            raise AssertionError("Start time must be a float.") from e
         self._start_time = __start_time
 
         assert self._bath.dimension == self._dimension and \
@@ -344,8 +345,8 @@ class Tempo(BaseAPIClass):
         """
         try:
             __end_time = float(end_time)
-        except:
-            raise AssertionError("End time must be a float.")
+        except Exception as e:
+            raise AssertionError("End time must be a float.") from e
 
         dim = self._dimension
         if self._tempo_backend.step is None:
@@ -410,8 +411,8 @@ def guess_tempo_parameters(
         "Argument 'bath' must be a time_evolving_mpo.Bath object."
     try:
         __tollerance = float(tollerance)
-    except:
-        raise AssertionError("Argument 'tollerance' must be float.")
+    except Exception as e:
+        raise AssertionError("Argument 'tollerance' must be float.") from e
     assert __tollerance > 0.0, \
         "Argument 'tollerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
