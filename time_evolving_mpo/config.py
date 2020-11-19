@@ -35,3 +35,9 @@ BACKEND_CONFIG = {
 
 # 'silent', 'simple' or 'bar' as a default to show the progress of computations
 PROGRESS_TYPE = 'bar'
+
+# relative precission for np.integrate.quad()
+INTEGRATE_EPSREL = 2**(-26)
+
+# maximal number of subdivision for adaptive np.integrate.quad()
+SUBDIV_LIMIT = 256

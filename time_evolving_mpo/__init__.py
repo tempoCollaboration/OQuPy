@@ -8,14 +8,15 @@ from time_evolving_mpo.version import __version__
 # all API functionallity is in __all__
 __all__ = [
     'Bath',
-    'CustomFunctionSD',
+    'CustomCorrelations',
+    'CustomSD',
     'Dynamics',
     'guess_tempo_parameters',
     'import_dynamics',
     'NumericsError',
     'NumericsWarning',
     'operators',
-    'StandardSD',
+    'PowerLawSD',
     'System',
     'Tempo',
     'tempo_compute',
@@ -48,8 +49,9 @@ import time_evolving_mpo.operators
 # from time_evolving_mpo.process_tensor import ProcessTensorParameters
 # from time_evolving_mpo.process_tensor import guess_process_tensor_parameters
 
-from time_evolving_mpo.spectral_density import CustomFunctionSD
-from time_evolving_mpo.spectral_density import StandardSD
+from time_evolving_mpo.correlations import CustomCorrelations
+from time_evolving_mpo.correlations import CustomSD
+from time_evolving_mpo.correlations import PowerLawSD
 
 from time_evolving_mpo.system import System
 from time_evolving_mpo.system import TimeDependentSystem

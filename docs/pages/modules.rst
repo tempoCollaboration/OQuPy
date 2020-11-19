@@ -16,6 +16,14 @@ tempo.bath
     :members:
 
 
+tempo.correlations
+------------------
+
+.. automodule:: time_evolving_mpo.correlations
+    :show-inheritance:
+    :members:
+
+
 tempo.dynamics
 --------------
 

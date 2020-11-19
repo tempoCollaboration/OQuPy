@@ -20,7 +20,7 @@ from copy import copy
 
 from numpy import allclose, array, diag, ndarray
 
-from time_evolving_mpo.spectral_density import BaseSD
+from time_evolving_mpo.correlations import BaseCorrelations
 from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.base_api import BaseAPIClass
 
@@ -28,16 +28,14 @@ from time_evolving_mpo.base_api import BaseAPIClass
 class Bath(BaseAPIClass):
     """
     Represents the bath degrees of freedom with a specific coupling operator
-    (to the system), a specific spectral density and a specific temperature.
+    (to the system) and a specific auto-correlation function.
 
     Parameters
     ----------
     coupling_operator: ndarray
         The system operator to which the bath couples.
-    spectral_density: BaseSD
-        The bath's spectral density.
-    temperature: float
-        The bath's temperature.
+    correlations: BaseCorrelations
+        The bath's auto correlation function.
     name: str
         An optional name for the bath.
     description: str
@@ -55,8 +53,7 @@ class Bath(BaseAPIClass):
     def __init__(
             self,
             coupling_operator: ArrayLike,
-            spectral_density: BaseSD,
-            temperature: Optional[float] = 0.0,
+            correlations: BaseCorrelations,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -80,21 +77,12 @@ class Bath(BaseAPIClass):
         self._coupling_operator = __coupling_operator
         self._dimension = self._coupling_operator.shape[0]
 
-        # input check for spectral_density.
-        if not isinstance(spectral_density, BaseSD):
+        # input check for correlations.
+        if not isinstance(correlations, BaseCorrelations):
             raise AssertionError(
-                "Spectral density must be an instance of a subclass of BaseSD.")
-        self._spectral_density = copy(spectral_density)
-
-        # input check for temperature.
-        try:
-            __temperature = float(temperature)
-        except Exception as e:
-            raise AssertionError("Temperature must be a float.") from e
-        if __temperature < 0.0:
-            raise ValueError("Temperature must be >= 0.0 (but is {})".format(
-                __temperature))
-        self._temperature = __temperature
+                "Correlations must be an instance of a subclass of " \
+                + "BaseCorrelations.")
+        self._correlations = copy(correlations)
 
         super().__init__(name, description, description_dict)
 
@@ -102,8 +90,7 @@ class Bath(BaseAPIClass):
         ret = []
         ret.append(super().__str__())
         ret.append("  dimension     = {} \n".format(self.dimension))
-        ret.append("  spectral den. = {} \n".format(self.spectral_density.name))
-        ret.append("  temperature   = {} \n".format(self.temperature))
+        ret.append("  correlations  = {} \n".format(self.correlations.name))
         return "".join(ret)
 
     @property
@@ -117,11 +104,6 @@ class Bath(BaseAPIClass):
         return copy(self._dimension)
 
     @property
-    def spectral_density(self) -> BaseSD:
-        """The spectral density of the bath. """
-        return copy(self._spectral_density)
-
-    @property
-    def temperature(self) -> float:
-        """The temperature of the bath. """
-        return copy(self._temperature)
+    def correlations(self) -> BaseCorrelations:
+        """The correlations of the bath. """
+        return copy(self._correlations)

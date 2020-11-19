@@ -20,24 +20,25 @@ import pytest
 import numpy as np
 
 from time_evolving_mpo.bath import Bath
-from time_evolving_mpo.spectral_density import StandardSD
+from time_evolving_mpo.correlations import PowerLawSD
 from time_evolving_mpo import operators
 
 def test_bath():
     wc = 4.0
     alpha = 0.3
     temperature = 0.1
-    spectral_density = StandardSD(alpha=alpha,
-                                  zeta=1.0,
-                                  cutoff=wc,
-                                  cutoff_type="exponential")
+    correlations = PowerLawSD(alpha=alpha,
+                              zeta=1.0,
+                              cutoff=wc,
+                              cutoff_type="exponential",
+                              temperature=temperature)
     coupling_operator = np.array([[1,0],[0,-1]])
-    name = "ohmic"
+    name = "phonon bath"
     description = """ Ohmic spectral density. \n J(w) = 2 alpha w exp(-w/wc) """
-    description_dict = {"alpha": alpha, "wc": wc}
+    description_dict = {"alpha": alpha, "wc": wc, "T": temperature}
 
     # try a minimal example
-    bath_A = Bath(coupling_operator, spectral_density, temperature)
+    bath_A = Bath(coupling_operator, correlations)
     bath_A.name = name
     bath_A.descripton = description
     bath_A.description_dict = description_dict
@@ -46,8 +47,7 @@ def test_bath():
     str(bath_A)
     np.testing.assert_equal(bath_A.coupling_operator, coupling_operator)
     assert bath_A.dimension == 2
-    assert bath_A.spectral_density.zeta == 1.0
-    assert bath_A.temperature == temperature
+    assert bath_A.correlations.zeta == 1.0
     del bath_A.name
     del bath_A.description
     del bath_A.description_dict
@@ -61,8 +61,7 @@ def test_bath():
 
     # try a full example
     Bath(coupling_operator,
-         spectral_density,
-         temperature,
+         correlations,
          name=name,
          description=description,
          description_dict=description_dict)
@@ -70,19 +69,15 @@ def test_bath():
     # try bad examples
     with pytest.raises(AssertionError):
         coupling_op = "bla"
-        Bath(coupling_op, spectral_density)
+        Bath(coupling_op, correlations)
     with pytest.raises(AssertionError):
         coupling_op = np.array([1.0,0.0])
-        Bath(coupling_op, spectral_density)
+        Bath(coupling_op, correlations)
     with pytest.raises(AssertionError):
         coupling_op = np.array([[1.0,0.0,0.0],[0.0,1.0,0.0]])
-        Bath(coupling_op, spectral_density)
+        Bath(coupling_op, correlations)
     with pytest.raises(NotImplementedError):
         coupling_op = np.array([[1.0,0.1],[0.1,1.0]])
-        Bath(coupling_op, spectral_density)
+        Bath(coupling_op, correlations)
     with pytest.raises(AssertionError):
-        Bath(coupling_operator, spectral_density="bla")
-    with pytest.raises(AssertionError):
-        Bath(coupling_operator, spectral_density, temperature="bla")
-    with pytest.raises(ValueError):
-        Bath(coupling_operator, spectral_density, temperature=-0.2)
+        Bath(coupling_operator, correlations="bla")

@@ -43,14 +43,14 @@ rho_A = np.array([[ 0.7809559 +0.j        , -0.09456333+0.16671419j],
 
 
 def test_tensor_network_tempo_backend_A():
-    spectral_density_A = tempo.StandardSD(alpha=alpha_A,
-                                          zeta=1.0,
-                                          cutoff=cutoff_A,
-                                          cutoff_type="exponential",
-                                          name="ohmic")
+    correlations_A = tempo.PowerLawSD(alpha=alpha_A,
+                                      zeta=1.0,
+                                      cutoff=cutoff_A,
+                                      cutoff_type="exponential",
+                                      temperature=temperature_A,
+                                      name="ohmic")
     bath_A = tempo.Bath(coupling_operator_A,
-                        spectral_density_A,
-                        temperature=temperature_A,
+                        correlations_A,
                         name="phonon bath")
     system_A = tempo.System(h_sys_A,
                             gammas=[gamma_A_1, gamma_A_2],

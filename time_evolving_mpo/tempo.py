@@ -249,13 +249,13 @@ class Tempo(BaseAPIClass):
             "bath_name":self._bath.name,
             "bath_description":self._bath.description,
             "bath_description_dict":self._bath.description_dict,
-            "spectral_density_type":str(type(self._bath.spectral_density)),
-            "spectral_density_name": \
-                self._bath.spectral_density.name,
-            "spectral_density_description": \
-                self._bath.spectral_density.description,
-            "spectral_density_description_dict": \
-                self._bath.spectral_density.description_dict,
+            "correlations_type":str(type(self._bath.correlations)),
+            "correlations_name": \
+                self._bath.correlations.name,
+            "correlations_description": \
+                self._bath.correlations.description,
+            "correlations_description_dict": \
+                self._bath.correlations.description_dict,
             "backend_type":str(type(self._backend)),
             "initial_state":self._initial_state,
             "dt":self._parameters.dt,
@@ -295,10 +295,9 @@ class Tempo(BaseAPIClass):
             shape = "square"
 
         dt = self._parameters.dt
-        eta_dk = self._bath.spectral_density.correlation_2d_integral( \
+        eta_dk = self._bath.correlations.correlation_2d_integral( \
             time_1=float(dk)*dt,
             delta=dt,
-            temperature=self._bath.temperature,
             shape=shape,
             epsrel=self._parameters.epsrel)
         op_p = self._coupling_acomm
