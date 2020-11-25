@@ -30,6 +30,8 @@ class BaseTempoBackend:
     influence: callable(int) -> ndarray
         Callable that takes an integer `step` and returns the influence super
         operator of that `step`.
+    unitary_transform: ndarray
+        ToDo
     propagators: callable(int) -> ndarray, ndarray
         Callable that takes an integer `step` and returns the first and second
         half of the system propagator of that `step`.
@@ -47,6 +49,7 @@ class BaseTempoBackend:
             self,
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
@@ -55,6 +58,7 @@ class BaseTempoBackend:
         """Create a BaseBackend object. """
         self._initial_state = initial_state
         self._influence = influence
+        self._unitary_transform = unitary_transform
         self._propagators = propagators
         self._sum_north = sum_north
         self._dkmax = dkmax
@@ -119,6 +123,7 @@ class BaseBackend:
             self,
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
@@ -127,6 +132,7 @@ class BaseBackend:
         """Returns an TempoBaseBackend object. """
         return self._tempo_backend_class(initial_state,
                                          influence,
+                                         unitary_transform,
                                          propagators,
                                          sum_north,
                                          sum_west,

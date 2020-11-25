@@ -273,6 +273,7 @@ class Tempo(BaseAPIClass):
         dim = self._dimension
         initial_state = self._initial_state.reshape(dim**2)
         influence = self._influence
+        unitary_transform = self._bath.unitary_transform
         propagators = self._propagators
         sum_north = array([1.0]*(dim**2))
         sum_west = array([1.0]*(dim**2))
@@ -281,6 +282,7 @@ class Tempo(BaseAPIClass):
         self._tempo_backend = \
             self._backend.get_tempo_backend(initial_state,
                                             influence,
+                                            unitary_transform,
                                             propagators,
                                             sum_north,
                                             sum_west,
@@ -311,6 +313,10 @@ class Tempo(BaseAPIClass):
             infl = exp(-outer(eta_dk.real*op_m + 1j*eta_dk.imag*op_p, op_m))
 
         return infl
+
+    def _unitary_transform(self):
+        """ToDo."""
+        return self._bath.unitary_transform()
 
     def _propagators(self, step: int):
         """Create the system propagators (first and second half) for the time

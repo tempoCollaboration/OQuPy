@@ -68,3 +68,55 @@ def test_tensor_network_tempo_backend_A():
     tempo_A.compute(end_time=1.0)
     dyn_A = tempo_A.get_dynamics()
     np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
+
+def test_tensor_network_tempo_backend_non_diag():
+    Omega = 1.0
+    omega_cutoff = 5.0
+    alpha = 0.3
+
+    sx=tempo.operators.sigma("x")
+    sy=tempo.operators.sigma("y")
+    sz=tempo.operators.sigma("z")
+
+    bases = [{"sys_op":sx, "coupling_op":sz, \
+                "init_state":tempo.operators.spin_dm("plus-y")},
+             {"sys_op":sy, "coupling_op":sx, \
+                "init_state":tempo.operators.spin_dm("up")},
+             {"sys_op":sz, "coupling_op":sy, \
+                "init_state":tempo.operators.spin_dm("plus")}]
+
+    results = []
+    for i, base in enumerate(bases):
+        system = tempo.System(0.5*base["sys_op"])
+        correlations = tempo.PowerLawSD(alpha=alpha,
+                                        zeta=1,
+                                        cutoff=omega_cutoff,
+                                        cutoff_type='exponential',
+                                        max_correlation_time=8.0)
+        bath = tempo.Bath(0.5*base["coupling_op"], correlations)
+        tempo_parameters = tempo.TempoParameters(dt=0.1,
+                                                 dkmax=30,
+                                                 epsrel=10**(-5))
+
+        dynamics = tempo.tempo_compute(system=system,
+                                       bath=bath,
+                                       initial_state=base["init_state"],
+                                       start_time=0.0,
+                                       end_time=1.0,
+                                       parameters=tempo_parameters)
+
+        _, s_x = dynamics.expectations(0.5*tempo.operators.sigma("x"),
+                                       real=True)
+        _, s_y = dynamics.expectations(0.5*tempo.operators.sigma("y"),
+                                       real=True)
+        _, s_z = dynamics.expectations(0.5*tempo.operators.sigma("z"),
+                                       real=True)
+        if i == 0:
+            results.append(np.array([s_x, s_y, s_z]))
+        elif i == 1:
+            results.append(np.array([s_y, s_z, s_x]))
+        elif i == 2:
+            results.append(np.array([s_z, s_x, s_y]))
+
+    assert np.allclose(results[0], results[1], atol=tempo_parameters.epsrel)
+    assert np.allclose(results[0], results[2], atol=tempo_parameters.epsrel)

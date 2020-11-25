@@ -18,7 +18,7 @@ Module for tensor network backend.
 from typing import Callable, Dict, Tuple
 from copy import copy
 
-from numpy import ndarray, array
+from numpy import ndarray, array, moveaxis, dot
 
 from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.backends.tensor_network import mps_mpo as mm
@@ -26,7 +26,7 @@ from time_evolving_mpo.backends.base_backend import BaseBackend
 from time_evolving_mpo.backends.base_backend import BaseTempoBackend
 from time_evolving_mpo.backends.tensor_network.util import create_delta
 from time_evolving_mpo.backends.tensor_network.util import add_singleton
-
+import time_evolving_mpo.util as util
 
 MPS_SINGLETON = array([[[1.0]]], dtype=NpDtype)
 
@@ -37,23 +37,26 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
             self,
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
             dkmax: int,
             epsrel: float):
         """Create a TensorNetworkTempoBackend object. """
-        self._initial_state = initial_state
-        self._influence = influence
-        self._propagators = propagators
-        self._sum_north = sum_north
-        self._dkmax = dkmax
-        self._epsrel = epsrel
-        self._step = None
-        self._state = None
+        super().__init__(initial_state,
+                         influence,
+                         unitary_transform,
+                         propagators,
+                         sum_north,
+                         sum_west,
+                         dkmax,
+                         epsrel)
         self._grow = None
         self._mps = None
         self._mpo = None
+        self._super_u = None
+        self._super_u_dagg = None
 
     def initialize(self) -> Tuple[int, ndarray]:
         """See BaseBackend.initialize() for docstring."""
@@ -68,6 +71,13 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
         self._step = 0
         self._grow = True
         self._state = self._initial_state
+        self._super_u = util.left_right_super(
+                            self._unitary_transform,
+                            self._unitary_transform.conjugate().T)
+        self._super_u_dagg = util.left_right_super(
+                                self._unitary_transform.conjugate().T,
+                                self._unitary_transform)
+
         return self._step, copy(self._state)
 
     def compute_step(self) -> Tuple[int, ndarray]:
@@ -88,6 +98,18 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
             infl = self._influence(self._step)
             infl_three_legs = add_singleton(create_delta(infl, [0, 0, 1]), 0)
             infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+            if self._step == 0:
+                # TODO: this is very patchy
+                tmp4 = dot(moveaxis(infl_four_legs,1,-1),
+                          self._super_u_dagg)
+                tmp4 = moveaxis(tmp4,-1,1)
+                tmp4 = dot(tmp4, self._super_u.T)
+                infl_four_legs = tmp4
+                tmp3 = dot(moveaxis(infl_three_legs,1,-1),
+                          self._super_u_dagg)
+                tmp3 = moveaxis(tmp3,-1,1)
+                tmp3 = dot(tmp3, self._super_u.T)
+                infl_three_legs = tmp3
             mpo.append_left(infl_three_legs)
             self._mpo.append_left(infl_four_legs)
         mpo.append_right(prop_2_with_singletons)
@@ -140,6 +162,7 @@ class TensorNetworkBackend(BaseBackend):
             self,
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
@@ -148,6 +171,7 @@ class TensorNetworkBackend(BaseBackend):
         """Returns an TensorNetworkTempoBackend object. """
         return self._tempo_backend_class(initial_state,
                                          influence,
+                                         unitary_transform,
                                          propagators,
                                          sum_north,
                                          sum_west,

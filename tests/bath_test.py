@@ -66,7 +66,23 @@ def test_bath():
          description=description,
          description_dict=description_dict)
 
-    # try bad examples
+    # try non-diagonal coupling
+    coupling_op = np.array([[0.0,-1.0j],[1.0j,0.0]])
+    bath_B = Bath(coupling_op, correlations)
+    u = bath_B.unitary_transform
+    op = bath_B.coupling_operator
+    assert np.allclose(coupling_op, \
+            u @ op @ u.conjugate().T)
+
+def test_bath_bad_input():
+    wc = 4.0
+    alpha = 0.3
+    temperature = 0.1
+    correlations = PowerLawSD(alpha=alpha,
+                              zeta=1.0,
+                              cutoff=wc,
+                              cutoff_type="exponential",
+                              temperature=temperature)
     with pytest.raises(AssertionError):
         coupling_op = "bla"
         Bath(coupling_op, correlations)
@@ -76,8 +92,6 @@ def test_bath():
     with pytest.raises(AssertionError):
         coupling_op = np.array([[1.0,0.0,0.0],[0.0,1.0,0.0]])
         Bath(coupling_op, correlations)
-    with pytest.raises(NotImplementedError):
-        coupling_op = np.array([[1.0,0.1],[0.1,1.0]])
-        Bath(coupling_op, correlations)
     with pytest.raises(AssertionError):
-        Bath(coupling_operator, correlations="bla")
+        coupling_op = np.array([[0.0,-1.0j],[1.0j,0.0]])
+        Bath(coupling_op, correlations="bla")

@@ -32,6 +32,7 @@ class ExampleTempoBackend(BaseTempoBackend):
             self,
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
@@ -41,6 +42,7 @@ class ExampleTempoBackend(BaseTempoBackend):
         """Create a ExampleTempoBackend object. """
         self._initial_state = initial_state
         self._influence = influence
+        self._unitary_transform = unitary_transform
         self._propagators = propagators
         self._sum_north = sum_north
         self._dkmax = dkmax
@@ -85,6 +87,7 @@ class ExampleBackend(BaseBackend):
             self,
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
             propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
@@ -93,6 +96,7 @@ class ExampleBackend(BaseBackend):
         """Returns an ExampleTempoBackend object. """
         return self._tempo_backend_class(initial_state,
                                          influence,
+                                         unitary_transform,
                                          propagators,
                                          sum_north,
                                          sum_west,

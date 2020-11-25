@@ -18,7 +18,7 @@ from typing import Dict, Optional, Text
 from typing import Any as ArrayLike
 from copy import copy
 
-from numpy import allclose, array, diag, ndarray
+import numpy as np
 
 from time_evolving_mpo.correlations import BaseCorrelations
 from time_evolving_mpo.config import NpDtype
@@ -32,7 +32,7 @@ class Bath(BaseAPIClass):
 
     Parameters
     ----------
-    coupling_operator: ndarray
+    coupling_operator: np.ndarray
         The system operator to which the bath couples.
     correlations: BaseCorrelations
         The bath's auto correlation function.
@@ -47,8 +47,6 @@ class Bath(BaseAPIClass):
     ------
     ValueError:
         If the temperature :math:`T` is smaller then 0.
-    NotImplementedError:
-        If the coupling_operator is not diagonal.
     """
     def __init__(
             self,
@@ -60,22 +58,33 @@ class Bath(BaseAPIClass):
         """Creates a Bath object. """
         # input check for coupling_operator.
         try:
-            __coupling_operator = array(coupling_operator, dtype=NpDtype)
+            __coupling_operator = np.array(coupling_operator, dtype=NpDtype)
             __coupling_operator.setflags(write=False)
         except Exception as e:
             raise AssertionError("Coupling operator must be numpy array") \
                 from e
         assert len(__coupling_operator.shape) == 2, \
-            "Coupling operator is not a matrix."
+            "Coupling operator must be a matrix."
         assert __coupling_operator.shape[0] == \
             __coupling_operator.shape[1], \
-            "Coupling operator is not a square matrix."
-        if not allclose(diag(__coupling_operator.diagonal()),
+            "Coupling operator must be a square matrix."
+        assert np.allclose(__coupling_operator.conjugate().T,
+                           __coupling_operator), \
+            "Coupling operator must be a hermitian matrix."
+        self._dimension = __coupling_operator.shape[0]
+
+        # diagonalise the coupling operator
+        if np.allclose(np.diag(__coupling_operator.diagonal()),
                         __coupling_operator):
-            raise NotImplementedError(
-                "Non-diagonal coupling operators are not implemented yet!")
-        self._coupling_operator = __coupling_operator
-        self._dimension = self._coupling_operator.shape[0]
+            self._coupling_operator = __coupling_operator
+            self._unitary = np.identity(self._dimension)
+        else:
+            w, v = np.linalg.eig(__coupling_operator)
+            self._coupling_operator = np.diag(w)
+            self._unitary = v
+            assert np.allclose(__coupling_operator, \
+                self._unitary @ self._coupling_operator \
+                @ self._unitary.conjugate().T)
 
         # input check for correlations.
         if not isinstance(correlations, BaseCorrelations):
@@ -94,12 +103,17 @@ class Bath(BaseAPIClass):
         return "".join(ret)
 
     @property
-    def coupling_operator(self) -> ndarray:
-        """The system operator to which the bath couples. """
+    def coupling_operator(self) -> np.ndarray:
+        """ToDo: The system diagonalised operator to which the bath couples. """
         return copy(self._coupling_operator)
 
     @property
-    def dimension(self) -> ndarray:
+    def unitary_transform(self) -> np.ndarray:
+        """ToDo: The unitary that makes the coupling diagonal to which the bath couples. """
+        return copy(self._unitary)
+
+    @property
+    def dimension(self) -> np.ndarray:
         """Hilbert space dimension of the coupling operator. """
         return copy(self._dimension)
 
