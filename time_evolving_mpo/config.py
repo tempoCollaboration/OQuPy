@@ -41,3 +41,9 @@ INTEGRATE_EPSREL = 2**(-26)
 
 # maximal number of subdivision for adaptive np.integrate.quad()
 SUBDIV_LIMIT = 256
+
+# maximal dkmax for tempo parameter guessing function
+MAX_DKMAX = 256
+
+# default tolerance for tempo parameter guessing function
+DEFAULT_TOLLERANCE = 3.9e-3

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.tempo module.
+Tests for the time_evovling_mpo.helpers module.
 """
 
 import pytest
@@ -21,14 +21,11 @@ import numpy as np
 import time_evolving_mpo as tempo
 
 
-def test_guess_tempo_parameters():
-    system = tempo.System(0.5 * tempo.operators.sigma("x"))
+def test_plot_correlations_with_parameters():
     correlation_function = lambda t: (np.cos(t)+1j*np.sin(6.0*t)) * np.exp(-2.0*t)
     correlations = tempo.CustomCorrelations(correlation_function,
                                             max_correlation_time=10.0)
-    bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
-    with pytest.warns(UserWarning):
-        param = tempo.guess_tempo_parameters(system=system,
-                                             bath=bath,
-                                             start_time=0.0,
-                                             end_time=15.0)
+    param = tempo.TempoParameters(dt=0.1,
+                                  dkmax=50,
+                                  epsrel=3.9e-8)
+    tempo.helpers.plot_correlations_with_parameters(correlations, param)

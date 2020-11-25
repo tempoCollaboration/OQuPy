@@ -20,18 +20,20 @@ and Lovett, B.W., 2018. *Efficient non-Markovian quantum dynamics using
 time-evolving matrix product operators.* Nature communications, 9(1), pp.1-9.
 """
 
-from typing import Dict, Optional, Text
+import sys
+from typing import Dict, Optional, Text, Callable
 from typing import Any as ArrayLike
 import warnings
-
 from copy import copy
+
+import numpy as np
 from numpy import array, ndarray, diag, exp, outer
 from scipy.linalg import expm
 
 from time_evolving_mpo.backends.backend_factory import get_backend
 from time_evolving_mpo.bath import Bath
 from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype
+from time_evolving_mpo.config import NpDtype, MAX_DKMAX, DEFAULT_TOLLERANCE
 from time_evolving_mpo.dynamics import Dynamics
 from time_evolving_mpo.system import BaseSystem
 from time_evolving_mpo.util import commutator, acommutator
@@ -370,17 +372,71 @@ class Tempo(BaseAPIClass):
         return copy(self._dynamics)
 
 
-GUESS_WARNING_MSG = "Estimating parameters for TEMPO calculation. " \
-    + "No guarantie that resulting TEMPO calculation converges towards " \
+def _analyse_correlation(
+        corr_func: Callable[[np.ndarray],np.ndarray],
+        times: np.ndarray,
+        corr_vals: np.ndarray):
+    """Check correlation function on a finer grid."""
+    additional_times = (times[:-1] + times[1:])/2.0
+    additional_corr_vals = corr_func(additional_times)
+    new_times = list(times)
+    new_corr_vals = list(corr_vals)
+    for i in range(len(additional_times)):
+        new_times.insert(2*i+1,additional_times[i])
+        new_corr_vals.insert(2*i+1,additional_corr_vals[i])
+
+    errors = []
+    integrals = []
+    integral = 0.0
+
+    for i in range(len(times)-1):
+        dt = new_times[2*i+2] - new_times[2*i]
+
+        rough_int = 0.5 * dt * (new_corr_vals[2*i] + new_corr_vals[2*i+2])
+        fine_int = 0.5 * (rough_int + dt * new_corr_vals[2*i+1])
+        error = np.abs(rough_int-fine_int)
+        errors.append(error)
+
+        rough_abs_int = 0.5 * dt \
+                * (np.abs(new_corr_vals[2*i]) + np.abs(new_corr_vals[2*i+2]))
+        fine_abs_int = 0.5 * (rough_abs_int + dt * np.abs(new_corr_vals[2*i+1]))
+        integral += fine_abs_int
+        integrals.append(integral)
+
+    full_abs_integral = integrals[-1]
+
+    new_times = np.array(new_times)
+    new_corr_val = np.array(new_corr_vals)
+    errors = np.array(errors) / full_abs_integral
+    integrals = np.array(integrals) / full_abs_integral
+
+    return new_times, new_corr_val, errors, integrals
+
+def _estimate_epsrel(
+        dkmax: int,
+        tollerance: float) -> float:
+    """Heuristic estimation of appropriate epsrel for TEMPO."""
+    power = np.log(dkmax)/np.log(4)-np.log(tollerance)/np.log(10)
+    return np.power(10,-power)
+
+GUESS_WARNING_MSG = "Estimating parameters for TEMPO computation. " \
+    + "No guarantie that resulting TEMPO computation converges towards " \
     + "the correct dynamics! " \
     + "Please refere to the TEMPO documentation and check convergence by " \
     + "varying the parameters for TEMPO manually."
 
-PLACEHOLDER_MSG = "This is just a placeholder and not really implemented yet."
+MAX_DKMAX_WARNING_MSG = f"Reached maximal recommended `dkmax` ({MAX_DKMAX})! " \
+    + "Interrupt TEMPO parameter estimation. "\
+    + "Please choose a lower tollerance, or analyse the correlation function " \
+    + "to choose TEMPO parameters manually. " \
+    + "Could not reach specified tollerance! "
+
 def guess_tempo_parameters(
         system: BaseSystem,
         bath: Bath,
-        tollerance: float) -> TempoParameters:
+        start_time: float,
+        end_time: float,
+        tollerance: float = DEFAULT_TOLLERANCE) -> TempoParameters:
     """
     Function to roughly estimate appropriate parameters for a TEMPO
     computation.
@@ -391,23 +447,35 @@ def guess_tempo_parameters(
         correct dynamics! Please refere to the TEMPO documentation and check
         convergence by varying the parameters for TEMPO manually.
 
-    .. todo::
-
-        This function is not really implemented yet.
-
     Parameters
     ----------
     system: BaseSystem
         The system.
     bath: Bath
         The bath.
+    start_time: float
+        The start time.
+    end_time: float
+        The time to which the TEMPO should be computed.
     tollerance: float
-        A measure for how exact/rough the computation should be.
+        Tollerance for the parameter estimation.
+
+    Returns
+    -------
+    tempo_parameters : TempoParameters
+        Estimate of appropropriate tempo parameters.
     """
     assert isinstance(system, BaseSystem), \
         "Argument 'system' must be a time_evolving_mpo.BaseSystem object."
     assert isinstance(bath, Bath), \
         "Argument 'bath' must be a time_evolving_mpo.Bath object."
+    try:
+        __start_time = float(start_time)
+        __end_time = float(end_time)
+    except Exception as e:
+        raise AssertionError("Start and end time must be a float.") from e
+    if __end_time <= __start_time:
+        raise ValueError("End time must be bigger than start time.")
     try:
         __tollerance = float(tollerance)
     except Exception as e:
@@ -415,14 +483,47 @@ def guess_tempo_parameters(
     assert __tollerance > 0.0, \
         "Argument 'tollerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
-    pass # ToDo
-    warnings.warn(PLACEHOLDER_MSG, UserWarning)
+    print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
+
+    max_tau = __end_time - __start_time
+    if bath.correlations.max_correlation_time is not None:
+        max_tau = min([max_tau, bath.correlations.max_correlation_time])
+
+    corr_func = np.vectorize(bath.correlations.correlation)
+    new_times = np.linspace(0, max_tau, 11, endpoint=True)
+    new_corr_vals = corr_func(new_times)
+    times = new_times
+    corr_vals = new_corr_vals
+
+    while True:
+        if len(new_times) > MAX_DKMAX:
+            warnings.warn(MAX_DKMAX_WARNING_MSG, UserWarning)
+            break
+        times = new_times
+        corr_vals = new_corr_vals
+        new_times, new_corr_vals, errors, integrals = \
+                _analyse_correlation(corr_func, times, corr_vals)
+        cut = np.where(integrals>(1-tollerance))[0][0]
+        cut = cut+2 if cut+2<=len(times) else len(times)
+        times = times[:cut]
+        corr_vals = corr_vals[:cut]
+        new_times = new_times[:2*cut-1]
+        new_corr_vals = new_corr_vals[:2*cut-1]
+        if (errors < tollerance).all():
+            break
+
+    dt = np.min(times[1:] - times[:-1])
+    dkmax = len(times)
+    epsrel = _estimate_epsrel(dkmax, tollerance)
+    sys.stderr.flush()
+
     return TempoParameters(
-        dt=0.05,
-        dkmax=20,
-        epsrel=2**(-15),
+        dt=dt,
+        dkmax=dkmax,
+        epsrel=epsrel,
         name="Roughly estimated parameters",
-        description="Estimated with 'guess_tempo_parameters()'")
+        description="Estimated with 'guess_tempo_parameters()'",
+        description_dict={"tollerance":tollerance})
 
 
 def tempo_compute(
@@ -432,7 +533,7 @@ def tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[TempoParameters] = None,
-        tollerance: Optional[float] = None,
+        tollerance: Optional[float] = DEFAULT_TOLLERANCE,
         backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
@@ -448,14 +549,17 @@ def tempo_compute(
         The system.
     bath: Bath
         The Bath (includes the coupling operator to the sytem).
-    parameters: TempoParameters
-        The parameters for the TEMPO computation.
     initial_state: ndarray
         The initial density matrix of the sytem.
     start_time: float
         The start time.
     end_time: float
         The time to which the TEMPO should be computed.
+    parameters: TempoParameters
+        The parameters for the TEMPO computation.
+    tollerance: float
+        Tollerance for the parameter estimation (only applicable if
+        `parameters` is None).
     backend: str (default = None)
         The name of the backend to use for the computation. If `backend` is
         ``None`` then the default backend is used.
@@ -477,11 +581,11 @@ def tempo_compute(
         assert tollerance is not None, \
             "If 'parameters' is 'None' then 'tollerance' must be " \
             + "a positive float."
-        parameters = guess_tempo_parameters(system, bath, tollerance)
-    else:
-        assert tollerance is None, \
-            "If 'parameters' is given then 'tollerance' must be " \
-            + "'None'."
+        parameters = guess_tempo_parameters(system,
+                                            bath,
+                                            start_time,
+                                            end_time,
+                                            tollerance)
     tempo = Tempo(system,
                   bath,
                   parameters,

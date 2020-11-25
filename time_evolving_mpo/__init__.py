@@ -11,7 +11,9 @@ __all__ = [
     'CustomCorrelations',
     'CustomSD',
     'Dynamics',
+    'file_formats',
     'guess_tempo_parameters',
+    'helpers',
     'import_dynamics',
     'NumericsError',
     'NumericsWarning',
@@ -41,6 +43,8 @@ from time_evolving_mpo.exceptions import NumericsWarning
 import time_evolving_mpo.file_formats
 
 import time_evolving_mpo.operators
+
+import time_evolving_mpo.helpers
 
 # from time_evolving_mpo.process_tensor import ProcessTensor
 # from time_evolving_mpo.process_tensor import compute_process_tensor
