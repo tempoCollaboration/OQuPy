@@ -24,9 +24,7 @@ from tensornetwork.backends.base_backend import BaseBackend
 
 
 class NodeArray:
-    """
-    ToDo
-    """
+    """NodeArray class. """
     def __init__(
             self,
             tensors: List[Union[Node, Any]],
@@ -112,18 +110,25 @@ class NodeArray:
 
         return "".join(ret)
 
+    def get_verbose_string(self):
+        """Returns a verbose desciption of the NodeArray. """
+        ret = [self.__str__()]
+        ret.append("\n")
+        ret.append(f" rank = {self.rank}\n")
+        ret.append(f" len = {len(self)}\n")
+        ret.append(f" bond_dimensions = {self.bond_dimensions}\n")
+        ret.append(f" left = {self.left}\n")
+        ret.append(f" right = {self.right}\n")
+        return "".join(ret)
+
     @property
     def bond_dimensions(self):
-        """
-        ToDo
-        """
+        """Returns the list of bond dimensions. """
         return [edge.dimension for edge in self.bond_edges]
 
     @property
     def rank(self) -> int:
-        """
-        ToDo
-        """
+        """Returns the rank of the NodeArray. (1 ... MPS, 2 ... MPO, etc.) """
         if len(self) == 0:
             return None
         ranks = [ node.get_rank() for node in self.nodes]
@@ -138,9 +143,7 @@ class NodeArray:
 
     @property
     def name(self):
-        """
-        ToDo
-        """
+        """The name of the NodeArray. """
         return self._name
 
     @name.setter
@@ -606,21 +609,21 @@ def split(
 
     a = array.copy() if copy else array
 
-    new_r_edge, new_l_edge = a.bond_edges[index-1].disconnect()
+    new_r_edge, new_l_edge = a.bond_edges[_index-1].disconnect()
 
     ret_l = NodeArray([], name=name_left, backend=array.backend)
-    ret_l.nodes = a.nodes[:index]
+    ret_l.nodes = a.nodes[:_index]
     ret_l.left_edge = a.left_edge
     ret_l.right_edge = new_r_edge
-    ret_l.bond_edges = a.bond_edges[:index-1]
-    ret_l.array_edges = a.array_edges[:index]
+    ret_l.bond_edges = a.bond_edges[:_index-1]
+    ret_l.array_edges = a.array_edges[:_index]
 
     ret_r = NodeArray([], name=name_right, backend=array.backend)
-    ret_r.nodes = a.nodes[index:]
+    ret_r.nodes = a.nodes[_index:]
     ret_r.left_edge = new_l_edge
     ret_r.right_edge = a.right_edge
-    ret_r.bond_edges = a.bond_edges[index:]
-    ret_r.array_edges = a.array_edges[index:]
+    ret_r.bond_edges = a.bond_edges[_index:]
+    ret_r.array_edges = a.array_edges[_index:]
 
     return ret_l, ret_r
 
