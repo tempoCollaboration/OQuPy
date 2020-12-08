@@ -61,6 +61,7 @@ class BaseTempoBackend:
         self._unitary_transform = unitary_transform
         self._propagators = propagators
         self._sum_north = sum_north
+        self._sum_west = sum_west
         self._dkmax = dkmax
         self._epsrel = epsrel
         self._step = None
