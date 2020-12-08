@@ -15,7 +15,7 @@
 Module for base classes of backends.
 """
 
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Tuple
 from numpy import ndarray
 
 
@@ -54,7 +54,8 @@ class BaseTempoBackend:
             sum_north: ndarray,
             sum_west: ndarray,
             dkmax: int,
-            epsrel: float):
+            epsrel: float,
+            config: Dict):
         """Create a BaseBackend object. """
         self._initial_state = initial_state
         self._influence = influence
@@ -66,6 +67,7 @@ class BaseTempoBackend:
         self._epsrel = epsrel
         self._step = None
         self._state = None
+        self._config = config
 
     @property
     def step(self) -> int:
@@ -102,40 +104,3 @@ class BaseTempoBackend:
         raise NotImplementedError(
             "Class {} has no compute_step implementation.".format(
                 type(self).__name__))
-
-
-class BaseBackend:
-    """
-    Base class for backends.
-
-    Parameters
-    ----------
-    config: dict (default = None)
-        Dictionary with information to configure the specific backend.
-    """
-    def __init__(self, config: Optional[Dict] = None):
-        """Create a BaseBackend object."""
-        self._tempo_backend_class = BaseTempoBackend
-        raise NotImplementedError(
-            "Class {} should not call BaseBackend constructor.".format(
-                type(self).__name__))
-
-    def get_tempo_backend(
-            self,
-            initial_state: ndarray,
-            influence: Callable[[int], ndarray],
-            unitary_transform: ndarray,
-            propagators: Callable[[int], Tuple[ndarray, ndarray]],
-            sum_north: ndarray,
-            sum_west: ndarray,
-            dkmax: int,
-            epsrel: float) -> BaseTempoBackend:
-        """Returns an TempoBaseBackend object. """
-        return self._tempo_backend_class(initial_state,
-                                         influence,
-                                         unitary_transform,
-                                         propagators,
-                                         sum_north,
-                                         sum_west,
-                                         dkmax,
-                                         epsrel)

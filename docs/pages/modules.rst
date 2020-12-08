@@ -87,14 +87,8 @@ tempo.util
 tempo.backends
 --------------
 
-base_backend
+base_backends
 ~~~~~~~~~~~~
 
-.. automodule:: time_evolving_mpo.backends.base_backend
-    :members:
-
-example_backend
-~~~~~~~~~~~~~~~
-
-.. automodule:: time_evolving_mpo.backends.example.example_backend
+.. automodule:: time_evolving_mpo.backends.base_backends
     :members:

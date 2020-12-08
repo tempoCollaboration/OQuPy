@@ -64,7 +64,7 @@ def test_tensor_network_tempo_backend_A():
                           tempo_params_A,
                           initial_state_A,
                           start_time=0.0,
-                          backend="tensor-network")
+                          backend_name="tensor-network")
     tempo_A.compute(end_time=1.0)
     dyn_A = tempo_A.get_dynamics()
     np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)

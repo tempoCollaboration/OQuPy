@@ -22,8 +22,7 @@ from numpy import ndarray, array, moveaxis, dot
 
 from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.backends.tensor_network import node_array as na
-from time_evolving_mpo.backends.base_backend import BaseBackend
-from time_evolving_mpo.backends.base_backend import BaseTempoBackend
+from time_evolving_mpo.backends.base_backends import BaseTempoBackend
 from time_evolving_mpo.backends.tensor_network.util import create_delta
 import time_evolving_mpo.util as util
 
@@ -41,7 +40,8 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
             sum_north: ndarray,
             sum_west: ndarray,
             dkmax: int,
-            epsrel: float):
+            epsrel: float,
+            config: Dict):
         """Create a TensorNetworkTempoBackend object. """
         super().__init__(initial_state,
                          influence,
@@ -50,7 +50,8 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
                          sum_north,
                          sum_west,
                          dkmax,
-                         epsrel)
+                         epsrel,
+                         config)
         self._grow = None
         self._mps = None
         self._mpo = None
@@ -225,29 +226,3 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
         self._state = tmp_mps.nodes[0].get_tensor()
 
         return copy(self._step), copy(self._state)
-
-class TensorNetworkBackend(BaseBackend):
-    """See BaseBackend for docstring. """
-    def __init__(self, config: Dict) -> None:
-        """Create ExampleBackend object. """
-        self._tempo_backend_class = TensorNetworkTempoBackend
-
-    def get_tempo_backend(
-            self,
-            initial_state: ndarray,
-            influence: Callable[[int], ndarray],
-            unitary_transform: ndarray,
-            propagators: Callable[[int], Tuple[ndarray, ndarray]],
-            sum_north: ndarray,
-            sum_west: ndarray,
-            dkmax: int,
-            epsrel: float) -> BaseTempoBackend:
-        """Returns an TensorNetworkTempoBackend object. """
-        return self._tempo_backend_class(initial_state,
-                                         influence,
-                                         unitary_transform,
-                                         propagators,
-                                         sum_north,
-                                         sum_west,
-                                         dkmax,
-                                         epsrel)

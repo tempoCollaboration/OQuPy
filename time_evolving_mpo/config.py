@@ -24,12 +24,11 @@ NpDtypeReal = float64
 # Seperator string for __str__ functions
 SEPERATOR = "----------------------------------------------\n"
 
-# The default backend for tensor network calculations
-BACKEND = 'tensor-network'
+# The default tempo backend for tensor network calculations
+TEMPO_BACKEND = 'tensor-network'
 
-# Dict of all backends and their default configuration
-BACKEND_CONFIG = {
-    'example': {'sleep_time':0.02},
+# Dict of all tempo backends and their default configuration
+TEMPO_BACKEND_CONFIG = {
     'tensor-network': {},
     }
 

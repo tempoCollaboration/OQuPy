@@ -30,7 +30,7 @@ import numpy as np
 from numpy import array, ndarray, diag, exp, outer
 from scipy.linalg import expm
 
-from time_evolving_mpo.backends.backend_factory import get_backend
+from time_evolving_mpo.backends.backend_factory import get_tempo_backend
 from time_evolving_mpo.bath import Bath
 from time_evolving_mpo.base_api import BaseAPIClass
 from time_evolving_mpo.config import NpDtype, MAX_DKMAX, DEFAULT_TOLLERANCE
@@ -153,9 +153,9 @@ class Tempo(BaseAPIClass):
         The initial density matrix of the sytem.
     start_time: float
         The start time.
-    backend: str (default = None)
-        The name of the backend to use for the computation. If `backend` is
-        ``None`` then the default backend is used.
+    backend_name: str (default = None)
+        The name of the backend_name to use for the computation. If
+        `backend_name` is ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -173,13 +173,14 @@ class Tempo(BaseAPIClass):
             parameters: TempoParameters,
             initial_state: ArrayLike,
             start_time: float,
-            backend: Optional[Text] = None,
+            backend_name: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a Tempo object. """
-        self._backend = get_backend(backend, backend_config)
+        self._backend_class, self._backend_config = \
+            get_tempo_backend(backend_name, backend_config)
 
         assert isinstance(system, BaseSystem), \
             "Argument 'system' must be an instance of BaseSystem."
@@ -227,6 +228,7 @@ class Tempo(BaseAPIClass):
         self._coupling_acomm = __coupling_acomm.diagonal()
 
         self._dynamics = None
+        self._backend_instance = None
 
         self._init_tempo_backend()
 
@@ -258,7 +260,7 @@ class Tempo(BaseAPIClass):
                 self._bath.correlations.description,
             "correlations_description_dict": \
                 self._bath.correlations.description_dict,
-            "backend_type":str(type(self._backend)),
+            "backend_class":str(self._backend_class),
             "initial_state":self._initial_state,
             "dt":self._parameters.dt,
             "dkmax":self._parameters.dkmax,
@@ -279,15 +281,16 @@ class Tempo(BaseAPIClass):
         sum_west = array([1.0]*(dim**2))
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
-        self._tempo_backend = \
-            self._backend.get_tempo_backend(initial_state,
-                                            influence,
-                                            unitary_transform,
-                                            propagators,
-                                            sum_north,
-                                            sum_west,
-                                            dkmax,
-                                            epsrel)
+        self._backend_instance = self._backend_class(
+                initial_state,
+                influence,
+                unitary_transform,
+                propagators,
+                sum_north,
+                sum_west,
+                dkmax,
+                epsrel,
+                config=self._backend_config)
 
     def _influence(self, dk: int):
         """Create the influence functional matrix for a time step distance
@@ -356,22 +359,22 @@ class Tempo(BaseAPIClass):
             raise AssertionError("End time must be a float.") from e
 
         dim = self._dimension
-        if self._tempo_backend.step is None:
-            step, state = self._tempo_backend.initialize()
+        if self._backend_instance.step is None:
+            step, state = self._backend_instance.initialize()
             self._init_dynamics()
             self._dynamics.add(self._time(step), state.reshape(dim, dim))
 
-        start_step = self._tempo_backend.step
+        start_step = self._backend_instance.step
         end_step = int((end_time - self._start_time)/self._parameters.dt)
         num_step = max(0, end_step - start_step)
 
         progress = get_progress(progress_type)
         with progress(num_step) as prog_bar:
-            while self._time(self._tempo_backend.step) < __end_time:
-                step, state = self._tempo_backend.compute_step()
+            while self._time(self._backend_instance.step) < __end_time:
+                step, state = self._backend_instance.compute_step()
                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
-                prog_bar.update(self._tempo_backend.step - start_step)
-            prog_bar.update(self._tempo_backend.step - start_step)
+                prog_bar.update(self._backend_instance.step - start_step)
+            prog_bar.update(self._backend_instance.step - start_step)
 
     def get_dynamics(self) -> Dynamics:
         """Returns a copy of the computed dynamics. """

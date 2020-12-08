@@ -17,32 +17,29 @@ Factory for backends.
 
 from typing import Dict, Optional, Text
 
-from time_evolving_mpo.config import BACKEND, BACKEND_CONFIG
-from time_evolving_mpo.backends.base_backend \
-    import BaseBackend
-from time_evolving_mpo.backends.example.example_backend \
-    import ExampleBackend
+from time_evolving_mpo.config import TEMPO_BACKEND, TEMPO_BACKEND_CONFIG
+from time_evolving_mpo.backends.base_backends import BaseTempoBackend
 from time_evolving_mpo.backends.tensor_network.tensor_network_backend \
-    import TensorNetworkBackend
+    import TensorNetworkTempoBackend
 
 
-BACKEND_DICT = {
-    'example': ExampleBackend,
-    'tensor-network': TensorNetworkBackend,
+TEMPO_BACKEND_DICT = {
+    'tensor-network': TensorNetworkTempoBackend,
     }
 
 
-def get_backend(
+def get_tempo_backend(
         name: Optional[Text] = None,
-        config: Optional[Dict] = None) -> BaseBackend:
+        config: Optional[Dict] = None) -> BaseTempoBackend:
     """Returns a backend object. """
     # input checks
     if name is None:
-        name = BACKEND
-    assert name in BACKEND_DICT, \
-        "Unknown backend '{}'. Known backends: {}.".format(name,
-                                                           BACKEND_DICT.keys())
-    if config is None:
-        config = BACKEND_CONFIG[name]
+        name = TEMPO_BACKEND
+    assert name in TEMPO_BACKEND_DICT, \
+        f"Unknown tempo backend '{name}'. " \
+        + f"Known backends: {TEMPO_BACKEND_DICT.keys()}."
 
-    return BACKEND_DICT[name](config)
+    if config is None:
+        config = TEMPO_BACKEND_CONFIG[name]
+
+    return TEMPO_BACKEND_DICT[name], config
