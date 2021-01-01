@@ -196,16 +196,16 @@ class Dynamics(BaseAPIClass):
         ----------
         operator: ndarray (default = None)
             The operator :math:`\hat{O}`. If `operator` is `None` then the
-            trace of rho(t) is returned.
+            trace of :math:`rho(t)` is returned.
         real: bool (default = False)
             If set True then only the real part of the expectation is returned.
 
         Returns
         -------
         times: ndarray
-            The points in time :math:`t`
+            The points in time :math:`t`.
         expectations: ndarray
-            Expectation values :math:`\langle \hat{O}(t) \rangle `.
+            Expectation values :math:`\langle \hat{O}(t) \rangle`.
         """
         if len(self) == 0:
             return None, None

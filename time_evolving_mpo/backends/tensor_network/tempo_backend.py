@@ -12,21 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for tensor network backend.
+Module for tensor network tempo backend.
 """
 
 from typing import Callable, Dict, Tuple
 from copy import copy
 
-from numpy import ndarray, array, moveaxis, dot
+from numpy import ndarray, moveaxis, dot
 
-from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.backends.tensor_network import node_array as na
 from time_evolving_mpo.backends.base_backends import BaseTempoBackend
 from time_evolving_mpo.backends.tensor_network.util import create_delta
 import time_evolving_mpo.util as util
-
-MPS_SINGLETON = array([[[1.0]]], dtype=NpDtype)
 
 
 class TensorNetworkTempoBackend(BaseTempoBackend):
@@ -52,13 +49,11 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
                          dkmax,
                          epsrel,
                          config)
-        self._grow = None
         self._mps = None
         self._mpo = None
         self._super_u = None
         self._super_u_dagg = None
         self._sum_north_na = None
-        self._influences = None
 
     def initialize(self) -> Tuple[int, ndarray]:
         """See BaseBackend.initialize() for docstring."""
@@ -86,9 +81,9 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
             infl = self._influence(i)
             infl_four_legs = create_delta(infl, [1, 0, 0, 1])
             if i == 0:
-                tmp = dot(moveaxis(infl_four_legs,1,-1),
+                tmp = dot(moveaxis(infl_four_legs, 1, -1),
                           self._super_u_dagg)
-                tmp = moveaxis(tmp,-1,1)
+                tmp = moveaxis(tmp, -1, 1)
                 tmp = dot(tmp, self._super_u.T)
                 infl_four_legs = tmp
             influences.append(infl_four_legs)
@@ -109,7 +104,7 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
 
     def compute_step(self) -> Tuple[int, ndarray]:
         """
-        See BaseBackend.compute_step() for docstring.
+        See BaseTempoBackend.compute_step() for docstring.
 
         For example, for at step 4, we start with:
 
@@ -140,7 +135,7 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
 
         """
         self._step += 1
-        prop_1, prop_2 = self._propagators(self._step)
+        prop_1, prop_2 = self._propagators(self._step-1)
         prop_1_na = na.NodeArray([prop_1],
                                  left=False,
                                  right=False,

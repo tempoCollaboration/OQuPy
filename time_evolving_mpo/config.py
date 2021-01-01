@@ -24,6 +24,18 @@ NpDtypeReal = float64
 # Seperator string for __str__ functions
 SEPERATOR = "----------------------------------------------\n"
 
+# relative precission for np.integrate.quad()
+INTEGRATE_EPSREL = 2**(-26)
+
+# maximal number of subdivision for adaptive np.integrate.quad()
+SUBDIV_LIMIT = 256
+
+# 'silent', 'simple' or 'bar' as a default to show the progress of computations
+PROGRESS_TYPE = 'bar'
+
+
+# -- TEMPO --------------------------------------------------------------------
+
 # The default tempo backend for tensor network calculations
 TEMPO_BACKEND = 'tensor-network'
 
@@ -32,17 +44,36 @@ TEMPO_BACKEND_CONFIG = {
     'tensor-network': {},
     }
 
-# 'silent', 'simple' or 'bar' as a default to show the progress of computations
-PROGRESS_TYPE = 'bar'
-
-# relative precission for np.integrate.quad()
-INTEGRATE_EPSREL = 2**(-26)
-
-# maximal number of subdivision for adaptive np.integrate.quad()
-SUBDIV_LIMIT = 256
-
 # maximal dkmax for tempo parameter guessing function
 MAX_DKMAX = 256
 
 # default tolerance for tempo parameter guessing function
 DEFAULT_TOLLERANCE = 3.9e-3
+
+
+# -- PT_TEMPO -----------------------------------------------------------------
+
+# The default process tensor tempo backend for tensor network calculations
+PT_TEMPO_BACKEND = 'tensor-network'
+
+# Dict of all process tensor tempo backends and their default configuration
+PT_TEMPO_BACKEND_CONFIG = {
+    'tensor-network': {},
+    }
+
+# maximal dkmax for process tensor tempo parameter guessing function
+PT_MAX_DKMAX = 256
+
+# default tolerance for process tensor tempo parameter guessing function
+PT_DEFAULT_TOLLERANCE = 3.9e-3
+
+
+# -- Process Tensor -----------------------------------------------------------
+
+# The default process tensor tempo backend for tensor network calculations
+PROCESS_TENSOR_BACKEND = 'tensor-network'
+
+# Dict of all process tensor tempo backends and their default configuration
+PROCESS_TENSOR_BACKEND_CONFIG = {
+    'tensor-network': {},
+    }

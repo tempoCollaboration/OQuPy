@@ -15,9 +15,10 @@
 Module on for the original time evolving matrix product operator (TEMPO)
 algorithm. This code is based on [Strathearn2018].
 
-**[Strathearn2018]** Strathearn, A., Kirton, P., Kilda, D., Keeling, J.
-and Lovett, B.W., 2018. *Efficient non-Markovian quantum dynamics using
-time-evolving matrix product operators.* Nature communications, 9(1), pp.1-9.
+**[Strathearn2018]**
+A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
+B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
+time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
 """
 
 import sys
@@ -173,14 +174,14 @@ class Tempo(BaseAPIClass):
             parameters: TempoParameters,
             initial_state: ArrayLike,
             start_time: float,
-            backend_name: Optional[Text] = None,
+            backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a Tempo object. """
         self._backend_class, self._backend_config = \
-            get_tempo_backend(backend_name, backend_config)
+            get_tempo_backend(backend, backend_config)
 
         assert isinstance(system, BaseSystem), \
             "Argument 'system' must be an instance of BaseSystem."
@@ -198,7 +199,7 @@ class Tempo(BaseAPIClass):
             __initial_state = array(initial_state, dtype=NpDtype)
             __initial_state.setflags(write=False)
         except Exception as e:
-            raise AssertionError("Initial state must be numpy array") from e
+            raise AssertionError("Initial state must be numpy array.") from e
         assert len(__initial_state.shape) == 2, \
             "Initial state is not a matrix."
         assert __initial_state.shape[0] == \
@@ -232,10 +233,32 @@ class Tempo(BaseAPIClass):
 
         self._init_tempo_backend()
 
+    def _init_tempo_backend(self):
+        """Create and initialize the tempo backend. """
+        dim = self._dimension
+        initial_state = self._initial_state.reshape(dim**2)
+        influence = self._influence
+        unitary_transform = self._bath.unitary_transform
+        propagators = self._propagators
+        sum_north = array([1.0]*(dim**2))
+        sum_west = array([1.0]*(dim**2))
+        dkmax = self._parameters.dkmax
+        epsrel = self._parameters.epsrel
+        self._backend_instance = self._backend_class(
+                initial_state,
+                influence,
+                unitary_transform,
+                propagators,
+                sum_north,
+                sum_west,
+                dkmax,
+                epsrel,
+                config=self._backend_config)
+
     def _init_dynamics(self):
         """Create a Dynamics object with metadata from the Tempo object. """
-        name = "computed from '{}' tempo".format(self.name)
-        description = None
+        name = None
+        description = "computed from '{}' tempo".format(self.name)
         description_dict = {
             "tempo_type":str(type(self)),
             "tempo_name":self.name,
@@ -270,28 +293,6 @@ class Tempo(BaseAPIClass):
                                   description=description,
                                   description_dict=description_dict)
 
-    def _init_tempo_backend(self):
-        """Create and initialize the tempo backend. """
-        dim = self._dimension
-        initial_state = self._initial_state.reshape(dim**2)
-        influence = self._influence
-        unitary_transform = self._bath.unitary_transform
-        propagators = self._propagators
-        sum_north = array([1.0]*(dim**2))
-        sum_west = array([1.0]*(dim**2))
-        dkmax = self._parameters.dkmax
-        epsrel = self._parameters.epsrel
-        self._backend_instance = self._backend_class(
-                initial_state,
-                influence,
-                unitary_transform,
-                propagators,
-                sum_north,
-                sum_west,
-                dkmax,
-                epsrel,
-                config=self._backend_config)
-
     def _influence(self, dk: int):
         """Create the influence functional matrix for a time step distance
         of dk. """
@@ -316,10 +317,6 @@ class Tempo(BaseAPIClass):
             infl = exp(-outer(eta_dk.real*op_m + 1j*eta_dk.imag*op_p, op_m))
 
         return infl
-
-    def _unitary_transform(self):
-        """ToDo."""
-        return self._bath.unitary_transform()
 
     def _propagators(self, step: int):
         """Create the system propagators (first and second half) for the time
@@ -441,11 +438,11 @@ MAX_DKMAX_WARNING_MSG = f"Reached maximal recommended `dkmax` ({MAX_DKMAX})! " \
     + "Could not reach specified tollerance! "
 
 def guess_tempo_parameters(
-        system: BaseSystem,
         bath: Bath,
         start_time: float,
         end_time: float,
-        tollerance: float = DEFAULT_TOLLERANCE) -> TempoParameters:
+        system: Optional[BaseSystem] = None,
+        tollerance: Optional[float] = DEFAULT_TOLLERANCE) -> TempoParameters:
     """
     Function to roughly estimate appropriate parameters for a TEMPO
     computation.
@@ -458,14 +455,14 @@ def guess_tempo_parameters(
 
     Parameters
     ----------
-    system: BaseSystem
-        The system.
     bath: Bath
         The bath.
     start_time: float
         The start time.
     end_time: float
         The time to which the TEMPO should be computed.
+    system: BaseSystem
+        The system.
     tollerance: float
         Tollerance for the parameter estimation.
 
@@ -474,8 +471,6 @@ def guess_tempo_parameters(
     tempo_parameters : TempoParameters
         Estimate of appropropriate tempo parameters.
     """
-    assert isinstance(system, BaseSystem), \
-        "Argument 'system' must be a time_evolving_mpo.BaseSystem object."
     assert isinstance(bath, Bath), \
         "Argument 'bath' must be a time_evolving_mpo.Bath object."
     try:
@@ -485,6 +480,8 @@ def guess_tempo_parameters(
         raise AssertionError("Start and end time must be a float.") from e
     if __end_time <= __start_time:
         raise ValueError("End time must be bigger than start time.")
+    assert isinstance(system, (type(None), BaseSystem)), \
+        "Argument 'system' must be 'None' or a time_evolving_mpo.BaseSystem object."
     try:
         __tollerance = float(tollerance)
     except Exception as e:
@@ -590,11 +587,11 @@ def tempo_compute(
         assert tollerance is not None, \
             "If 'parameters' is 'None' then 'tollerance' must be " \
             + "a positive float."
-        parameters = guess_tempo_parameters(system,
-                                            bath,
-                                            start_time,
-                                            end_time,
-                                            tollerance)
+        parameters = guess_tempo_parameters(bath=bath,
+                                            start_time=start_time,
+                                            end_time=end_time,
+                                            system=system,
+                                            tollerance=tollerance)
     tempo = Tempo(system,
                   bath,
                   parameters,

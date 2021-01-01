@@ -295,6 +295,7 @@ class NodeArray:
                 svh = s @ vh
                 self.nodes[i-1] = svh @ self.nodes[i-1]
 
+
         return singular_values
 
     def contract(
@@ -604,7 +605,7 @@ def split(
     ...................................................................
     """
     _index = len(array) + index if index < 0 else index
-    if _index < 0 or _index >= len(array):
+    if _index <= 0 or _index >= len(array):
         raise IndexError("Index out of range.")
 
     a = array.copy() if copy else array

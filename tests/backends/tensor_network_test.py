@@ -64,7 +64,7 @@ def test_tensor_network_tempo_backend_A():
                           tempo_params_A,
                           initial_state_A,
                           start_time=0.0,
-                          backend_name="tensor-network")
+                          backend="tensor-network")
     tempo_A.compute(end_time=1.0)
     dyn_A = tempo_A.get_dynamics()
     np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
@@ -103,7 +103,8 @@ def test_tensor_network_tempo_backend_non_diag():
                                        initial_state=base["init_state"],
                                        start_time=0.0,
                                        end_time=1.0,
-                                       parameters=tempo_parameters)
+                                       parameters=tempo_parameters,
+                                       backend="tensor-network")
 
         _, s_x = dynamics.expectations(0.5*tempo.operators.sigma("x"),
                                        real=True)
@@ -120,3 +121,34 @@ def test_tensor_network_tempo_backend_non_diag():
 
     assert np.allclose(results[0], results[1], atol=tempo_parameters.epsrel)
     assert np.allclose(results[0], results[2], atol=tempo_parameters.epsrel)
+
+def test_tensor_network_pt_tempo_backend_A():
+    correlations_A = tempo.PowerLawSD(alpha=alpha_A,
+                                      zeta=1.0,
+                                      cutoff=cutoff_A,
+                                      cutoff_type="exponential",
+                                      temperature=temperature_A,
+                                      name="ohmic")
+    bath_A = tempo.Bath(coupling_operator_A,
+                        correlations_A,
+                        name="phonon bath")
+    system_A = tempo.System(h_sys_A,
+                            gammas=[gamma_A_1, gamma_A_2],
+                            lindblad_operators=[tempo.operators.sigma("-"),
+                                                tempo.operators.sigma("z")])
+    tempo_params_A = tempo.PtTempoParameters(dt=0.05,
+                                             dkmax=None,
+                                             epsrel=10**(-7))
+    pt = tempo.pt_tempo_compute(
+                bath_A,
+                start_time=0.0,
+                end_time=1.0,
+                parameters=tempo_params_A,
+                backend="tensor-network")
+    state = pt.compute_final_state_from_system(system=system_A,
+                                               initial_state=initial_state_A)
+    np.testing.assert_almost_equal(state, rho_A, decimal=4)
+
+    dyn = pt.compute_dynamics_from_system(system=system_A,
+                                          initial_state=initial_state_A)
+    np.testing.assert_almost_equal(dyn.states[-1], rho_A, decimal=4)

@@ -2,7 +2,7 @@ All Modules
 ===========
 
 tempo.base_api
-----------------------
+--------------
 
 .. automodule:: time_evolving_mpo.base_api
     :members:
@@ -48,7 +48,7 @@ tempo.file_formats
 
 
 tempo.helpers
-------------------
+-------------
 
 .. automodule:: time_evolving_mpo.helpers
     :members:
@@ -58,6 +58,22 @@ tempo.operators
 ---------------
 
 .. automodule:: time_evolving_mpo.operators
+    :members:
+
+
+tempo.process_tensor
+--------------------
+
+.. automodule:: time_evolving_mpo.process_tensor
+    :show-inheritance:
+    :members:
+
+
+tempo.pt_tempo
+--------------
+
+.. automodule:: time_evolving_mpo.pt_tempo
+    :show-inheritance:
     :members:
 
 
@@ -88,7 +104,7 @@ tempo.backends
 --------------
 
 base_backends
-~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 .. automodule:: time_evolving_mpo.backends.base_backends
     :members:
