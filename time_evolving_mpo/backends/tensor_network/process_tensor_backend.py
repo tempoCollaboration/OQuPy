@@ -49,7 +49,8 @@ class TensorNetworkProcessTensorBackend:
         self._tensors = [ tn.Node(t, backend=self._backend) for t in _tensors ]
 
         if initial_tensor is not None:
-            self._initial_tensor = tn.Node(tensors, backend=self._backend)
+            self._initial_tensor = tn.Node(initial_tensor,
+                                           backend=self._backend)
         else:
             self._initial_tensor = None
 
@@ -76,6 +77,8 @@ class TensorNetworkProcessTensorBackend:
 
     def get_bond_dimensions(self) -> np.ndarray:
         """See BaseProcessTensorBackend.get_bond_dimensions() for docstring. """
+        if len(self._tensors) == 0:
+            return None
         dims = [self._tensors[0].shape[0]]
         for ten in self._tensors:
             dims.append(ten.shape[1])

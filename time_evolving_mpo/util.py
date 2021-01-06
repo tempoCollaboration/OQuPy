@@ -22,7 +22,8 @@ from threading import Timer
 from time import time
 from datetime import timedelta
 
-from numpy import identity, kron, ndarray
+import numpy as np
+from numpy import ndarray
 
 from time_evolving_mpo.config import PROGRESS_TYPE
 
@@ -32,28 +33,30 @@ from time_evolving_mpo.config import PROGRESS_TYPE
 def commutator(operator: ndarray) -> ndarray:
     """Construct commutator superoperator from operator. """
     dim = operator.shape[0]
-    return kron(operator, identity(dim)) - kron(identity(dim), operator.T)
+    return np.kron(operator, np.identity(dim)) \
+            - np.kron(np.identity(dim), operator.T)
 
 def acommutator(operator: ndarray) -> ndarray:
     """Construct anti-commutator superoperator from operator. """
     dim = operator.shape[0]
-    return kron(operator, identity(dim)) + kron(identity(dim), operator.T)
+    return np.kron(operator, np.identity(dim)) \
+            + np.kron(np.identity(dim), operator.T)
 
 def left_super(operator: ndarray) -> ndarray:
     """Construct left acting superoperator from operator. """
     dim = operator.shape[0]
-    return kron(operator, identity(dim))
+    return np.kron(operator, np.identity(dim))
 
 def right_super(operator: ndarray) -> ndarray:
     """Construct right acting superoperator from operator. """
     dim = operator.shape[0]
-    return kron(identity(dim), operator.T)
+    return np.kron(np.identity(dim), operator.T)
 
 def left_right_super(
         left_operator: ndarray,
         right_operator: ndarray) -> ndarray:
     """Construct left and right acting superoperator from operators. """
-    return kron(left_operator, right_operator.T)
+    return np.kron(left_operator, right_operator.T)
 
 
 # -- save and load from file --------------------------------------------------
@@ -77,9 +80,6 @@ def load_object(filename: Text) -> Any:
 
 class BaseProgress:
     """Base class to display computation progress. """
-    def __init__(self, max_value):
-        """Create a BaseProgress object. """
-        raise NotImplementedError()
 
     def __enter__(self):
         """Contextmanager enter. """

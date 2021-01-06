@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for base classes for API objects.
+Module for base classes of API objects.
 """
 
-from typing import Dict, Text, Optional
+from typing import Dict, Optional, Text
 
 from time_evolving_mpo.config import SEPERATOR
 
@@ -39,7 +39,6 @@ class BaseAPIClass:
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a BaseAPIClass object. """
-        # input check for propeties are in the propertie setters.
         self.name = name
         self.description = description
         self.description_dict = description_dict
@@ -49,8 +48,6 @@ class BaseAPIClass:
         ret.append(SEPERATOR)
         ret.append("{} object: ".format(type(self).__name__)+self.name+"\n")
         ret.append(" {}\n".format(self.description))
-        # if len(self.description_dict) > 0:
-        #     ret.append(" {}\n".format(self.description_dict))
         return "".join(ret)
 
     @property

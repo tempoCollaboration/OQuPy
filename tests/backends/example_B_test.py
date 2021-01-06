@@ -21,84 +21,10 @@ import numpy as np
 import time_evolving_mpo as tempo
 
 # -----------------------------------------------------------------------------
-# -- Test A: Spin boson model -------------------------------------------------
+# -- Test B: non-diagonal coupling --------------------------------------------
 
-# Initial state:
-initial_state_A = np.array([[1.0,0.0],[0.0,0.0]])
-
-# System operator
-h_sys_A = np.array([[0.0,0.5],[0.5,0.0]])
-
-# Markovian dissipation
-gamma_A_1 = 0.1 # with sigma minus
-gamma_A_2 = 0.2 # with sigma z
-
-# Ohmic spectral density with exponential cutoff
-coupling_operator_A = np.array([[0.5,0.0],[0.0,-0.5]])
-alpha_A = 0.3
-cutoff_A = 5.0
-temperature_A = 0.2
-
-# end time
-t_end_A = 1.0
-
-# result obtained with release code (made hermitian):
-rho_A = np.array([[ 0.7809559 +0.j        , -0.09456333+0.16671419j],
-                  [-0.09456333-0.16671419j,  0.2190441 +0.j        ]])
-
-correlations_A = tempo.PowerLawSD(alpha=alpha_A,
-                                  zeta=1.0,
-                                  cutoff=cutoff_A,
-                                  cutoff_type="exponential",
-                                  temperature=temperature_A,
-                                  name="ohmic")
-bath_A = tempo.Bath(coupling_operator_A,
-                    correlations_A,
-                    name="phonon bath")
-system_A = tempo.System(h_sys_A,
-                        gammas=[gamma_A_1, gamma_A_2],
-                        lindblad_operators=[tempo.operators.sigma("-"),
-                                            tempo.operators.sigma("z")])
-
-
-def test_tensor_network_tempo_backend_A():
-
-    tempo_params_A = tempo.TempoParameters(dt=0.05,
-                                           dkmax=None,
-                                           epsrel=10**(-7))
-    tempo_A = tempo.Tempo(system_A,
-                          bath_A,
-                          tempo_params_A,
-                          initial_state_A,
-                          start_time=0.0,
-                          backend="tensor-network")
-    tempo_A.compute(end_time=1.0)
-    dyn_A = tempo_A.get_dynamics()
-    np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
-
-def test_tensor_network_pt_tempo_backend_A():
-    tempo_params_A = tempo.PtTempoParameters(dt=0.05,
-                                             dkmax=None,
-                                             epsrel=10**(-7))
-    pt = tempo.pt_tempo_compute(
-                bath_A,
-                start_time=0.0,
-                end_time=1.0,
-                parameters=tempo_params_A,
-                backend="tensor-network")
-    state = pt.compute_final_state_from_system(system=system_A,
-                                               initial_state=initial_state_A)
-    np.testing.assert_almost_equal(state, rho_A, decimal=4)
-
-    dyn = pt.compute_dynamics_from_system(system=system_A,
-                                          initial_state=initial_state_A)
-    np.testing.assert_almost_equal(dyn.states[-1], rho_A, decimal=4)
-
-
-# -----------------------------------------------------------------------------
-# -- Test non-diagonal coupling -----------------------------------------------
-
-def test_tensor_network_tempo_backend_non_diag():
+@pytest.mark.parametrize('backend',["tensor-network"])
+def test_tensor_network_tempo_backend_non_diag(backend):
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
@@ -108,11 +34,11 @@ def test_tensor_network_tempo_backend_non_diag():
     sz=tempo.operators.sigma("z")
 
     bases = [{"sys_op":sx, "coupling_op":sz, \
-                "init_state":tempo.operators.spin_dm("plus-y")},
+                "init_state":tempo.operators.spin_dm("y+")},
              {"sys_op":sy, "coupling_op":sx, \
-                "init_state":tempo.operators.spin_dm("up")},
+                "init_state":tempo.operators.spin_dm("z+")},
              {"sys_op":sz, "coupling_op":sy, \
-                "init_state":tempo.operators.spin_dm("plus")}]
+                "init_state":tempo.operators.spin_dm("x+")}]
 
     results = []
     for i, base in enumerate(bases):
@@ -133,7 +59,7 @@ def test_tensor_network_tempo_backend_non_diag():
                                        start_time=0.0,
                                        end_time=1.0,
                                        parameters=tempo_parameters,
-                                       backend="tensor-network")
+                                       backend=backend)
 
         _, s_x = dynamics.expectations(0.5*tempo.operators.sigma("x"),
                                        real=True)
@@ -148,11 +74,12 @@ def test_tensor_network_tempo_backend_non_diag():
         elif i == 2:
             results.append(np.array([s_z, s_x, s_y]))
 
-    assert np.allclose(results[0], results[1], atol=1.0) #tempo_parameters.epsrel)
-    assert np.allclose(results[0], results[2], atol=1.0) #tempo_parameters.epsrel)
+    assert np.allclose(results[0], results[1], atol=tempo_parameters.epsrel)
+    assert np.allclose(results[0], results[2], atol=tempo_parameters.epsrel)
 
 
-def test_tensor_network_pt_tempo_backend_non_diag():
+@pytest.mark.parametrize('backend',["tensor-network"])
+def test_tensor_network_pt_tempo_backend_non_diag(backend):
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
@@ -162,11 +89,11 @@ def test_tensor_network_pt_tempo_backend_non_diag():
     sz=tempo.operators.sigma("z")
 
     bases = [{"sys_op":sx, "coupling_op":sz, \
-                "init_state":tempo.operators.spin_dm("plus-y")},
+                "init_state":tempo.operators.spin_dm("y+")},
              {"sys_op":sy, "coupling_op":sx, \
-                "init_state":tempo.operators.spin_dm("up")},
+                "init_state":tempo.operators.spin_dm("z+")},
              {"sys_op":sz, "coupling_op":sy, \
-                "init_state":tempo.operators.spin_dm("plus")}]
+                "init_state":tempo.operators.spin_dm("x+")}]
 
     results = []
     for i, base in enumerate(bases):
@@ -185,7 +112,7 @@ def test_tensor_network_pt_tempo_backend_non_diag():
                                     start_time=0.0,
                                     end_time=1.0,
                                     parameters=tempo_parameters,
-                                    backend="tensor-network")
+                                    backend=backend)
         dynamics = pt.compute_dynamics_from_system(
                     system=system,
                     initial_state=base["init_state"])
@@ -204,6 +131,5 @@ def test_tensor_network_pt_tempo_backend_non_diag():
 
     assert np.allclose(results[0], results[1], atol=tempo_parameters.epsrel)
     assert np.allclose(results[0], results[2], atol=tempo_parameters.epsrel)
-
 
 # -----------------------------------------------------------------------------

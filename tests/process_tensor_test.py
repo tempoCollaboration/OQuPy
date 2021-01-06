@@ -17,34 +17,67 @@ Tests for the time_evovling_mpo.process_tensor module.
 
 import pytest
 
-def test_import():
-    import time_evolving_mpo.process_tensor
+import time_evolving_mpo as tempo
 
-# from time_evolving_mpo import ProcessTensor
-# from time_evolving_mpo import apply_control_to_process_tensor
-# from time_evolving_mpo import apply_system_to_process_tensor
-# from time_evolving_mpo import compute_process_tensor
-# from time_evolving_mpo import ProcessTensorParameters
-# from time_evolving_mpo import guess_process_tensor_parameters
-#
-#
-# def test_process_tensor():
-#     process_tensor_A=ProcessTensor()
-#     process_tensor_A.check_convergence()
-#     process_tensor_A.export()
-#
-# def test_apply_control_to_process_tensor():
-#     apply_control_to_process_tensor()
-#
-# def test_apply_system_to_process_tensor():
-#     apply_system_to_process_tensor()
-#
-# def test_compute_process_tensor():
-#     compute_process_tensor()
-#
-# def test_process_tensor_parameters():
-#     ProcessTensorParameters()
-#
-# def test_guess_process_tensor_parameters():
-#     res = guess_process_tensor_parameters()
-#     assert isinstance(res,ProcessTensorParameters)
+
+TEMP_FILE = "tests/data/temp.processTensor"
+
+# -- prepare a process tensor -------------------------------------------------
+
+system = tempo.System(tempo.operators.sigma("x"))
+initial_state = tempo.operators.spin_dm("z+")
+correlations = tempo.PowerLawSD(alpha=0.3,
+                                zeta=1.0,
+                                cutoff=5.0,
+                                cutoff_type="exponential",
+                                temperature=0.2,
+                                name="ohmic")
+bath = tempo.Bath(0.5*tempo.operators.sigma("z"),
+                    correlations,
+                    name="phonon bath")
+tempo_params = tempo.PtTempoParameters(dt=0.1,
+                                         dkmax=5,
+                                         epsrel=10**(-5))
+pt = tempo.pt_tempo_compute(bath,
+                            start_time=0.0,
+                            end_time=1.0,
+                            parameters=tempo_params)
+pt.export(TEMP_FILE, overwrite=True)
+del pt
+
+
+def test_process_tensor():
+    pt = tempo.import_process_tensor(TEMP_FILE)
+    str(pt)
+    pt.times
+    pt.get_bond_dimensions()
+    pt.compute_final_state_from_system(system, initial_state)
+    pt.compute_dynamics_from_system(system, initial_state)
+    with pytest.raises(FileExistsError):
+        pt.export(TEMP_FILE)
+
+    with pytest.raises(AssertionError):
+        pt.compute_final_state_from_system(system)
+    with pytest.raises(AssertionError):
+        pt.compute_dynamics_from_system(system)
+    with pytest.raises(AssertionError):
+        pt.compute_final_state_from_system(system,"bla")
+    with pytest.raises(AssertionError):
+        pt.compute_dynamics_from_system(system,"bla")
+
+# -----------------------------------------------------------------------------
+
+GOOD_FILES_PROCESS_TENSOR_V1 = [
+    "tests/data/test_v1_0_good_file_A.processTensor",
+    "tests/data/test_v1_0_good_file_B.processTensor",
+    "tests/data/test_v1_0_good_file_C.processTensor",
+    "tests/data/test_v1_0_good_file_D.processTensor",
+    ]
+
+def test_import_process_tensor():
+    for filename in GOOD_FILES_PROCESS_TENSOR_V1:
+        tempo.import_process_tensor(filename)
+
+def test_process_tensor_bad_input():
+    tempo.ProcessTensor(times=None,
+                        tensors=[])

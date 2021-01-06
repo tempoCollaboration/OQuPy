@@ -34,6 +34,7 @@ def test_base_api_class():
     base_api.description_dict = description_dict
 
     str(base_api)
+    print(base_api.description_dict)
     del base_api.name
     del base_api.description
     del base_api.description_dict

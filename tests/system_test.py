@@ -23,34 +23,78 @@ from time_evolving_mpo.system import TimeDependentSystem
 from time_evolving_mpo import operators
 from time_evolving_mpo.system import BaseSystem
 
+# -----------------------------------------------------------------------------
+# -- test-examples ------------------------------------------------------------
+
+# -- example A --
+hamiltonianA = 0.4*operators.sigma("x")
+liouvillianA = np.array([[0.-0.j , 0.+0.4j, 0.-0.4j, 0.-0.j ],
+                         [0.+0.4j, 0.-0.j , 0.-0.j , 0.-0.4j],
+                         [0.-0.4j, 0.-0.j , 0.-0.j , 0.+0.4j],
+                         [0.-0.j , 0.-0.4j, 0.+0.4j, 0.-0.j ]])
+
+# -- example B --
+hamiltonianB = operators.sigma("z")
+gammasB = [0.2, 0.1, 0.05]
+lindblad_operatorsB = [operators.sigma("x"),
+                       operators.sigma("y"),
+                       operators.sigma("z")]
+liouvillianB = np.array([[-0.3+0.j,  0. +0.j,  0. +0.j,  0.3+0.j],
+                         [ 0. +0.j, -0.4-2.j,  0.1+0.j,  0. +0.j],
+                         [ 0. +0.j,  0.1+0.j, -0.4+2.j,  0. +0.j],
+                         [ 0.3+0.j,  0. +0.j,  0. +0.j, -0.3+0.j]])
+
+# -- example C --
+hamiltonianC = lambda t: t*operators.sigma("x")
+timeC = 2.0
+liouvillianC = np.array([[0.-0.j, 0.+2.j, 0.-2.j, 0.-0.j],
+                         [0.+2.j, 0.-0.j, 0.-0.j, 0.-2.j],
+                         [0.-2.j, 0.-0.j, 0.-0.j, 0.+2.j],
+                         [0.-0.j, 0.-2.j, 0.+2.j, 0.-0.j]])
+
+# -- example D --
+hamiltonianD = lambda t: t*operators.sigma("z")
+timeD = 2.0
+gammasD = [lambda t: t*0.2, lambda t: t*0.1, lambda t: t*0.05]
+lindblad_operatorsD = [lambda t: t*operators.sigma("x"),
+                       lambda t: t*operators.sigma("y"),
+                       lambda t: t*operators.sigma("z")]
+liouvillianD = np.array([[-2.4+0.j,  0. +0.j,  0. +0.j,  2.4+0.j],
+                         [ 0. +0.j, -3.2-4.j,  0.8+0.j,  0. +0.j],
+                         [ 0. +0.j,  0.8+0.j, -3.2+4.j,  0. +0.j],
+                         [ 2.4+0.j,  0. +0.j,  0. +0.j, -2.4+0.j]])
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 def test_base_system():
     dimension = 3
     sys = BaseSystem(dimension)
-    sys.dimension
+    assert sys.dimension == 3
 
     with pytest.raises(NotImplementedError):
         sys.liouvillian()
 
-def test_system():
-    sys_A = System(0.4*operators.sigma("x"))
-    sys_A.liouvillian()
+def test_system_A():
+    sys = System(hamiltonianA)
+    liouvillian = sys.liouvillian()
+    np.testing.assert_almost_equal(liouvillian, liouvillianA)
 
-    sys_B = System(operators.sigma("z"),
-                   [0.2,0.1,0.05],
-                   [operators.sigma("x"),
-                    operators.sigma("y"),
-                    operators.sigma("z")],
-                   name="bla",
-                   description="blub",
-                   description_dict={"the answer":42})
-    sys_B.liouvillian()
-    str(sys_B)
-    assert isinstance(sys_B.hamiltonian, np.ndarray)
-    assert isinstance(sys_B.gammas, list)
-    assert sys_B.gammas[0] == 0.2
-    assert isinstance(sys_B.lindblad_operators, list)
-    assert isinstance(sys_B.lindblad_operators[0], np.ndarray)
+def test_system_B():
+    sys = System(hamiltonianB,
+                 gammasB,
+                 lindblad_operatorsB,
+                 name="bla",
+                 description="blub",
+                 description_dict={"the answer":42})
+    str(sys)
+    assert isinstance(sys.hamiltonian, np.ndarray)
+    assert isinstance(sys.gammas, list)
+    assert sys.gammas[0] == gammasB[0]
+    assert isinstance(sys.lindblad_operators, list)
+    assert isinstance(sys.lindblad_operators[0], np.ndarray)
+    liouvillian = sys.liouvillian()
+    np.testing.assert_almost_equal(liouvillian, liouvillianB)
 
 def test_system_bad_input():
     with pytest.raises(AssertionError):
@@ -82,27 +126,31 @@ def test_system_bad_input():
                 "bla",
                 operators.sigma("z")])
 
-def test_time_dependent_system():
-    sys_A = TimeDependentSystem(lambda t: t*operators.sigma("x"))
-    sys_A.liouvillian(2.0)
+def test_time_dependent_system_C():
+    sys = TimeDependentSystem(hamiltonianC)
+    liouvillian = sys.liouvillian(timeC)
+    np.testing.assert_almost_equal(liouvillian, liouvillianC)
 
-    sys_B = TimeDependentSystem(lambda t: t*operators.sigma("z"),
-                   [lambda t: t*0.2, lambda t: t*0.1, lambda t: t*0.05],
-                   [lambda t: t*operators.sigma("x"),
-                    lambda t: t*operators.sigma("y"),
-                    lambda t: t*operators.sigma("z")],
-                   name="bla",
-                   description="blub",
-                   description_dict={"the answer":42})
+def test_time_dependent_system_D():
+    sys = TimeDependentSystem(
+            hamiltonianD,
+            gammasD,
+            lindblad_operatorsD,
+            name="bla",
+            description="blub",
+            description_dict={"the answer":42})
     with pytest.raises(ValueError):
-        sys_B.liouvillian()
-    sys_B.liouvillian(2.0)
-    str(sys_B)
-    assert isinstance(sys_B.hamiltonian, np.vectorize)
-    assert isinstance(sys_B.gammas, list)
-    assert sys_B.gammas[0](1.0) == 0.2
-    assert isinstance(sys_B.lindblad_operators, list)
-    assert isinstance(sys_B.lindblad_operators[0], np.vectorize)
+        sys.liouvillian()
+
+    str(sys)
+    assert isinstance(sys.hamiltonian, np.vectorize)
+    assert isinstance(sys.gammas, list)
+    assert sys.gammas[0](1.0) == gammasD[0](1.0)
+    assert isinstance(sys.lindblad_operators, list)
+    assert isinstance(sys.lindblad_operators[0], np.vectorize)
+    liouvillian = sys.liouvillian(timeD)
+    np.testing.assert_almost_equal(liouvillian, liouvillianD)
+
 
 def test_time_dependent_system_bad_input():
     with pytest.raises(AssertionError):

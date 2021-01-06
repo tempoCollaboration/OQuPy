@@ -119,7 +119,7 @@ class BaseCorrelations(BaseAPIClass):
         return self._max_correlation_time
 
     @max_correlation_time.setter
-    def max_correlation_time(self, new_tau: float):
+    def max_correlation_time(self, new_tau: Optional[float] = None):
         if new_tau is None:
             del self.max_correlation_time
         else:
@@ -169,7 +169,7 @@ class CustomCorrelations(BaseCorrelations):
     def __init__(
             self,
             correlation_function: Callable[[float], float],
-            max_correlation_time: float,
+            max_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -477,7 +477,7 @@ class CustomSD(BaseCorrelations):
             self,
             j_function: Callable[[float], float],
             cutoff: float,
-            cutoff_type: Text = 'exponential',
+            cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
             max_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,

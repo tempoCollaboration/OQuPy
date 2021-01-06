@@ -144,6 +144,8 @@ class NodeArray:
     @property
     def name(self):
         """The name of the NodeArray. """
+        if self._name is None:
+            return "__no_name__"
         return self._name
 
     @name.setter
@@ -322,9 +324,9 @@ class NodeArray:
         if axes is None:
             axes = [(0,0)]
 
-        assert len(axes) == self.rank and len(axes) == array.rank, \
-            "This contraction would lead to nodes with dangling legs. " \
-            + "To contract with dangling legs use NodeArray.zip_up()."
+        # assert len(axes) == self.rank and len(axes) == array.rank, \
+        #     "This contraction would lead to nodes with dangling legs. " \
+        #     + "To contract with dangling legs use NodeArray.zip_up()."
 
         _left_index, _right_index = _parse_left_right_index(self,
                                                             array,
@@ -405,10 +407,10 @@ class NodeArray:
 
         if len(self) > 1:
             new_n = self.nodes[_left_index] @ self.nodes[_left_index + sign]
-            self.nodes[_left_index+1] = new_n
-            del self.array_edges[left_index]
-            del self.bond_edges[left_index+inner_bond]
-            del self.nodes[left_index]
+            self.nodes[_left_index + sign] = new_n
+            del self.array_edges[_left_index]
+            del self.bond_edges[_left_index+inner_bond]
+            del self.nodes[_left_index]
 
     def zip_up(
             self,

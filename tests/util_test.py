@@ -19,6 +19,7 @@ import pytest
 
 import numpy as np
 
+from time_evolving_mpo.util import BaseProgress, ProgressBar
 from time_evolving_mpo.util import commutator, acommutator
 from time_evolving_mpo.util import left_super, right_super, left_right_super
 from time_evolving_mpo.util import save_object, load_object
@@ -76,3 +77,19 @@ def test_save_object():
         save_object(some_obj_B, filename, overwrite=False)
     obj = load_object(filename)
     assert obj[0] == "hi"
+
+
+def test_base_progress():
+    prog = BaseProgress()
+    with pytest.raises(NotImplementedError):
+        prog.__enter__()
+    with pytest.raises(NotImplementedError):
+        prog.__exit__(None, None, None)
+    with pytest.raises(NotImplementedError):
+        prog.update(4)
+
+def test_progess_bar():
+    with ProgressBar(10) as prog_bar:
+        prog_bar.update(None)
+    with ProgressBar(0) as prog_bar:
+        prog_bar.update(None)

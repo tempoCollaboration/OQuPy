@@ -16,21 +16,22 @@ Module on physical information of the system.
 """
 
 from typing import Callable, Dict, List, Optional, Text
-from typing import Any as ArrayLike
 from copy import copy
 from functools import lru_cache
 
-from numpy import array, dot, ndarray, vectorize
+import numpy as np
+from numpy import ndarray
 
-from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.util import commutator, acommutator, left_right_super
+from time_evolving_mpo.config import NpDtype
+from time_evolving_mpo.util import acommutator, commutator
+from time_evolving_mpo.util import left_right_super
 
 
 def _check_hamiltonian(hamiltonian):
-    """Input checking for a single hamiltonian. """
+    """Input checking for a single Hamiltonian. """
     try:
-        __hamiltonian = array(hamiltonian, dtype=NpDtype)
+        __hamiltonian = np.array(hamiltonian, dtype=NpDtype)
         __hamiltonian.setflags(write=False)
     except Exception as e:
         raise AssertionError("Coupling operator must be numpy array") from e
@@ -43,13 +44,13 @@ def _check_hamiltonian(hamiltonian):
 
 
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
-    """Lindbladian for a specific hamiltonian, gammas and lindblad_operators.
+    """Lindbladian for a specific Hamiltonian, gammas and lindblad_operators.
     """
     liouvillian = -1j * commutator(hamiltonian)
     for gamma, op in zip(gammas, lindblad_operators):
         op_dagger = op.conjugate().T
         liouvillian += gamma * (left_right_super(op, op_dagger) \
-                                - 0.5 * acommutator(dot(op_dagger, op)))
+                                - 0.5 * acommutator(np.dot(op_dagger, op)))
     return liouvillian
 
 
@@ -101,10 +102,10 @@ class BaseSystem(BaseAPIClass):
 
 class System(BaseSystem):
     r"""
-    Represents the system only (without any coupling to a non-markovian bath).
-    It is, however possible, to include Lindblad terms in the master equation.
+    Represents a system (without any coupling to a non-Markovian bath).
+    It is possible to include Lindblad terms in the master equation.
     The equations of motion for a system density matrix (without any coupling
-    to a non-markovian bath) is then:
+    to a non-Markovian bath) is then:
 
     .. math::
 
@@ -125,17 +126,23 @@ class System(BaseSystem):
         The rates :math:`\gamma_n`.
     lindblad_operators: list(ndarray)
         The Lindblad operators :math:`\hat{A}_n`.
+    name: str
+        An optional name for the system.
+    description: str
+        An optional description of the system.
+    description_dict: dict
+        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
-            hamiltonian: ArrayLike,
+            hamiltonian: ndarray,
             gammas: Optional[List[float]] = None,
-            lindblad_operators: Optional[List[ArrayLike]] = None,
+            lindblad_operators: Optional[List[ndarray]] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a System object. """
-        # input check for hamiltonian.
+        # input check for Hamiltonian.
         self._hamiltonian = _check_hamiltonian(hamiltonian)
         __dimension = self._hamiltonian.shape[0]
 
@@ -155,13 +162,13 @@ class System(BaseSystem):
             for gamma in gammas:
                 __gammas.append(float(gamma))
         except Exception as e:
-            raise AssertionError("All elements of `gamma` must be floats.") \
+            raise AssertionError("All elements of `gammas` must be floats.") \
                 from e
         try:
             __lindblad_operators = []
             for lindblad_operator in lindblad_operators:
                 __lindblad_operators.append(
-                    array(lindblad_operator, dtype=NpDtype))
+                    np.array(lindblad_operator, dtype=NpDtype))
         except Exception as e:
             raise AssertionError(
                 "All elements of `lindblad_operators` must be numpy arrays.") \
@@ -171,7 +178,7 @@ class System(BaseSystem):
 
         super().__init__(__dimension, name, description, description_dict)
 
-    @lru_cache(2**0)
+    @lru_cache(4)
     def liouvillian(self, t: Optional[float] = None) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}` with
@@ -196,7 +203,7 @@ class System(BaseSystem):
 
     @property
     def hamiltonian(self) -> ndarray:
-        """The system hamiltonian."""
+        """The system Hamiltonian."""
         return copy(self._hamiltonian)
 
     @property
@@ -213,10 +220,10 @@ class System(BaseSystem):
 class TimeDependentSystem(BaseSystem):
     r"""
     Represents an explicitly time dependent system (without any coupling to a
-    non-markovian bath). It is, however possible, to include (also explicitly
+    non-Markovian bath). It is possible to include (also explicitly
     time dependent) Lindblad terms in the master equation.
     The equations of motion for a system density matrix (without any coupling
-    to a non-markovian bath) is then:
+    to a non-Markovian bath) is then:
 
     .. math::
 
@@ -238,25 +245,31 @@ class TimeDependentSystem(BaseSystem):
         The rates :math:`\gamma_n(t)`.
     lindblad_operators: list(callable)
         The Lindblad operators :math:`\hat{A}_n(t)`.
+    name: str
+        An optional name for the system.
+    description: str
+        An optional description of the system.
+    description_dict: dict
+        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
-            hamiltonian: ArrayLike,
+            hamiltonian: Callable[[float], ndarray],
             gammas: \
                 Optional[List[Callable[[float], float]]] = None,
             lindblad_operators: \
-                Optional[List[Callable[[float], ArrayLike]]] = None,
+                Optional[List[Callable[[float], ndarray]]] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a System object."""
-        # input check for hamiltonian.
+        # input check for Hamiltonian.
         try:
-            __hamiltonian = vectorize(hamiltonian)
+            __hamiltonian = np.vectorize(hamiltonian)
             _check_hamiltonian(__hamiltonian(1.0))
         except Exception as e:
             raise AssertionError(
-                "Time dependent hamiltonian must be vectorizable callable.") \
+                "Time dependent Hamiltonian must be vectorizable callable.") \
                     from e
         self._hamiltonian = __hamiltonian
         __dimension = self._hamiltonian(1.0)
@@ -276,7 +289,7 @@ class TimeDependentSystem(BaseSystem):
             __gammas = []
             for gamma in gammas:
                 float(gamma(1.0))
-                __gamma = vectorize(gamma)
+                __gamma = np.vectorize(gamma)
                 __gammas.append(__gamma)
         except Exception as e:
             raise AssertionError(
@@ -285,8 +298,8 @@ class TimeDependentSystem(BaseSystem):
         try:
             __lindblad_operators = []
             for lindblad_operator in lindblad_operators:
-                __lindblad_operator = vectorize(lindblad_operator)
-                array(__lindblad_operator(1.0))
+                __lindblad_operator = np.vectorize(lindblad_operator)
+                np.array(__lindblad_operator(1.0))
                 __lindblad_operators.append(__lindblad_operator)
         except Exception as e:
             raise AssertionError(
@@ -337,7 +350,7 @@ class TimeDependentSystem(BaseSystem):
 
     @property
     def hamiltonian(self) -> Callable[[float], ndarray]:
-        """The system hamiltonian. """
+        """The system Hamiltonian. """
         return copy(self._hamiltonian)
 
     @property

@@ -16,14 +16,10 @@ Module on the discrete time evolution of a density matrix.
 """
 
 from typing import Dict, List, Optional, Text, Tuple
-from typing import Any as ArrayLike
 from copy import copy
 
-from numpy import array, identity, ndarray
-from numpy import trace
-from numpy import real as npreal
-from numpy import max as npmax
-from numpy import min as npmin
+import numpy as np
+from numpy import ndarray
 
 from time_evolving_mpo.base_api import BaseAPIClass
 from time_evolving_mpo.config import NpDtype, NpDtypeReal
@@ -81,9 +77,9 @@ class Dynamics(BaseAPIClass):
         ret.append("  length        = {} timesteps \n".format(len(self)))
         if len(self) > 0:
             ret.append("  min time      = {} \n".format(
-                npmin(self._times)))
+                np.min(self._times)))
             ret.append("  max time      = {} \n".format(
-                npmax(self._times)))
+                np.max(self._times)))
         return "".join(ret)
 
     def __len__(self) -> int:
@@ -99,12 +95,12 @@ class Dynamics(BaseAPIClass):
     @property
     def times(self) -> ndarray:
         """Times of the dynamics. """
-        return array(self._times, dtype=NpDtypeReal)
+        return np.array(self._times, dtype=NpDtypeReal)
 
     @property
     def states(self) -> ndarray:
         """States of the dynamics. """
-        return array(self._states, dtype=NpDtype)
+        return np.array(self._states, dtype=NpDtype)
 
     @property
     def shape(self) -> ndarray:
@@ -114,7 +110,7 @@ class Dynamics(BaseAPIClass):
     def add(
             self,
             time: float,
-            state: ArrayLike) -> None:
+            state: ndarray) -> None:
         """
         Append a state at a specific time to the time evolution.
 
@@ -130,7 +126,7 @@ class Dynamics(BaseAPIClass):
         except Exception as e:
             raise AssertionError("Argument `time` must be float.") from e
         try:
-            __state = array(state, dtype=NpDtype)
+            __state = np.array(state, dtype=NpDtype)
         except Exception as e:
             raise AssertionError("Argument `state` must be ndarray.") from e
         if self._shape is None:
@@ -152,7 +148,7 @@ class Dynamics(BaseAPIClass):
         self._states.append(__state)
 
         # ToDo: do this more elegantly and less resource draining.
-        if len(self) > 1 and (self._times[-1] < npmax(self._times[:-1])):
+        if len(self) > 1 and (self._times[-1] < np.max(self._times[:-1])):
             self._sort()
 
     def export(
@@ -210,10 +206,10 @@ class Dynamics(BaseAPIClass):
         if len(self) == 0:
             return None, None
         if operator is None:
-            __operator = identity(self._shape[0], dtype=NpDtype)
+            __operator = np.identity(self._shape[0], dtype=NpDtype)
         else:
             try:
-                __operator = array(operator, dtype=NpDtype)
+                __operator = np.array(operator, dtype=NpDtype)
             except Exception as e:
                 raise AssertionError("Argument `operator` must be ndarray.") \
                     from e
@@ -224,13 +220,13 @@ class Dynamics(BaseAPIClass):
 
         expectations_list = []
         for state in self._states:
-            expectations_list.append(trace(__operator @ state))
+            expectations_list.append(np.trace(__operator @ state))
 
-        times = array(self._times)
+        times = np.array(self._times)
         if real:
-            expectations = npreal(array(expectations_list))
+            expectations = np.real(np.array(expectations_list))
         else:
-            expectations = array(expectations_list)
+            expectations = np.array(expectations_list)
         return times, expectations
 
 # def distance(*args, **kwargs): # ToDo

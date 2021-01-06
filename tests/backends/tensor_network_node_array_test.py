@@ -13,14 +13,15 @@
 # limitations under the License.
 """
 Tests for the time_evolving_mpo.backends.node_array module.
+
+.. todo::
+    This is quite a mess. Make it better!
 """
-import sys
-
-# sys.path.insert(0,".")
-
 import pytest
+
 import numpy as np
 import tensornetwork as tn
+
 import time_evolving_mpo.backends.tensor_network.node_array as node_array
 
 
@@ -30,35 +31,36 @@ def test_node_array():
     b = np.random.rand(5,5,9,6)
     c = np.random.rand(6,5,9,2)
     d = np.random.rand(2,3,9)
+    d2 = np.random.rand(2,3,9,3)
     na = node_array.NodeArray([a,b,c,d], right=False, name="my node array")
-    print(na.bond_dimensions)
-    print(na.rank)
+    na2 = node_array.NodeArray([a,b,c,d2], name="my node array")
+    str(na)
+    str(na2)
+    na.bond_dimensions
+    na.rank
+    del na.name
+    na.get_verbose_string()
 
-    dd = node_array.NodeArray([d], name="D1", left=False, right=False)
-    print(dd)
-    print(f"    rank = {dd.rank}\n")
-    dd = node_array.NodeArray([d], name="D2", left=False, right=True)
-    print(dd)
-    print(f"    rank = {dd.rank}\n")
-    dd = node_array.NodeArray([d], name="D3", left=True, right=False)
-    print(dd)
-    print(f"    rank = {dd.rank}\n")
-    dd = node_array.NodeArray([d], name="D4", left=True, right=True)
-    print(dd)
-    print(f"    rank = {dd.rank}\n")
+    dd1 = node_array.NodeArray([d], name="D1", left=False, right=False)
+    dd2 = node_array.NodeArray([d], name="D2", left=False, right=True)
+    dd3 = node_array.NodeArray([d], name="D3", left=True, right=False)
+    dd4 = node_array.NodeArray([d], name="D4", left=True, right=True)
+
+    del dd1.name
+    dd2.get_verbose_string()
 
     #Apply matrix (left/right)
     m = np.random.rand(3,7)
-    print(na)
     na.apply_matrix(m,left=True)
-    print(na)
+    na2.apply_matrix(m,left=False)
 
     # Apply vector (left/right)
     v = np.random.rand(7)
-    print(na)
     na.apply_vector(v, left=True)
-    print(na)
+    na2.apply_vector(v, left=False)
 
+    na = node_array.NodeArray([])
+    assert na.rank == None
 
 def test_node_array_join_split():
     np.random.seed(0)
@@ -67,29 +69,17 @@ def test_node_array_join_split():
     c = np.random.rand(6,5,9,2)
     d = np.random.rand(2,3,9)
     x = np.random.rand(2,9,3)
+
     na0 = node_array.NodeArray([x], left=False, name="array 0")
     na1 = node_array.NodeArray([a,b], name="array 1")
     na2 = node_array.NodeArray([c,d], right=False, name="array 2")
-    print(na0)
-    print(na1)
-    print(na2)
-
 
     na_12 = node_array.join(na1,na2)
-    print(na_12)
-
-
     na_012 = node_array.join(na0, na_12)
-    print(na_012)
-
-    # ## Split
-
     na_A, na_B = node_array.split(na_012, 2)
 
-
-    print(na_A)
-    print(na_B)
-
+    with pytest.raises(IndexError):
+        na_A, na_B = node_array.split(na_012, 5)
 
 def test_node_array_svd():
     np.random.seed(0)
@@ -100,13 +90,14 @@ def test_node_array_svd():
     na = node_array.NodeArray([a,b,c,d], right=False, name="my node array")
 
     na.svd_sweep(1, 3, max_singular_values=4)
-    print(na)
+    na.svd_sweep(-1, 0, max_singular_values=1)
+    na.svd_sweep(0, -1, max_singular_values=1)
 
-    singular_values = na.svd_sweep(-1, 0, max_singular_values=1)
-    print(na)
-    print("Singular values:")
-    for keep, discard in singular_values:
-        print(f"  [keep / discard]: {keep} / {discard}")
+    with pytest.raises(IndexError):
+        na.svd_sweep(5, 3, max_singular_values=4)
+
+    with pytest.raises(IndexError):
+        na.svd_sweep(1, 5, max_singular_values=4)
 
 def test_node_array_contractions():
     np.random.seed(0)
@@ -114,36 +105,23 @@ def test_node_array_contractions():
                                 np.random.rand(3,3,3),
                                 np.random.rand(3,4,3)],
                                name="MPS")
-    print(mps)
-    print(f"    rank:{mps.rank}")
     mpo1 = node_array.NodeArray([np.random.rand(2,5,4),
                                  np.random.rand(4,3,5,4),
                                  np.random.rand(4,4,5)],
                                 left=False,
                                 right=False,
                                 name="MPO1")
-    print(mpo1)
-    print(f"    rank:{mpo1.rank}")
     mpo2 = node_array.NodeArray([np.random.rand(5,5,3),
                                  np.random.rand(3,5,5,3),
                                  np.random.rand(3,5,5)],
                                 left=False,
                                 right=False,
                                 name="MPO2")
-    print(mpo2)
-    print(f"    rank:{mpo2.rank}")
-
-
     mps.zip_up(mpo1, [(0, 0)], left_index=0, right_index=-1, max_singular_values=10)
-    print(mps)
 
-
-    mps.zip_up(mpo2, [(0, 0)], left_index=0, max_singular_values=11)
-    print(mps)
-
+    mps.zip_up(mpo2, left_index=0, max_singular_values=11)
 
     mps.svd_sweep(-1,0,max_singular_values=2);
-    print(mps)
 
     # ### 2nd example
 
@@ -158,78 +136,80 @@ def test_node_array_contractions():
     mps3 = mps.copy()
     mps4 = mps.copy()
     mps5 = mps.copy()
+    mpsTwo = node_array.NodeArray([np.random.rand(4,3),
+                                 np.random.rand(3,4)],
+                                left=False,
+                                right=False,
+                                name="MPS")
     mpsL = node_array.NodeArray([np.random.rand(3,4,3),
                                  np.random.rand(3,4)],
                                 left=True,
                                 right=False,
                                 name="MPS")
-    print(mps)
-    print(f"    rank:{mps.rank}")
-    print(mpsL)
-    print(f"    rank:{mpsL.rank}")
+    mpsR = node_array.NodeArray([np.random.rand(4,3),
+                                 np.random.rand(3,4,3)],
+                                left=False,
+                                right=True,
+                                name="MPS")
     mpo1 = node_array.NodeArray([np.random.rand(3,4,4,3),
                                  np.random.rand(3,4,4)],
                                 left=True,
                                 right=False,
                                 name="MPO1")
     mpo5 = mpo1.copy()
-    print(mpo1)
-    print(f"    rank:{mpo1.rank}")
     mpo2 = node_array.NodeArray([np.random.rand(4,4,3),
                                  np.random.rand(3,4,4,3)],
                                 left=False,
                                 right=True,
                                 name="MPO2")
-    print(mpo2)
-    print(f"    rank:{mpo2.rank}")
     arr1 = node_array.NodeArray([np.random.rand(4,2,2,3),
                                  np.random.rand(3,4,2,2,3),
                                  np.random.rand(3,4,2,2,3)],
                                 left=False,
                                 right=True,
                                 name="array1")
-    print(arr1)
-    print(f"    rank:{arr1.rank}")
     arr2 = node_array.NodeArray([np.random.rand(3,2,4,2,3),
                                  np.random.rand(3,2,4,2,3),
                                  np.random.rand(3,2,4,2)],
                                 left=True,
                                 right=False,
                                 name="array2")
-    print(arr2)
-    print(f"    rank:{arr2.rank}")
 
+    mps1a = mps1.copy()
+    mps1b = mps1.copy()
+    mps1c = mps1.copy()
+    with pytest.raises(ValueError):
+        mps1a.zip_up(mpo1, [(0,0)], left_index=0, direction="blub")
+
+    with pytest.raises(IndexError):
+        mps1b.zip_up(mpo1, [(0,0)], left_index=6, direction="left")
+
+    with pytest.raises(IndexError):
+        mps1c.zip_up(mpo1, [(0,0)], right_index=-6, direction="left")
 
     mps1.zip_up(mpo1, [(0, 0)], left_index=0, direction="left")
-    print(mps1)
-
 
     mps2.zip_up(mpo2, [(0, 0)], left_index=1, right_index=2, direction="left")
-    print(mps2)
-
 
     mps3.zip_up(arr1, [(0, 0)])
-    print(mps3)
-
 
     mps3.zip_up(arr2, [(0, 0),(1, 2)], right_index=-1, direction="left", max_singular_values=7)
-    print(mps3)
 
-
+    mps4b = mps4.copy()
+    mps4c = mps4.copy()
+    mps4d = mps4.copy()
     mps4.contract(mps, [(0,0)], direction="right")
-    print(mps4)
-    print(mps4.nodes)
 
+    with pytest.raises(ValueError):
+        mps4b.contract(mps, [(0,0)], direction="blub")
+    with pytest.raises(AssertionError):
+        mps4c.contract(mpsTwo, [(0,0)], right_index=-1, direction="right")
+    with pytest.raises(AssertionError):
+        mps4d.contract(mpsTwo, [(0,0)], left_index=0, direction="left")
 
-    print(mps1)
-    print(mps)
-    mps1.contract(mps, [(0,0)])
-    print(mps1)
+    mps1.contract(mps)
     mps1.nodes
 
-
-    # mps5.contract(mpsL, [(0,0)], left_index=0, direction="left")
-
-
+    mps5b = mps5.copy()
     mps5.contract(mpsL, [(0,0)], left_index=0, direction="right")
-    print(mps5)
+    mps5b.contract(mpsR, [(0,0)], right_index=-1, direction="left")

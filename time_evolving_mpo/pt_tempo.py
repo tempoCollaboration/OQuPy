@@ -90,9 +90,9 @@ class PtTempo(BaseAPIClass):
         The parameters for the PT-TEMPO computation.
     start_time: float
         The start time.
-    backend_name: str (default = None)
-        The name of the backend_name to use for the computation. If
-        `backend_name` is ``None`` then the default backend is used.
+    backend: str (default = None)
+        The name of the backend to use for the computation. If
+        `backend` is ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -109,14 +109,14 @@ class PtTempo(BaseAPIClass):
             start_time: float,
             end_time: float,
             parameters: PtTempoParameters,
-            backend_name: Optional[Text] = None,
+            backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a PtTempo object. """
         self._backend_class, self._backend_config = \
-            get_pt_tempo_backend(backend_name, backend_config)
+            get_pt_tempo_backend(backend, backend_config)
 
         assert isinstance(bath, Bath), \
             "Argument 'bath' must be an instance of Bath."
@@ -205,9 +205,9 @@ class PtTempo(BaseAPIClass):
 
         return infl
 
-    def _time(self, step: int):
-        """Return the time that corresponds to the time step `step`. """
-        return self._start_time + float(step)*self._parameters.dt
+    # def _time(self, step: int):
+    #     """Return the time that corresponds to the time step `step`. """
+    #     return self._start_time + float(step)*self._parameters.dt
 
     @property
     def dimension(self) -> np.ndarray:
@@ -240,7 +240,7 @@ class PtTempo(BaseAPIClass):
     def get_process_tensor(
             self,
             progress_type: Optional[Text] = None,
-            backend_name: Optional[Text] = None,
+            backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None) -> ProcessTensor:
         """
         Returns a the computed process tensor. It performs the computation if
@@ -248,9 +248,9 @@ class PtTempo(BaseAPIClass):
 
         Parameters
         ----------
-        backend_name: str (default = None)
+        backend: str (default = None)
             The name of the backend for the following process tensor
-            computations. If `backend_name` is ``None`` then the default
+            computations. If `backend` is ``None`` then the default
             backend is used.
         backend_config: dict (default = None)
             The configuration of the backend. If `backend_config` is
@@ -261,7 +261,9 @@ class PtTempo(BaseAPIClass):
         process_tensor: ProcessTensor
             The computed process tensor.
         """
-        if self._backend_instance.step < self._backend_instance.num_steps:
+
+        if self._backend_instance.step is None \
+            or (self._backend_instance.step < self._backend_instance.num_steps):
             self.compute(progress_type=progress_type)
 
         times = self._start_time \
@@ -300,7 +302,7 @@ class PtTempo(BaseAPIClass):
             times=times,
             tensors=tensors,
             initial_tensor=initial_tensor,
-            backend_name=backend_name,
+            backend=backend,
             backend_config=backend_config,
             name=name,
             description=description,

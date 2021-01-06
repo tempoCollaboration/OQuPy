@@ -20,10 +20,10 @@ M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
 framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 """
 
-from typing import Union, Dict, Optional, Text, List
-from copy import copy
+from typing import Dict, List, Optional, Text, Union
 
 import numpy as np
+from numpy import ndarray
 from scipy.linalg import expm
 
 from time_evolving_mpo.backends.backend_factory import \
@@ -67,11 +67,11 @@ class ProcessTensor(BaseAPIClass):
 
     Parameters
     ----------
-    times: np.ndarray / float / None
+    times: ndarray / float / None
         Time slots of process tensor. See description above.
-    tensors: list(np.ndarray)
+    tensors: list(ndarray)
         Process tensor tensors in MPS form. See description above.
-    initial_tensor: np.ndarray
+    initial_tensor: ndarray
         Initial tensor of process tensor in MPS form. See description above.
     backend: str (default = None)
         The name of the backend to use foe computations. If
@@ -89,10 +89,10 @@ class ProcessTensor(BaseAPIClass):
     """
     def __init__(
             self,
-            times: Union[float, np.ndarray],
-            tensors: List[np.ndarray],
-            initial_tensor: Optional[np.ndarray] = None,
-            backend_name: Optional[Text] = None,
+            times: Union[float, ndarray],
+            tensors: List[ndarray],
+            initial_tensor: Optional[ndarray] = None,
+            backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
@@ -100,7 +100,7 @@ class ProcessTensor(BaseAPIClass):
         """Create a ProcessTensor object. """
 
         self._backend_class, self._backend_config = \
-            get_process_tensor_backend(backend_name, backend_config)
+            get_process_tensor_backend(backend, backend_config)
 
         p_t_dict =  {
             "version":"1.0",
@@ -115,21 +115,29 @@ class ProcessTensor(BaseAPIClass):
 
         self._times = times
 
-        if isinstance(times, np.ndarray):
+        if isinstance(times, ndarray):
             self._times_array = times.astype(NpDtypeReal)
         elif isinstance(times, float):
+            assert times > 0.0
             self._times_array =  \
                     times * np.arange(len(tensors)+1).astype(NpDtypeReal)
         elif times is None:
             self._times_array = np.arange(len(tensors)+1).astype(NpDtypeReal)
+        # else:
+        #     raise AssertionError("Parameter `times` must be `None` or " \
+        #         + "of type `float` or `ndarray`")
+
+        if len(tensors)>0:
+            dim = int(np.sqrt(tensors[0].shape[2]))
+            trace = np.identity(dim)/float(dim)
+            trace = np.sqrt(trace.reshape(dim**2))
         else:
-            raise AssertionError("Parameter `times` must be `None` or " \
-                + "of type `float` or `ndarray`")
+            trace = np.array([0])
 
         self._backend_instance = self._backend_class(
                 tensors=tensors,
                 initial_tensor=initial_tensor,
-                trace=np.sqrt(np.array([0.5, 0.0, 0.0, 0.5])),
+                trace=trace,
                 config=self._backend_config)
 
         super().__init__(name, description, description_dict)
@@ -149,11 +157,11 @@ class ProcessTensor(BaseAPIClass):
         return len(self._times)
 
     @property
-    def times(self) -> np.ndarray:
+    def times(self) -> ndarray:
         """Times of the dynamics. """
-        return copy(self._times_array)
+        return self._times_array.copy()
 
-    def get_bond_dimensions(self) -> np.ndarray:
+    def get_bond_dimensions(self) -> ndarray:
         """Return the bond dimensions of the MPS form of the process tensor."""
         return self._backend_instance.get_bond_dimensions()
 
@@ -187,7 +195,7 @@ class ProcessTensor(BaseAPIClass):
     def compute_dynamics_from_system(
             self,
             system: BaseSystem,
-            initial_state: Optional[np.ndarray] = None) -> Dynamics:
+            initial_state: Optional[ndarray] = None) -> Dynamics:
         """
         Compute the system dynamics for a given system Hamiltonian.
 
@@ -227,11 +235,7 @@ class ProcessTensor(BaseAPIClass):
         def propagators(step: int):
             """Create the system propagators (first and second half) for the
             time step `step`. """
-            try:
-                dt = self._times_array[step+1] - self._times_array[step]
-            except IndexError:
-                dt = self._times_array[step] - self._times_array[step-1]
-
+            dt = self._times_array[step+1] - self._times_array[step]
             t = self._times_array[step]
             first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0).T
             second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0).T
@@ -250,7 +254,7 @@ class ProcessTensor(BaseAPIClass):
     def compute_final_state_from_system(
             self,
             system: BaseSystem,
-            initial_state: Optional[np.ndarray] = None) -> Dynamics:
+            initial_state: Optional[ndarray] = None) -> Dynamics:
         """
         Compute final state for a given system Hamiltonian.
 
@@ -292,7 +296,6 @@ class ProcessTensor(BaseAPIClass):
             """Create the system propagators (first and second half) for the
             time step `step`. """
             dt = self._times_array[step+1] - self._times_array[step]
-
             t = self._times_array[step]
             first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0).T
             second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0).T
@@ -329,14 +332,8 @@ def import_process_tensor(filename: Text) -> ProcessTensor:
         "Can't import process tensor from file {} ".format(filename) \
         + "as it appears to be an incompatible version."
     assert_process_tensor_dict(p_t)
-    assert p_t["times"] is not None
-    if isinstance(p_t["times"], float):
-        times = p_t["times"]*np.arange(len(p_t["tensors"])+1)
-    else:
-        assert isinstance(p_t["times"], np.ndarray)
-        times = p_t["times"]
 
-    return ProcessTensor(times=times,
+    return ProcessTensor(times=p_t["times"],
                          tensors=list(p_t["tensors"]),
                          initial_tensor=p_t["initial_tensor"],
                          name=p_t["name"],

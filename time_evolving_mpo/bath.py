@@ -15,13 +15,13 @@
 Module on physical information on the bath and its coupling to the system.
 """
 from typing import Dict, Optional, Text
-from typing import Any as ArrayLike
 from copy import copy
 
 import numpy as np
+from numpy import ndarray
 
-from time_evolving_mpo.correlations import BaseCorrelations
 from time_evolving_mpo.config import NpDtype
+from time_evolving_mpo.correlations import BaseCorrelations
 from time_evolving_mpo.base_api import BaseAPIClass
 
 
@@ -50,7 +50,7 @@ class Bath(BaseAPIClass):
     """
     def __init__(
             self,
-            coupling_operator: ArrayLike,
+            coupling_operator: ndarray,
             correlations: BaseCorrelations,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
@@ -104,13 +104,13 @@ class Bath(BaseAPIClass):
 
     @property
     def coupling_operator(self) -> np.ndarray:
-        """ToDo: The system diagonalised operator to which the bath couples. """
-        return copy(self._coupling_operator)
+        """The diagonalised system operator to which the bath couples. """
+        return self._coupling_operator.copy()
 
     @property
     def unitary_transform(self) -> np.ndarray:
-        """ToDo: The unitary that makes the coupling diagonal to which the bath couples. """
-        return copy(self._unitary)
+        """The unitary that makes the coupling operator diagonal. """
+        return self._unitary.copy()
 
     @property
     def dimension(self) -> np.ndarray:

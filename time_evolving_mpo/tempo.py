@@ -22,13 +22,12 @@ time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
 """
 
 import sys
-from typing import Dict, Optional, Text, Callable
-from typing import Any as ArrayLike
+from typing import Callable, Dict, Optional, Text
 import warnings
 from copy import copy
 
 import numpy as np
-from numpy import array, ndarray, diag, exp, outer
+from numpy import ndarray
 from scipy.linalg import expm
 
 from time_evolving_mpo.backends.backend_factory import get_tempo_backend
@@ -154,9 +153,9 @@ class Tempo(BaseAPIClass):
         The initial density matrix of the sytem.
     start_time: float
         The start time.
-    backend_name: str (default = None)
-        The name of the backend_name to use for the computation. If
-        `backend_name` is ``None`` then the default backend is used.
+    backend: str (default = None)
+        The name of the backend to use for the computation. If
+        `backend` is ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -172,7 +171,7 @@ class Tempo(BaseAPIClass):
             system: BaseSystem,
             bath: Bath,
             parameters: TempoParameters,
-            initial_state: ArrayLike,
+            initial_state: ndarray,
             start_time: float,
             backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
@@ -196,7 +195,7 @@ class Tempo(BaseAPIClass):
         self._parameters = parameters
 
         try:
-            __initial_state = array(initial_state, dtype=NpDtype)
+            __initial_state = np.array(initial_state, dtype=NpDtype)
             __initial_state.setflags(write=False)
         except Exception as e:
             raise AssertionError("Initial state must be numpy array.") from e
@@ -240,8 +239,8 @@ class Tempo(BaseAPIClass):
         influence = self._influence
         unitary_transform = self._bath.unitary_transform
         propagators = self._propagators
-        sum_north = array([1.0]*(dim**2))
-        sum_west = array([1.0]*(dim**2))
+        sum_north = np.array([1.0]*(dim**2))
+        sum_west = np.array([1.0]*(dim**2))
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
         self._backend_instance = self._backend_class(
@@ -312,9 +311,11 @@ class Tempo(BaseAPIClass):
         op_m = self._coupling_comm
 
         if dk == 0:
-            infl = diag(exp(-op_m*(eta_dk.real*op_m + 1j*eta_dk.imag*op_p)))
+            infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
+                                          + 1j*eta_dk.imag*op_p)))
         else:
-            infl = exp(-outer(eta_dk.real*op_m + 1j*eta_dk.imag*op_p, op_m))
+            infl = np.exp(-np.outer(eta_dk.real*op_m \
+                                  + 1j*eta_dk.imag*op_p, op_m))
 
         return infl
 
@@ -535,7 +536,7 @@ def guess_tempo_parameters(
 def tempo_compute(
         system: BaseSystem,
         bath: Bath,
-        initial_state: ArrayLike,
+        initial_state: ndarray,
         start_time: float,
         end_time: float,
         parameters: Optional[TempoParameters] = None,

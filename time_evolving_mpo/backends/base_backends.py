@@ -33,7 +33,7 @@ class BaseTempoBackend:
         Callable that takes an integer `step` and returns the influence super
         operator of that `step`.
     unitary_transform: ndarray
-        ToDo
+        Unitary that transforms the coupling operator into a diagonal form.
     propagators: callable(int) -> ndarray, ndarray
         Callable that takes an integer `step` and returns the first and second
         half of the system propagator of that `step`.
@@ -214,12 +214,13 @@ class BaseProcessTensorBackend:
             initial_tensor: Union[ndarray, type(None)],
             config: Dict):
         """Create a BaseProcessTensorBackend object. """
-        raise NotImplementedError(
-            "Class {} has no constructor implementation.".format(
-                type(self).__name__))
+        pass
+        # raise NotImplementedError(
+        #     "Class {} has no constructor implementation.".format(
+        #         type(self).__name__))
 
     def get_bond_dimensions(self) -> ndarray:
-        """ToDo"""
+        """Return MPS bond dimensions. """
         raise NotImplementedError(
             "Class {} has no get_bond_dimensions implementation.".format(
                 type(self).__name__))

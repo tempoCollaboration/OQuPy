@@ -118,7 +118,8 @@ def check_tempo_dynamics_file(filename: Text) -> bool:
 
     Returns
     -------
-    True or False:
+    True or False: bool
+        True if the file has the correct format.
     """
     try:
         assert_tempo_dynamics_file(filename)
@@ -305,7 +306,8 @@ def check_process_tensor_file(filename: Text) -> bool:
 
     Returns
     -------
-    True or False:
+    True or False: bool
+        True if the file has the correct format.
     """
     try:
         assert_process_tensor_file(filename)
