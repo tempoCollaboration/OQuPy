@@ -41,7 +41,7 @@ TEMPO_BACKEND = 'tensor-network'
 
 # Dict of all tempo backends and their default configuration
 TEMPO_BACKEND_CONFIG = {
-    'tensor-network': {},
+    'tensor-network': {'backend':'numpy'},
     }
 
 # maximal dkmax for tempo parameter guessing function
