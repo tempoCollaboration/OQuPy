@@ -6,14 +6,25 @@ compute the dynamics of a quantum system that is possibly strongly
 coupled to a structured environment. It illustrates this by applying the
 TEMPO method to the strongly coupled spin boson model.
 
+You can follow this tutorial using any of these options:
+
+.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb
+
+- launch binder |binder-tutorial| (runs in browser),
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorial.ipynb>`,
+- read through it and code along below.
+
+-------------------------------------------------------------------------------
+
 First, let’s import TimeEvolvingMPO and some other packages we are going
 to use
 
-.. code:: ipython3
+.. code:: python3
 
     import sys
     sys.path.insert(0,'..')
-    
+
     import time_evolving_mpo as tempo
     import numpy as np
     import matplotlib.pyplot as plt
@@ -21,7 +32,7 @@ to use
 
 and check what version of tempo we are using.
 
-.. code:: ipython3
+.. code:: python3
 
     tempo.__version__
 
@@ -56,21 +67,21 @@ coupled to an ohmic bath (spin-boson model). Before we go through this
 step by step below, let’s have a brief look at the script that will do
 the job - just to have an idea where we are going:
 
-.. code:: ipython3
+.. code:: python3
 
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
-    
+
     system = tempo.System(0.5 * Omega * tempo.operators.sigma("x"))
-    correlations = tempo.PowerLawSD(alpha=alpha, 
-                                    zeta=1, 
-                                    cutoff=omega_cutoff, 
-                                    cutoff_type='exponential', 
+    correlations = tempo.PowerLawSD(alpha=alpha,
+                                    zeta=1,
+                                    cutoff=omega_cutoff,
+                                    cutoff_type='exponential',
                                     max_correlation_time=8.0)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-5))
-    
+
     dynamics = tempo.tempo_compute(system=system,
                                    bath=bath,
                                    initial_state=tempo.operators.spin_dm("up"),
@@ -78,7 +89,7 @@ the job - just to have an idea where we are going:
                                    end_time=15.0,
                                    parameters=tempo_parameters)
     t, s_z = dynamics.expectations(0.5*tempo.operators.sigma("z"), real=True)
-    
+
     plt.plot(t, s_z, label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
     plt.ylabel(r'$<S_z>$')
@@ -122,12 +133,12 @@ where :math:`\hat{\sigma}_i` are the Pauli operators, and the
 :math:`g_k` and :math:`\omega_k` are such that the spectral density
 :math:`J(\omega)` is
 
-.. math::  J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right) \mathrm{.} 
+.. math::  J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right) \mathrm{.}
 
 Also, let’s assume the initial density matrix of the spin is the up
 state
 
-.. math::  \rho(0) = \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix} 
+.. math::  \rho(0) = \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix}
 
 and the bath is initially at zero temperature.
 
@@ -139,7 +150,7 @@ frequency. Here, we choose :math:`\Omega` for this and write:
 -  :math:`\omega_c = 5.0 \Omega`
 -  :math:`\alpha = 0.3`
 
-.. code:: ipython3
+.. code:: python3
 
     Omega_A = 1.0
     omega_cutoff_A = 5.0
@@ -152,7 +163,7 @@ To input the operators you can simply use numpy matrices. For the most
 common operators you can, more conveniently, use the ``tempo.operators``
 module:
 
-.. code:: ipython3
+.. code:: python3
 
     tempo.operators.sigma("x")
 
@@ -166,7 +177,7 @@ module:
 
 
 
-.. code:: ipython3
+.. code:: python3
 
     tempo.operators.spin_dm("up")
 
@@ -185,28 +196,28 @@ System
 
 .. math::  H_{S} = \frac{\Omega}{2} \hat{\sigma}_x \mathrm{,}
 
-.. code:: ipython3
+.. code:: python3
 
     system_A = tempo.System(0.5 * Omega_A * tempo.operators.sigma("x"))
 
 Correlations
 ^^^^^^^^^^^^
 
-.. math::  J(\omega) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right) 
+.. math::  J(\omega) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right)
 
 Because the spectral density is of the standard power-law form,
 
-.. math::  J(\omega) = 2 \alpha \frac{\omega^\zeta}{\omega_c^{\zeta-1}} X(\omega,\omega_c) 
+.. math::  J(\omega) = 2 \alpha \frac{\omega^\zeta}{\omega_c^{\zeta-1}} X(\omega,\omega_c)
 
 with :math:`\zeta=1` and :math:`X` of the type ``'exponential'`` we
 define the spectral density with:
 
-.. code:: ipython3
+.. code:: python3
 
-    correlations_A = tempo.PowerLawSD(alpha=alpha_A, 
-                                      zeta=1, 
-                                      cutoff=omega_cutoff_A, 
-                                      cutoff_type='exponential', 
+    correlations_A = tempo.PowerLawSD(alpha=alpha_A,
+                                      zeta=1,
+                                      cutoff=omega_cutoff_A,
+                                      cutoff_type='exponential',
                                       max_correlation_time=8.0)
 
 Bath
@@ -215,7 +226,7 @@ Bath
 The bath couples with the operator :math:`\frac{1}{2}\hat{\sigma}_z` to
 the system.
 
-.. code:: ipython3
+.. code:: python3
 
     bath_A = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations_A)
 
@@ -226,7 +237,7 @@ Now, that we have the system and the bath objects ready we can compute
 the dynamics of the spin starting in the up state, from time :math:`t=0`
 to :math:`t=15\,\Omega^{-1}`
 
-.. code:: ipython3
+.. code:: python3
 
     dynamics_A_1 = tempo.tempo_compute(system=system_A,
                                        bath=bath_A,
@@ -251,7 +262,7 @@ to :math:`t=15\,\Omega^{-1}`
 
 and plot the result:
 
-.. code:: ipython3
+.. code:: python3
 
     t_A_1, z_A_1 = dynamics_A_1.expectations(0.5*tempo.operators.sigma("z"), real=True)
     plt.plot(t_A_1, z_A_1, label=r'$\alpha=0.3$')
@@ -310,7 +321,7 @@ the ``tempo.guess_tempo_parameters()`` function and then check with the
 helper function ``tempo.helpers.plot_correlations_with_parameters()``
 whether it satisfies the above requirements:
 
-.. code:: ipython3
+.. code:: python3
 
     parameters = tempo.guess_tempo_parameters(system=system_A,
                                               bath=bath_A,
@@ -330,13 +341,13 @@ whether it satisfies the above requirements:
     ----------------------------------------------
     TempoParameters object: Roughly estimated parameters
      Estimated with 'guess_tempo_parameters()'
-      dt            = 0.0625 
-      dkmax         = 37 
-      epsrel        = 2.4846963223857106e-05 
-    
+      dt            = 0.0625
+      dkmax         = 37
+      epsrel        = 2.4846963223857106e-05
 
 
-.. code:: ipython3
+
+.. code:: python3
 
     tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters)
 
@@ -371,7 +382,7 @@ reasonable set of parameters.
 We can choose a set of parameters by hand and bundle them into a
 ``TempoParameters`` object,
 
-.. code:: ipython3
+.. code:: python3
 
     tempo_parameters_A = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-5), name="my rough parameters")
     print(tempo_parameters_A)
@@ -382,15 +393,15 @@ We can choose a set of parameters by hand and bundle them into a
     ----------------------------------------------
     TempoParameters object: my rough parameters
      __no_description__
-      dt            = 0.1 
-      dkmax         = 30 
-      epsrel        = 1e-05 
-    
+      dt            = 0.1
+      dkmax         = 30
+      epsrel        = 1e-05
+
 
 
 and check again with the helper function:
 
-.. code:: ipython3
+.. code:: python3
 
     tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A)
 
@@ -414,7 +425,7 @@ which allows us to resume a computation to get later system dynamics
 without having to start over. For this we start with creating a
 ``Tempo`` object:
 
-.. code:: ipython3
+.. code:: python3
 
     tempo_A = tempo.Tempo(system=system_A,
                           bath=bath_A,
@@ -425,7 +436,7 @@ without having to start over. For this we start with creating a
 We can start by computing the dynamics up to time
 :math:`5.0\,\Omega^{-1}`,
 
-.. code:: ipython3
+.. code:: python3
 
     tempo_A.compute(end_time=5.0)
 
@@ -438,7 +449,7 @@ We can start by computing the dynamics up to time
 
 then get and plot the dynamics of expecatation values,
 
-.. code:: ipython3
+.. code:: python3
 
     dynamics_A_2 = tempo_A.get_dynamics()
     plt.plot(*dynamics_A_2.expectations(0.5*tempo.operators.sigma("z"),real=True), label=r'$\alpha=0.3$')
@@ -461,7 +472,7 @@ then get and plot the dynamics of expecatation values,
 
 then continue the computation to :math:`15.0\,\Omega^{-1}`,
 
-.. code:: ipython3
+.. code:: python3
 
     tempo_A.compute(end_time=15.0)
 
@@ -474,7 +485,7 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 
 and then again get and plot the dynamics of expecatation values.
 
-.. code:: ipython3
+.. code:: python3
 
     dynamics_A_2 = tempo_A.get_dynamics()
     plt.plot(*dynamics_A_2.expectations(0.5*tempo.operators.sigma("z"),real=True), label=r'$\alpha=0.3$')
