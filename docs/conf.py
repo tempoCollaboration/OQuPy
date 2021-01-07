@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'TimeEvolvingMPO'
-copyright = '2020, TEMPO Collaboration'
+copyright = '2021, TEMPO Collaboration'
 author = 'TEMPO Collaboration'
 
 # The full version, including alpha/beta/rc tags
