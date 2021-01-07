@@ -1,17 +1,25 @@
 # How to Contribute
-The main code structure is currently under development and therefore the
-**project is not yet ready for code contributions.** If you have any question,
-suggestion or general thoughts on this library we'd very much appreciate if you
-share them with us. For this please feel free to file an issue in the
-[Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section
-on github. Once we are off the ground with the code your code contributions are
-very welcome as well.
+Contributions of all kinds are welcome! Get in touch if you ...
+<ul style="list-style: none;">
+ <li>... found a bug.</li>
+ <li> ... have a question on how to use the code.</li>
+ <li> ... have a suggestion, on how to improve the code or documentation.</li>
+ <li> ... would like to get involved in writing code or documentation.</li>
+ <li> ... have some other thoughts or suggestions.</li>
+</ul>
 
-For the coding bit of the project we try to follow these general guidlines:
+Please, feel free to file an issue in the
+[Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section
+on GitHub for this. Also, have a look at the text below if you want to get
+involved in the development.
+
+## General Guidlines
+For the coding bit of the project we try to follow these general guidelines:
 
 * [the zen of python](https://www.python.org/dev/peps/pep-0020/)
 * [structure](https://docs.python-guide.org/writing/structure/)
 * [code style](https://www.python.org/dev/peps/pep-0008/)
+* [code of conduct](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CODE_OF_CONDUCT.md)
 
 The current setup uses:
 
