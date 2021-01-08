@@ -1,36 +1,51 @@
-.. TimeEvolvingMPO documentation master file, created by
-   sphinx-quickstart on Fri Feb 14 19:49:08 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+TimeEvolvingMPO reference documentation
+=======================================
 
-Welcome to TimeEvolvingMPO's documentation!
-===========================================
+**A Python 3 package to efficiently compute non-Markovian open quantum
+systems.**
 
-*This library is under consturction!*
-
-A python3 library to efficiently compute non-markovian open quantum systems.
-
-+--------------------+----------------------------------------------------------------------------------------------+
-| **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                        |
-+--------------------+----------------------------------------------------------------------------------------------+
-| **Documentation**  | https://TimeEvolvingMPO.readthedocs.io                                                       |
-+--------------------+----------------------------------------------------------------------------------------------+
-| **PyPI**           | https://pypi.org/project/time-evolving-mpo/                                                  |
-+--------------------+----------------------------------------------------------------------------------------------+
-| **Tutorial**       | https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb |
-+--------------------+----------------------------------------------------------------------------------------------+
++--------------------+---------------------------------------------------------------------------------------------------------------+
+| **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                                         |
++--------------------+---------------------------------------------------------------------------------------------------------------+
+| **Documentation**  | https://TimeEvolvingMPO.readthedocs.io                                                                        |
++--------------------+---------------------------------------------------------------------------------------------------------------+
+| **PyPI**           | https://pypi.org/project/time-evolving-mpo/                                                                   |
++--------------------+---------------------------------------------------------------------------------------------------------------+
+| **Tutorial**       | `Binder link <https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb>`_ |
++--------------------+---------------------------------------------------------------------------------------------------------------+
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Introduction
 
+   pages/introduction
    pages/install
-   pages/tutorial
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+
+   pages/tutorial_01_quickstart/tutorial_01_quickstart
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+
+   pages/api
+   pages/modules
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development
+
+   pages/contributing
+   pages/authors
+   pages/how_to_cite
+   pages/bibliography
 
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

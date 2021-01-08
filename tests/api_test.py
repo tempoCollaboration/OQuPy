@@ -1,4 +1,4 @@
-# Copyright 2020 The TEMPO Collaboration
+# Copyright 2021 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This is a module just to be polite.
+Tests the time_evovling_mpo API.
 """
 
-from time_evolving_mpo.version import __version__
+import pytest
 
-HI_MSG = \
-"""
-Hi there!
-This is TimeEvolvingMPO version {} speaking!
-""".format(__version__)
+from time_evolving_mpo import *
 
-def say_hi() -> None:
-    """
-    Prints a greeting on the standard output.
-    """
-    print(HI_MSG)
+pass # ToDo

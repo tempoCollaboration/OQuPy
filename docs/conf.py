@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'TimeEvolvingMPO'
-copyright = '2020, TEMPO Collaboration'
+copyright = '2021, TEMPO Collaboration'
 author = 'TEMPO Collaboration'
 
 # The full version, including alpha/beta/rc tags
@@ -38,8 +38,15 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages'
+    'sphinx.ext.githubpages',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.imgconverter',
 ]
+
+mathjax_path = \
+"""https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"""
+
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

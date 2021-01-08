@@ -1,14 +1,23 @@
 # TimeEvolvingMPO
+**A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
 [![Build Status](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO.svg?branch=master)](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO)
 [![codecov](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO/branch/master/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO)
 [![Documentation Status](https://readthedocs.org/projects/timeevolvingmpo/badge/?version=latest)](https://timeevolvingmpo.readthedocs.io/en/latest/?badge=latest)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
+This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to a structured environment. It allows to conveniently apply the so called time evolving matrix product operator method (TEMPO) [1], as well as the process tensor TEMPO method (PT-TEMPO) [2].
 
-A python3 library to efficiently compute non-markovian open quantum systems.
-
-*This library is under consturction!*
+- **[1]**
+A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
+B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
+time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
+- **[2]**
+G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
+J. Keeling, *Efficient exploration of Hamiltonian parameter space for
+optimal control of non-Markovian open quantum systems*, arXiv2101.?????
+(2021).
 
 ## Links
 
@@ -29,7 +38,7 @@ See the
 for more information.
 
 
-## Tutorial
+## Quickstart Tutorial
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
 
 Click the `launch binder` button above to start a tutorial in a browser based
@@ -38,20 +47,21 @@ jupyter notebook (no installation required) or checkout the
 
 
 ## Contributing
-The main code structure is currently under development and therefore the
-**project is not yet ready for code contributions.** If you have any question,
-suggestion or general thoughts on this library we'd very much appreciate if you
-share them with us. For this please feel free to file an issue in the
-[Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section
-on github. Once we are off the ground with the code your code contributions are
-welcome as well (have a look at [`CONTRIBUTING.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CONTRIBUTING.md) for that).
+Contributions of all kinds are welcome! Get in touch if you ...
+<ul style="list-style: none;">
+ <li>... found a bug.</li>
+ <li> ... have a question on how to use the code.</li>
+ <li> ... have a suggestion, on how to improve the code or documentation.</li>
+ <li> ... would like to get involved in writing code or documentation.</li>
+ <li> ... have some other thoughts or suggestions.</li>
+</ul>
 
-## Authors and Sources
-The project is written and maintained by:
+Please, feel free to file an issue in the [Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section
+on GitHub for this. Also, have a look at [`CONTRIBUTING.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CONTRIBUTING.md) if you want to get involved in the development.
 
-* Gerald E. Fux (gefux) <gerald.e.fux@gmail.com>.
-* **N/A**(N/A)
-
-See [`AUTHORS.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/AUTHORS.md)
-and [Contributors](https://github.com/tempoCollaboration/TimeEvolvingMPO/graphs/contributors) for
-an extensive list.
+## Citing, Authors and Bibliography
+See the files
+[`HOW_TO_CITE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/HOW_TO_CITE.md),
+[`AUTHORS.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/AUTHORS.md)
+and
+[`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/BIBLIOGRAPHY.md).

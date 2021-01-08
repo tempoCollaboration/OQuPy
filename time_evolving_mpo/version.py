@@ -1,4 +1,4 @@
-# Copyright 2020 The TEMPO Collaboration
+# Copyright 2021 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,4 +15,4 @@
 This module just defines what version of tempo we are currently looking at.
 """
 
-__version__ = '0.0.1-2'
+__version__ = '0.0.3'

@@ -1,3 +1,11 @@
+# TEMPO file formats
+*.tempoDynamics
+*.processTensor
+
+# local development
+local_dev/
+*local_dev*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,3 +135,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Test data exceptions
+!tests/data/test_*

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2020 The TEMPO Collaboration
+# Copyright 2021 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,12 +21,17 @@ with open('time_evolving_mpo/version.py') as f:
   exec(f.read(), globals())
 
 # get short and long description
-short_description = "A python3 library to efficiently compute non-markovian open quantum systems."
+short_description = \
+"A python3 library to efficiently compute non-markovian open quantum systems."
+
 with open("README.md", "r") as f:
   long_description = f.read()
 
 # get requirements list
-requirements = ["numpy>=1.18.0" ]
+requirements = ["numpy>=1.18.0",
+                "scipy>=1.4.0",
+                "tensornetwork==0.3.0",
+                ]
 
 setup(
     name='time_evolving_mpo',

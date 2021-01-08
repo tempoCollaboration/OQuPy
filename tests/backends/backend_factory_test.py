@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.say_hi module.
+Tests for the time_evolving_mpo.backends.base_backends module.
 """
-
 import pytest
 
-from time_evolving_mpo import say_hi
+import numpy as np
+import tensornetwork as tn
 
-def test_say_hi():
-    say_hi()
+import time_evolving_mpo as tempo
+from time_evolving_mpo.backends.backend_factory import \
+    get_tempo_backend, get_pt_tempo_backend, get_process_tensor_backend
+pass
+
+def test_backend_factory_default():
+    tempo_back = get_tempo_backend()
+    pt_tempo_back = get_pt_tempo_backend()
+    process_tensor_back = get_process_tensor_backend()
