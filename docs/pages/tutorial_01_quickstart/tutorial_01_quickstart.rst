@@ -12,7 +12,8 @@ You can follow this tutorial using any of these options:
  :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
 
 - launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorial.ipynb>`,
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.ipynb>`,
+- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.ip>`,
 - read through it and code along below.
 
 -------------------------------------------------------------------------------

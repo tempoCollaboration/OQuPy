@@ -44,7 +44,7 @@ for more information.
 
 Click the `launch binder` button above to start a tutorial in a browser based
 jupyter notebook (no installation required) or checkout the
-[tutorial in the documentation](https://TimeEvolvingMPO.readthedocs.io/en/latest/pages/tutorial.html).
+[tutorial in the documentation](https://timeevolvingmpo.readthedocs.io/en/latest/pages/tutorial_01_quickstart/tutorial_01_quickstart.html).
 
 
 ## Contributing
