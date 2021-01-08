@@ -39,7 +39,7 @@ for more information.
 
 
 ## Quickstart Tutorial
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
 
 Click the `launch binder` button above to start a tutorial in a browser based
 jupyter notebook (no installation required) or checkout the
