@@ -6,6 +6,7 @@
 [![codecov](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO/branch/master/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO)
 [![Documentation Status](https://readthedocs.org/projects/timeevolvingmpo/badge/?version=latest)](https://timeevolvingmpo.readthedocs.io/en/latest/?badge=latest)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+[![DOI](https://www.zenodo.org/badge/244404030.svg)](https://www.zenodo.org/badge/latestdoi/244404030)
 
 This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to a structured environment. It allows to conveniently apply the so called time evolving matrix product operator method (TEMPO) [1], as well as the process tensor TEMPO method (PT-TEMPO) [2].
 
