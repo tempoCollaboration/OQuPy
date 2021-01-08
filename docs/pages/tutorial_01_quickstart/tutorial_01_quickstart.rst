@@ -13,7 +13,7 @@ You can follow this tutorial using any of these options:
 
 - launch binder |binder-tutorial| (runs in browser),
 - download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.ipynb>`,
-- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.ip>`,
+- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.py>`,
 - read through it and code along below.
 
 -------------------------------------------------------------------------------
