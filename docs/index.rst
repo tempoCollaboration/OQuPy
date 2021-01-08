@@ -4,6 +4,9 @@ TimeEvolvingMPO reference documentation
 **A Python 3 package to efficiently compute non-Markovian open quantum
 systems.**
 
+.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
+
 +--------------------+---------------------------------------------------------------------------------------------------------------+
 | **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                                         |
 +--------------------+---------------------------------------------------------------------------------------------------------------+
@@ -11,7 +14,7 @@ systems.**
 +--------------------+---------------------------------------------------------------------------------------------------------------+
 | **PyPI**           | https://pypi.org/project/time-evolving-mpo/                                                                   |
 +--------------------+---------------------------------------------------------------------------------------------------------------+
-| **Tutorial**       | `Binder link <https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb>`_ |
+| **Tutorial**       | launch |binder-tutorial|
 +--------------------+---------------------------------------------------------------------------------------------------------------+
 
 .. toctree::

@@ -44,7 +44,7 @@ This should give you the following message:
 
 .. code-block:: none
 
-  '0.0.1-2'
+  '0.1.0'
 
 
 Uninstall

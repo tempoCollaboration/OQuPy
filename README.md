@@ -1,7 +1,7 @@
 # TimeEvolvingMPO
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
 [![Build Status](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO.svg?branch=master)](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO)
 [![codecov](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO/branch/master/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO)
 [![Documentation Status](https://readthedocs.org/projects/timeevolvingmpo/badge/?version=latest)](https://timeevolvingmpo.readthedocs.io/en/latest/?badge=latest)

@@ -9,7 +9,7 @@ TEMPO method to the strongly coupled spin boson model.
 You can follow this tutorial using any of these options:
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
 
 - launch binder |binder-tutorial| (runs in browser),
 - download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorial.ipynb>`,
