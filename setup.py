@@ -31,6 +31,7 @@ with open("README.md", "r") as f:
 requirements = ["numpy>=1.18.0",
                 "scipy>=1.4.0",
                 "tensornetwork==0.3.0",
+                "matplotlib>=3.0.0",
                 ]
 
 setup(
