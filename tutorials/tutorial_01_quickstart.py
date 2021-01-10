@@ -52,7 +52,7 @@ correlations = tempo.PowerLawSD(alpha=alpha,
                                 cutoff_type='exponential', 
                                 max_correlation_time=8.0)
 bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
-tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-5))
+tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4))
 
 dynamics = tempo.tempo_compute(system=system,
                                bath=bath,
@@ -147,7 +147,7 @@ bath_A = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations_A)
 
 # ### A.3: The TEMPO Computation
 
-# Now, that we have the system and the bath objects ready we can compute the dynamics of the spin starting in the up state, from time $t=0$ to $t=15\,\Omega^{-1}$
+# Now, that we have the system and the bath objects ready we can compute the dynamics of the spin starting in the up state, from time $t=0$ to $t=5\,\Omega^{-1}$
 
 # In[10]:
 
@@ -156,7 +156,7 @@ dynamics_A_1 = tempo.tempo_compute(system=system_A,
                                    bath=bath_A,
                                    initial_state=tempo.operators.spin_dm("up"),
                                    start_time=0.0,
-                                   end_time=15.0,
+                                   end_time=5.0,
                                    tollerance=0.01)
 
 
@@ -217,7 +217,7 @@ tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters)
 # In[14]:
 
 
-tempo_parameters_A = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-5), name="my rough parameters")
+tempo_parameters_A = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4), name="my rough parameters")
 print(tempo_parameters_A)
 
 

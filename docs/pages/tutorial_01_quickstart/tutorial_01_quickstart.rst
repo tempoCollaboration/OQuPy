@@ -42,7 +42,7 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.0.3'
+    '0.1.0'
 
 
 
@@ -81,7 +81,7 @@ the job - just to have an idea where we are going:
                                     cutoff_type='exponential',
                                     max_correlation_time=8.0)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
-    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-5))
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4))
 
     dynamics = tempo.tempo_compute(system=system,
                                    bath=bath,
@@ -99,15 +99,15 @@ the job - just to have an idea where we are going:
 
 .. parsed-literal::
 
-    100.0%  150 of  150 [########################################] 00:00:25
-    Elapsed time: 25.4s
+    100.0%  150 of  150 [########################################] 00:00:10
+    Elapsed time: 10.7s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1b95173dd8>
+    <matplotlib.legend.Legend at 0x7fbcfc6cf4e0>
 
 
 
@@ -236,7 +236,7 @@ A.3: The TEMPO Computation
 
 Now, that we have the system and the bath objects ready we can compute
 the dynamics of the spin starting in the up state, from time :math:`t=0`
-to :math:`t=15\,\Omega^{-1}`
+to :math:`t=5\,\Omega^{-1}`
 
 .. code:: python3
 
@@ -244,21 +244,21 @@ to :math:`t=15\,\Omega^{-1}`
                                        bath=bath_A,
                                        initial_state=tempo.operators.spin_dm("up"),
                                        start_time=0.0,
-                                       end_time=15.0,
+                                       end_time=5.0,
                                        tollerance=0.01)
 
 
 .. parsed-literal::
 
-    ../time_evolving_mpo/tempo.py:492: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../time_evolving_mpo/tempo.py:495: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
 
 .. parsed-literal::
 
-    100.3%  301 of  300 [########################################] 00:01:05
-    Elapsed time: 65.9s
+    100.0%   80 of   80 [########################################] 00:00:06
+    Elapsed time: 6.7s
 
 
 and plot the result:
@@ -276,7 +276,7 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1b94f6c4a8>
+    <matplotlib.legend.Legend at 0x7fbcfc5fa160>
 
 
 
@@ -334,6 +334,8 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
+    ../time_evolving_mpo/tempo.py:495: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+      warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
 
@@ -363,7 +365,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x7f1b949694a8>
+    <AxesSubplot:xlabel='$\\tau$', ylabel='$C(\\tau)$'>
 
 
 
@@ -385,7 +387,7 @@ We can choose a set of parameters by hand and bundle them into a
 
 .. code:: python3
 
-    tempo_parameters_A = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-5), name="my rough parameters")
+    tempo_parameters_A = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4), name="my rough parameters")
     print(tempo_parameters_A)
 
 
@@ -396,7 +398,7 @@ We can choose a set of parameters by hand and bundle them into a
      __no_description__
       dt            = 0.1
       dkmax         = 30
-      epsrel        = 1e-05
+      epsrel        = 0.0001
 
 
 
@@ -407,16 +409,22 @@ and check again with the helper function:
     tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A)
 
 
+.. parsed-literal::
+
+    ../time_evolving_mpo/helpers.py:59: UserWarning: Matplotlib is currently using module://ipykernel.pylab.backend_inline, which is a non-GUI backend, so cannot show the figure.
+      fig.show()
+
+
 
 
 .. parsed-literal::
 
-    <matplotlib.axes._subplots.AxesSubplot at 0x7f1b948af320>
+    <AxesSubplot:xlabel='$\\tau$', ylabel='$C(\\tau)$'>
 
 
 
 
-.. image:: output_38_1.png
+.. image:: output_38_2.png
 
 
 We could feed this object into the ``tempo.tempo_compute()`` function to
@@ -444,8 +452,8 @@ We can start by computing the dynamics up to time
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:07
-    Elapsed time: 7.5s
+    100.0%   50 of   50 [########################################] 00:00:03
+    Elapsed time: 3.0s
 
 
 then get and plot the dynamics of expecatation values,
@@ -463,7 +471,7 @@ then get and plot the dynamics of expecatation values,
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1b950e7358>
+    <matplotlib.legend.Legend at 0x7fbcfc54f4a8>
 
 
 
@@ -480,8 +488,8 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 
 .. parsed-literal::
 
-    100.0%  100 of  100 [########################################] 00:00:25
-    Elapsed time: 25.7s
+    100.0%  100 of  100 [########################################] 00:00:12
+    Elapsed time: 12.3s
 
 
 and then again get and plot the dynamics of expecatation values.
@@ -499,7 +507,7 @@ and then again get and plot the dynamics of expecatation values.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1b950b5e48>
+    <matplotlib.legend.Legend at 0x7fbcfc13dd30>
 
 
 
