@@ -60,27 +60,30 @@ class PtTempoParameters(TempoParameters):
     r"""
     Parameters for the PT-TEMPO computation.
 
-    .. todo::
-
-        Explain effect of parameters in more detail.
-
     Parameters
     ----------
     dt: float
-        Length of a time step :math:`\delta t`.
+        Length of a time step :math:`\delta t`. - It should be small enough
+        such that a trotterisation between the system Hamiltonian and the
+        environment it valid, and the environment auto-correlation function
+        is reasonably well sampled.
     dkmax: int
         Number of time steps :math:`K\in\mathbb{N}` that should be included in
-        the non-Markovian memory.
+        the non-Markovian memory. - It must be large
+        enough such that :math:`\delta t \times K$ is larger than the
+        neccessary memory time :math:`\tau_\mathrm{cut}`.
     epsrel: float
         The maximal relative error in the singular value truncation (done
-        in the underlying tensor network algorithm).
+        in the underlying tensor network algorithm). - It must be small enough
+        such that the numerical compression (using tensor network algorithms)
+        does not truncate relevant correlations.
     """
     pass # Inherit everything from TempoParameters
 
 
 class PtTempo(BaseAPIClass):
     """
-    ToDo.
+    Class to facilitate a PT-TEMPO computation.
 
     Parameters
     ----------
@@ -401,8 +404,6 @@ def guess_pt_tempo_parameters(
         The start time.
     end_time: float
         The time to which the TEMPO should be computed.
-    system: BaseSystem
-        The system.
     tollerance: float
         Tollerance for the parameter estimation.
 
