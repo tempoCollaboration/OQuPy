@@ -13,9 +13,9 @@ M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
 framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 
 **[Jorgensen2020]**
-M. R. Jørgensen and F. A. Pollock, *A discrete
-memory-kernel for multi-time correlations in non-Markovian quantum
-processes*, Phys. Rev. A102, 052206 (2020).
+M. R. Jørgensen and F. A. Pollock, *Exploiting the causaltensor network
+structure of quantum processes to efficiently simulate non-markovian path
+integrals*, Phys. Rev. Lett. 123, 240602 (2019)
 
 **[Fux2021]**
 G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
@@ -39,19 +39,20 @@ optimal control of non-Markovian open quantum systems*, arXiv2101.03071
   year = {2021}
 }
 
-@article{Jorgensen2020,
-  author = {J{\o}rgensen, Mathias R. and Pollock, Felix A.},
-  doi = {10.1103/PhysRevA.102.052206},
-  issn = {2469-9926},
-  journal = {Phys. Rev. A},
-  month = {jul},
-  number = {5},
-  pages = {052206},
-  title = {{A discrete memory-kernel for multi-time correlations in
-            non-Markovian quantum processes}},
-  url = {http://arxiv.org/abs/2007.03234},
-  volume = {102},
-  year = {2020}
+@article{Jorgensen2019,
+  title = {Exploiting the Causal Tensor Network Structure of Quantum
+           Processes to Efficiently Simulate Non-Markovian Path Integrals},
+  author = {J\o{}rgensen, Mathias R. and Pollock, Felix A.},
+  journal = {Phys. Rev. Lett.},
+  volume = {123},
+  issue = {24},
+  pages = {240602},
+  numpages = {7},
+  year = {2019},
+  month = {Dec},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.123.240602},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.123.240602}
 }
 
 @article{Pollock2018,
