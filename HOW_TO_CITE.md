@@ -29,7 +29,7 @@ processes*, Phys. Rev. A102, 052206 (2020).
 - **[Fux2021]**
 G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
 J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-optimal control of non-Markovian open quantum systems*, arXiv2101.?????
+optimal control of non-Markovian open quantum systems*, arXiv2101.03071
 (2021).
 
 ## BibTeX
