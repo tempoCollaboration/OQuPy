@@ -194,7 +194,7 @@ class Dynamics(BaseAPIClass):
         ----------
         operator: ndarray (default = None)
             The operator :math:`\hat{O}`. If `operator` is `None` then the
-            trace of :math:`rho(t)` is returned.
+            trace of :math:`\rho(t)` is returned.
         real: bool (default = False)
             If set True then only the real part of the expectation is returned.
 
