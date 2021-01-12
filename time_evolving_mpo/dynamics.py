@@ -65,6 +65,8 @@ class Dynamics(BaseAPIClass):
             "Lists `times` and `states` must have the same length."
         self._times = []
         self._states = []
+        self._expectation_operators = []
+        self._expectation_lists = []
         self._shape = None
         for time, state in zip(times, states):
             self.add(time, state)
@@ -218,10 +220,20 @@ class Dynamics(BaseAPIClass):
                 + "states. Has shape {}, ".format(__operator.shape) \
                 + "but should be {}.".format(self._shape)
 
-        expectations_list = []
-        for state in self._states:
+        operator_index = next((i for i, op in \
+            enumerate(self._expectation_operators) if \
+            np.array_equal(op, __operator)), -1)
+        if operator_index == -1: # Operator not seen before
+            self._expectation_operators.append(__operator)
+            self._expectation_lists.append([])
+
+        expectations_list = self._expectation_lists[operator_index]
+
+        for state in self._states[len(expectations_list):]:
             expectations_list.append(np.trace(__operator @ state))
 
+        self._expectation_lists[operator_index] = expectations_list
+        
         times = np.array(self._times)
         if real:
             expectations = np.real(np.array(expectations_list))
