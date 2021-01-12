@@ -233,7 +233,7 @@ class Dynamics(BaseAPIClass):
             expectations_list.append(np.trace(__operator @ state))
 
         self._expectation_lists[operator_index] = expectations_list
-        
+
         times = np.array(self._times)
         if real:
             expectations = np.real(np.array(expectations_list))
