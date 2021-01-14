@@ -162,3 +162,26 @@ def test_tempo_compute():
                                     initial_state=initial_state,
                                     start_time=start_time,
                                     end_time=end_time)
+
+def test_tempo_dynamics_reference():
+    system = tempo.System(0.5 * tempo.operators.sigma("x"))
+    correlations = tempo.PowerLawSD(alpha=0.1,
+                                    zeta=1,
+                                    cutoff=1.0,
+                                    cutoff_type='exponential',
+                                    max_correlation_time=0.5)
+    bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-4))
+    tempo_A= tempo.Tempo(system=system,
+                        bath=bath,
+                        parameters=tempo_parameters,
+                        initial_state=tempo.operators.spin_dm("up"),
+                        start_time=0.0)
+    tempo_A.compute(end_time=0.2)
+    dynamics_1 = tempo_A.get_dynamics()
+    t_1, sz_1 = dynamics_1.expectations(tempo.operators.sigma("z"))
+    tempo_A.compute(end_time=0.4)
+    dynamics_2 = tempo_A.get_dynamics()
+    t_2, sz_2 = dynamics_2.expectations(tempo.operators.sigma("z"))
+    assert dynamics_1 == dynamics_2
+    assert len(t_2) > len(t_1)
