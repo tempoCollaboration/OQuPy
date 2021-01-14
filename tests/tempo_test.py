@@ -177,8 +177,7 @@ def test_tempo_dynamics_reference():
                         parameters=tempo_parameters,
                         initial_state=tempo.operators.spin_dm("up"),
                         start_time=0.0)
-    tempo_A.compute(end_time=0.2)
-    dynamics_1 = tempo_A.get_dynamics()
+    dynamics_1 = tempo_A.compute(end_time=0.2)
     t_1, sz_1 = dynamics_1.expectations(tempo.operators.sigma("z"))
     tempo_A.compute(end_time=0.4)
     dynamics_2 = tempo_A.get_dynamics()

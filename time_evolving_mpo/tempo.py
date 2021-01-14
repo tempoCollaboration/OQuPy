@@ -54,7 +54,7 @@ class TempoParameters(BaseAPIClass):
     dkmax: int
         Number of time steps :math:`K\in\mathbb{N}` that should be included in
         the non-Markovian memory. - It must be large
-        enough such that :math:`\delta t \times K$ is larger than the
+        enough such that :math:`\delta t \times K` is larger than the
         neccessary memory time :math:`\tau_\mathrm{cut}`.
     epsrel: float
         The maximal relative error in the singular value truncation (done
@@ -340,7 +340,10 @@ class Tempo(BaseAPIClass):
         """Hilbert space dimension. """
         return copy(self._dimension)
 
-    def compute(self, end_time: float, progress_type: Text = None) -> None:
+    def compute(
+            self,
+            end_time: float,
+            progress_type: Text = None) -> Dynamics:
         """
         Propagate (or continue to propagete) the TEMPO tensor network to
         time `end_time`.
@@ -351,8 +354,13 @@ class Tempo(BaseAPIClass):
             The time to which the TEMPO should be computed.
         progress_type: str (default = None)
             The progress report type during the computation. Types are:
-            {``silent``, ``simple`, ``bar``}. If `None` then
+            {``'silent'``, ``'simple'``, ``'bar'``}. If `None` then
             the default progress type is used.
+
+        Returns
+        -------
+        dynamics: Dynamics
+            The instance of Dynamics associated with the TEMPO object.
         """
         try:
             __end_time = float(end_time)
@@ -376,6 +384,8 @@ class Tempo(BaseAPIClass):
                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
                 prog_bar.update(self._backend_instance.step - start_step)
             prog_bar.update(self._backend_instance.step - start_step)
+
+        return self._dynamics
 
     def get_dynamics(self) -> Dynamics:
         """Returns the instance of Dynamics associated with the Tempo object.
