@@ -378,8 +378,9 @@ class Tempo(BaseAPIClass):
             prog_bar.update(self._backend_instance.step - start_step)
 
     def get_dynamics(self) -> Dynamics:
-        """Returns a copy of the computed dynamics. """
-        return copy(self._dynamics)
+        """Returns the instance of Dynamics associated with the Tempo object.
+        """
+        return self._dynamics
 
 
 def _analyse_correlation(
