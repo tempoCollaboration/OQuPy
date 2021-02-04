@@ -272,7 +272,7 @@ class TimeDependentSystem(BaseSystem):
                 "Time dependent Hamiltonian must be vectorizable callable.") \
                     from e
         self._hamiltonian = __hamiltonian
-        __dimension = self._hamiltonian(1.0)
+        __dimension = self._hamiltonian(1.0).shape[0]
 
         # input check gammas and lindblad_operators
         if gammas is None:
