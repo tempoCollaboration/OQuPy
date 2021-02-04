@@ -13,26 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import sys
+
 from setuptools import find_packages
 from setuptools import setup
+import pkg_resources
+
+here = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, here)
 
 # get the __version__ variable
-with open('time_evolving_mpo/version.py') as f:
+with open(os.path.join(here,"time_evolving_mpo/version.py"), "r") as f:
   exec(f.read(), globals())
 
 # get short and long description
 short_description = \
 "A python3 library to efficiently compute non-markovian open quantum systems."
 
-with open("README.md", "r") as f:
+with open(os.path.join(here,"README.md"), "r") as f:
   long_description = f.read()
 
 # get requirements list
-requirements = ["numpy>=1.18.0",
-                "scipy>=1.4.0",
-                "tensornetwork==0.3.0",
-                "matplotlib>=3.0.0",
-                ]
+with open(os.path.join(here,"requirements.txt"), "r") as requirements_file:
+    requirements = requirements_file.readlines()
+
 
 setup(
     name='time_evolving_mpo',
