@@ -93,6 +93,7 @@ def test_system_B():
     assert sys.gammas[0] == gammasB[0]
     assert isinstance(sys.lindblad_operators, list)
     assert isinstance(sys.lindblad_operators[0], np.ndarray)
+    assert sys.dimension == 2
     liouvillian = sys.liouvillian()
     np.testing.assert_almost_equal(liouvillian, liouvillianB)
 
@@ -148,6 +149,7 @@ def test_time_dependent_system_D():
     assert sys.gammas[0](1.0) == gammasD[0](1.0)
     assert isinstance(sys.lindblad_operators, list)
     assert isinstance(sys.lindblad_operators[0], np.vectorize)
+    assert sys.dimension == 2
     liouvillian = sys.liouvillian(timeD)
     np.testing.assert_almost_equal(liouvillian, liouvillianD)
 
