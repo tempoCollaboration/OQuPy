@@ -193,6 +193,8 @@ class Tempo(BaseAPIClass):
             "Argument 'bath' must be an instance of Bath."
         self._bath = bath
 
+        self._correlations = self._bath.correlations
+
         assert isinstance(parameters, TempoParameters), \
             "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
@@ -278,13 +280,13 @@ class Tempo(BaseAPIClass):
             "bath_name":self._bath.name,
             "bath_description":self._bath.description,
             "bath_description_dict":self._bath.description_dict,
-            "correlations_type":str(type(self._bath.correlations)),
+            "correlations_type":str(type(self._correlations)),
             "correlations_name": \
-                self._bath.correlations.name,
+                self._correlations.name,
             "correlations_description": \
-                self._bath.correlations.description,
+                self._correlations.description,
             "correlations_description_dict": \
-                self._bath.correlations.description_dict,
+                self._correlations.description_dict,
             "backend_class":str(self._backend_class),
             "initial_state":self._initial_state,
             "dt":self._parameters.dt,
@@ -298,16 +300,31 @@ class Tempo(BaseAPIClass):
     def _influence(self, dk: int):
         """Create the influence functional matrix for a time step distance
         of dk. """
+        dt = self._parameters.dt
+        dkmax = self._parameters.dkmax
 
         if dk == 0:
+            time_1 = 0.0
+            time_2 = None
             shape = "upper-triangle"
+        elif dk < 0:
+            time_1 = float(dkmax) * dt
+            if self._correlations.max_correlation_time is not None:
+                time_2 = np.min([
+                    float(dkmax-dk) * dt,
+                    self._correlations.max_correlation_time])
+            else:
+                time_2 = float(dkmax-dk) * dt
+            shape = "rectangle"
         else:
+            time_1 = float(dk) * dt
+            time_2 = None
             shape = "square"
 
-        dt = self._parameters.dt
-        eta_dk = self._bath.correlations.correlation_2d_integral( \
-            time_1=float(dk)*dt,
+        eta_dk = self._correlations.correlation_2d_integral( \
             delta=dt,
+            time_1=time_1,
+            time_2=time_2,
             shape=shape,
             epsrel=self._parameters.epsrel)
         op_p = self._coupling_acomm
