@@ -17,6 +17,7 @@ Module for environment correlations.
 
 from typing import Callable, Dict, Optional, Text
 from typing import Any as ArrayLike
+import functools
 
 import numpy as np
 from scipy import integrate
@@ -66,8 +67,9 @@ class BaseCorrelations(BaseAPIClass):
 
     def correlation_2d_integral(
             self,
-            time_1: float,
             delta: float,
+            time_1: float,
+            time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
             epsrel: Optional[float] = INTEGRATE_EPSREL,
             subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> complex:
@@ -76,27 +78,33 @@ class BaseCorrelations(BaseAPIClass):
 
         .. math::
 
-            \eta(t_1,\Delta)_\mathrm{square} =
+            \eta_\mathrm{square} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
-            \eta(t_1,\Delta)_\mathrm{upper-triangle} =
+            \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta(t_1,\Delta)_\mathrm{lower-triangle} =
+            \eta_\mathrm{lower-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
 
-        for `shape` either ``'square'``, ``'upper-triangle'`` or
-        ``'lower-triangle'``.
+            \eta_\mathrm{rectangle} =
+            \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
+
+        for `shape` either ``'square'``, ``'upper-triangle'``,
+        ``'lower-triangle'``, or ``'rectangle'``.
 
         Parameters
         ----------
-        time_1 : float
-            Lower bound of integration interval of :math:`dt'`.
         delta : float
             Length of integration intevals.
+        time_1 : float
+            Lower bound of integration interval of :math:`dt'`.
+        time_2 : float
+            Upper bound of integration interval of :math:`dt'` for `shape` =
+            ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
             Relative error tollerance.
         subdiv_limit: int
@@ -106,7 +114,7 @@ class BaseCorrelations(BaseAPIClass):
         -------
         integral : float
             The numerical value for the two dimensional integral
-            :math:`\eta(t_1,\Delta)_\mathrm{shape}`.
+            :math:`\eta_\mathrm{shape}`.
         """
         raise NotImplementedError(
             "{} has no correlation_2d_integral implementation.".format(
@@ -228,67 +236,86 @@ class CustomCorrelations(BaseCorrelations):
         """
         return self.correlation_function(tau)
 
+    @functools.lru_cache(maxsize=2**10, typed=False)
     def correlation_2d_integral(
             self,
-            time_1: float,
             delta: float,
+            time_1: float,
+            time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
             epsrel: Optional[float] = INTEGRATE_EPSREL,
             subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> complex:
         r"""
-        2D integrals of the auto-correlation function
+        2D integrals of the correlation function
 
         .. math::
 
-            \eta(t_1,\Delta)_\mathrm{square} =
+            \eta_\mathrm{square} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
-            \eta(t_1,\Delta)_\mathrm{upper-triangle} =
+            \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta(t_1,\Delta)_\mathrm{lower-triangle} =
+            \eta_\mathrm{lower-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
 
-        for `shape` either ``'square'``, ``'upper-triangle'`` or
-        ``'lower-triangle'``.
+            \eta_\mathrm{rectangle} =
+            \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
+
+        for `shape` either ``'square'``, ``'upper-triangle'``,
+        ``'lower-triangle'``, or ``'rectangle'``.
 
         Parameters
         ----------
-        time_1 : float
-            Lower bound of integration interval of :math:`dt'`.
         delta : float
             Length of integration intevals.
-        shape : str{``'square'``, ``'upper-triangle'``, ``'lower-triangle'``}
-            The shape of the 2D integral.
+        time_1 : float
+            Lower bound of integration interval of :math:`dt'`.
+        time_2 : float
+            Upper bound of integration interval of :math:`dt'` for `shape` =
+            ``'rectangle'``.
+        shape : str (default = ``'square'``)
+            The shape of the 2D integral. Shapes are: {``'square'``,
+            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
             Relative error tollerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
+
         Returns
         -------
         integral : float
             The numerical value for the two dimensional integral
-            :math:`\eta(t_1,\Delta)_\mathrm{shape}`.
+            :math:`\eta_\mathrm{shape}`.
         """
         c_real = lambda y, x: np.real(self.correlation(x-y))
         c_imag = lambda y, x: np.imag(self.correlation(x-y))
 
+        if time_2 is None:
+            time_2 = time_1 + delta
+        else:
+            assert shape == 'rectangle', \
+                "paramter 'time_2' can only be used in conjunction with " \
+                "'shape' = ``rectangle`` !"
+
         lower_boundary = {'square': lambda x: 0.0,
                           'upper-triangle': lambda x: 0.0,
-                          'lower-triangle': lambda x: x-time_1}
+                          'lower-triangle': lambda x: x-time_1,
+                          'rectangle': lambda x: 0.0}
         upper_boundary = {'square': lambda x: delta,
                           'upper-triangle': lambda x: x-time_1,
-                          'lower-triangle': lambda x: delta}
+                          'lower-triangle': lambda x: delta,
+                          'rectangle': lambda x: delta,}
 
         int_real = integrate.dblquad(func=c_real,
                                      a=time_1,
-                                     b=time_1+delta,
+                                     b=time_2,
                                      gfun=lower_boundary[shape],
                                      hfun=upper_boundary[shape],
                                      epsrel=epsrel)[0]
         int_imag = integrate.dblquad(func=c_imag,
                                      a=time_1,
-                                     b=time_1+delta,
+                                     b=time_2,
                                      gfun=lower_boundary[shape],
                                      hfun=upper_boundary[shape],
                                      epsrel=epsrel)[0]
@@ -324,17 +351,20 @@ CUTOFF_DICT = {
 
 def _2d_square_integrand_real(
         omega: ArrayLike,
+        delta: float,
         time_1: float,
-        delta: float) -> ArrayLike:
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for real part of square 2D time integral at zero
     temperature without J(omega). """
     return 1.0/omega**2 * 2 * np.cos(time_1*omega) * (1 - np.cos(delta*omega))
 
 def _2d_square_integrand_real_t(
         omega: ArrayLike,
-        time_1: float,
         delta: float,
-        temperature: float) -> ArrayLike:
+        time_1: float,
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for real part of square 2D time integral at finite
     temperature without J(omega). """
     integrand = 1.0/omega**2 * 2 * np.cos(time_1*omega) \
@@ -343,16 +373,20 @@ def _2d_square_integrand_real_t(
 
 def _2d_square_integrand_imag(
         omega: ArrayLike,
+        delta: float,
         time_1: float,
-        delta: float) -> ArrayLike:
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for imaginary part of square 2D time integral without
     J(omega). """
     return -1.0/omega**2 * 2 * np.sin(time_1*omega) * (1 - np.cos(delta*omega))
 
 def _2d_upper_triangle_integrand_real(
         omega: ArrayLike,
+        delta: float,
         time_1: float,
-        delta: float) -> ArrayLike:
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for real part of upper triangle 2D time integral at zero
     temperature without J(omega). """
     return 1.0/omega**2 * (np.cos(omega*time_1) \
@@ -361,9 +395,10 @@ def _2d_upper_triangle_integrand_real(
 
 def _2d_upper_triangle_integrand_real_t(
         omega: ArrayLike,
-        time_1: float,
         delta: float,
-        temperature: float) -> ArrayLike:
+        time_1: float,
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for real part of upper triangle 2D time integral at finite
     temperature without J(omega). """
     return 1.0/omega**2 * (np.cos(omega*time_1) \
@@ -373,8 +408,10 @@ def _2d_upper_triangle_integrand_real_t(
 
 def _2d_upper_triangle_integrand_imag(
         omega: ArrayLike,
+        delta: float,
         time_1: float,
-        delta: float) -> ArrayLike:
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for imaginary part of upper triangle 2D time integral without
     J(omega). """
     return -1.0/omega**2 * (np.sin(omega*time_1) \
@@ -383,8 +420,10 @@ def _2d_upper_triangle_integrand_imag(
 
 def _2d_lower_triangle_integrand_real(
         omega: ArrayLike,
+        delta: float,
         time_1: float,
-        delta: float) -> ArrayLike:
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for real part of lower triangle 2D time integral at zero
     temperature without J(omega). """
     return 1.0/omega**2 * (np.cos(omega*time_1) \
@@ -393,9 +432,10 @@ def _2d_lower_triangle_integrand_real(
 
 def _2d_lower_triangle_integrand_real_t(
         omega: ArrayLike,
-        time_1: float,
         delta: float,
-        temperature: float) -> ArrayLike:
+        time_1: float,
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for real part of lower triangle 2D time integral at finite
     temperature without J(omega). """
     return 1.0/omega**2 * (np.cos(omega*time_1) \
@@ -405,13 +445,55 @@ def _2d_lower_triangle_integrand_real_t(
 
 def _2d_lower_triangle_integrand_imag(
         omega: ArrayLike,
+        delta: float,
         time_1: float,
-        delta: float) -> ArrayLike:
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
     """Integrand for imaginary part of lower triangle 2D time integral without
     J(omega). """
     return -1.0/omega**2 * (np.sin(omega*time_1)
                             - np.sin(omega*(time_1-delta))
                             - omega * delta * np.cos(omega*time_1))
+
+def _2d_rectangle_integrand_real(
+        omega: ArrayLike,
+        delta: float,
+        time_1: float,
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
+    """Integrand for real part of rectangle 2D time integral at zero
+    temperature without J(omega). """
+    return 1.0/omega**2 * (np.cos((time_2 - delta) * omega)
+                           - np.cos((time_1 - delta) * omega)
+                           - np.cos(time_2 * omega)
+                           + np.cos(time_1 * omega))
+
+def _2d_rectangle_integrand_real_t(
+        omega: ArrayLike,
+        delta: float,
+        time_1: float,
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
+    """Integrand for real part of rectangle 2D time integral at finite
+    temperature without J(omega). """
+    integrand = 1.0/omega**2 * (np.cos((time_2 - delta) * omega)
+                                - np.cos((time_1 - delta) * omega)
+                                - np.cos(time_2 * omega)
+                                + np.cos(time_1 * omega))
+    return integrand / np.tanh(omega/(2*temperature))
+
+def _2d_rectangle_integrand_imag(
+        omega: ArrayLike,
+        delta: float,
+        time_1: float,
+        time_2: Optional[float] = None,
+        temperature: Optional[float] = None) -> ArrayLike:
+    """Integrand for imaginary part of rectangle 2D time integral without
+    J(omega). """
+    return -1.0/omega**2 * (np.sin((time_2 - delta) * omega)
+                            - np.sin((time_1 - delta) * omega)
+                            - np.sin(time_2 * omega)
+                            + np.sin(time_1 * omega))
 
 # dictionary for the various integrands for the 2d time integral
 INTEGRAND_DICT = {
@@ -424,6 +506,9 @@ INTEGRAND_DICT = {
     'lower-triangle': (_2d_lower_triangle_integrand_real,
                        _2d_lower_triangle_integrand_real_t,
                        _2d_lower_triangle_integrand_imag),
+    'rectangle': (_2d_rectangle_integrand_real,
+                  _2d_rectangle_integrand_real_t,
+                  _2d_rectangle_integrand_imag),
     }
 
 
@@ -552,7 +637,6 @@ class CustomSD(BaseCorrelations):
         """
         return self._spectral_density(omega)
 
-
     def correlation(
             self,
             tau: ArrayLike,
@@ -619,10 +703,12 @@ class CustomSD(BaseCorrelations):
                                      limit=subdiv_limit)[0]
         return re_int+1j*im_int
 
+    @functools.lru_cache(maxsize=2**10, typed=False)
     def correlation_2d_integral(
             self,
-            time_1: float,
             delta: float,
+            time_1: float,
+            time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
             epsrel: Optional[float] = INTEGRATE_EPSREL,
             subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> complex:
@@ -631,26 +717,33 @@ class CustomSD(BaseCorrelations):
 
         .. math::
 
-            \eta(t_1,\Delta)_\mathrm{square} =
+            \eta_\mathrm{square} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
-            \eta(t_1,\Delta)_\mathrm{upper-triangle} =
+            \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta(t_1,\Delta)_\mathrm{lower-triangle} =
-            \int_{0}^{\Delta} \int_{t_1}^{t_1+dt''} C(t'-t'') dt' dt''
+            \eta_\mathrm{lower-triangle} =
+            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
 
-        for `shape` either ``'square'``, ``'upper-triangle'`` or
-        ``'lower-triangle'``.
+            \eta_\mathrm{rectangle} =
+            \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
+
+        for `shape` either ``'square'``, ``'upper-triangle'``,
+        ``'lower-triangle'``, or ``'rectangle'``.
 
         Parameters
         ----------
-        time_1 : float
-            Lower bound of integration interval of :math:`dt'`.
         delta : float
             Length of integration intevals.
-        shape : str{``'square'``, ``'upper-triangle'``, ``'lower-triangle'``}
-            The shape of the 2D integral.
+        time_1 : float
+            Lower bound of integration interval of :math:`dt'`.
+        time_2 : float
+            Upper bound of integration interval of :math:`dt'` for `shape` =
+            ``'rectangle'``.
+        shape : str (default = ``'square'``)
+            The shape of the 2D integral. Shapes are: {``'square'``,
+            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
             Relative error tollerance.
         subdiv_limit: int
@@ -660,22 +753,32 @@ class CustomSD(BaseCorrelations):
         -------
         integral : float
             The numerical value for the two dimensional integral
-            :math:`\eta(t_1,\Delta)_\mathrm{shape}`.
+            :math:`\eta_\mathrm{shape}`.
         """
         # real and imaginary part of the integrand
         if self.temperature == 0.0:
             re_integrand = lambda w: \
                     self._spectral_density(w) \
-                    * INTEGRAND_DICT[shape][0](w, time_1, delta)
+                    * INTEGRAND_DICT[shape][0](w,
+                                               delta,
+                                               time_1,
+                                               time_2,
+                                               self.temperature)
         else:
             re_integrand = lambda w: \
                     self._spectral_density(w) \
                     * INTEGRAND_DICT[shape][1](w,
-                                               time_1,
                                                delta,
+                                               time_1,
+                                               time_2,
                                                self.temperature)
-        im_integrand = lambda w: self._spectral_density(w) \
-                       * INTEGRAND_DICT[shape][2](w, time_1, delta)
+        im_integrand = lambda w: \
+                    self._spectral_density(w) \
+                    * INTEGRAND_DICT[shape][2](w,
+                                               delta,
+                                               time_1,
+                                               time_2,
+                                               self.temperature)
         # real and imaginary part of the integral
         re_int = integrate.quad(re_integrand,
                                 a=0.0,
