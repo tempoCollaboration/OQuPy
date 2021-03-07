@@ -59,7 +59,7 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
         self._mps = None
         self._mpo = None
         self._last_infl_na = None
-        self._num_infl = min(num_steps, dkmax)
+        self._num_infl = min(num_steps, dkmax+1)
         self._super_u = None
         self._super_u_dagg = None
         self._sum_north_scaled = None
@@ -85,16 +85,27 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
         influences_mpo = []
         influences_mps = []
         for i in range(self._num_infl):
-            infl = self._influence(i)
             if i == 0:
+                infl = self._influence(i)
                 infl = infl / scale
                 infl_mpo = create_delta(infl, [1, 1, 0])
                 infl_mps = infl.T / scale
             elif i == self._num_infl-1:
+                # if self._dkmax is not None:
+                #     dk = self._dkmax - self._num_steps
+                #     if dk < 0:
+                #         infl = self._influence(dk)
+                #     else:
+                #         infl = self._influence(i)
+                if self._dkmax < self._num_steps:
+                    infl = self._influence(-1)
+                else:
+                    infl = self._influence(i)
                 infl_mpo = add_singleton(infl, 1)
                 infl_mpo = add_singleton(infl_mpo, 3)
                 infl_mps = add_singleton(infl, 2)
             else:
+                infl = self._influence(i)
                 infl_mpo = create_delta(infl, [0, 1, 1, 0])
                 infl_mps = create_delta(infl / scale, [0, 1, 0])
 
@@ -182,6 +193,45 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
             if self._mps.right:
                 self._mps.apply_vector(np.array([1.0]), left=False)
         else:
+            if self._dkmax is not None:
+                # dk = self._step + self._dkmax - self._num_steps - 1
+                # if dk < 0:
+                #     infl = self._influence(dk)
+                #     infl_mpo = add_singleton(infl, 1)
+                #     infl_mpo = add_singleton(infl_mpo, 3)
+                #     last_mpo = na.NodeArray(
+                #             [infl_mpo],
+                #             left=True,
+                #             right=True,
+                #             name="The integrating back to zero infl. func.",
+                #             backend=self._backend)
+                #     self._mpo, _ = na.split(self._mpo,
+                #                             index=-1,
+                #                             copy=False,
+                #                             name_left="Shortened MPO")
+                #     self._mpo = na.join(self._mpo,
+                #                         last_mpo,
+                #                         copy=False,
+                #                         name="Thee updated MPO")
+                dk = int(0 - self._step)
+                infl = self._influence(dk)
+                infl_mpo = add_singleton(infl, 1)
+                infl_mpo = add_singleton(infl_mpo, 3)
+                last_mpo = na.NodeArray(
+                        [infl_mpo],
+                        left=True,
+                        right=True,
+                        name="The integrating back to zero infl. func.",
+                        backend=self._backend)
+                self._mpo, _ = na.split(self._mpo,
+                                        index=-1,
+                                        copy=False,
+                                        name_left="Shortened MPO")
+                self._mpo = na.join(self._mpo,
+                                    last_mpo,
+                                    copy=False,
+                                    name="Thee updated MPO")
+
             one = self._one_na.copy()
             self._mps = na.join(self._mps,
                                 one,
