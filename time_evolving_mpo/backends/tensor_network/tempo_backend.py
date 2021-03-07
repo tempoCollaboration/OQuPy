@@ -160,8 +160,19 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
             _, mpo = na.split(self._mpo,
                               int(0 - self._step),
                               copy=True)
+        elif self._step == self._dkmax:
+            mpo = self._mpo.copy()
         else:
             mpo = self._mpo.copy()
+            infl = self._influence(self._dkmax-self._step)
+            infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+            infl_na = na.NodeArray([infl_four_legs],
+                                   left=True,
+                                   right=True)
+            mpo = na.join(infl_na,
+                          mpo,
+                          name="Thee Time Evolving MPO",
+                          copy=False)
 
         mpo.name = "temporary MPO"
         mpo.apply_vector(self._sum_west, left=True)
@@ -186,7 +197,7 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
                          relative=True,
                          copy=False)
 
-        if self._dkmax is not None and self._step >= self._dkmax:
+        if self._dkmax is not None and self._step > self._dkmax:
             self._mps.contract(self._sum_north_na,
                                axes=[(0,0)],
                                left_index=0,
