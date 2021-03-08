@@ -1,10 +1,10 @@
 # How to Cite this Project
 
 ## Citing the Code
-- **[TimeEvolvingMPO]** The TEMPO collaboration, [*TimeEvolvingMPO: A Python 3 package to efficiently compute non-Markovianopen quantum systems*](https://github.com/tempoCollaboration/TimeEvolvingMPO) (2020).
+- **[TimeEvolvingMPO]** The TEMPO collaboration, *TimeEvolvingMPO: A Python 3 package to efficiently compute non-Markovianopen quantum systems*, GitHub (2020).
 
 
-## Citing the Science
+## Please consider citing:
 
 #### TEMPO algorithm :
 - **[Strathearn2018]**
@@ -12,8 +12,12 @@ A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
 B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
 time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
 
-#### Process Tensor approach:
+- **[Strathearn2019]**
+A. Strathearn, *Modelling Non-Markovian Quantum Sys-tems Using Tensor
+Networks*, Springer Theses (2020)
 
+
+#### Process Tensor approach:
 - **[Pollock2018]**
 F.  A.  Pollock,  C.  Rodriguez-Rosario,  T.  Frauenheim,
 M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
@@ -24,7 +28,6 @@ structure of quantum processes to efficiently simulate non-markovian path
 integrals*, Phys. Rev. Lett. 123, 240602 (2019)
 
 #### Process Tensor - TEMPO algorithm
-
 - **[Fux2021]**
 G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
 J. Keeling, *Efficient exploration of Hamiltonian parameter space for

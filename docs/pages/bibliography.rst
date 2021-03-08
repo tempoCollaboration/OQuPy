@@ -3,6 +3,11 @@ Bibliography
 
 The code in this project is based on ideas from the following publications:
 
+**[Strathearn2017]**
+A. Strathearn, B.W. Lovett, and P. Kirton, *Efficient real-time path integrals
+for non-Markovian spin-boson models*. New Journal of Physics, 19(9),
+p.093009 (2017).
+
 **[Strathearn2018]**
 A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
 B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
@@ -78,6 +83,20 @@ BibTeX
     year = {2018}
   }
 
+  @article{Strathearn_2017,
+  	doi = {10.1088/1367-2630/aa8744},
+  	url = {https://doi.org/10.1088/1367-2630/aa8744},
+  	year = 2017,
+  	month = {sep},
+  	publisher = {{IOP} Publishing},
+  	volume = {19},
+  	number = {9},
+  	pages = {093009},
+  	author = {A Strathearn and B W Lovett and P Kirton},
+  	title = {Efficient real-time path integrals for non-Markovian spin-boson models},
+  	journal = {New Journal of Physics},
+  }
+
   @article{Strathearn2018,
     author = {Strathearn, A. and Kirton, P. and Kilda, D. and Keeling, J. and
               Lovett, B. W.},
@@ -95,11 +114,24 @@ BibTeX
     year = {2018}
   }
 
+  @book{Strathearn2019,
+    address = {Cham},
+    author = {Strathearn, Aidan},
+    doi = {10.1007/978-3-030-54975-6},
+    isbn = {978-3-030-54974-9},
+    publisher = {Springer International Publishing},
+    series = {Springer Theses},
+    title = {{Modelling Non-Markovian Quantum Systems Using Tensor Networks}},
+    url = {http://link.springer.com/10.1007/978-3-030-54975-6},
+    year = {2020}
+  }
+
   @misc{TimeEvolvingMPO,
     author={{The TEMPO collaboration}},
     title={{TimeEvolvingMPO: A Python 3 package to efficiently compute
             non-Markovian open quantum systems.}},
     year=2020,
     publisher={GitHub},
-    url={{https://github.com/tempoCollaboration/TimeEvolvingMPO}}
+    doi={10.5281/zenodo.4428316}
+    url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
   }
