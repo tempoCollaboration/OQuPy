@@ -9,13 +9,16 @@ Citing the Code
   <https://github.com/tempoCollaboration/TimeEvolvingMPO>`_, (2020).
 
 
-Citing the Science
-------------------
+Please consider citing
+----------------------
 
 TEMPO algorithm:
   - **[Strathearn2018]** A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
     B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
     time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
+  - **[Strathearn2019]**
+    A. Strathearn, *Modelling Non-Markovian Quantum Sys-tems Using Tensor
+    Networks*, Springer Theses (2020)
 
 Process Tensor approach:
   - **[Pollock2018]** F.  A.  Pollock,  C.  Rodriguez-Rosario,  T.  Frauenheim,
