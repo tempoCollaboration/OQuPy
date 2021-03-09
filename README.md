@@ -25,7 +25,7 @@ optimal control of non-Markovian open quantum systems*, arXiv2101.03071
 * Github:         <https://github.com/tempoCollaboration/TimeEvolvingMPO>
 * Documentation:  <https://TimeEvolvingMPO.readthedocs.io>
 * PyPI:           <https://pypi.org/project/time-evolving-mpo/>
-* Tutorial:       <https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorial.ipynb>
+* Tutorial:       [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
 
 
 ## Installation
