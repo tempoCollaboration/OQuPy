@@ -637,36 +637,32 @@ def _parse_left_right_index(
         left_index: int,
         right_index: int) -> Tuple[int]:
     """Parse left and right index."""
-    if left_index is None and right_index is None:
-        assert len(b) == len(a)
-        _left_index = 0
-        _right_index = len(a)-1
-    if left_index is not None:
-        if left_index<0:
-            _left_index = len(a) + left_index
-        else:
-            _left_index = left_index
-        if _left_index < 0 or _left_index >= len(a):
-            raise IndexError("Index out of range.")
-        if right_index is None:
-            assert _left_index + len(b) <= len(a), \
-                "Array is too long. It extends to the rigth when zipped " \
-                + f"from index {left_index}."
-            _right_index = _left_index + len(b) - 1
-    if right_index is not None:
-        if right_index<0:
-            _right_index = len(a) + right_index
-        else:
-            _right_index = right_index
-        if _right_index < 0 or _right_index >= len(a):
-            raise IndexError("Index out of range.")
-        if left_index is None:
-            assert _right_index - ( len(b) - 1) >= 0, \
-                "Array is too long. It extends to the left when zipped " \
-                + f"to index {right_index}."
-            _left_index = _right_index - ( len(b) - 1)
+    a_indices = list(range(len(a)))
 
-    assert len(b) == _right_index - _left_index + 1, \
-        "Length of array must match index span"
+    if left_index is None and right_index is None:
+        assert len(b) == len(a), \
+            "Length of arrays must mach when no indices are given."
+        _left_index = a_indices[0]
+        _right_index = a_indices[-1]
+
+    elif left_index is None and right_index is not None:
+        _right_index = a_indices[right_index]
+        _left_index = _right_index - len(b) + 1
+        assert _left_index >= 0, \
+            "Array is too long. It extends to the left when zipped " \
+            + f"to index {right_index}."
+
+    elif left_index is not None and right_index is None:
+        _left_index = a_indices[left_index]
+        _right_index = _left_index + len(b) - 1
+        assert _right_index < len(a), \
+            "Array is too long. It extends to the rigth when zipped " \
+            + f"from index {left_index}."
+
+    elif left_index is not None and right_index is not None:
+        _left_index = a_indices[left_index]
+        _right_index = a_indices[right_index]
+        assert len(b) == _right_index - _left_index + 1, \
+            "Length of array must match index span"
 
     return _left_index, _right_index
