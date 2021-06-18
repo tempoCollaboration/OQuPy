@@ -14,11 +14,10 @@ This open source project aims to facilitate versatile numerical tools to efficie
 A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
 B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
 time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
-- **[2]**
-G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
+- **[2]** G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
 J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-optimal control of non-Markovian open quantum systems*, arXiv2101.03071
-(2021).
+optimal control of non-Markovian open quantum systems*, 
+Phys. Rev. Lett. 126, 200401(2021).
 
 ## Links
 

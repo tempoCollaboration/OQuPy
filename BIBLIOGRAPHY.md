@@ -20,28 +20,30 @@ framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 **[Jorgensen2020]**
 M. R. Jørgensen and F. A. Pollock, *Exploiting the causaltensor network
 structure of quantum processes to efficiently simulate non-markovian path
-integrals*, Phys. Rev. Lett. 123, 240602 (2019)
+integrals*, Phys. Rev. Lett. 123, 240602 (2019).
 
 **[Fux2021]**
 G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
 J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-optimal control of non-Markovian open quantum systems*, arXiv2101.03071
-(2021).
+optimal control of non-Markovian open quantum systems*, 
+Phys. Rev. Lett. 126, 200401(2021).
 
 ### BibTeX:
 
 ```
 @article{Fux2021,
-  archivePrefix = {arXiv},
-  arxivId = {2101.03071},
-  author = {Fux, Gerald E. and Butler, Eoin and Eastham, Paul R. and Lovett,
-            Brendon W. and Keeling, Jonathan},
-  eprint = {2101.03071},
-  pages = {1--6},
-  title = {{Efficient exploration of Hamiltonian parameter space for optimal
-            control of non-Markovian open quantum systems}},
-  url = {http://arxiv.org/abs/2101.03071},
-  year = {2021}
+  title = {Efficient Exploration of Hamiltonian Parameter Space for Optimal Control of Non-Markovian Open Quantum Systems},
+  author = {Fux, Gerald E. and Butler, Eoin P. and Eastham, Paul R. and Lovett, Brendon W. and Keeling, Jonathan},
+  journal = {Phys. Rev. Lett.},
+  volume = {126},
+  issue = {20},
+  pages = {200401},
+  numpages = {6},
+  year = {2021},
+  month = {May},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.126.200401},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.126.200401}
 }
 
 @article{Jorgensen2019,

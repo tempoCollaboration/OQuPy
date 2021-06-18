@@ -38,13 +38,13 @@ Open a interactive python3 session and type:
 .. code-block:: python
 
   >>> import time_evolving_mpo as tempo
-  >>> tempo.say_hi()
+  >>> tempo.__version__
 
 This should give you the following message:
 
 .. code-block:: none
 
-  '0.1.0'
+  '0.1.2'
 
 
 Uninstall
