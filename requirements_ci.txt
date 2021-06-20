@@ -1,6 +1,10 @@
 pytest
 pytest-cov
 pylint
+sphinx
+sphinx_rtd_theme
+ipython
+docutils==0.16
 setuptools
 wheel
 numpy>=1.18.0
