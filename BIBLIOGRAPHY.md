@@ -26,7 +26,7 @@ integrals*, Phys. Rev. Lett. 123, 240602 (2019).
 G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
 J. Keeling, *Efficient exploration of Hamiltonian parameter space for
 optimal control of non-Markovian open quantum systems*, 
-Phys. Rev. Lett. 126, 200401(2021).
+Phys. Rev. Lett. 126, 200401 (2021).
 
 ### BibTeX:
 
