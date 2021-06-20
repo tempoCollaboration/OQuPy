@@ -1,0 +1,4 @@
+sphinx
+sphinx_rtd_theme
+ipython
+docutils==0.16
