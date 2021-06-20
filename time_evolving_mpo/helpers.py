@@ -53,8 +53,8 @@ def plot_correlations_with_parameters(
     ax.scatter(times[sample], np.real(corr_vals[sample]), marker="d", color="C0")
     ax.plot(times, np.imag(corr_vals), color="C1", linestyle="-", label="imag")
     ax.scatter(times[sample], np.imag(corr_vals[sample]), marker="o", color="C1")
+    ax.legend()
 
     if show:
-        ax.legend()
         fig.show()
     return ax
