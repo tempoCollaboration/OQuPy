@@ -3,8 +3,18 @@ Tutorial 01 - Quickstart
 
 A quick introduction on how to use the TimeEvolvingMPO package to
 compute the dynamics of a quantum system that is possibly strongly
-coupled to a structured environment. It illustrates this by applying the
+coupled to a structured environment. We illustrate this by applying the
 TEMPO method to the strongly coupled spin boson model.
+
+**Contents:**
+
+-  Example A - The spin boson model
+
+   -  A.1: The model and its parameters
+   -  A.2: Create system, correlations and bath objects
+   -  A.3: TEMPO computation
+
+-------------------------------------------------------------------------------
 
 You can follow this tutorial using any of these options:
 
@@ -21,11 +31,11 @@ You can follow this tutorial using any of these options:
 First, let’s import TimeEvolvingMPO and some other packages we are going
 to use
 
-.. code:: python3
+.. code:: ipython3
 
     import sys
     sys.path.insert(0,'..')
-
+    
     import time_evolving_mpo as tempo
     import numpy as np
     import matplotlib.pyplot as plt
@@ -33,7 +43,7 @@ to use
 
 and check what version of tempo we are using.
 
-.. code:: python3
+.. code:: ipython3
 
     tempo.__version__
 
@@ -42,21 +52,13 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.1.0'
+    '0.1.2'
 
 
-
-**Contents:**
-
--  Example A - The Spin Boson Model
-
-   -  A.1: The Model and its Parameters
-   -  A.2: Create System, Spectral Density and Bath Objects
-   -  A.3: The TEMPO Computation
 
 --------------
 
-Example A - The Spin Boson Model
+Example A - The spin boson model
 --------------------------------
 
 As a first example let’s try to reconstruct one of the lines in figure
@@ -68,21 +70,21 @@ coupled to an ohmic bath (spin-boson model). Before we go through this
 step by step below, let’s have a brief look at the script that will do
 the job - just to have an idea where we are going:
 
-.. code:: python3
+.. code:: ipython3
 
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
-
+    
     system = tempo.System(0.5 * Omega * tempo.operators.sigma("x"))
-    correlations = tempo.PowerLawSD(alpha=alpha,
-                                    zeta=1,
-                                    cutoff=omega_cutoff,
-                                    cutoff_type='exponential',
+    correlations = tempo.PowerLawSD(alpha=alpha, 
+                                    zeta=1, 
+                                    cutoff=omega_cutoff, 
+                                    cutoff_type='exponential', 
                                     max_correlation_time=8.0)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4))
-
+    
     dynamics = tempo.tempo_compute(system=system,
                                    bath=bath,
                                    initial_state=tempo.operators.spin_dm("up"),
@@ -90,7 +92,7 @@ the job - just to have an idea where we are going:
                                    end_time=15.0,
                                    parameters=tempo_parameters)
     t, s_z = dynamics.expectations(0.5*tempo.operators.sigma("z"), real=True)
-
+    
     plt.plot(t, s_z, label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
     plt.ylabel(r'$<S_z>$')
@@ -99,15 +101,15 @@ the job - just to have an idea where we are going:
 
 .. parsed-literal::
 
-    100.0%  150 of  150 [########################################] 00:00:10
-    Elapsed time: 10.7s
+    100.0%  150 of  150 [########################################] 00:00:21
+    Elapsed time: 21.7s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcfc6cf4e0>
+    <matplotlib.legend.Legend at 0x7fd738214550>
 
 
 
@@ -115,7 +117,7 @@ the job - just to have an idea where we are going:
 .. image:: output_7_2.png
 
 
-A.1: The Model and its Parameters
+A.1: The model and its parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We consider a system Hamiltonian
@@ -134,12 +136,12 @@ where :math:`\hat{\sigma}_i` are the Pauli operators, and the
 :math:`g_k` and :math:`\omega_k` are such that the spectral density
 :math:`J(\omega)` is
 
-.. math::  J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right) \mathrm{.}
+.. math::  J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right) \mathrm{.} 
 
 Also, let’s assume the initial density matrix of the spin is the up
 state
 
-.. math::  \rho(0) = \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix}
+.. math::  \rho(0) = \begin{pmatrix} 1 & 0 \\ 0 & 0 \end{pmatrix} 
 
 and the bath is initially at zero temperature.
 
@@ -151,20 +153,20 @@ frequency. Here, we choose :math:`\Omega` for this and write:
 -  :math:`\omega_c = 5.0 \Omega`
 -  :math:`\alpha = 0.3`
 
-.. code:: python3
+.. code:: ipython3
 
     Omega_A = 1.0
     omega_cutoff_A = 5.0
     alpha_A = 0.3
 
-A.2: Create System, Spectral Density and Bath Objects
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A.2: Create system, correlations and bath objects
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To input the operators you can simply use numpy matrices. For the most
 common operators you can, more conveniently, use the ``tempo.operators``
 module:
 
-.. code:: python3
+.. code:: ipython3
 
     tempo.operators.sigma("x")
 
@@ -178,7 +180,7 @@ module:
 
 
 
-.. code:: python3
+.. code:: ipython3
 
     tempo.operators.spin_dm("up")
 
@@ -197,28 +199,28 @@ System
 
 .. math::  H_{S} = \frac{\Omega}{2} \hat{\sigma}_x \mathrm{,}
 
-.. code:: python3
+.. code:: ipython3
 
     system_A = tempo.System(0.5 * Omega_A * tempo.operators.sigma("x"))
 
 Correlations
 ^^^^^^^^^^^^
 
-.. math::  J(\omega) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right)
+.. math::  J(\omega) = 2 \, \alpha \, \omega \, \exp\left(-\frac{\omega}{\omega_\mathrm{cutoff}}\right) 
 
 Because the spectral density is of the standard power-law form,
 
-.. math::  J(\omega) = 2 \alpha \frac{\omega^\zeta}{\omega_c^{\zeta-1}} X(\omega,\omega_c)
+.. math::  J(\omega) = 2 \alpha \frac{\omega^\zeta}{\omega_c^{\zeta-1}} X(\omega,\omega_c) 
 
 with :math:`\zeta=1` and :math:`X` of the type ``'exponential'`` we
 define the spectral density with:
 
-.. code:: python3
+.. code:: ipython3
 
-    correlations_A = tempo.PowerLawSD(alpha=alpha_A,
-                                      zeta=1,
-                                      cutoff=omega_cutoff_A,
-                                      cutoff_type='exponential',
+    correlations_A = tempo.PowerLawSD(alpha=alpha_A, 
+                                      zeta=1, 
+                                      cutoff=omega_cutoff_A, 
+                                      cutoff_type='exponential', 
                                       max_correlation_time=8.0)
 
 Bath
@@ -227,18 +229,18 @@ Bath
 The bath couples with the operator :math:`\frac{1}{2}\hat{\sigma}_z` to
 the system.
 
-.. code:: python3
+.. code:: ipython3
 
     bath_A = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations_A)
 
-A.3: The TEMPO Computation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+A.3: TEMPO computation
+~~~~~~~~~~~~~~~~~~~~~~
 
 Now, that we have the system and the bath objects ready we can compute
 the dynamics of the spin starting in the up state, from time :math:`t=0`
 to :math:`t=5\,\Omega^{-1}`
 
-.. code:: python3
+.. code:: ipython3
 
     dynamics_A_1 = tempo.tempo_compute(system=system_A,
                                        bath=bath_A,
@@ -250,20 +252,20 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    ../time_evolving_mpo/tempo.py:495: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../time_evolving_mpo/tempo.py:523: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
 
 .. parsed-literal::
 
-    100.0%   80 of   80 [########################################] 00:00:06
-    Elapsed time: 6.7s
+    100.0%   80 of   80 [########################################] 00:00:10
+    Elapsed time: 10.2s
 
 
 and plot the result:
 
-.. code:: python3
+.. code:: ipython3
 
     t_A_1, z_A_1 = dynamics_A_1.expectations(0.5*tempo.operators.sigma("z"), real=True)
     plt.plot(t_A_1, z_A_1, label=r'$\alpha=0.3$')
@@ -276,12 +278,12 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcfc5fa160>
+    <matplotlib.legend.Legend at 0x7fd738085b00>
 
 
 
 
-.. image:: output_26_1.png
+.. image:: output_25_1.png
 
 
 Yay! This looks like the plot in figure 2a [Strathearn2018].
@@ -322,7 +324,7 @@ the ``tempo.guess_tempo_parameters()`` function and then check with the
 helper function ``tempo.helpers.plot_correlations_with_parameters()``
 whether it satisfies the above requirements:
 
-.. code:: python3
+.. code:: ipython3
 
     parameters = tempo.guess_tempo_parameters(system=system_A,
                                               bath=bath_A,
@@ -334,7 +336,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    ../time_evolving_mpo/tempo.py:495: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../time_evolving_mpo/tempo.py:523: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -344,33 +346,28 @@ whether it satisfies the above requirements:
     ----------------------------------------------
     TempoParameters object: Roughly estimated parameters
      Estimated with 'guess_tempo_parameters()'
-      dt            = 0.0625
-      dkmax         = 37
-      epsrel        = 2.4846963223857106e-05
+      dt            = 0.0625 
+      dkmax         = 37 
+      epsrel        = 2.4846963223857106e-05 
+    
 
 
+.. code:: ipython3
 
-.. code:: python3
-
-    tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters)
-
-
-.. parsed-literal::
-
-    ../time_evolving_mpo/helpers.py:59: UserWarning: Matplotlib is currently using module://ipykernel.pylab.backend_inline, which is a non-GUI backend, so cannot show the figure.
-      fig.show()
+    fig, ax = plt.subplots(1,1)
+    tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters, ax=ax)
 
 
 
 
 .. parsed-literal::
 
-    <AxesSubplot:xlabel='$\\tau$', ylabel='$C(\\tau)$'>
+    <AxesSubplot:>
 
 
 
 
-.. image:: output_33_2.png
+.. image:: output_32_1.png
 
 
 In this plot you see the real and imaginary part of the environments
@@ -385,7 +382,7 @@ reasonable set of parameters.
 We can choose a set of parameters by hand and bundle them into a
 ``TempoParameters`` object,
 
-.. code:: python3
+.. code:: ipython3
 
     tempo_parameters_A = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4), name="my rough parameters")
     print(tempo_parameters_A)
@@ -396,35 +393,30 @@ We can choose a set of parameters by hand and bundle them into a
     ----------------------------------------------
     TempoParameters object: my rough parameters
      __no_description__
-      dt            = 0.1
-      dkmax         = 30
-      epsrel        = 0.0001
-
+      dt            = 0.1 
+      dkmax         = 30 
+      epsrel        = 0.0001 
+    
 
 
 and check again with the helper function:
 
-.. code:: python3
+.. code:: ipython3
 
-    tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A)
-
-
-.. parsed-literal::
-
-    ../time_evolving_mpo/helpers.py:59: UserWarning: Matplotlib is currently using module://ipykernel.pylab.backend_inline, which is a non-GUI backend, so cannot show the figure.
-      fig.show()
+    fig, ax = plt.subplots(1,1)
+    tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A, ax=ax)
 
 
 
 
 .. parsed-literal::
 
-    <AxesSubplot:xlabel='$\\tau$', ylabel='$C(\\tau)$'>
+    <AxesSubplot:>
 
 
 
 
-.. image:: output_38_2.png
+.. image:: output_37_1.png
 
 
 We could feed this object into the ``tempo.tempo_compute()`` function to
@@ -434,7 +426,7 @@ which allows us to resume a computation to get later system dynamics
 without having to start over. For this we start with creating a
 ``Tempo`` object:
 
-.. code:: python3
+.. code:: ipython3
 
     tempo_A = tempo.Tempo(system=system_A,
                           bath=bath_A,
@@ -445,7 +437,7 @@ without having to start over. For this we start with creating a
 We can start by computing the dynamics up to time
 :math:`5.0\,\Omega^{-1}`,
 
-.. code:: python3
+.. code:: ipython3
 
     tempo_A.compute(end_time=5.0)
 
@@ -453,12 +445,20 @@ We can start by computing the dynamics up to time
 .. parsed-literal::
 
     100.0%   50 of   50 [########################################] 00:00:03
-    Elapsed time: 3.0s
+    Elapsed time: 3.2s
+
+
+
+
+.. parsed-literal::
+
+    <time_evolving_mpo.dynamics.Dynamics at 0x7fd738294f28>
+
 
 
 then get and plot the dynamics of expecatation values,
 
-.. code:: python3
+.. code:: ipython3
 
     dynamics_A_2 = tempo_A.get_dynamics()
     plt.plot(*dynamics_A_2.expectations(0.5*tempo.operators.sigma("z"),real=True), label=r'$\alpha=0.3$')
@@ -471,30 +471,38 @@ then get and plot the dynamics of expecatation values,
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcfc54f4a8>
+    <matplotlib.legend.Legend at 0x7fd738156cf8>
 
 
 
 
-.. image:: output_44_1.png
+.. image:: output_43_1.png
 
 
 then continue the computation to :math:`15.0\,\Omega^{-1}`,
 
-.. code:: python3
+.. code:: ipython3
 
     tempo_A.compute(end_time=15.0)
 
 
 .. parsed-literal::
 
-    100.0%  100 of  100 [########################################] 00:00:12
-    Elapsed time: 12.3s
+    100.0%  100 of  100 [########################################] 00:00:20
+    Elapsed time: 21.0s
+
+
+
+
+.. parsed-literal::
+
+    <time_evolving_mpo.dynamics.Dynamics at 0x7fd738294f28>
+
 
 
 and then again get and plot the dynamics of expecatation values.
 
-.. code:: python3
+.. code:: ipython3
 
     dynamics_A_2 = tempo_A.get_dynamics()
     plt.plot(*dynamics_A_2.expectations(0.5*tempo.operators.sigma("z"),real=True), label=r'$\alpha=0.3$')
@@ -507,12 +515,12 @@ and then again get and plot the dynamics of expecatation values.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcfc13dd30>
+    <matplotlib.legend.Legend at 0x7fd73832f7b8>
 
 
 
 
-.. image:: output_48_1.png
+.. image:: output_47_1.png
 
 
 Finally, we note: to validate the accuracy the result **it vital to

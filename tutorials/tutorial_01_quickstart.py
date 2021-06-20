@@ -2,7 +2,14 @@
 # coding: utf-8
 
 # # Tutorial 01 - Quickstart
-# A quick introduction on how to use the TimeEvolvingMPO package to compute the dynamics of a quantum system that is possibly strongly coupled to a structured environment. It illustrates this by applying the TEMPO method to the strongly coupled spin boson model.
+# A quick introduction on how to use the TimeEvolvingMPO package to compute the dynamics of a quantum system that is possibly strongly coupled to a structured environment. We illustrate this by applying the TEMPO method to the strongly coupled spin boson model.
+
+# **Contents:**
+# 
+# * Example A - The spin boson model
+#     * A.1: The model and its parameters
+#     * A.2: Create system, correlations and bath objects
+#     * A.3: TEMPO computation
 
 # First, let's import TimeEvolvingMPO and some other packages we are going to use
 
@@ -26,16 +33,8 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 tempo.__version__
 
 
-# **Contents:**
-# 
-# * Example A - The Spin Boson Model
-#     * A.1: The Model and its Parameters
-#     * A.2: Create System, Spectral Density and Bath Objects
-#     * A.3: The TEMPO Computation
-
 # -------------------------------------------------
-# ## Example A - The Spin Boson Model
-# 
+# ## Example A - The spin boson model
 # As a first example let's try to reconstruct one of the lines in figure 2a of [Strathearn2018] ([Nat. Comm. 9, 3322 (2018)](https://doi.org/10.1038/s41467-018-05617-3) / [arXiv:1711.09641v3](https://arxiv.org/abs/1711.09641)). In this example we compute the time evolution of a spin which is strongly coupled to an ohmic bath (spin-boson model). Before we go through this step by step below, let's have a brief look at the script that will do the job - just to have an idea where we are going:
 
 # In[3]:
@@ -68,7 +67,7 @@ plt.ylabel(r'$<S_z>$')
 plt.legend()
 
 
-# ### A.1: The Model and its Parameters 
+# ### A.1: The model and its parameters 
 # We consider a system Hamiltonian
 # $$ H_{S} = \frac{\Omega}{2} \hat{\sigma}_x \mathrm{,}$$
 # a bath Hamiltonian
@@ -94,7 +93,7 @@ omega_cutoff_A = 5.0
 alpha_A = 0.3
 
 
-# ### A.2: Create System, Spectral Density and Bath Objects
+# ### A.2: Create system, correlations and bath objects
 
 # To input the operators you can simply use numpy matrices. For the most common operators you can, more conveniently, use the `tempo.operators` module:
 
@@ -145,8 +144,7 @@ correlations_A = tempo.PowerLawSD(alpha=alpha_A,
 bath_A = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations_A)
 
 
-# ### A.3: The TEMPO Computation
-
+# ### A.3: TEMPO computation
 # Now, that we have the system and the bath objects ready we can compute the dynamics of the spin starting in the up state, from time $t=0$ to $t=5\,\Omega^{-1}$
 
 # In[10]:
@@ -207,7 +205,8 @@ print(parameters)
 # In[13]:
 
 
-tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters)
+fig, ax = plt.subplots(1,1)
+tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters, ax=ax)
 
 
 # In this plot you see the real and imaginary part of the environments auto-correlation as a function of the delay time $\tau$ and the sampling of it corresponding the the chosen parameters. The spacing and the number of sampling points is given by `dt` and `dkmax` respectively. We can see that the auto-correlation function is close to zero for delay times larger than approx $2 \Omega^{-1}$ and that the sampling points follow the curve reasonably well. Thus this is a reasonable set of parameters.
@@ -226,7 +225,8 @@ print(tempo_parameters_A)
 # In[15]:
 
 
-tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A)
+fig, ax = plt.subplots(1,1)
+tempo.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A, ax=ax)
 
 
 # We could feed this object into the `tempo.tempo_compute()` function to get the dynamics of the system. However, instead of that, we can split up the work that `tempo.tempo_compute()` does into several steps, which allows us to resume a computation to get later system dynamics without having to start over. For this we start with creating a `Tempo` object:
