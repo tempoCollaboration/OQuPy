@@ -29,6 +29,7 @@ systems.**
    :caption: Tutorials
 
    pages/tutorial_01_quickstart/tutorial_01_quickstart
+   pages/tutorial_02_pt_tempo/tutorial_02_pt_tempo
 
 .. toctree::
    :maxdepth: 1
