@@ -146,7 +146,7 @@ plt.legend(loc=4)
 
 
 # ### B.5: Using PT-TEMPO to explore many different laser pulses
-# If we want to do the same computation for a set of different laser pulses (and thus different time dependent system Hamiltonians), we could repeate the above procedure. However, for a large set of different system Hamiltonians it is advisable to make use of the process tensor approach (PT-TEMPO), for which the bulk of the computation needs to be performed only once. For this we first compute the process tensor (the bulk of the computation), which we can then apply to as many different time dependent sytem Hamiltonian as we want.
+# If we want to do the same computation for a set of different laser pulses (and thus different time dependent system Hamiltonians), we could repeate the above procedure. However, for a large number of different system Hamiltonians this is impractical. In such cases one may instead use the process tensor approach (PT-TEMPO) wherein the bath influence tensors are computed separately from the rest of the network. This produces an object known as the process tensor which may then be used with many different system Hamiltonians at relatively little cost.
 
 # In[9]:
 
