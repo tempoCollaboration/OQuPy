@@ -37,7 +37,7 @@ tempo.__version__
 # -------------------------------------------------
 # ## Example B - Quantum Dot driven by a laser pulse
 # 
-# As a first example let's try to reconstruct one of the lines in figure 3c of [Fux2021] ([Phys. Rev. Lett. 126, 200401 (2021)](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) / [arXiv:2101.03071](https://arxiv.org/abs/2101.03071)). In this example we compute the time evolution of a quantum dot which is driven with a pi/2 laser pulse and is strongly coupled to an ohmic bath (spin-boson model). 
+# As a first example let's try to reconstruct one of the lines in figure 3c of [Fux2021] ([Phys. Rev. Lett. 126, 200401 (2021)](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) / [arXiv:2101.03071](https://arxiv.org/abs/2101.03071)). In this example we compute the time evolution of a quantum dot which is driven with a $pi/2$ laser pulse and is strongly coupled to an ohmic bath (spin-boson model). 
 
 # ### B.1: Hamiltonian for driven quantum dot with bosonic environment
 # We consider a time dependent system Hamiltonian
@@ -146,7 +146,7 @@ plt.legend(loc=4)
 
 
 # ### B.5: Using PT-TEMPO to explore many different laser pulses
-# If we want to do the same computation for a set of different laser pulses (and thus different time dependent system Hamiltonians), we could repeate the above procedure. However, for a large set of different system Hamiltonians it is advisable to make use of the process tensor approach (PT-TEMPO), for wich the bulk of the computation needs to be performed only once. For this we first compute the process tensor (the bulk of the computation), which we can then apply to as many different time dependent sytem Hamiltonian as we want.
+# If we want to do the same computation for a set of different laser pulses (and thus different time dependent system Hamiltonians), we could repeate the above procedure. However, for a large set of different system Hamiltonians it is advisable to make use of the process tensor approach (PT-TEMPO), for which the bulk of the computation needs to be performed only once. For this we first compute the process tensor (the bulk of the computation), which we can then apply to as many different time dependent sytem Hamiltonian as we want.
 
 # In[9]:
 
@@ -208,10 +208,3 @@ for t, s_xy, delta in zip(t_list, s_xy_list, deltas):
     plt.xlabel(r'$t/$ps')
     plt.ylabel(r'$<\sigma_xy>$')
 plt.legend()
-
-
-# In[ ]:
-
-
-
-
