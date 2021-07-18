@@ -1,5 +1,5 @@
-Tutorial 02 - PT-TEMPO
-======================
+Tutorial 02 - Time dependence and PT-TEMPO
+==========================================
 
 A quick introduction on how to use the TimeEvolvingMPO package to
 compute the dynamics of a time dependent quantum system and how to
@@ -16,20 +16,6 @@ pulse.
    -  B.3: Create time dependent system object
    -  B.4: TEMPO computation
    -  B.5: Using PT-TEMPO to explore many different laser pulses
-
--------------------------------------------------------------------------------
-
-You can follow this tutorial using any of these options:
-
-.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_02_pt_tempo.ipynb
-
-- launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_02_pt_tempo.ipynb>`,
-- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_02_pt_tempo.py>`,
-- read through it and code along below.
-
--------------------------------------------------------------------------------
 
 First, let’s import TimeEvolvingMPO and some other packages we are going
 to use
@@ -68,8 +54,8 @@ As a first example let’s try to reconstruct one of the lines in figure
 (2021) <https://link.aps.org/doi/10.1103/PhysRevLett.126.200401>`__ /
 `arXiv:2101.03071 <https://arxiv.org/abs/2101.03071>`__). In this
 example we compute the time evolution of a quantum dot which is driven
-with a pi/2 laser pulse and is strongly coupled to an ohmic bath
-(spin-boson model).
+with a :math:`\pi/2` laser pulse and is strongly coupled to an ohmic
+bath (spin-boson model).
 
 B.1: Hamiltonian for driven quantum dot with bosonic environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,7 +135,7 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f8cc77a0470>
+    <matplotlib.legend.Legend at 0x7f6a0ad0e3c8>
 
 
 
@@ -184,7 +170,7 @@ parameters):
 
 .. code:: ipython3
 
-    tempo_parameters = tempo.TempoParameters(dt=0.05, dkmax=40, epsrel=10**(-5))
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
     
     tempo_sys = tempo.Tempo(system=system,
                             bath=bath,
@@ -196,8 +182,8 @@ parameters):
 
 .. parsed-literal::
 
-    100.0%  100 of  100 [########################################] 00:00:07
-    Elapsed time: 7.0s
+    100.0%   50 of   50 [########################################] 00:00:02
+    Elapsed time: 2.1s
 
 
 and extract the expectation values
@@ -220,7 +206,7 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f8cbc44ccc0>
+    <matplotlib.legend.Legend at 0x7f6a0027f080>
 
 
 
@@ -233,16 +219,16 @@ B.5: Using PT-TEMPO to explore many different laser pulses
 
 If we want to do the same computation for a set of different laser
 pulses (and thus different time dependent system Hamiltonians), we could
-repeate the above procedure. However, for a large set of different
-system Hamiltonians it is advisable to make use of the process tensor
-approach (PT-TEMPO), for wich the bulk of the computation needs to be
-performed only once. For this we first compute the process tensor (the
-bulk of the computation), which we can then apply to as many different
-time dependent sytem Hamiltonian as we want.
+repeate the above procedure. However, for a large number of different
+system Hamiltonians this is impractical. In such cases one may instead
+use the process tensor approach (PT-TEMPO) wherein the bath influence
+tensors are computed separately from the rest of the network. This
+produces an object known as the process tensor which may then be used
+with many different system Hamiltonians at relatively little cost.
 
 .. code:: ipython3
 
-    pt_tempo_parameters = tempo.PtTempoParameters(dt=0.05, dkmax=40, epsrel=10**(-5))
+    pt_tempo_parameters = tempo.PtTempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
     
     process_tensor = tempo.pt_tempo_compute(bath=bath,
                                             start_time=-2.0,
@@ -252,8 +238,8 @@ time dependent sytem Hamiltonian as we want.
 
 .. parsed-literal::
 
-    100.0%  100 of  100 [########################################] 00:00:23
-    Elapsed time: 23.1s
+    100.0%   50 of   50 [########################################] 00:00:03
+    Elapsed time: 3.0s
 
 
 Given we want to calculate :math:`\langle\sigma_{xy}\rangle(t)` for 5
@@ -309,6 +295,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
         plt.plot(t, s_xy, label=r"$\Delta = $"+f"{delta:0.1f}")
         plt.xlabel(r'$t/$ps')
         plt.ylabel(r'$<\sigma_xy>$')
+    plt.ylim((0.0,1.0))
     plt.legend()
 
 
@@ -316,7 +303,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f8cbf6860f0>
+    <matplotlib.legend.Legend at 0x7f6a00346c18>
 
 
 
