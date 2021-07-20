@@ -4,6 +4,7 @@ This open source project has been started by [Gerald E. Fux](https://github.com/
 
 ### Members of the TEMPO collaboration:
 - Kristín Arnardóttir (*University of St Andrews*) <kristinbjorga@gmail.com>
+- [Piper Fowler-Wright](https://github.com/piperfw) (*University of St Andrews*) <pfw1@st-andrews.ac.uk>
 - [Gerald E. Fux](https://github.com/gefux) (*University of St Andrews*) <gf52@st-andrews.ac.uk>
 - [Erik Gauger](https://github.com/erikgauger) (*Heriot-Watt University*) <e.gauger@hw.ac.uk>
 - Jonathan Keeling (*University of St Andrews*) <jmjk@st-andrews.ac.uk>
