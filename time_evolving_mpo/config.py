@@ -66,14 +66,3 @@ PT_MAX_DKMAX = 256
 
 # default tolerance for process tensor tempo parameter guessing function
 PT_DEFAULT_TOLLERANCE = 3.9e-3
-
-
-# -- Process Tensor -----------------------------------------------------------
-
-# The default process tensor tempo backend for tensor network calculations
-PROCESS_TENSOR_BACKEND = 'tensor-network'
-
-# Dict of all process tensor tempo backends and their default configuration
-PROCESS_TENSOR_BACKEND_CONFIG = {
-    'tensor-network': {},
-    }

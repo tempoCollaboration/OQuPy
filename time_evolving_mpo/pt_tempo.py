@@ -38,7 +38,7 @@ optimal control of non-Markovian open quantum systems*, arXiv2101.03071
 (2021).
 """
 
-from typing import Dict, Optional, Text
+from typing import Dict, Optional, Text, Union
 from copy import copy
 
 import numpy as np
@@ -49,11 +49,17 @@ from time_evolving_mpo.bath import Bath
 # from time_evolving_mpo.config import NpDtype
 # from time_evolving_mpo.config import PT_MAX_DKMAX, PT_DEFAULT_TOLLERANCE
 from time_evolving_mpo.config import PT_DEFAULT_TOLLERANCE
-from time_evolving_mpo.process_tensor import ProcessTensor
+from time_evolving_mpo.process_tensor import BaseProcessTensor
+from time_evolving_mpo.process_tensor import SimpleProcessTensor
+from time_evolving_mpo.process_tensor import FileProcessTensor
 from time_evolving_mpo.tempo import TempoParameters
 from time_evolving_mpo.tempo import guess_tempo_parameters
 from time_evolving_mpo.util import commutator, acommutator
+from time_evolving_mpo.util import left_right_super
 from time_evolving_mpo.util import get_progress
+
+
+PT_CLASS = {"simple": SimpleProcessTensor}
 
 
 class PtTempoParameters(TempoParameters):
@@ -112,24 +118,19 @@ class PtTempo(BaseAPIClass):
             start_time: float,
             end_time: float,
             parameters: PtTempoParameters,
+            process_tensor_file: Optional[Union[Text, bool]] = None,
+            overwrite: Optional[bool] = False,
             backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a PtTempo object. """
-        self._backend_class, self._backend_config = \
-            get_pt_tempo_backend(backend, backend_config)
-
         assert isinstance(bath, Bath), \
             "Argument 'bath' must be an instance of Bath."
         self._bath = bath
         self._dimension = self._bath.dimension
         self._correlations = self._bath.correlations
-
-        assert isinstance(parameters, PtTempoParameters), \
-            "Argument 'parameters' must be an instance of PtTempoParameters."
-        self._parameters = parameters
 
         try:
             __start_time = float(start_time)
@@ -142,6 +143,23 @@ class PtTempo(BaseAPIClass):
         except Exception as e:
             raise AssertionError("End time must be a float.") from e
         self._end_time = __end_time
+
+        assert isinstance(parameters, PtTempoParameters), \
+            "Argument 'parameters' must be an instance of PtTempoParameters."
+        self._parameters = parameters
+
+        self._process_tensor = None
+        if process_tensor_file or isinstance(process_tensor_file, Text):
+            if isinstance(process_tensor_file, Text):
+                filename = process_tensor_file
+            else:
+                filename = None
+            self._init_file_process_tensor(filename, overwrite)
+        else:
+            self._init_simple_process_tensor()
+
+        self._backend_class, self._backend_config = \
+            get_pt_tempo_backend(backend, backend_config)
 
         super().__init__(name, description, description_dict)
 
@@ -159,27 +177,63 @@ class PtTempo(BaseAPIClass):
         self._backend_instance = None
         self._init_pt_tempo_backend()
 
+    def _init_simple_process_tensor(self):
+        """ToDo. """
+        unitary = self._bath.unitary_transform
+        if not np.allclose(unitary, np.identity(self._dimension)):
+            transform_in = left_right_super(unitary.conjugate().T,
+                                            unitary).T
+            transform_out = left_right_super(unitary,
+                                             unitary.conjugate().T).T
+        else:
+            transform_in = None
+            transform_out = None
+        self._process_tensor = SimpleProcessTensor(
+            hilbert_space_dimension=self._dimension,
+            dt=self._parameters.dt,
+            transform_in=transform_in,
+            transform_out=transform_out)
+
+    def _init_file_process_tensor(self, filename, overwrite):
+        """ToDo. """
+        unitary = self._bath.unitary_transform
+        if not np.allclose(unitary, np.identity(self._dimension)):
+            transform_in = left_right_super(unitary.conjugate().T,
+                                            unitary).T
+            transform_out = left_right_super(unitary,
+                                             unitary.conjugate().T).T
+        else:
+            transform_in = None
+            transform_out = None
+
+        if overwrite:
+            mode = "overwrite"
+        else:
+            mode = "write"
+        self._process_tensor = FileProcessTensor(
+            mode=mode,
+            filename=filename,
+            hilbert_space_dimension=self._dimension,
+            dt=self._parameters.dt,
+            transform_in=transform_in,
+            transform_out=transform_out)
+
     def _init_pt_tempo_backend(self):
         """Create and initialize the pt-tempo backend. """
-        dimension = self._dimension
-        influence = self._influence
-        unitary_transform = self._bath.unitary_transform
-        sum_north = np.array([1.0]*(dimension**2))
-        sum_west = np.array([1.0]*(dimension**2))
-        num_steps = self._num_steps
+        sum_north = np.array([1.0]*(self._dimension**2))
+        sum_west = np.array([1.0]*(self._dimension**2))
         dkmax = self._parameters.dkmax
         if dkmax is None:
-            dkmax = num_steps
-        epsrel = self._parameters.epsrel
+            dkmax = self._num_steps
         self._backend_instance = self._backend_class(
-                dimension,
-                influence,
-                unitary_transform,
-                sum_north,
-                sum_west,
-                num_steps,
-                dkmax,
-                epsrel,
+                dimension=self._dimension,
+                influence=self._influence,
+                process_tensor=self._process_tensor,
+                sum_north=sum_north,
+                sum_west=sum_west,
+                num_steps=self._num_steps,
+                dkmax=dkmax,
+                epsrel=self._parameters.epsrel,
                 config=self._backend_config)
 
     def _influence(self, dk: int):
@@ -224,10 +278,6 @@ class PtTempo(BaseAPIClass):
 
         return infl
 
-    # def _time(self, step: int):
-    #     """Return the time that corresponds to the time step `step`. """
-    #     return self._start_time + float(step)*self._parameters.dt
-
     @property
     def dimension(self) -> np.ndarray:
         """Hilbert space dimension. """
@@ -256,76 +306,31 @@ class PtTempo(BaseAPIClass):
 
     def get_process_tensor(
             self,
-            progress_type: Optional[Text] = None,
-            backend: Optional[Text] = None,
-            backend_config: Optional[Dict] = None) -> ProcessTensor:
+            progress_type: Optional[Text] = None) -> BaseProcessTensor:
         """
         Returns a the computed process tensor. It performs the computation if
         it hasn't been already done.
 
         Parameters
         ----------
-        backend: str (default = None)
-            The name of the backend for the following process tensor
-            computations. If `backend` is ``None`` then the default
-            backend is used.
-        backend_config: dict (default = None)
-            The configuration of the backend. If `backend_config` is
-            ``None`` then the default backend configuration is used.
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``silent``, ``simple``, ``bar``}. If `None` then
+            the default progress type is used.
 
         Returns
         -------
-        process_tensor: ProcessTensor
+        process_tensor: SimpleProcessTensor
             The computed process tensor.
         """
-
-        if self._backend_instance.step is None \
-            or (self._backend_instance.step < self._backend_instance.num_steps):
+        if self._backend_instance.step is None or \
+            self._backend_instance.step < self._backend_instance.num_steps:
             self.compute(progress_type=progress_type)
 
-        times = self._start_time \
-                + self._parameters.dt * np.arange(self._num_steps+1)
-        tensors = self._backend_instance.get_tensors()
-        initial_tensor = None
-        name = None
-        description = f"computed from {self.name} pt-tempo"
-        description_dict = {
-            "pt_tempo_type":str(type(self)),
-            "pt_tempo_name":self.name,
-            "pt_tempo_description":self.description,
-            "pt_tempo_description_dict":self.description_dict,
-            "pt_parameters_type":str(type(self._parameters)),
-            "pt_parameters_name":self._parameters.name,
-            "pt_parameters_description":self._parameters.description,
-            "pt_parameters_description_dict":self._parameters.description_dict,
-            "bath_type":str(type(self._bath)),
-            "bath_name":self._bath.name,
-            "bath_description":self._bath.description,
-            "bath_description_dict":self._bath.description_dict,
-            "correlations_type":str(type(self._correlations)),
-            "correlations_name": \
-                self._correlations.name,
-            "correlations_description": \
-                self._correlations.description,
-            "correlations_description_dict": \
-                self._correlations.description_dict,
-            "backend_class":str(self._backend_class),
-            "dt":self._parameters.dt,
-            "dkmax":self._parameters.dkmax,
-            "epsrel":self._parameters.epsrel,
-            }
+        if len(self._process_tensor) < self._backend_instance.num_steps:
+            self._backend_instance.update_process_tensor()
 
-        process_tensor = ProcessTensor(
-            times=times,
-            tensors=tensors,
-            initial_tensor=initial_tensor,
-            backend=backend,
-            backend_config=backend_config,
-            name=name,
-            description=description,
-            description_dict=description_dict)
-
-        return process_tensor
+        return self._process_tensor
 
 
 def pt_tempo_compute(
@@ -333,13 +338,15 @@ def pt_tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[PtTempoParameters] = None,
-        tolerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
+        tollerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
+        process_tensor_file: Optional[Union[Text, bool]] = None,
+        overwrite: Optional[bool] = False,
         backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
         name: Optional[Text] = None,
         description: Optional[Text] = None,
-        description_dict: Optional[Dict] = None) -> ProcessTensor:
+        description_dict: Optional[Dict] = None) -> BaseProcessTensor:
     """
     Shortcut for creating a process tensor by performing a PT-TEMPO
     computation.
@@ -386,6 +393,8 @@ def pt_tempo_compute(
                   start_time,
                   end_time,
                   parameters,
+                  process_tensor_file,
+                  overwrite,
                   backend,
                   backend_config,
                   name,

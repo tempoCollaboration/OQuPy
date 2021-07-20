@@ -22,7 +22,7 @@ from numpy import ndarray, moveaxis, dot
 
 from time_evolving_mpo.backends.tensor_network import node_array as na
 from time_evolving_mpo.backends.base_backends import BaseTempoBackend
-from time_evolving_mpo.backends.tensor_network.util import create_delta
+from time_evolving_mpo.util import create_delta
 from time_evolving_mpo import util
 
 

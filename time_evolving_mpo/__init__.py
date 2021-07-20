@@ -24,6 +24,7 @@ __all__ = [
     'CustomSD',
     'Dynamics',
     'file_formats',
+    'FileProcessTensor',
     'guess_pt_tempo_parameters',
     'guess_tempo_parameters',
     'helpers',
@@ -33,14 +34,15 @@ __all__ = [
     'NumericsWarning',
     'operators',
     'PowerLawSD',
-    'ProcessTensor',
     'PtTempo',
     'pt_tempo_compute',
+    'SimpleProcessTensor',
     'System',
     'Tempo',
     'tempo_compute',
     'TempoParameters',
     'TimeDependentSystem',
+    'TrivialProcessTensor',
     ]
 
 # -- Modules in alphabetical order --------------------------------------------
@@ -50,9 +52,7 @@ from time_evolving_mpo.bath import Bath
 # from time_evolving_mpo.control import Control
 
 from time_evolving_mpo.dynamics import Dynamics
-# from time_evolving_mpo.dynamics import distance
 from time_evolving_mpo.dynamics import import_dynamics
-# from time_evolving_mpo.dynamics import norms
 
 from time_evolving_mpo.exceptions import NumericsError
 from time_evolving_mpo.exceptions import NumericsWarning
@@ -63,8 +63,10 @@ import time_evolving_mpo.operators
 
 import time_evolving_mpo.helpers
 
-from time_evolving_mpo.process_tensor import ProcessTensor
 from time_evolving_mpo.process_tensor import import_process_tensor
+from time_evolving_mpo.process_tensor import TrivialProcessTensor
+from time_evolving_mpo.process_tensor import SimpleProcessTensor
+from time_evolving_mpo.process_tensor import FileProcessTensor
 
 from time_evolving_mpo.pt_tempo import PtTempo
 from time_evolving_mpo.pt_tempo import PtTempoParameters

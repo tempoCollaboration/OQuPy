@@ -15,10 +15,10 @@
 Module for base classes of backends.
 """
 
-from typing import Callable, Dict, Tuple, Union, List, Optional
+from typing import Callable, Dict, Tuple
 from numpy import ndarray
 
-from time_evolving_mpo.dynamics import Dynamics
+from time_evolving_mpo.process_tensor import BaseProcessTensor
 
 
 class BaseTempoBackend:
@@ -133,7 +133,7 @@ class BasePtTempoBackend:
             self,
             dimension: int,
             influence: Callable[[int], ndarray],
-            unitary_transform: ndarray,
+            process_tensor: BaseProcessTensor,
             sum_north: ndarray,
             sum_west: ndarray,
             num_steps: int,
@@ -143,7 +143,7 @@ class BasePtTempoBackend:
         """Create a BasePtTempoBackend object. """
         self._dimension = dimension
         self._influence = influence
-        self._unitary_transform = unitary_transform
+        self._process_tensor = process_tensor
         self._sum_north = sum_north
         self._sum_west = sum_west
         self._num_steps = num_steps
@@ -174,117 +174,8 @@ class BasePtTempoBackend:
             "Class {} has no compute_step() implementation.".format(
                 type(self).__name__))
 
-    def get_tensors(self) -> List[ndarray]:
-        """Return the computed tensors. """
+    def update_process_tensor(self) -> None:
+        """Update the process tensor. """
         raise NotImplementedError(
-            "Class {} has no get_process_tensor() implementation.".format(
-                type(self).__name__))
-
-class BaseProcessTensorBackend:
-    """
-    Base class for process tensor backends.
-
-    If `initial_tensor` is `None` this amounts to no given initial
-    state. If `initial_tensor` is an `numpy.ndarray` it must be a
-    2-legged tensor (i.e. a matrix) where the first leg is the internal leg
-    connecting to the next part of the array of tensors that represent the
-    process tensor. The second leg is vectorised initial state (in fact the
-    first slot in the process tensor).
-
-    The parameter `tensors` is list of three or four legged tensors. The first
-    and second legs are the internal legs that connect to the previous and next
-    tensor. If `initial_tensor` is `None` the first leg of the first tensor
-    must be a dummy leg of dimension 1. The  second leg of the last tensor must
-    always be a dummy leg of dimension 1. The third leg is the "incoming" leg
-    of the previous time slot, while the fourth leg is the "resulting" leg of
-    the following time slot. If the tensor has only three legs, a
-    Kronecker-delta between the third and fourth leg is assumed.
-
-    Parameters
-    ----------
-    tensors: list(ndarray)
-        The tensors that make up the MPO representation of the process
-        tensor.
-    initial_tensor: ndarray
-        The zeroth/initial tensor of the process tensor.
-    """
-    def __init__(
-            self,
-            tensors: List[ndarray],
-            initial_tensor: Union[ndarray, type(None)],
-            config: Dict):
-        """Create a BaseProcessTensorBackend object. """
-        pass
-        # raise NotImplementedError(
-        #     "Class {} has no constructor implementation.".format(
-        #         type(self).__name__))
-
-    def get_bond_dimensions(self) -> ndarray:
-        """Return MPS bond dimensions. """
-        raise NotImplementedError(
-            "Class {} has no get_bond_dimensions implementation.".format(
-                type(self).__name__))
-
-    def export_tensors(self) -> Tuple[ndarray, ndarray]:
-        """
-        Export process tensor tensors.
-
-        returns
-        -------
-        tensors: list(ndarray)
-            The tensors that make up the MPO representation of the process
-            tensor.
-        initial_tensor: ndarray
-            The zeroth/initial tensor of the process tensor.
-        """
-        raise NotImplementedError(
-            "Class {} has no export_tensors implementation.".format(
-                type(self).__name__))
-
-    def compute_dynamics(
-            self,
-            controls: Callable[[int], Tuple[ndarray, ndarray]],
-            initial_state: Optional[ndarray] = None) -> Dynamics:
-        """
-        Compute the Dynamics for a given set of controls.
-
-        Parameters
-        ----------
-        controls: callable(int) -> ndarray, ndarray
-            Callable that takes an integer `step` and returns the pre and post
-            control at that time step.
-        initial_state: ndarray
-            Initial state vector.
-
-        Returns
-        -------
-        dynamics: Dynamics
-            The dynamics of the system.
-        """
-        raise NotImplementedError(
-            "Class {} has no compute_dynamics implementation.".format(
-                type(self).__name__))
-
-    def compute_final_state(
-            self,
-            controls: Callable[[int], Tuple[ndarray, ndarray]],
-            initial_state: Optional[ndarray] = None) -> ndarray:
-        """
-        Compute final state for a given set of controls.
-
-        Parameters
-        ----------
-        controls: callable(int) -> ndarray, ndarray
-            Callable that takes an integer `step` and returns the pre and post
-            control at that time step.
-        initial_state: ndarray
-            Initial state vector.
-
-        Returns
-        -------
-        final_state: ndarray
-            The final state of the system.
-        """
-        raise NotImplementedError(
-            "Class {} has no compute_dynamics implementation.".format(
+            "Class {} has no update_process_tensor() implementation.".format(
                 type(self).__name__))
