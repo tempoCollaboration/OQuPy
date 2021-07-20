@@ -63,7 +63,7 @@ def test_pt_tempo():
     assert pt_tempo_sys_A.dimension == 2
     pt_tempo_sys_A.compute()
     pt_A = pt_tempo_sys_A.get_process_tensor()
-    assert len(pt_A.times) == 12
+    assert len(pt_A) == 11
 
     tempo_param_B = tempo.PtTempoParameters(0.1, None, 1.0e-5, name="rough-B")
     pt_tempo_sys_B = tempo.PtTempo(bath=bath,

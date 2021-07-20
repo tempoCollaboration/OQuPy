@@ -39,34 +39,3 @@ def test_base_tempo_backend():
     with pytest.raises(NotImplementedError):
         tempo_back.compute_step()
 
-def test_base_pt_tempo_backend():
-    pt_tempo_back = bb.BasePtTempoBackend(
-                        dimension=None,
-                        influence=None,
-                        unitary_transform=None,
-                        sum_north=None,
-                        sum_west=None,
-                        num_steps=None,
-                        dkmax=None,
-                        epsrel=None,
-                        config=None)
-    with pytest.raises(NotImplementedError):
-        pt_tempo_back.initialize()
-    with pytest.raises(NotImplementedError):
-        pt_tempo_back.compute_step()
-    with pytest.raises(NotImplementedError):
-        pt_tempo_back.get_tensors()
-
-def test_base_process_tensor_backend():
-    pt_back = bb.BaseProcessTensorBackend(
-                        tensors=None,
-                        initial_tensor=None,
-                        config=None)
-    with pytest.raises(NotImplementedError):
-        pt_back.get_bond_dimensions()
-    with pytest.raises(NotImplementedError):
-        pt_back.export_tensors()
-    with pytest.raises(NotImplementedError):
-        pt_back.compute_dynamics(controls=None)
-    with pytest.raises(NotImplementedError):
-        pt_back.compute_final_state(controls=None)

@@ -47,37 +47,15 @@ del pt
 
 
 def test_process_tensor():
-    pt = tempo.import_process_tensor(TEMP_FILE)
+    pt = tempo.import_process_tensor(TEMP_FILE, process_tensor_type="simple")
     str(pt)
-    pt.times
     pt.get_bond_dimensions()
-    pt.compute_final_state_from_system(system, initial_state)
-    pt.compute_dynamics_from_system(system, initial_state)
-    with pytest.raises(FileExistsError):
+    pt.compute_final_state_from_system(system, initial_state=initial_state)
+    pt.compute_dynamics_from_system(system, initial_state=initial_state)
+    with pytest.raises(OSError):
         pt.export(TEMP_FILE)
 
     with pytest.raises(AssertionError):
         pt.compute_final_state_from_system(system)
     with pytest.raises(AssertionError):
         pt.compute_dynamics_from_system(system)
-    with pytest.raises(AssertionError):
-        pt.compute_final_state_from_system(system,"bla")
-    with pytest.raises(AssertionError):
-        pt.compute_dynamics_from_system(system,"bla")
-
-# -----------------------------------------------------------------------------
-
-GOOD_FILES_PROCESS_TENSOR_V1 = [
-    "tests/data/test_v1_0_good_file_A.processTensor",
-    "tests/data/test_v1_0_good_file_B.processTensor",
-    "tests/data/test_v1_0_good_file_C.processTensor",
-    "tests/data/test_v1_0_good_file_D.processTensor",
-    ]
-
-def test_import_process_tensor():
-    for filename in GOOD_FILES_PROCESS_TENSOR_V1:
-        tempo.import_process_tensor(filename)
-
-def test_process_tensor_bad_input():
-    tempo.ProcessTensor(times=None,
-                        tensors=[])

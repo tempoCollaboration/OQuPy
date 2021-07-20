@@ -19,9 +19,7 @@ import pytest
 import os, contextlib
 
 from time_evolving_mpo.file_formats import check_tempo_dynamics_file
-from time_evolving_mpo.file_formats import check_process_tensor_file
 from time_evolving_mpo.file_formats import print_tempo_dynamics_file
-from time_evolving_mpo.file_formats import print_process_tensor_file
 
 # -----------------------------------------------------------------------------
 
@@ -44,15 +42,6 @@ GOOD_FILES_TEMPO_DYNAMICS_V1 = [
     "tests/data/test_v1_0_good_file_B.tempoDynamics",
     "tests/data/test_v1_0_good_file_C.tempoDynamics",
     ]
-GOOD_FILES_PROCESS_TENSOR_V1 = [
-    "tests/data/test_v1_0_good_file_A.processTensor",
-    "tests/data/test_v1_0_good_file_B.processTensor",
-    "tests/data/test_v1_0_good_file_C.processTensor",
-    "tests/data/test_v1_0_good_file_D.processTensor",
-    ]
-BAD_FILES_PROCESS_TENSOR_V1 = [
-    "tests/data/test_v1_0_bad_file_A.processTensor",
-    ]
 
 # -----------------------------------------------------------------------------
 
@@ -68,20 +57,5 @@ def test_check_tempo_dynamics_files_bad():
 def test_print_tempo_dynamics_files():
     for filename in GOOD_FILES_TEMPO_DYNAMICS_V1:
         print_tempo_dynamics_file(filename)
-
-# -----------------------------------------------------------------------------
-
-def test_check_process_tensor_files_good():
-    for filename in GOOD_FILES_PROCESS_TENSOR_V1:
-        assert check_process_tensor_file(filename)
-
-def test_check_process_tensor_files_bad():
-    for filename in BAD_FILES_PROCESS_TENSOR_V1:
-        assert check_process_tensor_file(filename) is False
-
-@supress_stdout
-def test_print_process_tensor_files():
-    for filename in GOOD_FILES_PROCESS_TENSOR_V1:
-        print_process_tensor_file(filename)
 
 # -----------------------------------------------------------------------------
