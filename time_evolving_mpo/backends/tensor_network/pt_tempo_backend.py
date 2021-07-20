@@ -15,17 +15,16 @@
 Module for tensor network process tensor tempo backend.
 """
 
-from typing import Callable, Dict, List
+from typing import Callable, Dict
 
 import numpy as np
 from numpy import ndarray
 
 from time_evolving_mpo.backends.tensor_network import node_array as na
 from time_evolving_mpo.backends.base_backends import BasePtTempoBackend
-from time_evolving_mpo.backends.tensor_network.util import create_delta
-from time_evolving_mpo.backends.tensor_network.util import add_singleton
 from time_evolving_mpo.config import NpDtype
-import time_evolving_mpo.util as util
+from time_evolving_mpo.process_tensor import BaseProcessTensor
+from time_evolving_mpo import util
 
 
 class TensorNetworkPtTempoBackend(BasePtTempoBackend):
@@ -34,7 +33,7 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
             self,
             dimension: int,
             influence: Callable[[int], ndarray],
-            unitary_transform: ndarray,
+            process_tensor: BaseProcessTensor,
             sum_north: ndarray,
             sum_west: ndarray,
             num_steps: int,
@@ -44,7 +43,7 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
         """Create a TensorNetworkPtTempoBackend object. """
         super().__init__(dimension,
                          influence,
-                         unitary_transform,
+                         process_tensor,
                          sum_north,
                          sum_west,
                          num_steps,
@@ -73,13 +72,6 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
         # copy and contrac mpo to mps
         scale = self._dimension
 
-        self._super_u = util.left_right_super(
-                            self._unitary_transform,
-                            self._unitary_transform.conjugate().T)
-        self._super_u_dagg = util.left_right_super(
-                                self._unitary_transform.conjugate().T,
-                                self._unitary_transform)
-
         self._sum_north_scaled = self._sum_north * scale
 
         influences_mpo = []
@@ -88,26 +80,20 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
             if i == 0:
                 infl = self._influence(i)
                 infl = infl / scale
-                infl_mpo = create_delta(infl, [1, 1, 0])
+                infl_mpo = util.create_delta(infl, [1, 1, 0])
                 infl_mps = infl.T / scale
             elif i == self._num_infl-1:
-                # if self._dkmax is not None:
-                #     dk = self._dkmax - self._num_steps
-                #     if dk < 0:
-                #         infl = self._influence(dk)
-                #     else:
-                #         infl = self._influence(i)
                 if self._dkmax < self._num_steps:
                     infl = self._influence(-1)
                 else:
                     infl = self._influence(i)
-                infl_mpo = add_singleton(infl, 1)
-                infl_mpo = add_singleton(infl_mpo, 3)
-                infl_mps = add_singleton(infl, 2)
+                infl_mpo = util.add_singleton(infl, 1)
+                infl_mpo = util.add_singleton(infl_mpo, 3)
+                infl_mps = util.add_singleton(infl, 2)
             else:
                 infl = self._influence(i)
-                infl_mpo = create_delta(infl, [0, 1, 1, 0])
-                infl_mps = create_delta(infl / scale, [0, 1, 0])
+                infl_mpo = util.create_delta(infl, [0, 1, 1, 0])
+                infl_mps = util.create_delta(infl / scale, [0, 1, 0])
 
             influences_mpo.append(infl_mpo)
             influences_mps.append(infl_mps)
@@ -194,29 +180,10 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
                 self._mps.apply_vector(np.array([1.0]), left=False)
         else:
             if self._dkmax is not None:
-                # dk = self._step + self._dkmax - self._num_steps - 1
-                # if dk < 0:
-                #     infl = self._influence(dk)
-                #     infl_mpo = add_singleton(infl, 1)
-                #     infl_mpo = add_singleton(infl_mpo, 3)
-                #     last_mpo = na.NodeArray(
-                #             [infl_mpo],
-                #             left=True,
-                #             right=True,
-                #             name="The integrating back to zero infl. func.",
-                #             backend=self._backend)
-                #     self._mpo, _ = na.split(self._mpo,
-                #                             index=-1,
-                #                             copy=False,
-                #                             name_left="Shortened MPO")
-                #     self._mpo = na.join(self._mpo,
-                #                         last_mpo,
-                #                         copy=False,
-                #                         name="Thee updated MPO")
                 dk = int(0 - self._step)
                 infl = self._influence(dk)
-                infl_mpo = add_singleton(infl, 1)
-                infl_mpo = add_singleton(infl_mpo, 3)
+                infl_mpo = util.add_singleton(infl, 1)
+                infl_mpo = util.add_singleton(infl_mpo, 3)
                 last_mpo = na.NodeArray(
                         [infl_mpo],
                         left=True,
@@ -257,38 +224,36 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
 
         return self._step < self._num_steps
 
-    def get_tensors(self) -> List[ndarray]:
-        """Return the computed tensors. """
+    def get_mpo_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        n = len(self._mps.nodes)
+        assert n == self._num_steps
+        assert step < n
+
+        if step == 0:
+            order = [self._mps.bond_edges[0],self._mps.array_edges[0][0]]
+            first_t = self._mps.nodes[0].reorder_edges(order).get_tensor()
+            first_t = util.add_singleton(first_t, 0)
+            tensor = first_t * self._dimension
+        elif step == n-1:
+            order = [self._mps.bond_edges[-1],self._mps.array_edges[-1][0]]
+            last_t = self._mps.nodes[-1].reorder_edges(order).get_tensor()
+            last_t = util.add_singleton(last_t, 1)
+            tensor = last_t * self._dimension
+        else:
+            order = [self._mps.bond_edges[step-1],
+            self._mps.bond_edges[step],
+            self._mps.array_edges[step][0]]
+            temp_t = self._mps.nodes[step].reorder_edges(order).get_tensor()
+            tensor = temp_t * self._dimension
+
+        return tensor
+
+    def update_process_tensor(self) -> None:
+        """Update the process tensor. """
         assert self._step >= self._num_steps
 
-        tensors = []
-
-        order = [self._mps.bond_edges[0],self._mps.array_edges[0][0]]
-        first_t = self._mps.nodes[0].reorder_edges(order).get_tensor()
-        first_t = add_singleton(first_t, 0)
-        tensors.append(first_t* self._dimension)
-
-        for i in range(1, len(self._mps.nodes) - 1):
-            order = [self._mps.bond_edges[i-1],
-                     self._mps.bond_edges[i],
-                     self._mps.array_edges[i][0]]
-            temp_t = self._mps.nodes[i].reorder_edges(order).get_tensor()
-            tensors.append(temp_t * self._dimension)
-
-        order = [self._mps.bond_edges[-1],self._mps.array_edges[-1][0]]
-        last_t = self._mps.nodes[-1].reorder_edges(order).get_tensor()
-        last_t = add_singleton(last_t, 1)
-        tensors.append(last_t * self._dimension)
-
-        # apply basis change / transformation
-        if not np.allclose(self._unitary_transform,
-                           np.identity(self._unitary_transform.shape[0])):
-            for i, tensor in enumerate(tensors):
-                tmp = create_delta(tensor, [0, 1, 2, 2])
-                tmp = np.dot(np.moveaxis(tmp, -2, -1),
-                      self._super_u_dagg)
-                tmp = np.moveaxis(tmp, -1, -2)
-                tmp = np.dot(tmp, self._super_u.T)
-                tensors[i] = tmp
-
-        return tensors
+        for step in reversed(range(self.num_steps)):
+            mpo_tensor = self.get_mpo_tensor(step)
+            self._process_tensor.set_mpo_tensor(step, mpo_tensor)
+        self._process_tensor.compute_caps()

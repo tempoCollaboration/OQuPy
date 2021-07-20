@@ -17,7 +17,8 @@ Module for utillities.
 
 import sys
 import pickle
-from typing import Any, Text
+import copy as cp
+from typing import Any, List, Optional, Text
 from threading import Timer
 from time import time
 from datetime import timedelta
@@ -58,6 +59,71 @@ def left_right_super(
     """Construct left and right acting superoperator from operators. """
     return np.kron(left_operator, right_operator.T)
 
+# -- numpy utils --------------------------------------------------------------
+
+def create_delta(
+        tensor: ndarray,
+        index_scrambling: List[int]) -> ndarray:
+    """
+    Creates deltas in numpy tensor.
+
+    .. warning::
+        This is a computationally inefficient method to perform the task.
+
+    .. todo::
+        Make it better.
+
+    """
+    tensor_shape = tensor.shape
+    a = [0]*len(tensor_shape)
+
+    ret_shape = tuple(list(tensor_shape)[i] for i in index_scrambling)
+    ret_ndarray = np.zeros(ret_shape, dtype=tensor.dtype)
+
+    # emulating a do-while loop
+    do_while_condition = True
+    while do_while_condition:
+        tensor_indices = tuple(a)
+        ret_indices = tuple(a[i] for i in index_scrambling)
+        ret_ndarray[ret_indices] = tensor[tensor_indices]
+        do_while_condition = increase_list_of_index(a, tensor_shape)
+
+    return ret_ndarray
+
+def increase_list_of_index(
+        a: List,
+        shape: List,
+        index: Optional[int] = -1) -> bool:
+    """Circle through a list of indices. """
+    a[index] += 1
+    if a[index] >= shape[index]:
+        if index == -len(shape):
+            return False
+        a[index] = 0
+        return increase_list_of_index(a, shape, index-1)
+    return True
+
+def add_singleton(
+        tensor: ndarray,
+        index: Optional[int] = -1,
+        copy: Optional[bool] = True) -> ndarray:
+    """Add a singleton to a numpy tensor. """
+    if copy:
+        ten = cp.copy(tensor)
+    else:
+        ten = tensor
+    shape_list = list(ten.shape)
+    shape_list.insert(index, 1)
+    ten.shape = tuple(shape_list)
+    return ten
+
+def is_diagonal_matrix(tensor: ndarray):
+    """Check if matrix is diagonal """
+    assert len(tensor.shape) == 2
+    i, j = tensor.shape
+    assert i == j
+    test = tensor.reshape(-1)[:-1].reshape(i-1, j+1)
+    return ~np.any(test[:, 1:])
 
 # -- save and load from file --------------------------------------------------
 

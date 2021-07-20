@@ -20,183 +20,174 @@ M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
 framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 """
 
-from typing import Dict, List, Optional, Text, Union
+
+import os
+import tempfile
+from typing import Callable, Dict, List, Optional, Text, Tuple
 
 import numpy as np
 from numpy import ndarray
 from scipy.linalg import expm
+import tensornetwork as tn
+import h5py
 
-from time_evolving_mpo.backends.backend_factory import \
-    get_process_tensor_backend
 from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype, NpDtypeReal
+from time_evolving_mpo.config import NpDtype
 from time_evolving_mpo.dynamics import Dynamics
-from time_evolving_mpo.file_formats import assert_process_tensor_dict
 from time_evolving_mpo.system import BaseSystem
-from time_evolving_mpo.util import save_object, load_object
+from time_evolving_mpo import util
 
 
-class ProcessTensor(BaseAPIClass):
+class BaseProcessTensor(BaseAPIClass):
     """
-    Represents a specific process tensor.
-
-    If the field `times` is `None` this amounts to no information on
-    the time slots of the process tensor (only "initial step", "first step",
-    etc). If the field `times` is a `float` it signals that the time steps are
-    uniformly spaced. If the field `times` is an `numpy.ndarray` it
-    has to be a vector of the time slots considered in this process tensor in
-    ascending order. In this case the length of `times` must be the length of
-    `tensors` plus 1.
-
-    If the field `initial_tensor` is `None` this amounts to no given initial
-    state. If the field `initial_tensor` is an `numpy.ndarray` it must be a
-    2-legged tensor (i.e. a matrix) where the first leg is the internal leg
-    connecting to the next part of the array of tensors that represent the
-    process tensor. The second leg is vectorised initial state (in fact the
-    first slot in the process tensor).
-
-    The field `tensors` is list of three or four legged tensors. The first and
-    second legs are the internal legs that connect to the previous and next
-    tensor. If `initial_tensor` is `None` the first leg of the first tensor
-    must be a dummy leg of dimension 1. The  second leg of the last tensor must
-    always be a dummy leg of dimension 1. The third leg is the "incoming" leg
-    of the previous time slot, while the fourth leg is the "resulting" leg of
-    the following time slot. If the tensor has only three legs, a
-    Kronecker-delta between the third and fourth leg is assumed.
-
-
-    Parameters
-    ----------
-    times: ndarray / float / None
-        Time slots of process tensor. See description above.
-    tensors: list(ndarray)
-        Process tensor tensors in MPS form. See description above.
-    initial_tensor: ndarray
-        Initial tensor of process tensor in MPS form. See description above.
-    backend: str (default = None)
-        The name of the backend to use foe computations. If
-        `backend` is ``None`` then the default backend is used.
-    backend_config: dict (default = None)
-        The configuration of the backend. If `backend_config` is
-        ``None`` then the default backend configuration is used.
-    name: str
-        An optional name for the process tensor.
-    description: str
-        An optional description of the process tensor.
-    description_dict: dict
-        An optional dictionary with descriptive data.
-
+    ToDo
     """
     def __init__(
             self,
-            times: Union[float, ndarray],
-            tensors: List[ndarray],
-            initial_tensor: Optional[ndarray] = None,
-            backend: Optional[Text] = None,
-            backend_config: Optional[Dict] = None,
+            hilbert_space_dimension: int,
+            dt: Optional[float] = None,
+            transform_in: Optional[ndarray] = None,
+            transform_out: Optional[ndarray] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
-        """Create a ProcessTensor object. """
+        """ToDo. """
+        self._hs_dim = hilbert_space_dimension
+        self._dt = dt
+        self._rho_dim = self._hs_dim**2
+        self._trace = (np.identity(self._hs_dim, dtype=NpDtype) \
+                       / np.sqrt(float(self._hs_dim))).flatten()
+        self._trace_square = self._trace**2
 
-        self._backend_class, self._backend_config = \
-            get_process_tensor_backend(backend, backend_config)
-
-        p_t_dict =  {
-            "version":"1.0",
-            "name":name,
-            "description":description,
-            "description_dict":description_dict,
-            "times":times,
-            "initial_tensor":initial_tensor,
-            "tensors":tensors,
-            }
-        assert_process_tensor_dict(p_t_dict)
-
-        self._times = times
-
-        if isinstance(times, ndarray):
-            self._times_array = times.astype(NpDtypeReal)
-        elif isinstance(times, float):
-            assert times > 0.0
-            self._times_array =  \
-                    times * np.arange(len(tensors)+1).astype(NpDtypeReal)
-        elif times is None:
-            self._times_array = np.arange(len(tensors)+1).astype(NpDtypeReal)
-        # else:
-        #     raise AssertionError("Parameter `times` must be `None` or " \
-        #         + "of type `float` or `ndarray`")
-
-        if len(tensors)>0:
-            dim = int(np.sqrt(tensors[0].shape[2]))
-            trace = np.identity(dim)/float(dim)
-            trace = np.sqrt(trace.reshape(dim**2))
+        if transform_in is not None:
+            __transform_in = np.array(transform_in, dtype=NpDtype)
+            assert len(__transform_in.shape) == 2
+            assert __transform_in.shape[0] == self._rho_dim
+            self._in_dim = __transform_in.shape[1]
+            self._transform_in = __transform_in
+            self._trace_in = self._trace @ self._transform_in
         else:
-            trace = np.array([0])
+            self._in_dim = self._rho_dim
+            self._transform_in = None
+            self._trace_in = self._trace
 
-        self._backend_instance = self._backend_class(
-                tensors=tensors,
-                initial_tensor=initial_tensor,
-                trace=trace,
-                config=self._backend_config)
+        if transform_out is not None:
+            __transform_out = np.array(transform_out, dtype=NpDtype)
+            assert len(__transform_out.shape) == 2
+            assert __transform_out.shape[1] == self._rho_dim
+            self._out_dim = __transform_out.shape[0]
+            self._transform_out = __transform_out
+            self._trace_out = self._transform_out @ self._trace
+        else:
+            self._out_dim = self._rho_dim
+            self._transform_out = None
+            self._trace_out = self._trace
 
         super().__init__(name, description, description_dict)
 
-    def __str__(self) -> Text:
-        ret = []
-        ret.append(super().__str__())
-        ret.append("  length        = {} timesteps \n".format(len(self)))
-        if len(self) > 0:
-            ret.append("  min time      = {} \n".format(
-                np.min(self._times)))
-            ret.append("  max time      = {} \n".format(
-                np.max(self._times)))
-        return "".join(ret)
-
-    def __len__(self) -> int:
-        return len(self._times)
+    @property
+    def hilbert_space_dimension(self):
+        """ToDo. """
+        return self._hs_dim
 
     @property
-    def times(self) -> ndarray:
-        """Times of the dynamics. """
-        return self._times_array.copy()
+    def dt(self):
+        """ToDo. """
+        return self._dt
+
+    @property
+    def transform_in(self):
+        """ToDo. """
+        return self._transform_in
+
+    @property
+    def transform_out(self):
+        """ToDo. """
+        return self._transform_out
+
+    def __len__(self) -> int:
+        """Length of process tensor."""
+        raise NotImplementedError(
+            "Class {} has no __len__() implementation.".format(
+                type(self).__name__))
+
+    def set_initial_tensor(
+            self,
+            initial_tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no set_initial_tensor() implementation.".format(
+                type(self).__name__))
+
+    def get_initial_tensor(self) -> ndarray:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no get_initial_tensor() implementation.".format(
+                type(self).__name__))
+
+    def set_mpo_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no set_mpo_tensor() implementation.".format(
+                type(self).__name__))
+
+    def get_mpo_tensor(
+            self,
+            step: int,
+            transformed: Optional[bool] = True) -> ndarray:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no get_mpo_tensor() implementation.".format(
+                type(self).__name__))
+
+    def set_cap_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no set_cap_tensor() implementation.".format(
+                type(self).__name__))
+
+    def get_cap_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no get_cap_tensor() implementation.".format(
+                type(self).__name__))
+
+    def set_lam_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no set_lam_tensor() implementation.".format(
+                type(self).__name__))
+
+    def get_lam_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        raise NotImplementedError(
+            "Class {} has no get_lam_tensor() implementation.".format(
+                type(self).__name__))
 
     def get_bond_dimensions(self) -> ndarray:
         """Return the bond dimensions of the MPS form of the process tensor."""
-        return self._backend_instance.get_bond_dimensions()
-
-    def export(
-            self,
-            filename: Text,
-            overwrite: bool = False) -> None:
-        """
-        Save process tensor to a file (format ProcessTensorFormat version 1.0).
-
-        Parameters
-        ----------
-        filename: str
-            Path and filename to file that should be created.
-        overwrite: bool (default = False)
-            If set `True` then file is overwritten in case it already exists.
-        """
-        tensors, initial_tensor = self._backend_instance.export_tensors()
-        p_t_dict = {
-            "version": "1.0",
-            "name": self.name,
-            "description": self.description,
-            "description_dict": self.description_dict,
-            "times": self.times,
-            "initial_tensor":initial_tensor,
-            "tensors":tensors,
-            }
-        assert_process_tensor_dict(p_t_dict)
-        save_object(p_t_dict, filename, overwrite)
+        raise NotImplementedError(
+            "Class {} has no get_bond_dimensions() implementation.".format(
+                type(self).__name__))
 
     def compute_dynamics_from_system(
             self,
             system: BaseSystem,
-            initial_state: Optional[ndarray] = None) -> Dynamics:
+            start_time: Optional[float] = 0.0,
+            dt: Optional[float] = None,
+            initial_state: Optional[ndarray] = None,
+            num_steps: Optional[int] = None) -> Dynamics:
         """
+        ToDo.
         Compute the system dynamics for a given system Hamiltonian.
 
         Parameters
@@ -210,53 +201,25 @@ class ProcessTensor(BaseAPIClass):
             The system dynamics for the given system Hamiltonian
             (accounting for the interaction with the environment).
         """
-        assert isinstance(system, BaseSystem), \
-            "Parameter `system` is not of type `tempo.BaseSystem`."
-
-        dimension = system.dimension
-
-        if initial_state is None:
-            initial_state_vector = None
-        else:
-            try:
-                _initial_state = np.array(initial_state, dtype=NpDtype)
-                _initial_state.setflags(write=False)
-            except Exception as e:
-                raise AssertionError("Initial state must be numpy array.") \
-                    from e
-            assert len(_initial_state.shape) == 2, \
-                "Initial state is not a matrix."
-            assert _initial_state.shape[0] == \
-                _initial_state.shape[1], \
-                "Initial state is not a square matrix."
-
-            initial_state_vector = _initial_state.reshape(dimension**2)
-
-        def propagators(step: int):
-            """Create the system propagators (first and second half) for the
-            time step `step`. """
-            dt = self._times_array[step+1] - self._times_array[step]
-            t = self._times_array[step]
-            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0).T
-            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0).T
-            return first_step, second_step
-
-        state_vectors = self._backend_instance.compute_dynamics(
-                            controls=propagators,
-                            initial_state=initial_state_vector)
-
-        states = [v.reshape((dimension,dimension)) for v in state_vectors]
-        times = list(self._times_array)
-
-        dyn = Dynamics(times=times, states=states)
-        return dyn
+        return compute_dynamics_from_system(
+            process_tensor=self,
+            system=system,
+            start_time=start_time,
+            dt=dt,
+            initial_state=initial_state,
+            num_steps=num_steps,
+            record_all=True)
 
     def compute_final_state_from_system(
             self,
             system: BaseSystem,
-            initial_state: Optional[ndarray] = None) -> Dynamics:
+            start_time: Optional[float] = 0.0,
+            dt: Optional[float] = None,
+            initial_state: Optional[ndarray] = None,
+            num_steps: Optional[int] = None) -> ndarray:
         """
-        Compute final state for a given system Hamiltonian.
+        ToDo.
+        Compute the final state for a given system Hamiltonian.
 
         Parameters
         ----------
@@ -266,76 +229,781 @@ class ProcessTensor(BaseAPIClass):
         Returns
         -------
         final_state: ndarray
-            The final system system state for the given system Hamiltonian
+            The final state of the system for the given system Hamiltonian
             (accounting for the interaction with the environment).
         """
+        dynamics = compute_dynamics_from_system(
+            process_tensor=self,
+            system=system,
+            start_time=start_time,
+            dt=dt,
+            initial_state=initial_state,
+            num_steps=num_steps,
+            record_all=False)
+        return dynamics.states[-1]
 
-        assert isinstance(system, BaseSystem), \
-            "Parameter `system` is not of type `tempo.BaseSystem`."
-
-        dimension = system.dimension
-
-        if initial_state is None:
-            initial_state_vector = None
-        else:
-            try:
-                _initial_state = np.array(initial_state, dtype=NpDtype)
-                _initial_state.setflags(write=False)
-            except Exception as e:
-                raise AssertionError("Initial state must be numpy array.") \
-                    from e
-            assert len(_initial_state.shape) == 2, \
-                "Initial state is not a matrix."
-            assert _initial_state.shape[0] == \
-                _initial_state.shape[1], \
-                "Initial state is not a square matrix."
-
-            initial_state_vector = _initial_state.reshape(dimension**2)
-
-        def propagators(step: int):
-            """Create the system propagators (first and second half) for the
-            time step `step`. """
-            dt = self._times_array[step+1] - self._times_array[step]
-            t = self._times_array[step]
-            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0).T
-            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0).T
-            return first_step, second_step
-
-        final_state_vector = self._backend_instance.compute_final_state(
-                            controls=propagators,
-                            initial_state=initial_state_vector)
-
-        final_state = final_state_vector.reshape(dimension, dimension)
-
-        return final_state
-
-
-def import_process_tensor(filename: Text) -> ProcessTensor:
+class TrivialProcessTensor(BaseProcessTensor):
     """
-    Load process tensor from a file (format ProcessTensorFormat version 1.0).
+    ToDo
+    """
+    def __init__(
+            self,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """ToDo. """
+        super().__init__(
+            hilbert_space_dimension=1,
+            name=name,
+            description=description,
+            description_dict=description_dict)
+
+    def __len__(self) -> int:
+        """Length of process tensor. """
+        return 0
+
+    def get_initial_tensor(self) -> ndarray:
+        """ToDo. """
+        return None
+
+    def get_mpo_tensor(
+            self,
+            step: int,
+            transformed: Optional[bool] = True) -> ndarray:
+        """ToDo. """
+        return None
+
+    def get_cap_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        return np.array([1.0], dtype=NpDtype)
+
+    def get_lam_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        return None
+
+    def get_bond_dimensions(self) -> ndarray:
+        """Return the bond dimensions of the MPS form of the process tensor."""
+        return None
+
+class SimpleProcessTensor(BaseProcessTensor):
+    """
+    ToDo
+    """
+    def __init__(
+            self,
+            hilbert_space_dimension: int,
+            dt: Optional[float] = None,
+            transform_in: Optional[ndarray] = None,
+            transform_out: Optional[ndarray] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """ToDo. """
+        self._initial_tensor = None
+        self._mpo_tensors = []
+        self._cap_tensors = []
+        self._lam_tensors = []
+        super().__init__(
+            hilbert_space_dimension,
+            dt,
+            transform_in,
+            transform_out,
+            name,
+            description,
+            description_dict)
+
+    def __len__(self) -> int:
+        """Length of process tensor. """
+        return len(self._mpo_tensors)
+
+    def set_initial_tensor(
+            self,
+            initial_tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        if initial_tensor is None:
+            self._initial_tensor = None
+            self._initial_tensor = np.array(initial_tensor, dtype=NpDtype)
+
+    def get_initial_tensor(self) -> ndarray:
+        """ToDo. """
+        self._initial_tensor
+
+    def set_mpo_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        length = len(self._mpo_tensors)
+        if step >= length:
+            self._mpo_tensors.extend([None] * (step - length + 1))
+        self._mpo_tensors[step] = np.array(tensor, dtype=NpDtype)
+
+    def get_mpo_tensor(
+            self,
+            step: int,
+            transformed: Optional[bool] = True) -> ndarray:
+        """ToDo. """
+        length = len(self._mpo_tensors)
+        if step >= length or step < 0:
+            raise IndexError("Process tensor index out of bound. ")
+        tensor = self._mpo_tensors[step]
+        if len(tensor.shape) == 3:
+            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+        if self._transform_in is not None:
+            tensor = np.dot(np.moveaxis(tensor, -2, -1),
+                            self._transform_in.T)
+            tensor = np.moveaxis(tensor, -1, -2)
+        if self._transform_out is not None:
+            tensor = np.dot(tensor, self._transform_out)
+        return tensor
+
+    def set_cap_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        length = len(self._cap_tensors)
+        if step >= length:
+            self._cap_tensors.extend([None] * (step - length + 1))
+        self._cap_tensors[step] = np.array(tensor, dtype=NpDtype)
+
+    def get_cap_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        length = len(self._cap_tensors)
+        if step >= length or step < 0:
+            return None
+        return self._cap_tensors[step]
+
+    def set_lam_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        length = len(self._lam_tensors)
+        if step >= length:
+            self._lam_tensors.extend([None] * (step - length + 1))
+        self._lam_tensors[step] = np.array(tensor, dtype=NpDtype)
+
+    def get_lam_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        length = len(self._lam_tensors)
+        if step >= length or step < 0:
+            return None
+        return self._lam_tensors[step]
+
+    def get_bond_dimensions(self) -> ndarray:
+        """Return the bond dimensions of the MPS form of the process tensor."""
+        bond_dims = []
+        for mpo in self._mpo_tensors:
+            if mpo is None:
+                bond_dims.append(0)
+            else:
+                bond_dims.append(mpo.shape[0])
+        bond_dims.append(self._mpo_tensors[-1].shape[1])
+        return np.array(bond_dims)
+
+    def compute_caps(self) -> None:
+        """ToDo. """
+        length = len(self)
+
+        caps = [np.array([1.0], dtype=NpDtype)]
+        last_cap = tn.Node(caps[-1])
+
+        for step in reversed(range(length)):
+            trace_square = tn.Node(self._trace_square)
+            trace_in = tn.Node(self._trace_in)
+            trace_out = tn.Node(self._trace_out)
+            ten = tn.Node(self._mpo_tensors[step])
+
+            if len(ten.shape) == 3:
+                ten[1] ^ last_cap[0]
+                ten[2] ^ trace_square[0]
+                new_cap = ten @ last_cap @ trace_square
+            else:
+                ten[1] ^ last_cap[0]
+                ten[2] ^ trace_in[0]
+                ten[3] ^ trace_out[0]
+                new_cap = ten @ last_cap @ trace_in @ trace_out
+            caps.insert(0, new_cap.get_tensor())
+            last_cap = new_cap
+        self._cap_tensors = caps
+
+    def export(self, filename: Text, overwrite: bool = False):
+        """ToDo. """
+        if overwrite:
+            mode = "overwrite"
+        else:
+            mode = "write"
+
+        pt_file = FileProcessTensor(
+            mode=mode,
+            filename=filename,
+            hilbert_space_dimension=self._hs_dim,
+            dt=self._dt,
+            transform_in=self._transform_in,
+            transform_out=self._transform_out,
+            name=self.name,
+            description=self.description,
+            description_dict=self.description_dict)
+
+        pt_file.set_initial_tensor(self._initial_tensor)
+        for step, mpo in enumerate(self._mpo_tensors):
+            pt_file.set_mpo_tensor(step, mpo)
+        for step, cap in enumerate(self._cap_tensors):
+            pt_file.set_cap_tensor(step, cap)
+        for step, lam in enumerate(self._lam_tensors):
+            pt_file.set_lam_tensor(step, lam)
+        pt_file.close()
+
+class FileProcessTensor(BaseProcessTensor):
+    """
+    ToDo
+    """
+    def __init__(
+            self,
+            mode: Text,
+            filename: Optional[Text] = None,
+            hilbert_space_dimension: Optional[int] = None,
+            dt: Optional[float] = None,
+            transform_in: Optional[ndarray] = None,
+            transform_out: Optional[ndarray] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """ToDo. """
+
+        if mode == "read":
+            write = False
+            overwrite = False
+        elif mode == "write":
+            write = True
+            overwrite = False
+        elif mode == "overwrite":
+            write = True
+            overwrite = True
+        else:
+            raise ValueError("Parameter 'mode' must be one of 'read'/"\
+                + "'write'/'overwrite'!")
+
+        self._f = None
+        self._initial_tensor_data = None
+        self._initial_tensor_shape = None
+        self._mpo_tensors_data = None
+        self._mpo_tensors_shape = None
+        self._cap_tensors_data = None
+        self._cap_tensors_shape = None
+        self._lam_tensors_data = None
+        self._lam_tensors_shape = None
+
+        if write:
+            if filename is None:
+                self._removeable = True
+                __filename = tempfile._get_default_tempdir() + "/pt_" \
+                    + next(tempfile._get_candidate_names()) + ".hdf5"
+            else:
+                self._removeable = overwrite
+                __filename = filename
+            assert isinstance(hilbert_space_dimension, int)
+            super().__init__(
+                hilbert_space_dimension,
+                dt,
+                transform_in,
+                transform_out,
+                name,
+                description,
+                description_dict)
+            self._filename = __filename
+            self._create_file(__filename, overwrite)
+        else:
+            assert filename is not None
+            self._filename = filename
+            self._removeable = False
+            dictionary = self._read_file(filename)
+            super().__init__(**dictionary)
+
+    def _create_file(self, filename: Text, overwrite: bool):
+        """ToDo."""
+        if overwrite:
+            self._f = h5py.File(filename, "w")
+        else:
+            self._f = h5py.File(filename, "x")
+        data_type = h5py.vlen_dtype(np.dtype('complex128'))
+        shape_type = h5py.vlen_dtype(np.dtype('i'))
+
+        self._f.create_dataset("hs_dim", (1,), dtype='i', data=[self._hs_dim])
+
+        if self._dt is None:
+            self._f.create_dataset("dt", (1,), dtype='float64', data=[0.0])
+        else:
+            self._f.create_dataset(
+                "dt", (1,), dtype='float64', data=[self._dt])
+
+        if self._transform_in is None:
+            self._f.create_dataset("transform_in",
+                                   (1,),
+                                   dtype='complex128',
+                                   data=[0.0])
+        else:
+            self._f.create_dataset("transform_in",
+                                   self._transform_in.shape,
+                                   dtype='complex128',
+                                   data=self._transform_in)
+
+        if self._transform_out is None:
+            self._f.create_dataset("transform_out",
+                                   (1,),
+                                   dtype='complex128',
+                                   data=[0.0])
+        else:
+            self._f.create_dataset("transform_out",
+                                   self._transform_out.shape,
+                                   dtype='complex128',
+                                   data=self._transform_out)
+
+        self._initial_tensor_data = self._f.create_dataset(
+            "initial_tensor_data", (1,), dtype=data_type)
+        self._initial_tensor_shape = self._f.create_dataset(
+            "initial_tensor_shape", (1,), dtype=shape_type)
+
+        self._mpo_tensors_data = self._f.create_dataset(
+            "mpo_tensors_data", (0,), dtype=data_type, maxshape=(None,))
+        self._mpo_tensors_shape = self._f.create_dataset(
+            "mpo_tensors_shape", (0,), dtype=shape_type, maxshape=(None,))
+
+        self._cap_tensors_data = self._f.create_dataset(
+            "cap_tensors_data", (0,), dtype=data_type, maxshape=(None,))
+        self._cap_tensors_shape = self._f.create_dataset(
+            "cap_tensors_shape", (0,), dtype=shape_type, maxshape=(None,))
+
+        self._lam_tensors_data = self._f.create_dataset(
+            "lam_tensors_data", (0,), dtype=data_type, maxshape=(None,))
+        self._lam_tensors_shape = self._f.create_dataset(
+            "lam_tensors_shape", (0,), dtype=shape_type, maxshape=(None,))
+
+        self.set_initial_tensor(initial_tensor=None)
+
+    def _read_file(self, filename: Text):
+        """ToDo."""
+        self._create = False
+        self._f = h5py.File(filename, "r")
+
+        # hilber space dimension
+        hs_dim = int(self._f["hs_dim"][0])
+
+        # time step dt
+        dt = float(self._f["dt"][0])
+        if dt == 0.0:
+            dt = None
+
+        # transforms
+        transform_in = np.array(self._f["transform_in"])
+        if transform_in == 0.0:
+            transform_in = None
+        transform_out = np.array(self._f["transform_out"])
+        if transform_out == 0.0:
+            transform_out = None
+
+        # initial tensor and mpo/cap/lam tensors
+        self._initial_tensor_data = self._f["initial_tensor_data"]
+        self._initial_tensor_shape = self._f["initial_tensor_shape"]
+        self._mpo_tensors_data = self._f["mpo_tensors_data"]
+        self._mpo_tensors_shape = self._f["mpo_tensors_shape"]
+        self._cap_tensors_data = self._f["cap_tensors_data"]
+        self._cap_tensors_shape = self._f["cap_tensors_shape"]
+        self._lam_tensors_data = self._f["lam_tensors_data"]
+        self._lam_tensors_shape = self._f["lam_tensors_shape"]
+
+        return {
+            "hilbert_space_dimension":hs_dim,
+            "dt":dt,
+            "transform_in":transform_in,
+            "transform_out":transform_out,
+            "name":None,
+            "description":None,
+            "description_dict":None,
+        }
+
+    def __len__(self) -> int:
+        """Length of process tensor."""
+        return self._mpo_tensors_shape.shape[0]
+
+    @property
+    def filename(self):
+        """ToDo. """
+        return self._filename
+
+    def close(self):
+        """ToDo. """
+        if self._f is not None:
+            self._f.close()
+
+    def remove(self):
+        """ToDo. """
+        self.close()
+        if self._removeable:
+            os.remove(self._filename)
+        else:
+            raise FileExistsError("This process tensor file cannot be removed.")
+
+    def set_initial_tensor(
+            self,
+            initial_tensor: Optional[ndarray] = None) -> None:
+        """ToDo. """
+        _set_data_and_shape(step=0,
+                            data=self._initial_tensor_data,
+                            shape=self._initial_tensor_shape,
+                            tensor=initial_tensor)
+
+    def get_initial_tensor(self) -> ndarray:
+        """ToDo. """
+        return _get_data_and_shape(step=0,
+                                   data=self._initial_tensor_data,
+                                   shape=self._initial_tensor_shape)
+
+    def set_mpo_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray]=None) -> None:
+        """ToDo. """
+        if tensor is None:
+            __tensor = np.array([0.0])
+        else:
+            __tensor = tensor
+        _set_data_and_shape(step,
+                            data=self._mpo_tensors_data,
+                            shape=self._mpo_tensors_shape,
+                            tensor=__tensor)
+
+    def get_mpo_tensor(
+            self,
+            step: int,
+            transformed: Optional[bool] = True) -> ndarray:
+        """ToDo. """
+        tensor = _get_data_and_shape(step,
+                                     data=self._mpo_tensors_data,
+                                     shape=self._mpo_tensors_shape)
+        if transformed:
+            if len(tensor.shape) == 3:
+                tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            if self._transform_in is not None:
+                tensor = np.dot(np.moveaxis(tensor, -2, -1),
+                                self._transform_in.T)
+                tensor = np.moveaxis(tensor, -1, -2)
+            if self._transform_out is not None:
+                tensor = np.dot(tensor, self._transform_out)
+        return tensor
+
+    def set_cap_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray]=None) -> None:
+        """ToDo. """
+        _set_data_and_shape(step,
+                            data=self._cap_tensors_data,
+                            shape=self._cap_tensors_shape,
+                            tensor=tensor)
+
+    def get_cap_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        try:
+            tensor = _get_data_and_shape(step,
+                                         data=self._cap_tensors_data,
+                                         shape=self._cap_tensors_shape)
+        except IndexError:
+            tensor = None
+        return tensor
+
+    def set_lam_tensor(
+            self,
+            step: int,
+            tensor: Optional[ndarray]=None) -> None:
+        """ToDo. """
+        _set_data_and_shape(step,
+                            data=self._lam_tensors_data,
+                            shape=self._lam_tensors_shape,
+                            tensor=tensor)
+
+    def get_lam_tensor(self, step: int) -> ndarray:
+        """ToDo. """
+        try:
+            tensor = _get_data_and_shape(step,
+                                         data=self._lam_tensors_data,
+                                         shape=self._lam_tensors_shape)
+        except IndexError:
+            tensor = None
+        return tensor
+
+    def get_bond_dimensions(self) -> ndarray:
+        """Return the bond dimensions of the MPS form of the process tensor."""
+        bond_dims = []
+        for tensor_shape in self._mpo_tensors_shape:
+            bond_dims.append(tensor_shape[0])
+        bond_dims.append(self._mpo_tensors_shape[-1][1])
+        return np.array(bond_dims)
+
+    def compute_caps(self) -> None:
+        """ToDo. """
+        length = len(self)
+
+        cap = np.array([1.0], dtype=NpDtype)
+        self.set_cap_tensor(length, cap)
+        last_cap = tn.Node(cap)
+
+        for step in reversed(range(length)):
+            trace_in = tn.Node(self._trace_in)
+            trace_out = tn.Node(self._trace_out)
+            ten = tn.Node(self.get_mpo_tensor(step))
+            ten[1] ^ last_cap[0]
+            ten[2] ^ trace_in[0]
+            ten[3] ^ trace_out[0]
+            new_cap = ten @ last_cap @ trace_in @ trace_out
+            self.set_cap_tensor(step, new_cap.get_tensor())
+            last_cap = new_cap
+
+def _set_data_and_shape(step, data, shape, tensor):
+    """ToDo."""
+    if tensor is None:
+        tensor = np.array([0.0])
+    if step >= shape.shape[0]:
+        shape.resize((step+1,))
+    if step >= data.shape[0]:
+        data.resize((step+1,))
+
+    shape[step] = tensor.shape
+    tensor = tensor.reshape(-1)
+    data[step] = tensor
+
+def _get_data_and_shape(step, data, shape) -> ndarray:
+    """ToDo."""
+    if step >= shape.shape[0]:
+        raise IndexError("Process tensor index out of bound!")
+    tensor_shape = shape[step]
+    tensor = data[step]
+    tensor = tensor.reshape(tensor_shape)
+    if tensor.shape == (1,) and tensor == 0.0:
+        tensor = None
+    return tensor
+
+def compute_dynamics_from_system(
+        process_tensor: BaseProcessTensor,
+        system: BaseSystem,
+        start_time: Optional[float] = 0.0,
+        dt: Optional[float] = None,
+        initial_state: Optional[ndarray] = None,
+        num_steps: Optional[int] = None,
+        record_all: Optional[bool] = True) -> Dynamics:
+    """
+    Compute the system dynamics for a given system Hamiltonian.
 
     Parameters
     ----------
-    filename: str
-        Path and filename to file that should read in.
+    process_tensor: BaseProcessTensor
+        A process tensor object.
+    system: BaseSystem
+        Object containing the system Hamiltonian information.
 
     Returns
     -------
-    process_tensor: ProcessTensor
-        The process tensor stored in the file `filename`.
+    dynamics: Dynamics
+        The system dynamics for the given system Hamiltonian
+        (accounting for the interaction with the environment).
     """
-    p_t = load_object(filename)
-    assert "version" in p_t, \
-        "Can't import process tensor from file {} ".format(filename) \
-        + "because it doesn't have a 'version' field."
-    assert p_t["version"] == "1.0", \
-        "Can't import process tensor from file {} ".format(filename) \
-        + "as it appears to be an incompatible version."
-    assert_process_tensor_dict(p_t)
+    # -- input parsing --
+    assert isinstance(system, BaseSystem), \
+        "Parameter `system` is not of type `tempo.BaseSystem`."
 
-    return ProcessTensor(times=p_t["times"],
-                         tensors=list(p_t["tensors"]),
-                         initial_tensor=p_t["initial_tensor"],
-                         name=p_t["name"],
-                         description=p_t["description"],
-                         description_dict=p_t["description_dict"])
+    hs_dim = system.dimension
+    assert hs_dim == process_tensor.hilbert_space_dimension
+
+    if dt is None:
+        dt = process_tensor.dt
+        if dt is None:
+            raise ValueError("Process tensor has no timestep, "\
+                + "please specify time step 'dt'.")
+    try:
+        __dt = float(dt)
+    except Exception as e:
+        raise AssertionError("Time step 'dt' must be a float.") from e
+
+    try:
+        __start_time = float(start_time)
+    except Exception as e:
+        raise AssertionError("Start time must be a float.") from e
+
+    if initial_state is not None:
+        assert initial_state.shape == (hs_dim, hs_dim)
+
+    if num_steps is not None:
+        try:
+            __num_steps = int(num_steps)
+        except Exception as e:
+            raise AssertionError("Number of steps must be an integer.") from e
+    else:
+        __num_steps = None
+
+    # -- compute dynamics --
+
+    def propagators(step: int):
+        """Create the system propagators (first and second half) for the
+        time step `step`. """
+        t = __start_time + step * __dt
+        first_step = expm(system.liouvillian(t+__dt/4.0)*__dt/2.0).T
+        second_step = expm(system.liouvillian(t+__dt*3.0/4.0)*__dt/2.0).T
+        return first_step, second_step
+
+    states = _compute_dynamics(process_tensor=process_tensor,
+                               controls=propagators,
+                               initial_state=initial_state,
+                               num_steps=__num_steps,
+                               record_all=record_all)
+    if record_all:
+        times = __start_time + np.arange(len(states))*__dt
+    else:
+        times = [__start_time + len(states)*__dt]
+
+    return Dynamics(times=list(times),states=states)
+
+
+def _compute_dynamics(
+        process_tensor: BaseProcessTensor,
+        controls: Callable[[int], Tuple[ndarray, ndarray]],
+        initial_state: Optional[ndarray] = None,
+        num_steps: Optional[int] = None,
+        record_all: Optional[bool] = True) -> List[ndarray]:
+    """See BaseProcessTensorBackend.compute_dynamics() for docstring. """
+    hs_dim = process_tensor.hilbert_space_dimension
+
+    initial_tensor = process_tensor.get_initial_tensor()
+    assert (initial_state is None) ^ (initial_tensor is None), \
+        "Initial state must be either (exclusively) encoded in the " \
+        + "process tensor or given as an argument."
+    if initial_tensor is None:
+        initial_tensor = util.add_singleton(
+            initial_state.reshape(hs_dim**2), 0)
+
+    current = tn.Node(initial_tensor)
+    current_bond_leg = current[0]
+    current_state_leg = current[1]
+    states = []
+
+    if num_steps is None:
+        __num_steps = len(process_tensor)
+    else:
+        __num_steps = num_steps
+
+    for step in range(__num_steps):
+        if record_all:
+            # -- extract current state --
+            try:
+                cap = process_tensor.get_cap_tensor(step)
+            except Exception as e:
+                raise ValueError("There are either no cap tensors in the "\
+                        +"process tensor or the process tensor is not "\
+                        +"long enough") from e
+            if cap is None:
+                raise ValueError("Process tensor has no cap tensor "\
+                    +f"for step {step}.")
+            cap_node = tn.Node(cap)
+            node_dict, edge_dict = tn.copy([current])
+            edge_dict[current_bond_leg] ^ cap_node[0]
+            state_node = node_dict[current] @ cap_node
+            state = state_node.get_tensor().reshape(hs_dim, hs_dim)
+            states.append(state)
+
+        # -- propagate one time step --
+        try:
+            mpo = process_tensor.get_mpo_tensor(step)
+        except Exception as e:
+            raise ValueError("The process tensor is not long enough") from e
+        if mpo is None:
+            raise ValueError("Process tensor has no mpo tensor "\
+                +f"for step {step}.")
+        mpo_node = tn.Node(mpo)
+        pre, post = controls(step)
+        pre_node = tn.Node(pre)
+        post_node = tn.Node(post)
+
+        lam = process_tensor.get_lam_tensor(step)
+        if lam is None:
+            current_bond_leg ^ mpo_node[0]
+            current_state_leg ^ pre_node[0]
+            pre_node[1] ^ mpo_node[2]
+            mpo_node[3] ^ post_node[0]
+            current_bond_leg = mpo_node[1]
+            current_state_leg = post_node[1]
+            current = current @ pre_node @ mpo_node @ post_node
+        else:
+            lam_node = tn.Node(lam)
+            current_bond_leg ^ mpo_node[0]
+            current_state_leg ^ pre_node[0]
+            pre_node[1] ^ mpo_node[2]
+            mpo_node[1] ^ lam_node[0]
+            mpo_node[3] ^ post_node[0]
+            current_bond_leg = lam_node[1]
+            current_state_leg = post_node[1]
+            current = current @ pre_node @ mpo_node @ lam_node @ post_node
+
+    # -- extract last state --
+    cap = process_tensor.get_cap_tensor(__num_steps)
+    if cap is None:
+        raise ValueError("Process tensor has no cap tensor "\
+            +f"for step {step}.")
+    cap_node = tn.Node(cap)
+    current_bond_leg ^ cap_node[0]
+    final_state_node = current @ cap_node
+    final_state = final_state_node.get_tensor().reshape(hs_dim, hs_dim)
+    states.append(final_state)
+
+    return states
+
+def import_process_tensor(
+        filename: Text,
+        process_tensor_type: Text = None) -> BaseProcessTensor:
+    """
+    ToDo.
+    """
+    pt_file = FileProcessTensor(mode="read", filename=filename)
+
+    if process_tensor_type is None or process_tensor_type == "file":
+        pt = pt_file
+    elif process_tensor_type == "simple":
+        pt = SimpleProcessTensor(
+            hilbert_space_dimension=pt_file.hilbert_space_dimension,
+            dt=pt_file.dt,
+            transform_in=pt_file.transform_in,
+            transform_out=pt_file.transform_out,
+            name=pt_file.name,
+            description=pt_file.description,
+            description_dict=pt_file.description_dict)
+        pt.set_initial_tensor(pt_file.get_initial_tensor())
+
+        step = 0
+        while True:
+            try:
+                mpo = pt_file.get_mpo_tensor(step, transformed=False)
+            except IndexError:
+                break
+            pt.set_mpo_tensor(step, mpo)
+            step += 1
+
+        step = 0
+        while True:
+            cap = pt_file.get_cap_tensor(step)
+            if cap is None:
+                break
+            pt.set_cap_tensor(step, cap)
+            step += 1
+
+        step = 0
+        while True:
+            lam = pt_file.get_lam_tensor(step)
+            if lam is None:
+                break
+            pt.set_lam_tensor(step, lam)
+            step += 1
+
+    else:
+        raise ValueError("Parameter 'process_tensor_type' must be "\
+            + "'file' or 'simple'!")
+
+    return pt
