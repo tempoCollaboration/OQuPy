@@ -15,6 +15,7 @@ Members of the TEMPO collaboration
   - `Peter Kirton <https://github.com/peterkirton>`_ (*University of Strathclyde*) <peter.kirton@strath.ac.uk>
   - `Thibaut Lacroix <https://github.com/tfmlaX>`_ (*University of St Andrews*) <tfml1@st-andrews.ac.uk>
   - Brendon W. Lovett (*University of St Andrews*) <bwl4@st-andrews.ac.uk>
+  - [Piper Fowler-Wright](https://github.com/piperfw) (*University of St Andrews*) <pfw1@st-andrews.ac.uk>
 
 
 Project administrators
