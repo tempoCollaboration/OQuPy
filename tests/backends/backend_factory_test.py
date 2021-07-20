@@ -21,10 +21,9 @@ import tensornetwork as tn
 
 import time_evolving_mpo as tempo
 from time_evolving_mpo.backends.backend_factory import \
-    get_tempo_backend, get_pt_tempo_backend, get_process_tensor_backend
+    get_tempo_backend, get_pt_tempo_backend
 pass
 
 def test_backend_factory_default():
     tempo_back = get_tempo_backend()
     pt_tempo_back = get_pt_tempo_backend()
-    process_tensor_back = get_process_tensor_backend()
