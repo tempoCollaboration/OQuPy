@@ -25,7 +25,7 @@ from time_evolving_mpo.backends.base_backends import BasePtTempoBackend
 from time_evolving_mpo.backends.tensor_network.util import create_delta
 from time_evolving_mpo.backends.tensor_network.util import add_singleton
 from time_evolving_mpo.config import NpDtype
-import time_evolving_mpo.util as util
+from time_evolving_mpo import util
 
 
 class TensorNetworkPtTempoBackend(BasePtTempoBackend):
