@@ -21,10 +21,10 @@ from numpy import float64, complex128
 NpDtype = complex128
 NpDtypeReal = float64
 
-# Seperator string for __str__ functions
+# Separator string for __str__ functions
 SEPERATOR = "----------------------------------------------\n"
 
-# relative precission for np.integrate.quad()
+# relative precision for np.integrate.quad()
 INTEGRATE_EPSREL = 2**(-26)
 
 # maximal number of subdivision for adaptive np.integrate.quad()

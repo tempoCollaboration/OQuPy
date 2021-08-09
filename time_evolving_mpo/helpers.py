@@ -34,7 +34,7 @@ def plot_correlations_with_parameters(
     Parameters
     ----------
     correlations: BaseCorrelations
-        The correlation obeject we are interested in.
+        The correlation object we are interested in.
     parameters: TempoParameters
         The tempo parameters that determine the grid.
     """

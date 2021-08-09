@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Custom TEMPO Warings and Errors.
+Custom TEMPO Warnings and Errors.
 """
 
 class NumericsError(Exception):
