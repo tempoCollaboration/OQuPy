@@ -71,7 +71,7 @@ class PtTempoParameters(TempoParameters):
         Number of time steps :math:`K\in\mathbb{N}` that should be included in
         the non-Markovian memory. - It must be large
         enough such that :math:`\delta t \times K` is larger than the
-        neccessary memory time :math:`\tau_\mathrm{cut}`.
+        necessary memory time :math:`\tau_\mathrm{cut}`.
     epsrel: float
         The maximal relative error in the singular value truncation (done
         in the underlying tensor network algorithm). - It must be small enough
@@ -88,7 +88,7 @@ class PtTempo(BaseAPIClass):
     Parameters
     ----------
     bath: Bath
-        The Bath (includes the coupling operator to the sytem).
+        The Bath (includes the coupling operator to the system).
     parameters: PtTempoParameters
         The parameters for the PT-TEMPO computation.
     start_time: float
@@ -235,7 +235,7 @@ class PtTempo(BaseAPIClass):
 
     def compute(self, progress_type: Optional[Text] = None) -> None:
         """
-        Propagate (or continue to propagete) the TEMPO tensor network to
+        Propagate (or continue to propagate) the TEMPO tensor network to
         time `end_time`.
 
         Parameters
@@ -333,7 +333,7 @@ def pt_tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[PtTempoParameters] = None,
-        tollerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
+        tolerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
         backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
@@ -347,15 +347,15 @@ def pt_tempo_compute(
     Parameters
     ----------
     bath: Bath
-        The Bath (includes the coupling operator to the sytem).
+        The Bath (includes the coupling operator to the system).
     start_time: float
         The start time.
     end_time: float
         The time to which the PT-TEMPO should be computed.
     parameters: PtTempoParameters
         The parameters for the PT-TEMPO computation.
-    tollerance: float
-        Tollerance for the parameter estimation (only applicable if
+    tolerance: float
+        Tolerance for the parameter estimation (only applicable if
         `parameters` is None).
     backend: str (default = None)
         The name of the backend to use for the computation. If `backend` is
@@ -375,13 +375,13 @@ def pt_tempo_compute(
         An optional dictionary with descriptive data.
     """
     if parameters is None:
-        assert tollerance is not None, \
-            "If 'parameters' is 'None' then 'tollerance' must be " \
+        assert tolerance is not None, \
+            "If 'parameters' is 'None' then 'tolerance' must be " \
             + "a positive float."
         parameters = guess_pt_tempo_parameters(bath=bath,
                                                start_time=start_time,
                                                end_time=end_time,
-                                               tollerance=tollerance)
+                                               tolerance=tolerance)
     ptt = PtTempo(bath,
                   start_time,
                   end_time,
@@ -398,7 +398,7 @@ def guess_pt_tempo_parameters(
         bath: Bath,
         start_time: float,
         end_time: float,
-        tollerance: Optional[float] = PT_DEFAULT_TOLLERANCE
+        tolerance: Optional[float] = PT_DEFAULT_TOLLERANCE
         ) -> PtTempoParameters:
     """
     Function to roughly estimate appropriate parameters for a PT-TEMPO
@@ -406,8 +406,8 @@ def guess_pt_tempo_parameters(
 
     .. warning::
 
-        No guarantie that resulting PT-TEMPO calculation converges towards the
-        correct dynamics! Please refere to the TEMPO documentation and check
+        No guarantee that resulting PT-TEMPO calculation converges towards the
+        correct dynamics! Please refer to the TEMPO documentation and check
         convergence by varying the parameters for PT-TEMPO manually.
 
     Parameters
@@ -418,23 +418,23 @@ def guess_pt_tempo_parameters(
         The start time.
     end_time: float
         The time to which the TEMPO should be computed.
-    tollerance: float
-        Tollerance for the parameter estimation.
+    tolerance: float
+        Tolerance for the parameter estimation.
 
     Returns
     -------
     pt_tempo_parameters : TempoParameters
-        Estimate of appropropriate tempo parameters.
+        Estimate of appropriate tempo parameters.
     """
     param = guess_tempo_parameters(
                 bath=bath,
                 start_time=start_time,
                 end_time=end_time,
-                tollerance=tollerance)
+                tolerance=tolerance)
     return PtTempoParameters(
         dt=param.dt,
         dkmax=param.dkmax,
         epsrel=param.epsrel,
         name="Roughly estimated parameters",
         description="Estimated with 'guess_pt_tempo_parameters()'",
-        description_dict={"tollerance":tollerance})
+        description_dict={"tolerance":tolerance})

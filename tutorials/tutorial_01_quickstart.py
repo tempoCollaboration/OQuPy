@@ -155,7 +155,7 @@ dynamics_A_1 = tempo.tempo_compute(system=system_A,
                                    initial_state=tempo.operators.spin_dm("up"),
                                    start_time=0.0,
                                    end_time=5.0,
-                                   tollerance=0.01)
+                                   tolerance=0.01)
 
 
 # and plot the result:
@@ -177,7 +177,7 @@ plt.legend()
 # ```
 # WARNING: Estimating parameters for TEMPO calculation. No guarantie that resulting TEMPO calculation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 # ```
-# We got this message because we didn't tell the package what parameters to use for the TEMPO computation, but instead only specified a `tollerance`. The package tries it's best by implicitly calling the function `tempo.guess_tempo_parameters()` to find parameters that are appropriate for the spectral density and system objects given.
+# We got this message because we didn't tell the package what parameters to use for the TEMPO computation, but instead only specified a `tolerance`. The package tries it's best by implicitly calling the function `tempo.guess_tempo_parameters()` to find parameters that are appropriate for the spectral density and system objects given.
 
 # #### TEMPO Parameters
 
@@ -198,7 +198,7 @@ parameters = tempo.guess_tempo_parameters(system=system_A,
                                           bath=bath_A,
                                           start_time=0.0,
                                           end_time=5.0,
-                                          tollerance=0.01)
+                                          tolerance=0.01)
 print(parameters)
 
 
