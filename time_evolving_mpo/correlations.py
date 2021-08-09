@@ -53,7 +53,7 @@ class BaseCorrelations(BaseAPIClass):
         tau : ndarray
             Time difference :math:`\tau`
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -106,7 +106,7 @@ class BaseCorrelations(BaseAPIClass):
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -224,7 +224,7 @@ class CustomCorrelations(BaseCorrelations):
         tau : ndarray
             Time difference :math:`\tau`
         epsrel : float
-            Relative error tollerance (has no effect here).
+            Relative error tolerance (has no effect here).
         subdiv_limit : int
             Maximal number of interval subdivisions for numerical integration
             (has no effect here).
@@ -278,7 +278,7 @@ class CustomCorrelations(BaseCorrelations):
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -660,9 +660,9 @@ class CustomSD(BaseCorrelations):
         tau : ndarray
             Time difference :math:`\tau`
         epsrel : float (default = 1.49e-08)
-            Relative error tollerance.
+            Relative error tolerance.
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
@@ -745,7 +745,7 @@ class CustomSD(BaseCorrelations):
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
         epsrel : float
-            Relative error tollerance.
+            Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 

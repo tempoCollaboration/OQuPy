@@ -247,7 +247,7 @@ to :math:`t=5\,\Omega^{-1}`
                                        initial_state=tempo.operators.spin_dm("up"),
                                        start_time=0.0,
                                        end_time=5.0,
-                                       tollerance=0.01)
+                                       tolerance=0.01)
 
 
 .. parsed-literal::
@@ -296,7 +296,7 @@ Let’s have a look at the above warning. It said:
 
 We got this message because we didn’t tell the package what parameters
 to use for the TEMPO computation, but instead only specified a
-``tollerance``. The package tries it’s best by implicitly calling the
+``tolerance``. The package tries it’s best by implicitly calling the
 function ``tempo.guess_tempo_parameters()`` to find parameters that are
 appropriate for the spectral density and system objects given.
 
@@ -330,7 +330,7 @@ whether it satisfies the above requirements:
                                               bath=bath_A,
                                               start_time=0.0,
                                               end_time=5.0,
-                                              tollerance=0.01)
+                                              tolerance=0.01)
     print(parameters)
 
 

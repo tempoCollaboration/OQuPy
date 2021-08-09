@@ -128,21 +128,21 @@ def test_guess_tempo_parameters():
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=10.0,
                                              end_time=0.0)
-    with pytest.raises(AssertionError): # bad tollerance
+    with pytest.raises(AssertionError): # bad tolerance
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=0.0,
                                              end_time=15.0,
-                                             tollerance="bla")
-    with pytest.raises(AssertionError): # bad tollerance (negative)
+                                             tolerance="bla")
+    with pytest.raises(AssertionError): # bad tolerance (negative)
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=0.0,
                                              end_time=15.0,
-                                             tollerance=-0.2)
+                                             tolerance=-0.2)
     with pytest.warns(UserWarning): # reach MAX_DKMAX
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=0.0,
                                              end_time=15.0,
-                                             tollerance=1.0e-12)
+                                             tolerance=1.0e-12)
 
 def test_tempo_compute():
     start_time = -0.3
