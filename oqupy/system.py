@@ -24,8 +24,8 @@ from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype
-from oqupy.util import acommutator, commutator
-from oqupy.util import left_right_super
+from oqupy.operators import acommutator, commutator
+from oqupy.operators import left_right_super
 
 
 def _check_hamiltonian(hamiltonian):

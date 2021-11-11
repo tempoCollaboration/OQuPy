@@ -59,3 +59,44 @@ def test_operators_create_destroy():
         a = operators.destroy(n)
         result = adag@a
         np.testing.assert_almost_equal(result,np.diag(range(n)))
+
+# -- testing super operators --------------------------------------------------
+
+N = 3
+
+a = np.random.rand(N,N) + 1j * np.random.rand(N,N)
+b = np.random.rand(N,N) + 1j * np.random.rand(N,N)
+x = np.random.rand(N,N) + 1j * np.random.rand(N,N)
+
+a_dagger = a.conjugate().T
+b_dagger = a.conjugate().T
+x_dagger = a.conjugate().T
+
+x_vector = x.flatten()
+x_dagger_vector = x_dagger.flatten()
+
+
+def test_commutator():
+    sol = a@x - x@a
+    res = operators.commutator(a)@x_vector
+    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+
+def test_acommutator():
+    sol = a@x + x@a
+    res = operators.acommutator(a)@x_vector
+    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+
+def test_left_super():
+    sol = a@x
+    res = operators.left_super(a)@x_vector
+    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+
+def test_right_super():
+    sol = x@a
+    res = operators.right_super(a)@x_vector
+    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+
+def test_left_right_super():
+    sol = a@x@b
+    res = operators.left_right_super(a,b)@x_vector
+    np.testing.assert_almost_equal(res.reshape(N,N),sol)

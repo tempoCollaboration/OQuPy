@@ -36,7 +36,7 @@ from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
 from oqupy.dynamics import Dynamics
 from oqupy.system import BaseSystem
-from oqupy.util import commutator, acommutator
+from oqupy.operators import commutator, acommutator
 from oqupy.util import get_progress
 
 

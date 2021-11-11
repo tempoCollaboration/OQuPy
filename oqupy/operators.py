@@ -18,8 +18,10 @@ Shorthand for commonly used operators.
 from typing import Text
 
 import numpy as np
+from numpy import ndarray
 
 from oqupy.config import NpDtype
+
 
 SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],
@@ -39,7 +41,7 @@ SPIN_DM = {"up":[[1, 0], [0, 0]],
            "mixed":[[0.5, 0.0], [0.0, 0.5]]}
 
 
-def identity(n: int):
+def identity(n: int) -> ndarray:
     """
     Identity matrix of dimension `n` x `n`.
 
@@ -56,7 +58,7 @@ def identity(n: int):
     return np.identity(n, dtype=NpDtype)
 
 
-def sigma(name: Text):
+def sigma(name: Text) -> ndarray:
     """
     Spin matrix sigma of type `name`.
 
@@ -72,7 +74,7 @@ def sigma(name: Text):
     return np.array(SIGMA[name], dtype=NpDtype)
 
 
-def spin_dm(name: Text):
+def spin_dm(name: Text) -> ndarray:
     """
     Spin 1/2 state of type `name`.
 
@@ -89,7 +91,7 @@ def spin_dm(name: Text):
     return np.array(SPIN_DM[name], dtype=NpDtype)
 
 
-def create(n: int):
+def create(n: int) -> ndarray:
     """
     Bosonic creation operator of dimension `n` x `n`.
 
@@ -106,7 +108,7 @@ def create(n: int):
     return destroy(n).T
 
 
-def destroy(n: int):
+def destroy(n: int) -> ndarray:
     """
     Bosonic annihilation operator of dimension `n` x `n`.
 
@@ -121,3 +123,34 @@ def destroy(n: int):
         Annihilation operator matrix of dimension `n` x `n`.
     """
     return np.diag(np.sqrt(range(1, n), dtype=NpDtype), 1)
+
+
+# -- superoperators ----------------------------------------------------------
+
+def commutator(operator: ndarray) -> ndarray:
+    """Construct commutator superoperator from operator. """
+    dim = operator.shape[0]
+    return np.kron(operator, np.identity(dim)) \
+            - np.kron(np.identity(dim), operator.T)
+
+def acommutator(operator: ndarray) -> ndarray:
+    """Construct anti-commutator superoperator from operator. """
+    dim = operator.shape[0]
+    return np.kron(operator, np.identity(dim)) \
+            + np.kron(np.identity(dim), operator.T)
+
+def left_super(operator: ndarray) -> ndarray:
+    """Construct left acting superoperator from operator. """
+    dim = operator.shape[0]
+    return np.kron(operator, np.identity(dim))
+
+def right_super(operator: ndarray) -> ndarray:
+    """Construct right acting superoperator from operator. """
+    dim = operator.shape[0]
+    return np.kron(np.identity(dim), operator.T)
+
+def left_right_super(
+        left_operator: ndarray,
+        right_operator: ndarray) -> ndarray:
+    """Construct left and right acting superoperator from operators. """
+    return np.kron(left_operator, right_operator.T)

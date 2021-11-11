@@ -20,50 +20,6 @@ import pytest
 import numpy as np
 
 from oqupy.util import BaseProgress, ProgressBar
-from oqupy.util import commutator, acommutator
-from oqupy.util import left_super, right_super, left_right_super
-
-
-# -- testing super operators --------------------------------------------------
-
-N = 3
-
-a = np.random.rand(N,N) + 1j * np.random.rand(N,N)
-b = np.random.rand(N,N) + 1j * np.random.rand(N,N)
-x = np.random.rand(N,N) + 1j * np.random.rand(N,N)
-
-a_dagger = a.conjugate().T
-b_dagger = a.conjugate().T
-x_dagger = a.conjugate().T
-
-x_vector = x.flatten()
-x_dagger_vector = x_dagger.flatten()
-
-
-def test_commutator():
-    sol = a@x - x@a
-    res = commutator(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
-
-def test_acommutator():
-    sol = a@x + x@a
-    res = acommutator(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
-
-def test_left_super():
-    sol = a@x
-    res = left_super(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
-
-def test_right_super():
-    sol = x@a
-    res = right_super(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
-
-def test_left_right_super():
-    sol = a@x@b
-    res = left_right_super(a,b)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
 
 
 def test_base_progress():

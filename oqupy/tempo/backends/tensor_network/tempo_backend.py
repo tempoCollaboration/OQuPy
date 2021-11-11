@@ -23,7 +23,7 @@ from numpy import ndarray, moveaxis, dot
 from oqupy.tempo.backends.tensor_network import node_array as na
 from oqupy.tempo.backends.base_backends import BaseTempoBackend
 from oqupy.util import create_delta
-from oqupy import util
+from oqupy import operators
 
 
 class TensorNetworkTempoBackend(BaseTempoBackend):
@@ -59,10 +59,10 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
         """See BaseBackend.initialize() for docstring."""
         self._initial_state = copy(self._initial_state).reshape(-1)
 
-        self._super_u = util.left_right_super(
-                            self._unitary_transform,
-                            self._unitary_transform.conjugate().T)
-        self._super_u_dagg = util.left_right_super(
+        self._super_u = operators.left_right_super(
+                                self._unitary_transform,
+                                self._unitary_transform.conjugate().T)
+        self._super_u_dagg = operators.left_right_super(
                                 self._unitary_transform.conjugate().T,
                                 self._unitary_transform)
 

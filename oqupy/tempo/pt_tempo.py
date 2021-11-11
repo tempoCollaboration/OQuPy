@@ -54,8 +54,8 @@ from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
 from oqupy.tempo.tempo import TempoParameters
 from oqupy.tempo.tempo import guess_tempo_parameters
-from oqupy.util import commutator, acommutator
-from oqupy.util import left_right_super
+from oqupy.operators import commutator, acommutator
+from oqupy.operators import left_right_super
 from oqupy.util import get_progress
 
 

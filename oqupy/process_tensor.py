@@ -37,7 +37,6 @@ from oqupy.dynamics import Dynamics
 from oqupy.system import BaseSystem
 from oqupy import util
 
-
 class BaseProcessTensor(BaseAPIClass):
     """
     ToDo

@@ -17,7 +17,7 @@ Module for utilities.
 
 import sys
 import copy as cp
-from typing import Any, List, Optional, Text
+from typing import List, Optional, Text
 from threading import Timer
 from time import time
 from datetime import timedelta
@@ -26,37 +26,6 @@ import numpy as np
 from numpy import ndarray
 
 from oqupy.config import PROGRESS_TYPE
-
-
-# -- superoperators ----------------------------------------------------------
-
-def commutator(operator: ndarray) -> ndarray:
-    """Construct commutator superoperator from operator. """
-    dim = operator.shape[0]
-    return np.kron(operator, np.identity(dim)) \
-            - np.kron(np.identity(dim), operator.T)
-
-def acommutator(operator: ndarray) -> ndarray:
-    """Construct anti-commutator superoperator from operator. """
-    dim = operator.shape[0]
-    return np.kron(operator, np.identity(dim)) \
-            + np.kron(np.identity(dim), operator.T)
-
-def left_super(operator: ndarray) -> ndarray:
-    """Construct left acting superoperator from operator. """
-    dim = operator.shape[0]
-    return np.kron(operator, np.identity(dim))
-
-def right_super(operator: ndarray) -> ndarray:
-    """Construct right acting superoperator from operator. """
-    dim = operator.shape[0]
-    return np.kron(np.identity(dim), operator.T)
-
-def left_right_super(
-        left_operator: ndarray,
-        right_operator: ndarray) -> ndarray:
-    """Construct left and right acting superoperator from operators. """
-    return np.kron(left_operator, right_operator.T)
 
 # -- numpy utils --------------------------------------------------------------
 
