@@ -18,19 +18,20 @@ Tests for the time_evovling_mpo.backends.tensor_network modules.
 import pytest
 import numpy as np
 
-import oqupy as tempo
+import oqupy
+from oqupy import process_tensor
 
 # -----------------------------------------------------------------------------
 # -- Test E: Superohmic independent spin boson model --------------------------
 
 # Initial state:
-initial_state_E = tempo.operators.spin_dm("y+")
+initial_state_E = oqupy.operators.spin_dm("y+")
 
 # System operator
-h_sys_E = 0.0 * tempo.operators.sigma("x")
+h_sys_E = 0.0 * oqupy.operators.sigma("x")
 
 # Ohmic spectral density with exponential cutoff
-coupling_operator_E = 0.5 * tempo.operators.sigma("z")
+coupling_operator_E = 0.5 * oqupy.operators.sigma("z")
 alpha_E = 0.3
 cutoff_E = 5.0
 temperature_E = 0.0
@@ -44,33 +45,33 @@ def exact_result(t):
     x = (t*cutoff_E)**2
     phi = 2 * alpha_E * (1 + (x-1)/(x+1)**2)
     y_plus = np.exp(-phi)
-    dm = (1 - y_plus) * tempo.operators.spin_dm("mixed") \
-         + y_plus * tempo.operators.spin_dm("y+")
+    dm = (1 - y_plus) * oqupy.operators.spin_dm("mixed") \
+         + y_plus * oqupy.operators.spin_dm("y+")
     return dm
 
 rho_E = exact_result(t_end_E)
 
-correlations_E = tempo.PowerLawSD(alpha=alpha_E,
+correlations_E = oqupy.PowerLawSD(alpha=alpha_E,
                                   zeta=3.0,
                                   cutoff=cutoff_E,
                                   cutoff_type="exponential",
                                   temperature=temperature_E,
                                   name="superohmic",
                         )
-bath_E = tempo.Bath(coupling_operator_E,
+bath_E = oqupy.Bath(coupling_operator_E,
                     correlations_E,
                     name="superohmic phonon bath")
-system_E = tempo.System(h_sys_E)
+system_E = oqupy.System(h_sys_E)
 
 # -----------------------------------------------------------------------------
 
 @pytest.mark.parametrize('backend,backend_config',
                         [("tensor-network", {"backend":"numpy"}),])
 def test_tensor_network_tempo_backend_E(backend, backend_config):
-    tempo_params_E = tempo.TempoParameters(dt=0.4,
+    tempo_params_E = oqupy.TempoParameters(dt=0.4,
                                            dkmax=5,
                                            epsrel=1.0e-6)
-    tempo_E = tempo.Tempo(system_E,
+    tempo_E = oqupy.Tempo(system_E,
                           bath_E,
                           tempo_params_E,
                           initial_state_E,
@@ -84,22 +85,26 @@ def test_tensor_network_tempo_backend_E(backend, backend_config):
 @pytest.mark.parametrize('backend,backend_config',
                         [("tensor-network", {"backend":"numpy"}),])
 def test_tensor_network_pt_tempo_backend_E(backend,backend_config):
-    tempo_params_E = tempo.PtTempoParameters(dt=0.4,
+    tempo_params_E = oqupy.PtTempoParameters(dt=0.4,
                                              dkmax=5,
                                              epsrel=1.0e-6)
-    pt = tempo.pt_tempo_compute(
+    pt = oqupy.pt_tempo_compute(
                 bath_E,
                 start_time=t_start_E,
                 end_time=t_end_E,
                 parameters=tempo_params_E,
                 backend=backend,
                 backend_config=backend_config)
-    state = pt.compute_final_state_from_system(system=system_E,
-                                               initial_state=initial_state_E)
+    state = oqupy.compute_final_state(
+        system=system_E,
+        process_tensor=pt,
+        initial_state=initial_state_E)
     np.testing.assert_almost_equal(state, rho_E, decimal=4)
 
-    dyn = pt.compute_dynamics_from_system(system=system_E,
-                                          initial_state=initial_state_E)
+    dyn = oqupy.compute_dynamics(
+        system=system_E,
+        process_tensor=pt,
+        initial_state=initial_state_E)
     np.testing.assert_almost_equal(dyn.states[-1], rho_E, decimal=4)
 
 # -----------------------------------------------------------------------------

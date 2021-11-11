@@ -18,7 +18,9 @@ Tests for the time_evovling_mpo.backends.tensor_network modules.
 import pytest
 import numpy as np
 
-import oqupy as tempo
+import oqupy
+from oqupy import process_tensor
+
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------
@@ -46,19 +48,19 @@ t_end_A = 1.0
 rho_A = np.array([[ 0.7809559 +0.j        , -0.09456333+0.16671419j],
                   [-0.09456333-0.16671419j,  0.2190441 +0.j        ]])
 
-correlations_A = tempo.PowerLawSD(alpha=alpha_A,
+correlations_A = oqupy.PowerLawSD(alpha=alpha_A,
                                   zeta=1.0,
                                   cutoff=cutoff_A,
                                   cutoff_type="exponential",
                                   temperature=temperature_A,
                                   name="ohmic")
-bath_A = tempo.Bath(coupling_operator_A,
+bath_A = oqupy.Bath(coupling_operator_A,
                     correlations_A,
                     name="phonon bath")
-system_A = tempo.System(h_sys_A,
+system_A = oqupy.System(h_sys_A,
                         gammas=[gamma_A_1, gamma_A_2],
-                        lindblad_operators=[tempo.operators.sigma("-"),
-                                            tempo.operators.sigma("z")])
+                        lindblad_operators=[oqupy.operators.sigma("-"),
+                                            oqupy.operators.sigma("z")])
 
 # -----------------------------------------------------------------------------
 
@@ -66,10 +68,10 @@ system_A = tempo.System(h_sys_A,
                         [("tensor-network", {"backend":"numpy"}),
                          ("tensor-network", None)])
 def test_tensor_network_tempo_backend_A(backend, backend_config):
-    tempo_params_A = tempo.TempoParameters(dt=0.05,
+    tempo_params_A = oqupy.TempoParameters(dt=0.05,
                                            dkmax=None,
                                            epsrel=10**(-7))
-    tempo_A = tempo.Tempo(system_A,
+    tempo_A = oqupy.Tempo(system_A,
                           bath_A,
                           tempo_params_A,
                           initial_state_A,
@@ -84,22 +86,26 @@ def test_tensor_network_tempo_backend_A(backend, backend_config):
                         [("tensor-network", {"backend":"numpy"}),
                          ("tensor-network", None)])
 def test_tensor_network_pt_tempo_backend_A(backend,backend_config):
-    tempo_params_A = tempo.PtTempoParameters(dt=0.05,
+    tempo_params_A = oqupy.PtTempoParameters(dt=0.05,
                                              dkmax=None,
                                              epsrel=10**(-7))
-    pt = tempo.pt_tempo_compute(
+    pt = oqupy.pt_tempo_compute(
                 bath_A,
                 start_time=0.0,
                 end_time=1.0,
                 parameters=tempo_params_A,
                 backend=backend,
                 backend_config=backend_config)
-    state = pt.compute_final_state_from_system(system=system_A,
-                                               initial_state=initial_state_A)
+    state = oqupy.compute_final_state(
+        system=system_A,
+        process_tensor=pt,
+        initial_state=initial_state_A)
     np.testing.assert_almost_equal(state, rho_A, decimal=4)
 
-    dyn = pt.compute_dynamics_from_system(system=system_A,
-                                          initial_state=initial_state_A)
+    dyn = oqupy.compute_dynamics(
+        system=system_A,
+        process_tensor=pt,
+        initial_state=initial_state_A)
     np.testing.assert_almost_equal(dyn.states[-1], rho_A, decimal=4)
 
 # -----------------------------------------------------------------------------

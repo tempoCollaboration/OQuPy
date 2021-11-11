@@ -50,12 +50,6 @@ def test_process_tensor():
     pt = tempo.import_process_tensor(TEMP_FILE, process_tensor_type="simple")
     str(pt)
     pt.get_bond_dimensions()
-    pt.compute_final_state_from_system(system, initial_state=initial_state)
-    pt.compute_dynamics_from_system(system, initial_state=initial_state)
     with pytest.raises(OSError):
         pt.export(TEMP_FILE)
 
-    with pytest.raises(AssertionError):
-        pt.compute_final_state_from_system(system)
-    with pytest.raises(AssertionError):
-        pt.compute_dynamics_from_system(system)

@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.backends.tensor_network modules.
 import pytest
 import numpy as np
 
-import oqupy as tempo
+import oqupy
 
 # -----------------------------------------------------------------------------
 # -- Test B: non-diagonal coupling --------------------------------------------
@@ -29,31 +29,31 @@ def test_tensor_network_tempo_backend_non_diag(backend):
     omega_cutoff = 5.0
     alpha = 0.3
 
-    sx=tempo.operators.sigma("x")
-    sy=tempo.operators.sigma("y")
-    sz=tempo.operators.sigma("z")
+    sx=oqupy.operators.sigma("x")
+    sy=oqupy.operators.sigma("y")
+    sz=oqupy.operators.sigma("z")
 
     bases = [{"sys_op":sx, "coupling_op":sz, \
-                "init_state":tempo.operators.spin_dm("y+")},
+                "init_state":oqupy.operators.spin_dm("y+")},
              {"sys_op":sy, "coupling_op":sx, \
-                "init_state":tempo.operators.spin_dm("z+")},
+                "init_state":oqupy.operators.spin_dm("z+")},
              {"sys_op":sz, "coupling_op":sy, \
-                "init_state":tempo.operators.spin_dm("x+")}]
+                "init_state":oqupy.operators.spin_dm("x+")}]
 
     results = []
     for i, base in enumerate(bases):
-        system = tempo.System(0.5*base["sys_op"])
-        correlations = tempo.PowerLawSD(alpha=alpha,
+        system = oqupy.System(0.5*base["sys_op"])
+        correlations = oqupy.PowerLawSD(alpha=alpha,
                                         zeta=1,
                                         cutoff=omega_cutoff,
                                         cutoff_type='exponential',
                                         max_correlation_time=8.0)
-        bath = tempo.Bath(0.5*base["coupling_op"], correlations)
-        tempo_parameters = tempo.TempoParameters(dt=0.1,
+        bath = oqupy.Bath(0.5*base["coupling_op"], correlations)
+        tempo_parameters = oqupy.TempoParameters(dt=0.1,
                                                  dkmax=30,
                                                  epsrel=10**(-5))
 
-        dynamics = tempo.tempo_compute(system=system,
+        dynamics = oqupy.tempo_compute(system=system,
                                        bath=bath,
                                        initial_state=base["init_state"],
                                        start_time=0.0,
@@ -61,11 +61,11 @@ def test_tensor_network_tempo_backend_non_diag(backend):
                                        parameters=tempo_parameters,
                                        backend=backend)
 
-        _, s_x = dynamics.expectations(0.5*tempo.operators.sigma("x"),
+        _, s_x = dynamics.expectations(0.5*oqupy.operators.sigma("x"),
                                        real=True)
-        _, s_y = dynamics.expectations(0.5*tempo.operators.sigma("y"),
+        _, s_y = dynamics.expectations(0.5*oqupy.operators.sigma("y"),
                                        real=True)
-        _, s_z = dynamics.expectations(0.5*tempo.operators.sigma("z"),
+        _, s_z = dynamics.expectations(0.5*oqupy.operators.sigma("z"),
                                        real=True)
         if i == 0:
             results.append(np.array([s_x, s_y, s_z]))
@@ -84,43 +84,44 @@ def test_tensor_network_pt_tempo_backend_non_diag(backend):
     omega_cutoff = 5.0
     alpha = 0.3
 
-    sx=tempo.operators.sigma("x")
-    sy=tempo.operators.sigma("y")
-    sz=tempo.operators.sigma("z")
+    sx=oqupy.operators.sigma("x")
+    sy=oqupy.operators.sigma("y")
+    sz=oqupy.operators.sigma("z")
 
     bases = [{"sys_op":sx, "coupling_op":sz, \
-                "init_state":tempo.operators.spin_dm("y+")},
+                "init_state":oqupy.operators.spin_dm("y+")},
              {"sys_op":sy, "coupling_op":sx, \
-                "init_state":tempo.operators.spin_dm("z+")},
+                "init_state":oqupy.operators.spin_dm("z+")},
              {"sys_op":sz, "coupling_op":sy, \
-                "init_state":tempo.operators.spin_dm("x+")}]
+                "init_state":oqupy.operators.spin_dm("x+")}]
 
     results = []
     for i, base in enumerate(bases):
-        system = tempo.System(0.5*base["sys_op"])
-        correlations = tempo.PowerLawSD(alpha=alpha,
+        system = oqupy.System(0.5*base["sys_op"])
+        correlations = oqupy.PowerLawSD(alpha=alpha,
                                         zeta=1,
                                         cutoff=omega_cutoff,
                                         cutoff_type='exponential',
                                         max_correlation_time=8.0)
-        bath = tempo.Bath(0.5*base["coupling_op"], correlations)
-        tempo_parameters = tempo.PtTempoParameters(dt=0.1,
+        bath = oqupy.Bath(0.5*base["coupling_op"], correlations)
+        tempo_parameters = oqupy.PtTempoParameters(dt=0.1,
                                                  dkmax=30,
                                                  epsrel=10**(-5))
 
-        pt = tempo.pt_tempo_compute(bath=bath,
+        pt = oqupy.pt_tempo_compute(bath=bath,
                                     start_time=0.0,
                                     end_time=1.0,
                                     parameters=tempo_parameters,
                                     backend=backend)
-        dynamics = pt.compute_dynamics_from_system(
+        dynamics = oqupy.compute_dynamics(
                     system=system,
+                    process_tensor=pt,
                     initial_state=base["init_state"])
-        _, s_x = dynamics.expectations(0.5*tempo.operators.sigma("x"),
+        _, s_x = dynamics.expectations(0.5*oqupy.operators.sigma("x"),
                                        real=True)
-        _, s_y = dynamics.expectations(0.5*tempo.operators.sigma("y"),
+        _, s_y = dynamics.expectations(0.5*oqupy.operators.sigma("y"),
                                        real=True)
-        _, s_z = dynamics.expectations(0.5*tempo.operators.sigma("z"),
+        _, s_z = dynamics.expectations(0.5*oqupy.operators.sigma("z"),
                                        real=True)
         if i == 0:
             results.append(np.array([s_x, s_y, s_z]))

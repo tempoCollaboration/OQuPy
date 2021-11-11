@@ -49,6 +49,9 @@ from oqupy.bath import Bath
 
 # from oqupy.control import Control
 
+from oqupy.contractions import compute_dynamics
+from oqupy.contractions import compute_final_state
+
 from oqupy.dynamics import Dynamics
 
 from oqupy.exceptions import NumericsError
