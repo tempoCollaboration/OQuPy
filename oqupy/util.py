@@ -16,7 +16,6 @@ Module for utilities.
 """
 
 import sys
-import pickle
 import copy as cp
 from typing import Any, List, Optional, Text
 from threading import Timer
@@ -124,23 +123,6 @@ def is_diagonal_matrix(tensor: ndarray):
     assert i == j
     test = tensor.reshape(-1)[:-1].reshape(i-1, j+1)
     return ~np.any(test[:, 1:])
-
-# -- save and load from file --------------------------------------------------
-
-def save_object(obj: Any, filename: Text, overwrite: bool) -> None:
-    """Save an object to a file using pickle. """
-    if overwrite:
-        mode = 'wb'
-    else:
-        mode = 'xb'
-    with open(filename, mode) as file:
-        pickle.dump(obj, file)
-
-def load_object(filename: Text) -> Any:
-    """Load an object from a file using pickle. """
-    with open(filename, 'rb') as file:
-        return pickle.load(file)
-
 
 # -- process bar --------------------------------------------------------------
 
