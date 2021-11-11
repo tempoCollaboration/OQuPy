@@ -33,7 +33,7 @@ from scipy.linalg import expm
 from time_evolving_mpo.backends.backend_factory import get_tempo_backend
 from time_evolving_mpo.bath import Bath
 from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype, MAX_DKMAX, DEFAULT_TOLLERANCE
+from time_evolving_mpo.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
 from time_evolving_mpo.dynamics import Dynamics
 from time_evolving_mpo.system import BaseSystem
 from time_evolving_mpo.util import commutator, acommutator
@@ -474,7 +474,7 @@ def guess_tempo_parameters(
         start_time: float,
         end_time: float,
         system: Optional[BaseSystem] = None,
-        tolerance: Optional[float] = DEFAULT_TOLLERANCE) -> TempoParameters:
+        tolerance: Optional[float] = DEFAULT_TOLERANCE) -> TempoParameters:
     """
     Function to roughly estimate appropriate parameters for a TEMPO
     computation.
@@ -571,7 +571,7 @@ def tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[TempoParameters] = None,
-        tolerance: Optional[float] = DEFAULT_TOLLERANCE,
+        tolerance: Optional[float] = DEFAULT_TOLERANCE,
         backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,

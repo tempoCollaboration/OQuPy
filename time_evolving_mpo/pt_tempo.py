@@ -47,8 +47,8 @@ from time_evolving_mpo.backends.backend_factory import get_pt_tempo_backend
 from time_evolving_mpo.base_api import BaseAPIClass
 from time_evolving_mpo.bath import Bath
 # from time_evolving_mpo.config import NpDtype
-# from time_evolving_mpo.config import PT_MAX_DKMAX, PT_DEFAULT_TOLLERANCE
-from time_evolving_mpo.config import PT_DEFAULT_TOLLERANCE
+# from time_evolving_mpo.config import PT_MAX_DKMAX, PT_DEFAULT_TOLERANCE
+from time_evolving_mpo.config import PT_DEFAULT_TOLERANCE
 from time_evolving_mpo.process_tensor import BaseProcessTensor
 from time_evolving_mpo.process_tensor import SimpleProcessTensor
 from time_evolving_mpo.process_tensor import FileProcessTensor
@@ -338,7 +338,7 @@ def pt_tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[PtTempoParameters] = None,
-        tollerance: Optional[float] = PT_DEFAULT_TOLLERANCE,
+        tolerance: Optional[float] = PT_DEFAULT_TOLERANCE,
         process_tensor_file: Optional[Union[Text, bool]] = None,
         overwrite: Optional[bool] = False,
         backend: Optional[Text] = None,
@@ -407,7 +407,7 @@ def guess_pt_tempo_parameters(
         bath: Bath,
         start_time: float,
         end_time: float,
-        tolerance: Optional[float] = PT_DEFAULT_TOLLERANCE
+        tolerance: Optional[float] = PT_DEFAULT_TOLERANCE
         ) -> PtTempoParameters:
     """
     Function to roughly estimate appropriate parameters for a PT-TEMPO
