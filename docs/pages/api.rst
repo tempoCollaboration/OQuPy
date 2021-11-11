@@ -29,31 +29,31 @@ Pauli operators for example.
 The physical layer
 ------------------
 
-class :class:`time_evolving_mpo.system.BaseSystem`
+class :class:`oqupy.system.BaseSystem`
   Abstract class representing a quantum system of interest.
 
-  class :class:`time_evolving_mpo.system.System`
+  class :class:`oqupy.system.System`
     Encodes system Hamiltonian and possibly some additional Markovian decay.
 
-  class :class:`time_evolving_mpo.system.TimeDependentSystem`
+  class :class:`oqupy.system.TimeDependentSystem`
     Encodes a time dependent system Hamiltonian and possibly some additional
     time dependent Markovian decay.
 
-class :class:`time_evolving_mpo.correlations.BaseCorrelations`
+class :class:`oqupy.correlations.BaseCorrelations`
   Abstract class representing the environments auto-correlations.
 
-  class :class:`time_evolving_mpo.correlations.CustomCorrelations`
+  class :class:`oqupy.correlations.CustomCorrelations`
     Encode an explicitly given environment auto-correlation function.
 
-  class :class:`time_evolving_mpo.correlations.CustomSD`
+  class :class:`oqupy.correlations.CustomSD`
     Encodes the auto-correlations for a given spectral density.
 
-  class :class:`time_evolving_mpo.correlations.PowerLawSD`
+  class :class:`oqupy.correlations.PowerLawSD`
     Encodes the auto-correlations for a given spectral density of a power law
     form.
 
-class :class:`time_evolving_mpo.bath.Bath`
-  Bundles a :class:`time_evolving_mpo.correlations.BaseCorrelations` object
+class :class:`oqupy.bath.Bath`
+  Bundles a :class:`oqupy.correlations.BaseCorrelations` object
   together with a coupling operator.
 
 The algorithms layer
@@ -62,19 +62,19 @@ The algorithms layer
 TEMPO
 *****
 
-class :class:`time_evolving_mpo.tempo.TempoParameters`
+class :class:`oqupy.tempo.TempoParameters`
   Stores a set of parameters for a TEMPO computation.
 
-class :class:`time_evolving_mpo.tempo.Tempo`
+class :class:`oqupy.tempo.Tempo`
   Class to facilitate a TEMPO computation.
 
-  method :meth:`time_evolving_mpo.tempo.Tempo.compute`
+  method :meth:`oqupy.tempo.Tempo.compute`
     Method that carries out a TEMPO computation.
 
-class :class:`time_evolving_mpo.dynamics.Dynamics`
+class :class:`oqupy.dynamics.Dynamics`
   Object that encodes the time evolution of a system (with discrete time steps).
 
-function :func:`time_evolving_mpo.tempo.guess_tempo_parameters`
+function :func:`oqupy.tempo.guess_tempo_parameters`
   Function that chooses an appropriate set of parameters for a particular
   TEMPO computation.
 
@@ -82,16 +82,16 @@ function :func:`time_evolving_mpo.tempo.guess_tempo_parameters`
 PT-TEMPO
 ********
 
-class :class:`time_evolving_mpo.pt_tempo.PtTempoParameters`
+class :class:`oqupy.pt_tempo.PtTempoParameters`
   Stores a set of parameters for a PT-TEMPO computation.
 
-class :class:`time_evolving_mpo.pt_tempo.PtTempo`
+class :class:`oqupy.pt_tempo.PtTempo`
   Class to facilitate a PT-TEMPO computation.
 
-  method :meth:`time_evolving_mpo.pt_tempo.PtTempo.compute`
+  method :meth:`oqupy.pt_tempo.PtTempo.compute`
     Method that carries out a PT-TEMPO computation.
 
-class :class:`time_evolving_mpo.process_tensor.ProcessTensor`
+class :class:`oqupy.process_tensor.ProcessTensor`
   Object that encodes a so called process tensor (which captures all possible
   Markovian and non-Markovian interactions between some system and an
   environment).
@@ -120,10 +120,10 @@ The default uses:
 Utillities
 ----------
 
-module :mod:`time_evolving_mpo.operators`
+module :mod:`oqupy.operators`
   Supplies several commonly used operators, such as the Pauli matrices and spin
   density matrices.
 
-function :func:`time_evolving_mpo.helpers.plot_correlations_with_parameters`
+function :func:`oqupy.helpers.plot_correlations_with_parameters`
   A helper function to plot an auto-correlation function and the sampling
   points given by a set of parameters for a TEMPO computation.

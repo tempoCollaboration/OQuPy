@@ -18,10 +18,10 @@ Tests for the time_evovling_mpo.correlations module.
 import pytest
 import numpy as np
 
-from time_evolving_mpo.correlations import BaseCorrelations
-from time_evolving_mpo.correlations import CustomCorrelations
-from time_evolving_mpo.correlations import CustomSD
-from time_evolving_mpo.correlations import PowerLawSD
+from oqupy.correlations import BaseCorrelations
+from oqupy.correlations import CustomCorrelations
+from oqupy.correlations import CustomSD
+from oqupy.correlations import PowerLawSD
 
 square_function = lambda w: 0.1 * w**2
 

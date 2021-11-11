@@ -1,4 +1,4 @@
-# TimeEvolvingMPO
+# Open Quantum Systems in Python: OQuPy
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
@@ -22,6 +22,7 @@ This open source project aims to facilitate versatile numerical tools to efficie
 - **[4]** Gribben et al., *Exact dynamics of non-additive environments in
   non-Markovian open quantum systems*, arXiv:2109.08442 (2021).
 
+Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 ## Links
 
 * Github:         <https://github.com/tempoCollaboration/TimeEvolvingMPO>
@@ -33,7 +34,7 @@ This open source project aims to facilitate versatile numerical tools to efficie
 ## Installation
 You can install TimeEvolvingMPO using pip like this:
 ```
-$ python3 -m pip install time_evolving_mpo
+$ python3 -m pip install oqupy
 ```
 
 See the

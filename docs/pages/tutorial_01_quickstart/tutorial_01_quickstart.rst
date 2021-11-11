@@ -36,7 +36,7 @@ to use
     import sys
     sys.path.insert(0,'..')
     
-    import time_evolving_mpo as tempo
+    import oqupy as tempo
     import numpy as np
     import matplotlib.pyplot as plt
     %matplotlib inline
@@ -252,7 +252,7 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    ../time_evolving_mpo/tempo.py:523: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo.py:523: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -336,7 +336,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    ../time_evolving_mpo/tempo.py:523: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo.py:523: UserWarning: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantie that resulting TEMPO computation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -452,7 +452,7 @@ We can start by computing the dynamics up to time
 
 .. parsed-literal::
 
-    <time_evolving_mpo.dynamics.Dynamics at 0x7fd738294f28>
+    <oqupy.dynamics.Dynamics at 0x7fd738294f28>
 
 
 
@@ -496,7 +496,7 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 
 .. parsed-literal::
 
-    <time_evolving_mpo.dynamics.Dynamics at 0x7fd738294f28>
+    <oqupy.dynamics.Dynamics at 0x7fd738294f28>
 
 
 

@@ -19,9 +19,9 @@ import pytest
 
 import numpy as np
 
-from time_evolving_mpo.bath import Bath
-from time_evolving_mpo.correlations import PowerLawSD
-from time_evolving_mpo import operators
+from oqupy.bath import Bath
+from oqupy.correlations import PowerLawSD
+from oqupy import operators
 
 def test_bath():
     wc = 4.0

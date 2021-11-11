@@ -26,7 +26,7 @@ from datetime import timedelta
 import numpy as np
 from numpy import ndarray
 
-from time_evolving_mpo.config import PROGRESS_TYPE
+from oqupy.config import PROGRESS_TYPE
 
 
 # -- superoperators ----------------------------------------------------------

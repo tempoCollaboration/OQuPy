@@ -19,8 +19,8 @@ from typing import Dict, Text
 
 from numpy import ndarray
 
-from time_evolving_mpo.config import NpDtype, NpDtypeReal
-from time_evolving_mpo.util import load_object
+from oqupy.config import NpDtype, NpDtypeReal
+from oqupy.util import load_object
 
 
 def _assert_common_fields(data_dict: Dict) -> None:

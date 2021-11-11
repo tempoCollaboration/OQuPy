@@ -24,7 +24,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, here)
 
 # get the __version__ variable
-with open(os.path.join(here,"time_evolving_mpo/version.py"), "r") as f:
+with open(os.path.join(here,"oqupy/version.py"), "r") as f:
   exec(f.read(), globals())
 
 # get short and long description
@@ -40,7 +40,7 @@ with open(os.path.join(here,"requirements.txt"), "r") as requirements_file:
 
 
 setup(
-    name='time_evolving_mpo',
+    name='oqupy',
     version=__version__,
     url='http://github.com/tempoCollaboration/TimeEvolvingMPO',
     author='TEMPO Collaboration',

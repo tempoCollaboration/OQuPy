@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.backends.tensor_network modules.
 import pytest
 import numpy as np
 
-import time_evolving_mpo as tempo
+import oqupy as tempo
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------

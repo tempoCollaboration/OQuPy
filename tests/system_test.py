@@ -18,10 +18,10 @@ Tests for the time_evovling_mpo.system module.
 import pytest
 import numpy as np
 
-from time_evolving_mpo.system import System
-from time_evolving_mpo.system import TimeDependentSystem
-from time_evolving_mpo import operators
-from time_evolving_mpo.system import BaseSystem
+from oqupy.system import System
+from oqupy.system import TimeDependentSystem
+from oqupy import operators
+from oqupy.system import BaseSystem
 
 # -----------------------------------------------------------------------------
 # -- test-examples ------------------------------------------------------------

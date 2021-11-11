@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.helpers module.
 import pytest
 import numpy as np
 
-import time_evolving_mpo as tempo
+import oqupy as tempo
 
 
 def test_plot_correlations_with_parameters():

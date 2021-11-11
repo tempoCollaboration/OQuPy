@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evolving_mpo.backends.base_backends module.
+Tests for the oqupy.backends.base_backends module.
 """
 import pytest
 
 import numpy as np
 import tensornetwork as tn
 
-import time_evolving_mpo as tempo
-from time_evolving_mpo.backends.backend_factory import \
+import oqupy as tempo
+from oqupy.backends.backend_factory import \
     get_tempo_backend, get_pt_tempo_backend
 pass
 

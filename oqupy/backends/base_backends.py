@@ -18,7 +18,7 @@ Module for base classes of backends.
 from typing import Callable, Dict, Tuple
 from numpy import ndarray
 
-from time_evolving_mpo.process_tensor import BaseProcessTensor
+from oqupy.process_tensor import BaseProcessTensor
 
 
 class BaseTempoBackend:

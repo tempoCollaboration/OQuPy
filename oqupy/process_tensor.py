@@ -31,11 +31,11 @@ from scipy.linalg import expm
 import tensornetwork as tn
 import h5py
 
-from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype
-from time_evolving_mpo.dynamics import Dynamics
-from time_evolving_mpo.system import BaseSystem
-from time_evolving_mpo import util
+from oqupy.base_api import BaseAPIClass
+from oqupy.config import NpDtype
+from oqupy.dynamics import Dynamics
+from oqupy.system import BaseSystem
+from oqupy import util
 
 
 class BaseProcessTensor(BaseAPIClass):

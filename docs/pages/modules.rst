@@ -4,14 +4,14 @@ All Modules
 tempo.base_api
 --------------
 
-.. automodule:: time_evolving_mpo.base_api
+.. automodule:: oqupy.base_api
     :members:
 
 
 tempo.bath
 ----------
 
-.. automodule:: time_evolving_mpo.bath
+.. automodule:: oqupy.bath
     :show-inheritance:
     :members:
 
@@ -19,7 +19,7 @@ tempo.bath
 tempo.correlations
 ------------------
 
-.. automodule:: time_evolving_mpo.correlations
+.. automodule:: oqupy.correlations
     :show-inheritance:
     :members:
 
@@ -27,7 +27,7 @@ tempo.correlations
 tempo.dynamics
 --------------
 
-.. automodule:: time_evolving_mpo.dynamics
+.. automodule:: oqupy.dynamics
     :show-inheritance:
     :members:
 
@@ -35,7 +35,7 @@ tempo.dynamics
 tempo.exceptions
 ----------------
 
-.. automodule:: time_evolving_mpo.exceptions
+.. automodule:: oqupy.exceptions
     :show-inheritance:
     :members:
 
@@ -43,28 +43,28 @@ tempo.exceptions
 tempo.file_formats
 ------------------
 
-.. automodule:: time_evolving_mpo.file_formats
+.. automodule:: oqupy.file_formats
     :members:
 
 
 tempo.helpers
 -------------
 
-.. automodule:: time_evolving_mpo.helpers
+.. automodule:: oqupy.helpers
     :members:
 
 
 tempo.operators
 ---------------
 
-.. automodule:: time_evolving_mpo.operators
+.. automodule:: oqupy.operators
     :members:
 
 
 tempo.process_tensor
 --------------------
 
-.. automodule:: time_evolving_mpo.process_tensor
+.. automodule:: oqupy.process_tensor
     :show-inheritance:
     :members:
 
@@ -72,7 +72,7 @@ tempo.process_tensor
 tempo.pt_tempo
 --------------
 
-.. automodule:: time_evolving_mpo.pt_tempo
+.. automodule:: oqupy.pt_tempo
     :show-inheritance:
     :members:
 
@@ -80,7 +80,7 @@ tempo.pt_tempo
 tempo.system
 ------------
 
-.. automodule:: time_evolving_mpo.system
+.. automodule:: oqupy.system
     :show-inheritance:
     :members:
 
@@ -88,7 +88,7 @@ tempo.system
 tempo.tempo
 -----------
 
-.. automodule:: time_evolving_mpo.tempo
+.. automodule:: oqupy.tempo
     :show-inheritance:
     :members:
 
@@ -96,7 +96,7 @@ tempo.tempo
 tempo.util
 ----------
 
-.. automodule:: time_evolving_mpo.util
+.. automodule:: oqupy.util
     :members:
 
 
@@ -106,5 +106,5 @@ tempo.backends
 base_backends
 ~~~~~~~~~~~~~
 
-.. automodule:: time_evolving_mpo.backends.base_backends
+.. automodule:: oqupy.backends.base_backends
     :members:

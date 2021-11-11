@@ -18,9 +18,9 @@ Tests for the time_evovling_mpo.control module.
 import pytest
 
 def test_import():
-    import time_evolving_mpo.control
+    import oqupy.control
 
-# from time_evolving_mpo import Control
+# from oqupy import Control
 #
 # def test_control():
 #     Control()
