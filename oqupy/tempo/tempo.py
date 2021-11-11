@@ -30,7 +30,7 @@ import numpy as np
 from numpy import ndarray
 from scipy.linalg import expm
 
-from oqupy.backends.backend_factory import get_tempo_backend
+from oqupy.tempo.backends.backend_factory import get_tempo_backend
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE

@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
 from oqupy.correlations import BaseCorrelations
-from oqupy.tempo import TempoParameters
+from oqupy.tempo.tempo import TempoParameters
 
 
 def plot_correlations_with_parameters(

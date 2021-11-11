@@ -18,12 +18,12 @@ Factory for backends.
 from typing import Dict, Optional, Text
 
 from oqupy.config import TEMPO_BACKEND, TEMPO_BACKEND_CONFIG
-from oqupy.backends.base_backends import BaseTempoBackend
-from oqupy.backends.tensor_network.tempo_backend \
+from oqupy.tempo.backends.base_backends import BaseTempoBackend
+from oqupy.tempo.backends.tensor_network.tempo_backend \
     import TensorNetworkTempoBackend
 from oqupy.config import PT_TEMPO_BACKEND, PT_TEMPO_BACKEND_CONFIG
-from oqupy.backends.base_backends import BasePtTempoBackend
-from oqupy.backends.tensor_network.pt_tempo_backend \
+from oqupy.tempo.backends.base_backends import BasePtTempoBackend
+from oqupy.tempo.backends.tensor_network.pt_tempo_backend \
     import TensorNetworkPtTempoBackend
 
 TEMPO_BACKEND_DICT = {

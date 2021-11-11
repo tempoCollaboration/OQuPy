@@ -20,22 +20,10 @@ import numpy as np
 import tensornetwork as tn
 
 import oqupy as tempo
-import oqupy.backends.base_backends as bb
+from oqupy.tempo.backends.backend_factory import \
+    get_tempo_backend, get_pt_tempo_backend
 pass
 
-def test_base_tempo_backend():
-    tempo_back = bb.BaseTempoBackend(
-                    initial_state=None,
-                    influence=None,
-                    unitary_transform=None,
-                    propagators=None,
-                    sum_north=None,
-                    sum_west=None,
-                    dkmax=None,
-                    epsrel=None,
-                    config=None)
-    with pytest.raises(NotImplementedError):
-        tempo_back.initialize()
-    with pytest.raises(NotImplementedError):
-        tempo_back.compute_step()
-
+def test_backend_factory_default():
+    tempo_back = get_tempo_backend()
+    pt_tempo_back = get_pt_tempo_backend()
