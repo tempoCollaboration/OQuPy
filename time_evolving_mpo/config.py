@@ -48,7 +48,7 @@ TEMPO_BACKEND_CONFIG = {
 MAX_DKMAX = 256
 
 # default tolerance for tempo parameter guessing function
-DEFAULT_TOLLERANCE = 3.9e-3
+DEFAULT_TOLERANCE = 3.9e-3
 
 
 # -- PT_TEMPO -----------------------------------------------------------------
@@ -65,4 +65,4 @@ PT_TEMPO_BACKEND_CONFIG = {
 PT_MAX_DKMAX = 256
 
 # default tolerance for process tensor tempo parameter guessing function
-PT_DEFAULT_TOLLERANCE = 3.9e-3
+PT_DEFAULT_TOLERANCE = 3.9e-3
