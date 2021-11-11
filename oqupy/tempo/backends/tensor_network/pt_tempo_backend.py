@@ -20,8 +20,8 @@ from typing import Callable, Dict
 import numpy as np
 from numpy import ndarray
 
-from oqupy.backends.tensor_network import node_array as na
-from oqupy.backends.base_backends import BasePtTempoBackend
+from oqupy.tempo.backends.tensor_network import node_array as na
+from oqupy.tempo.backends.base_backends import BasePtTempoBackend
 from oqupy.config import NpDtype
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy import util

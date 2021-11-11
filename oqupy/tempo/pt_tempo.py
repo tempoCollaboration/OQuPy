@@ -43,7 +43,7 @@ from copy import copy
 
 import numpy as np
 
-from oqupy.backends.backend_factory import get_pt_tempo_backend
+from oqupy.tempo.backends.backend_factory import get_pt_tempo_backend
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
 # from oqupy.config import NpDtype
@@ -52,8 +52,8 @@ from oqupy.config import PT_DEFAULT_TOLERANCE
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
-from oqupy.tempo import TempoParameters
-from oqupy.tempo import guess_tempo_parameters
+from oqupy.tempo.tempo import TempoParameters
+from oqupy.tempo.tempo import guess_tempo_parameters
 from oqupy.util import commutator, acommutator
 from oqupy.util import left_right_super
 from oqupy.util import get_progress

@@ -68,10 +68,10 @@ from oqupy.process_tensor import TrivialProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
 
-from oqupy.pt_tempo import PtTempo
-from oqupy.pt_tempo import PtTempoParameters
-from oqupy.pt_tempo import guess_pt_tempo_parameters
-from oqupy.pt_tempo import pt_tempo_compute
+from oqupy.tempo.pt_tempo import PtTempo
+from oqupy.tempo.pt_tempo import PtTempoParameters
+from oqupy.tempo.pt_tempo import guess_pt_tempo_parameters
+from oqupy.tempo.pt_tempo import pt_tempo_compute
 
 from oqupy.correlations import CustomCorrelations
 from oqupy.correlations import CustomSD
@@ -80,7 +80,7 @@ from oqupy.correlations import PowerLawSD
 from oqupy.system import System
 from oqupy.system import TimeDependentSystem
 
-from oqupy.tempo import Tempo
-from oqupy.tempo import TempoParameters
-from oqupy.tempo import guess_tempo_parameters
-from oqupy.tempo import tempo_compute
+from oqupy.tempo.tempo import Tempo
+from oqupy.tempo.tempo import TempoParameters
+from oqupy.tempo.tempo import guess_tempo_parameters
+from oqupy.tempo.tempo import tempo_compute

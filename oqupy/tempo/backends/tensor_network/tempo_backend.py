@@ -20,8 +20,8 @@ from copy import copy
 
 from numpy import ndarray, moveaxis, dot
 
-from oqupy.backends.tensor_network import node_array as na
-from oqupy.backends.base_backends import BaseTempoBackend
+from oqupy.tempo.backends.tensor_network import node_array as na
+from oqupy.tempo.backends.base_backends import BaseTempoBackend
 from oqupy.util import create_delta
 from oqupy import util
 

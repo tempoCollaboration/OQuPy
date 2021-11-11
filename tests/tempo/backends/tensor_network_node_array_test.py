@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the oqupy.backends.node_array module.
+Tests for the oqupy.tempo.backends.node_array module.
 
 .. todo::
     This is quite a mess. Make it better!
@@ -22,7 +22,7 @@ import pytest
 import numpy as np
 import tensornetwork as tn
 
-import oqupy.backends.tensor_network.node_array as node_array
+import oqupy.tempo.backends.tensor_network.node_array as node_array
 
 
 def test_node_array():
