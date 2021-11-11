@@ -19,7 +19,6 @@ import pytest
 import numpy as np
 
 from oqupy.dynamics import Dynamics
-from oqupy.dynamics import import_dynamics
 
 
 times = [0.0, 0.1]
@@ -77,11 +76,3 @@ def test_dynamics_expectations():
     np.testing.assert_almost_equal(lower, [0, -0.1j])
     with pytest.raises(AssertionError):
         dyn.expectations("bla")
-
-def test_export_import():
-    dyn_A = Dynamics(times, states)
-    dyn_A.name = "some name"
-    dyn_A.export("tests/data/temp.tempoDynamics", overwrite=True)
-    dyn_B = import_dynamics("tests/data/temp.tempoDynamics")
-    assert dyn_B.name == dyn_A.name
-    np.testing.assert_almost_equal(dyn_B.states, dyn_A.states)

@@ -23,8 +23,6 @@ from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype, NpDtypeReal
-from oqupy.file_formats import assert_tempo_dynamics_dict
-from oqupy.util import save_object, load_object
 
 
 class Dynamics(BaseAPIClass):
@@ -153,29 +151,6 @@ class Dynamics(BaseAPIClass):
         if len(self) > 1 and (self._times[-1] < np.max(self._times[:-1])):
             self._sort()
 
-    def export(
-            self,
-            filename: Text,
-            overwrite: bool = False) -> None:
-        """
-        Save dynamics to a file (format TempoDynamicsFormat version 1.0).
-
-        Parameters
-        ----------
-        filename: str
-            Path and filename to file that should be created.
-        overwrite: bool (default = False)
-            If set `True` then file is overwritten in case it already exists.
-        """
-        dyn = {"version": "1.0",
-               "name": self.name,
-               "description": self.description,
-               "description_dict": self.description_dict,
-               "times": self.times,
-               "states": self.states}
-        assert_tempo_dynamics_dict(dyn)
-        save_object(dyn, filename, overwrite)
-
     def expectations(
             self,
             operator: Optional[ndarray] = None,
@@ -240,47 +215,3 @@ class Dynamics(BaseAPIClass):
         else:
             expectations = np.array(expectations_list)
         return times, expectations
-
-# def distance(*args, **kwargs): # ToDo
-#     """
-#     ToDo
-#     """
-#     pass # ToDo
-#     return NotImplemented, NotImplemented #ToDo
-
-
-def import_dynamics(filename: Text) -> Dynamics:
-    """
-    Load dynamics from a file (format TempoDynamicsFormat version 1.0).
-
-    Parameters
-    ----------
-    filename: str
-        Path and filename to file that should read in.
-
-    Returns
-    -------
-    dynamics: Dynamics
-        The time evolution stored in the file `filename`.
-    """
-    dyn = load_object(filename)
-    assert "version" in dyn, \
-        "Can't import dynamics from file {} ".format(filename) \
-        + "because it doesn't have a 'version' field."
-    assert dyn["version"] == "1.0", \
-        "Can't import dynamics from file {} ".format(filename) \
-        + "as it appears to be an incompatible version."
-    assert_tempo_dynamics_dict(dyn)
-    return Dynamics(times=list(dyn["times"]),
-                    states=list(dyn["states"]),
-                    name=dyn["name"],
-                    description=dyn["description"],
-                    description_dict=dyn["description_dict"])
-
-
-# def norms(*args, **kwargs): # ToDo
-#     """
-#     ToDo
-#     """
-#     pass # ToDo
-#     return NotImplemented #ToDo
