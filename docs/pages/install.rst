@@ -27,7 +27,7 @@ How To Install
 
   .. code-block:: none
 
-    $ python3 -m pip install time_evolving_mpo
+    $ python3 -m pip install oqupy
 
 
 Test Installation
@@ -37,7 +37,7 @@ Open a interactive python3 session and type:
 
 .. code-block:: python
 
-  >>> import time_evolving_mpo as tempo
+  >>> import oqupy as tempo
   >>> tempo.__version__
 
 This should give you the following message:
@@ -54,4 +54,4 @@ Uninstall TimeEvolvingMPO with pip:
 
 .. code-block:: none
 
- $ python3 -m pip uninstall time_evolving_mpo
+ $ python3 -m pip uninstall oqupy

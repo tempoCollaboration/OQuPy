@@ -18,8 +18,8 @@ Tests for the time_evovling_mpo.file_formats module.
 import pytest
 import os, contextlib
 
-from time_evolving_mpo.file_formats import check_tempo_dynamics_file
-from time_evolving_mpo.file_formats import print_tempo_dynamics_file
+from oqupy.file_formats import check_tempo_dynamics_file
+from oqupy.file_formats import print_tempo_dynamics_file
 
 # -----------------------------------------------------------------------------
 

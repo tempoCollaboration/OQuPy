@@ -17,8 +17,8 @@ Tests for the time_evovling_mpo.exceptions module.
 
 import pytest
 
-from time_evolving_mpo.exceptions import NumericsError
-from time_evolving_mpo.exceptions import NumericsWarning
+from oqupy.exceptions import NumericsError
+from oqupy.exceptions import NumericsWarning
 
 
 def test_numerics_error():

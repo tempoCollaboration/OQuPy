@@ -20,11 +20,11 @@ from typing import Callable, Dict
 import numpy as np
 from numpy import ndarray
 
-from time_evolving_mpo.backends.tensor_network import node_array as na
-from time_evolving_mpo.backends.base_backends import BasePtTempoBackend
-from time_evolving_mpo.config import NpDtype
-from time_evolving_mpo.process_tensor import BaseProcessTensor
-from time_evolving_mpo import util
+from oqupy.backends.tensor_network import node_array as na
+from oqupy.backends.base_backends import BasePtTempoBackend
+from oqupy.config import NpDtype
+from oqupy.process_tensor import BaseProcessTensor
+from oqupy import util
 
 
 class TensorNetworkPtTempoBackend(BasePtTempoBackend):

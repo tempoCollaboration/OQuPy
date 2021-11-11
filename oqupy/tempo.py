@@ -30,14 +30,14 @@ import numpy as np
 from numpy import ndarray
 from scipy.linalg import expm
 
-from time_evolving_mpo.backends.backend_factory import get_tempo_backend
-from time_evolving_mpo.bath import Bath
-from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
-from time_evolving_mpo.dynamics import Dynamics
-from time_evolving_mpo.system import BaseSystem
-from time_evolving_mpo.util import commutator, acommutator
-from time_evolving_mpo.util import get_progress
+from oqupy.backends.backend_factory import get_tempo_backend
+from oqupy.bath import Bath
+from oqupy.base_api import BaseAPIClass
+from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
+from oqupy.dynamics import Dynamics
+from oqupy.system import BaseSystem
+from oqupy.util import commutator, acommutator
+from oqupy.util import get_progress
 
 
 class TempoParameters(BaseAPIClass):
@@ -504,7 +504,7 @@ def guess_tempo_parameters(
         Estimate of appropriate tempo parameters.
     """
     assert isinstance(bath, Bath), \
-        "Argument 'bath' must be a time_evolving_mpo.Bath object."
+        "Argument 'bath' must be a oqupy.Bath object."
     try:
         __start_time = float(start_time)
         __end_time = float(end_time)
@@ -513,7 +513,7 @@ def guess_tempo_parameters(
     if __end_time <= __start_time:
         raise ValueError("End time must be bigger than start time.")
     assert isinstance(system, (type(None), BaseSystem)), \
-        "Argument 'system' must be 'None' or a time_evolving_mpo.BaseSystem object."
+        "Argument 'system' must be 'None' or a oqupy.BaseSystem object."
     try:
         __tolerance = float(tolerance)
     except Exception as e:

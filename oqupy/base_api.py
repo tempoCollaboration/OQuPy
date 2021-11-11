@@ -17,7 +17,7 @@ Module for base classes of API objects.
 
 from typing import Dict, Optional, Text
 
-from time_evolving_mpo.config import SEPERATOR
+from oqupy.config import SEPERATOR
 
 
 class BaseAPIClass:

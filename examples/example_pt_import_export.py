@@ -11,7 +11,7 @@ os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['NUMEXPR_NUM_THREADS'] = '1'
 
-import time_evolving_mpo as tempo
+import oqupy as tempo
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython import embed

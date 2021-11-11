@@ -22,7 +22,7 @@ copyright = '2021, TEMPO Collaboration'
 author = 'TEMPO Collaboration'
 
 # The full version, including alpha/beta/rc tags
-with open('../time_evolving_mpo/version.py') as f:
+with open('../oqupy/version.py') as f:
   exec(f.read(), globals())
 release = __version__
 

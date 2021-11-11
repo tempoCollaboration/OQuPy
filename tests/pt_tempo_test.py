@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.pt_tempo module.
 import pytest
 import numpy as np
 
-import time_evolving_mpo as tempo
+import oqupy as tempo
 
 def test_pt_tempo_parameters():
     tempo_param = tempo.PtTempoParameters(0.1, None, 1.0e-5, "rough", "bla", {})

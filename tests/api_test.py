@@ -17,6 +17,6 @@ Tests the time_evovling_mpo API.
 
 import pytest
 
-from time_evolving_mpo import *
+from oqupy import *
 
 pass # ToDo

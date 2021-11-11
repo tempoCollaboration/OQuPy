@@ -19,7 +19,7 @@ from typing import Text
 
 import numpy as np
 
-from time_evolving_mpo.config import NpDtype
+from oqupy.config import NpDtype
 
 SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],

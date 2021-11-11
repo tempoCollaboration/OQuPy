@@ -21,7 +21,7 @@
 import sys
 sys.path.insert(0,'..')
 
-import time_evolving_mpo as tempo
+import oqupy as tempo
 import numpy as np
 import matplotlib.pyplot as plt
 

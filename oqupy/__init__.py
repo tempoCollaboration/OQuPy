@@ -15,7 +15,7 @@ the process tensor TEMPO method (PT-TEMPO) [2].
     optimal control of non-Markovian open quantum systems*, arXiv2101.?????
     (2021).
 """
-from time_evolving_mpo.version import __version__
+from oqupy.version import __version__
 
 # all API functionallity is in __all__
 __all__ = [
@@ -47,40 +47,40 @@ __all__ = [
 
 # -- Modules in alphabetical order --------------------------------------------
 
-from time_evolving_mpo.bath import Bath
+from oqupy.bath import Bath
 
-# from time_evolving_mpo.control import Control
+# from oqupy.control import Control
 
-from time_evolving_mpo.dynamics import Dynamics
-from time_evolving_mpo.dynamics import import_dynamics
+from oqupy.dynamics import Dynamics
+from oqupy.dynamics import import_dynamics
 
-from time_evolving_mpo.exceptions import NumericsError
-from time_evolving_mpo.exceptions import NumericsWarning
+from oqupy.exceptions import NumericsError
+from oqupy.exceptions import NumericsWarning
 
-import time_evolving_mpo.file_formats
+import oqupy.file_formats
 
-import time_evolving_mpo.operators
+import oqupy.operators
 
-import time_evolving_mpo.helpers
+import oqupy.helpers
 
-from time_evolving_mpo.process_tensor import import_process_tensor
-from time_evolving_mpo.process_tensor import TrivialProcessTensor
-from time_evolving_mpo.process_tensor import SimpleProcessTensor
-from time_evolving_mpo.process_tensor import FileProcessTensor
+from oqupy.process_tensor import import_process_tensor
+from oqupy.process_tensor import TrivialProcessTensor
+from oqupy.process_tensor import SimpleProcessTensor
+from oqupy.process_tensor import FileProcessTensor
 
-from time_evolving_mpo.pt_tempo import PtTempo
-from time_evolving_mpo.pt_tempo import PtTempoParameters
-from time_evolving_mpo.pt_tempo import guess_pt_tempo_parameters
-from time_evolving_mpo.pt_tempo import pt_tempo_compute
+from oqupy.pt_tempo import PtTempo
+from oqupy.pt_tempo import PtTempoParameters
+from oqupy.pt_tempo import guess_pt_tempo_parameters
+from oqupy.pt_tempo import pt_tempo_compute
 
-from time_evolving_mpo.correlations import CustomCorrelations
-from time_evolving_mpo.correlations import CustomSD
-from time_evolving_mpo.correlations import PowerLawSD
+from oqupy.correlations import CustomCorrelations
+from oqupy.correlations import CustomSD
+from oqupy.correlations import PowerLawSD
 
-from time_evolving_mpo.system import System
-from time_evolving_mpo.system import TimeDependentSystem
+from oqupy.system import System
+from oqupy.system import TimeDependentSystem
 
-from time_evolving_mpo.tempo import Tempo
-from time_evolving_mpo.tempo import TempoParameters
-from time_evolving_mpo.tempo import guess_tempo_parameters
-from time_evolving_mpo.tempo import tempo_compute
+from oqupy.tempo import Tempo
+from oqupy.tempo import TempoParameters
+from oqupy.tempo import guess_tempo_parameters
+from oqupy.tempo import tempo_compute

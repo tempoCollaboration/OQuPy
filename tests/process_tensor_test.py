@@ -17,7 +17,7 @@ Tests for the time_evovling_mpo.process_tensor module.
 
 import pytest
 
-import time_evolving_mpo as tempo
+import oqupy as tempo
 
 
 TEMP_FILE = "tests/data/temp.processTensor"

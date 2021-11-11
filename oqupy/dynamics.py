@@ -21,10 +21,10 @@ from copy import copy
 import numpy as np
 from numpy import ndarray
 
-from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype, NpDtypeReal
-from time_evolving_mpo.file_formats import assert_tempo_dynamics_dict
-from time_evolving_mpo.util import save_object, load_object
+from oqupy.base_api import BaseAPIClass
+from oqupy.config import NpDtype, NpDtypeReal
+from oqupy.file_formats import assert_tempo_dynamics_dict
+from oqupy.util import save_object, load_object
 
 
 class Dynamics(BaseAPIClass):

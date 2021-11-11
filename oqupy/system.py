@@ -22,10 +22,10 @@ from functools import lru_cache
 import numpy as np
 from numpy import ndarray
 
-from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import NpDtype
-from time_evolving_mpo.util import acommutator, commutator
-from time_evolving_mpo.util import left_right_super
+from oqupy.base_api import BaseAPIClass
+from oqupy.config import NpDtype
+from oqupy.util import acommutator, commutator
+from oqupy.util import left_right_super
 
 
 def _check_hamiltonian(hamiltonian):

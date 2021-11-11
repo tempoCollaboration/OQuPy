@@ -18,8 +18,8 @@ Tests for the time_evovling_mpo.dynamics module.
 import pytest
 import numpy as np
 
-from time_evolving_mpo.dynamics import Dynamics
-from time_evolving_mpo.dynamics import import_dynamics
+from oqupy.dynamics import Dynamics
+from oqupy.dynamics import import_dynamics
 
 
 times = [0.0, 0.1]

@@ -20,9 +20,9 @@ from copy import copy
 import numpy as np
 from numpy import ndarray
 
-from time_evolving_mpo.config import NpDtype
-from time_evolving_mpo.correlations import BaseCorrelations
-from time_evolving_mpo.base_api import BaseAPIClass
+from oqupy.config import NpDtype
+from oqupy.correlations import BaseCorrelations
+from oqupy.base_api import BaseAPIClass
 
 
 class Bath(BaseAPIClass):

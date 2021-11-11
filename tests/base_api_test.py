@@ -17,7 +17,7 @@ Tests for the time_evovling_mpo.base_api module.
 
 import pytest
 
-from time_evolving_mpo.base_api import BaseAPIClass
+from oqupy.base_api import BaseAPIClass
 
 
 def test_base_api_class():

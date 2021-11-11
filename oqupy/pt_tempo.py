@@ -43,20 +43,20 @@ from copy import copy
 
 import numpy as np
 
-from time_evolving_mpo.backends.backend_factory import get_pt_tempo_backend
-from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.bath import Bath
-# from time_evolving_mpo.config import NpDtype
-# from time_evolving_mpo.config import PT_MAX_DKMAX, PT_DEFAULT_TOLERANCE
-from time_evolving_mpo.config import PT_DEFAULT_TOLERANCE
-from time_evolving_mpo.process_tensor import BaseProcessTensor
-from time_evolving_mpo.process_tensor import SimpleProcessTensor
-from time_evolving_mpo.process_tensor import FileProcessTensor
-from time_evolving_mpo.tempo import TempoParameters
-from time_evolving_mpo.tempo import guess_tempo_parameters
-from time_evolving_mpo.util import commutator, acommutator
-from time_evolving_mpo.util import left_right_super
-from time_evolving_mpo.util import get_progress
+from oqupy.backends.backend_factory import get_pt_tempo_backend
+from oqupy.base_api import BaseAPIClass
+from oqupy.bath import Bath
+# from oqupy.config import NpDtype
+# from oqupy.config import PT_MAX_DKMAX, PT_DEFAULT_TOLERANCE
+from oqupy.config import PT_DEFAULT_TOLERANCE
+from oqupy.process_tensor import BaseProcessTensor
+from oqupy.process_tensor import SimpleProcessTensor
+from oqupy.process_tensor import FileProcessTensor
+from oqupy.tempo import TempoParameters
+from oqupy.tempo import guess_tempo_parameters
+from oqupy.util import commutator, acommutator
+from oqupy.util import left_right_super
+from oqupy.util import get_progress
 
 
 PT_CLASS = {"simple": SimpleProcessTensor}

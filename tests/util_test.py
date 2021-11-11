@@ -19,10 +19,10 @@ import pytest
 
 import numpy as np
 
-from time_evolving_mpo.util import BaseProgress, ProgressBar
-from time_evolving_mpo.util import commutator, acommutator
-from time_evolving_mpo.util import left_super, right_super, left_right_super
-from time_evolving_mpo.util import save_object, load_object
+from oqupy.util import BaseProgress, ProgressBar
+from oqupy.util import commutator, acommutator
+from oqupy.util import left_super, right_super, left_right_super
+from oqupy.util import save_object, load_object
 
 
 # -- testing super operators --------------------------------------------------

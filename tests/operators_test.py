@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.operators module.
 import pytest
 import numpy as np
 
-from time_evolving_mpo import operators
+from oqupy import operators
 
 SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],

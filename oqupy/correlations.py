@@ -22,8 +22,8 @@ import functools
 import numpy as np
 from scipy import integrate
 
-from time_evolving_mpo.base_api import BaseAPIClass
-from time_evolving_mpo.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.base_api import BaseAPIClass
+from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 
 
 # --- spectral density classes ------------------------------------------------
