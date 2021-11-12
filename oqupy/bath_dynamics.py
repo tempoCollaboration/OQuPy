@@ -60,4 +60,120 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None
             ) -> None:
+        self._system = system
+        self._bath = bath
+        self._process_tensor = process_tensor
+        self._system_correlations = system_correlations
+        self._bath_correlations = {}
+        super().__init__(name, description, description_dict)
+
+    @property
+    def system(self):
+        """
+        System Hamiltonian
+        """
+        return self._system
+
+    @property
+    def bath(self):
+        """
+        Bath properties
+        """
+        return self._bath
+
+    def bath_occupation(self,
+                    freq: float,
+                    dw: Optional[float] = 1.0):
+        r"""
+        Function to calculate the change in bath occupation in a particular
+        bandwidth.
+
+        Parameters
+        ----------
+        freq : float
+            Frequency about which to calculate the change in occupation.
+        dw : tuple (default = (1.0,1.0)):
+            Bandwidth of about the frequency to calculate the energy within. By
+            default what is returned by this method is a *density*.
+        Returns
+        -------
+        times : List[float]
+
+        bath_energy: float
+        """
+        return None
+
+    def correlation(self,
+                    freq_1: float,
+                    time_1: float,
+                    freq_2: Optional[float] = None,
+                    time_2: Optional[float] = None,
+                    dw: Optional[tuple] = (1.0,1.0),
+                    dagg: Optional[tuple] = (1,0)):
+        r"""
+        Function to calculate two-time correlation function between to frequency
+        bands of a bath.
+
+        Parameters
+        ----------
+        freq_1 : float
+            Frequency of the later time operator.
+        time_1 : float
+            Time the later operator acts.
+        freq_2 : float (default = None)
+            Frequency of the earlier time operator. If set to None will default
+            to freq_2=freq_1.
+        time_2 : float (default = None)
+            Time the earlier operator acts. If set to None will default to
+            time_2=time_1.
+        dw : tuple (default = (1.0,1.0)):
+            Bandwidth of about each frequency comparing correlations between.
+            By default what is returned by this method is a correlation
+            *density*.
+        dagg : Optional[tuple] (default = (1,0))
+            Determines whether each operator is daggered or not e.g. (1,0)
+            would correspond to < a^\dagger a >
+        Returns
+        -------
+        times : tuple
+            Pair of times of each operation.
+        correlation : complex
+            Bath correlation function
+            <a^{dagg[0]}_{freq_1} (time_1) a^{dagg[1]}_{freq_2} (time_2)>
+        """
+        return None
+
+    def _calc_kernel(self,
+                    freq_1: float,
+                    time_1: float,
+                    freq_2: float,
+                    time_2: float,
+                    dagg: tuple):
+        r"""
+        Function to calculate the corresponding kernel for the desired
+        correlation function.
+        Parameters
+        ----------
+        freq_1 : float
+            Frequency of the later time operator.
+        time_1 : float
+            Time the later operator acts.
+        freq_2 : float
+            Frequency of the earlier time operator.
+        time_2 : float
+            Time the earlier operator acts.
+        dagg : tuple
+            Determines whether each operator is daggered or not e.g. (1,0)
+            would correspond to < a^\dagger a >
+
+        Returns
+        -------
+        re_kernel : ndarray
+            An array that multiplies the real part of the system correlation
+            functions before being summed.
+        im_kernel : ndarray
+            An array that multiplies the imaginary part of the system
+            correlation functions before being summed.
+
+        """
         return None
