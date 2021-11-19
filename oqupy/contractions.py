@@ -15,7 +15,7 @@
 Module on the discrete time evolution of a density matrix.
 """
 
-from typing import List, Optional, Tuple, Callable
+from typing import List, Optional, Tuple, Callable, Union
 
 import numpy as np
 from numpy import ndarray
@@ -31,7 +31,7 @@ from oqupy.operators import identity
 
 def compute_dynamics(
         system: BaseSystem,
-        process_tensor: BaseProcessTensor,
+        process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         initial_state: Optional[ndarray] = None,
@@ -44,8 +44,8 @@ def compute_dynamics(
     ----------
     system: BaseSystem
         Object containing the system Hamiltonian information.
-    process_tensor: BaseProcessTensor
-        A process tensor object.
+    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
+        A process tensor object or list of process tensor objects.
 
     Returns
     -------
@@ -57,11 +57,23 @@ def compute_dynamics(
     assert isinstance(system, BaseSystem), \
         "Parameter `system` is not of type `tempo.BaseSystem`."
 
+    if not isinstance(process_tensor,List):
+        process_tensors = [process_tensor]
+    else:
+        process_tensors = process_tensor
     hs_dim = system.dimension
-    assert hs_dim == process_tensor.hilbert_space_dimension
+    for pt in process_tensors:
+        assert hs_dim == pt.hilbert_space_dimension
+
+    lens = [len(pt) for pt in process_tensors]
+    assert len(set(lens)) == 1, \
+        "All process tensors must be of the same length."
 
     if dt is None:
-        dt = process_tensor.dt
+        dts = [pt.dt for pt in process_tensors]
+        assert len(set(dts)) == 1, \
+            "All process tensors must be calculated with same timestep."
+        dt = dts[0]
         if dt is None:
             raise ValueError("Process tensor has no timestep, "\
                 + "please specify time step 'dt'.")
@@ -96,7 +108,7 @@ def compute_dynamics(
         second_step = expm(system.liouvillian(t+__dt*3.0/4.0)*__dt/2.0).T
         return first_step, second_step
 
-    states = _compute_dynamics(process_tensor=process_tensor,
+    states = _compute_dynamics(process_tensors=process_tensors,
                                controls=propagators,
                                initial_state=initial_state,
                                num_steps=__num_steps,
@@ -111,7 +123,7 @@ def compute_dynamics(
 
 def compute_final_state(
         system: BaseSystem,
-        process_tensor: BaseProcessTensor,
+        process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         initial_state: Optional[ndarray] = None,
@@ -137,35 +149,29 @@ def _compute_dynamics(
         num_steps: Optional[int] = None,
         record_all: Optional[bool] = True) -> List[ndarray]:
     """See BaseProcessTensorBackend.compute_dynamics() for docstring. """
-    process_tensors = list(process_tensors)
     num_envs = len(process_tensors)
-    dims = [pt.hilbert_space_dimension for pt in process_tensors]
-    assert len(set(dims)) == 1, \
-        "All process tensors must correspond to same system Hilbert space."
-    lens = [len(pt) for pt in process_tensors]
-    assert len(set(lens)) == 1, \
-        "All process tensors must be of the same length."
-    hs_dim = dims[0]
-    assert num_envs > 1 and initial_state is not None, \
+    hs_dim = process_tensors[0].hilbert_space_dimension
+
+    if num_envs > 1:
+        assert (initial_state is not None), \
         "For multiple environments an initial state must be specified."
-    
-    
+
     initial_tensor = process_tensors[0].get_initial_tensor()
     assert (initial_state is None) ^ (initial_tensor is None), \
         "Initial state must be either (exclusively) encoded in the " \
         + "process tensor or given as an argument."
-    if (initial_tensor is None) ^ (num_envs > 1):
+    if (initial_tensor is None) or (num_envs > 1):
         initial_tensor = util.add_singleton(
             initial_state.reshape(hs_dim**2), 0)
-    
+
     dummy_init = util.add_singleton(identity(hs_dim**2), 0)
     current = tn.Node(initial_tensor)
-    
+
     for i in range(num_envs-1):
         dummy = tn.Node(dummy_init)
         current[-1] ^ dummy[1]
         current = current @ dummy
-        
+
     current_bond_legs = [current[i] for i in range(num_envs)]
     current_state_leg = current[-1]
     states = []
@@ -177,11 +183,12 @@ def _compute_dynamics(
     for step in range(__num_steps):
         if record_all:
             # -- extract current state --
-            cap_node = tn.Node(1)
+            cap_nodes = []
             for i in range(num_envs):
                 try:
                     cap = process_tensors[i].get_cap_tensor(step)
-                    cap_node = tn.outer_product(cap_node, tn.Node(cap))
+                    cap_node = tn.Node(cap)
+                    cap_nodes.append(cap_node)
                 except Exception as e:
                     raise ValueError("There are either no cap tensors in "\
                             +f"process tensor {i} or process tensor {i} is "\
@@ -191,52 +198,73 @@ def _compute_dynamics(
                         +f"for step {step}.")
             node_dict, edge_dict = tn.copy([current])
             for i in range(num_envs):
-                edge_dict[current_bond_legs[i]] ^ cap_node[i]
-            state_node = node_dict[current] @ cap_node
+                edge_dict[current_bond_legs[i]] ^ cap_nodes[i][0]
+                node_dict[current] = node_dict[current] @ cap_nodes[i]
+            state_node = node_dict[current]
             state = state_node.get_tensor().reshape(hs_dim, hs_dim)
             states.append(state)
 
         # -- propagate one time step --
         try:
-            mpo = process_tensor.get_mpo_tensor(step)
+            mpo = process_tensors[0].get_mpo_tensor(step)
         except Exception as e:
-            raise ValueError("The process tensor is not long enough") from e
+            raise ValueError("Process tensor 0 is not long enough") from e
         if mpo is None:
-            raise ValueError("Process tensor has no mpo tensor "\
+            raise ValueError("Process tensor 0 has no mpo tensor "\
                 +f"for step {step}.")
         mpo_node = tn.Node(mpo)
+        mpo_bond_legs = [mpo_node[0]]
+        for i in range(1,num_envs):
+            try:
+                dummy_mpo = process_tensors[i].get_mpo_tensor(step)
+            except Exception as e:
+                raise ValueError(f"Process tensor {i} is not long enough")\
+                    from e
+            if dummy_mpo is None:
+                raise ValueError(f"Process tensor {i} has no mpo tensor "\
+                    +f"for step {step}.")
+
+            dummy_mpo_node = tn.Node(process_tensors[i].get_mpo_tensor(step))
+            mpo_node[-1] ^ dummy_mpo_node[2]
+            mpo_node = mpo_node @ dummy_mpo_node
+            mpo_bond_legs.append(mpo_node[i*2+1])
+
         pre, post = controls(step)
         pre_node = tn.Node(pre)
         post_node = tn.Node(post)
 
-        lam = process_tensor.get_lam_tensor(step)
-        if lam is None:
-            current_bond_leg ^ mpo_node[0]
-            current_state_leg ^ pre_node[0]
-            pre_node[1] ^ mpo_node[2]
-            mpo_node[3] ^ post_node[0]
-            current_bond_leg = mpo_node[1]
-            current_state_leg = post_node[1]
-            current = current @ pre_node @ mpo_node @ post_node
-        else:
-            lam_node = tn.Node(lam)
-            current_bond_leg ^ mpo_node[0]
-            current_state_leg ^ pre_node[0]
-            pre_node[1] ^ mpo_node[2]
-            mpo_node[1] ^ lam_node[0]
-            mpo_node[3] ^ post_node[0]
-            current_bond_leg = lam_node[1]
-            current_state_leg = post_node[1]
-            current = current @ pre_node @ mpo_node @ lam_node @ post_node
+        lams = [process_tensors[i].get_lam_tensor(step) for i in range(num_envs)]
+
+        for i in range(num_envs):
+            current_bond_legs[i] ^ mpo_bond_legs[i]
+        current_state_leg ^ pre_node[0]
+        pre_node[1] ^ mpo_node[2]
+        mpo_node[-1] ^ post_node[0]
+        current_bond_legs[0] = mpo_node[1]
+        for i in range(1,num_envs):
+            current_bond_legs[i] = mpo_node[2*i+2]
+        current_state_leg = post_node[1]
+        current = current @ pre_node @ mpo_node @ post_node
+        for i,lam in enumerate(lams):
+            if lam is not None:
+                lam_node = tn.Node(lam)
+                current_bond_legs[i]^lam_node[0]
+                current_bond_legs[i] = lam_node[1]
+                current @ lam_node
 
     # -- extract last state --
-    cap = process_tensor.get_cap_tensor(__num_steps)
-    if cap is None:
-        raise ValueError("Process tensor has no cap tensor "\
-            +f"for step {step}.")
-    cap_node = tn.Node(cap)
-    current_bond_leg ^ cap_node[0]
-    final_state_node = current @ cap_node
+    cap_nodes = []
+    for i in range(num_envs):
+        cap = process_tensors[i].get_cap_tensor(__num_steps)
+        if cap is None:
+            raise ValueError(f"Process tensor {i} has no cap tensor "\
+                +f"for step {step}.")
+        cap_node = tn.Node(cap)
+        cap_nodes.append(cap_node)
+    for i in range(num_envs):
+        current_bond_legs[i] ^ cap_nodes[i][0]
+        current = current @ cap_nodes[i]
+    final_state_node = current
     final_state = final_state_node.get_tensor().reshape(hs_dim, hs_dim)
     states.append(final_state)
 
