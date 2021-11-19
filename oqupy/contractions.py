@@ -26,6 +26,7 @@ from oqupy import util
 from oqupy.dynamics import Dynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem
+from oqupy.operators import identity
 
 
 def compute_dynamics(
@@ -130,47 +131,67 @@ def compute_final_state(
 
 
 def _compute_dynamics(
-        process_tensor: BaseProcessTensor,
+        process_tensors: List[BaseProcessTensor],
         controls: Callable[[int], Tuple[ndarray, ndarray]],
         initial_state: Optional[ndarray] = None,
         num_steps: Optional[int] = None,
         record_all: Optional[bool] = True) -> List[ndarray]:
     """See BaseProcessTensorBackend.compute_dynamics() for docstring. """
-    hs_dim = process_tensor.hilbert_space_dimension
-
-    initial_tensor = process_tensor.get_initial_tensor()
+    process_tensors = list(process_tensors)
+    num_envs = len(process_tensors)
+    dims = [pt.hilbert_space_dimension for pt in process_tensors]
+    assert len(set(dims)) == 1, \
+        "All process tensors must correspond to same system Hilbert space."
+    lens = [len(pt) for pt in process_tensors]
+    assert len(set(lens)) == 1, \
+        "All process tensors must be of the same length."
+    hs_dim = dims[0]
+    assert num_envs > 1 and initial_state is not None, \
+        "For multiple environments an initial state must be specified."
+    
+    
+    initial_tensor = process_tensors[0].get_initial_tensor()
     assert (initial_state is None) ^ (initial_tensor is None), \
         "Initial state must be either (exclusively) encoded in the " \
         + "process tensor or given as an argument."
-    if initial_tensor is None:
+    if (initial_tensor is None) ^ (num_envs > 1):
         initial_tensor = util.add_singleton(
             initial_state.reshape(hs_dim**2), 0)
-
+    
+    dummy_init = util.add_singleton(identity(hs_dim**2), 0)
     current = tn.Node(initial_tensor)
-    current_bond_leg = current[0]
-    current_state_leg = current[1]
+    
+    for i in range(num_envs-1):
+        dummy = tn.Node(dummy_init)
+        current[-1] ^ dummy[1]
+        current = current @ dummy
+        
+    current_bond_legs = [current[i] for i in range(num_envs)]
+    current_state_leg = current[-1]
     states = []
-
     if num_steps is None:
-        __num_steps = len(process_tensor)
+        __num_steps = len(process_tensors[0])
     else:
         __num_steps = num_steps
 
     for step in range(__num_steps):
         if record_all:
             # -- extract current state --
-            try:
-                cap = process_tensor.get_cap_tensor(step)
-            except Exception as e:
-                raise ValueError("There are either no cap tensors in the "\
-                        +"process tensor or the process tensor is not "\
-                        +"long enough") from e
-            if cap is None:
-                raise ValueError("Process tensor has no cap tensor "\
-                    +f"for step {step}.")
-            cap_node = tn.Node(cap)
+            cap_node = tn.Node(1)
+            for i in range(num_envs):
+                try:
+                    cap = process_tensors[i].get_cap_tensor(step)
+                    cap_node = tn.outer_product(cap_node, tn.Node(cap))
+                except Exception as e:
+                    raise ValueError("There are either no cap tensors in "\
+                            +f"process tensor {i} or process tensor {i} is "\
+                            +"not long enough") from e
+                if cap is None:
+                    raise ValueError(f"Process tensor {i} has no cap tensor "\
+                        +f"for step {step}.")
             node_dict, edge_dict = tn.copy([current])
-            edge_dict[current_bond_leg] ^ cap_node[0]
+            for i in range(num_envs):
+                edge_dict[current_bond_legs[i]] ^ cap_node[i]
             state_node = node_dict[current] @ cap_node
             state = state_node.get_tensor().reshape(hs_dim, hs_dim)
             states.append(state)
