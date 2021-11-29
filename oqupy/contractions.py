@@ -61,6 +61,11 @@ def compute_dynamics(
         process_tensors = [process_tensor]
     else:
         process_tensors = process_tensor
+
+    if len(process_tensors) > 1:
+        assert (initial_state is not None), \
+        "For multiple environments an initial state must be specified."
+
     hs_dim = system.dimension
     for pt in process_tensors:
         assert hs_dim == pt.hilbert_space_dimension
@@ -152,9 +157,6 @@ def _compute_dynamics(
     num_envs = len(process_tensors)
     hs_dim = process_tensors[0].hilbert_space_dimension
 
-    if num_envs > 1:
-        assert (initial_state is not None), \
-        "For multiple environments an initial state must be specified."
 
     initial_tensor = process_tensors[0].get_initial_tensor()
     assert (initial_state is None) ^ (initial_tensor is None), \
@@ -248,7 +250,7 @@ def _compute_dynamics(
         for i,lam in enumerate(lams):
             if lam is not None:
                 lam_node = tn.Node(lam)
-                current_bond_legs[i]^lam_node[0]
+                current_bond_legs[i] ^ lam_node[0]
                 current_bond_legs[i] = lam_node[1]
                 current @ lam_node
 
@@ -261,6 +263,7 @@ def _compute_dynamics(
                 +f"for step {step}.")
         cap_node = tn.Node(cap)
         cap_nodes.append(cap_node)
+
     for i in range(num_envs):
         current_bond_legs[i] ^ cap_nodes[i][0]
         current = current @ cap_nodes[i]
