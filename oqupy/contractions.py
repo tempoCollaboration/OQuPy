@@ -146,6 +146,83 @@ def compute_final_state(
         record_all=False)
     return dynamics.states[-1]
 
+def _build_cap(
+        process_tensors: List[BaseProcessTensor],
+        step: int):
+    """
+    Builds caps for multiple process tensors at a given timestep.
+
+    Parameters
+    ----------
+    process_tensors: List[BaseProcessTensor]
+        List of process tensor objects.
+    step: int
+        Step at which to build caps.
+
+    Returns
+    -------
+    cap_nodes: List[tensornetwork.Node]
+        List of caps for each process tensor at the chosen step.
+
+    """
+    cap_nodes = []
+    for i in range(len(process_tensors)):
+        try:
+            cap = process_tensors[i].get_cap_tensor(step)
+            cap_node = tn.Node(cap)
+            cap_nodes.append(cap_node)
+        except Exception as e:
+            raise ValueError("There are either no cap tensors in "\
+                    +f"process tensor {i} or process tensor {i} is "\
+                    +"not long enough") from e
+        if cap is None:
+            raise ValueError(f"Process tensor {i} has no cap tensor "\
+                +f"for step {step}.")
+    return cap_nodes
+
+def _build_mpo_node(
+        process_tensors: List[BaseProcessTensor],
+        step: int):
+    """
+    Contracts MPO for multiple process tensors at a given timestep into a
+    single tensor.
+
+    Parameters
+    ----------
+    process_tensors: List[BaseProcessTensor]
+        List of process tensor objects.
+    step: int
+        Step at which to build MPO.
+
+    Returns
+    -------
+    mpo_node: tensornetwork.Node
+        Single tensor built from MPO for each process tensor at the chosen
+        step.
+
+    """
+    try:
+        mpo = process_tensors[0].get_mpo_tensor(step)
+    except Exception as e:
+        raise ValueError("Process tensor 0 is not long enough") from e
+    if mpo is None:
+        raise ValueError("Process tensor 0 has no mpo tensor "\
+            +f"for step {step}.")
+    mpo_node = tn.Node(mpo)
+    for i in range(1,len(process_tensors)):
+        try:
+            dummy_mpo = process_tensors[i].get_mpo_tensor(step)
+        except Exception as e:
+            raise ValueError(f"Process tensor {i} is not long enough")\
+                from e
+        if dummy_mpo is None:
+            raise ValueError(f"Process tensor {i} has no mpo tensor "\
+                +f"for step {step}.")
+
+        dummy_mpo_node = tn.Node(dummy_mpo)
+        mpo_node[-1] ^ dummy_mpo_node[2]
+        mpo_node = mpo_node @ dummy_mpo_node
+    return mpo_node
 
 def _compute_dynamics(
         process_tensors: List[BaseProcessTensor],
@@ -174,7 +251,7 @@ def _compute_dynamics(
         current[-1] ^ dummy[1]
         current = current @ dummy
 
-    current_bond_legs = [current[i] for i in range(num_envs)]
+    current_bond_legs = current[:-1]
     current_state_leg = current[-1]
     states = []
     if num_steps is None:
@@ -185,19 +262,7 @@ def _compute_dynamics(
     for step in range(__num_steps):
         if record_all:
             # -- extract current state --
-            cap_nodes = []
-            for i in range(num_envs):
-                try:
-                    cap = process_tensors[i].get_cap_tensor(step)
-                    cap_node = tn.Node(cap)
-                    cap_nodes.append(cap_node)
-                except Exception as e:
-                    raise ValueError("There are either no cap tensors in "\
-                            +f"process tensor {i} or process tensor {i} is "\
-                            +"not long enough") from e
-                if cap is None:
-                    raise ValueError(f"Process tensor {i} has no cap tensor "\
-                        +f"for step {step}.")
+            cap_nodes = _build_cap(process_tensors,step)
             node_dict, edge_dict = tn.copy([current])
             for i in range(num_envs):
                 edge_dict[current_bond_legs[i]] ^ cap_nodes[i][0]
@@ -207,29 +272,9 @@ def _compute_dynamics(
             states.append(state)
 
         # -- propagate one time step --
-        try:
-            mpo = process_tensors[0].get_mpo_tensor(step)
-        except Exception as e:
-            raise ValueError("Process tensor 0 is not long enough") from e
-        if mpo is None:
-            raise ValueError("Process tensor 0 has no mpo tensor "\
-                +f"for step {step}.")
-        mpo_node = tn.Node(mpo)
+        mpo_node = _build_mpo_node(process_tensors,step)
         mpo_bond_legs = [mpo_node[0]]
-        for i in range(1,num_envs):
-            try:
-                dummy_mpo = process_tensors[i].get_mpo_tensor(step)
-            except Exception as e:
-                raise ValueError(f"Process tensor {i} is not long enough")\
-                    from e
-            if dummy_mpo is None:
-                raise ValueError(f"Process tensor {i} has no mpo tensor "\
-                    +f"for step {step}.")
-
-            dummy_mpo_node = tn.Node(process_tensors[i].get_mpo_tensor(step))
-            mpo_node[-1] ^ dummy_mpo_node[2]
-            mpo_node = mpo_node @ dummy_mpo_node
-            mpo_bond_legs.append(mpo_node[i*2+1])
+        mpo_bond_legs += [mpo_node[i*2+1] for i in range(1,num_envs)]
 
         pre, post = controls(step)
         pre_node = tn.Node(pre)
@@ -255,15 +300,7 @@ def _compute_dynamics(
                 current @ lam_node
 
     # -- extract last state --
-    cap_nodes = []
-    for i in range(num_envs):
-        cap = process_tensors[i].get_cap_tensor(__num_steps)
-        if cap is None:
-            raise ValueError(f"Process tensor {i} has no cap tensor "\
-                +f"for step {step}.")
-        cap_node = tn.Node(cap)
-        cap_nodes.append(cap_node)
-
+    cap_nodes = _build_cap(process_tensors, __num_steps)
     for i in range(num_envs):
         current_bond_legs[i] ^ cap_nodes[i][0]
         current = current @ cap_nodes[i]
