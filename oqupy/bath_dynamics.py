@@ -30,7 +30,6 @@ from oqupy.system import BaseSystem
 from oqupy.config import NpDtype
 
 
-
 class TwoTimeBathCorrelations(BaseAPIClass):
     """
     Class to facilitate calculation of two-time bath correlations.
@@ -140,14 +139,14 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         Parameters
         ----------
         freq_1 : float
-            Frequency of the later time operator.
+            Frequency of the earlier time operator.
         time_1 : float
-            Time the later operator acts.
+            Time the earlier operator acts.
         freq_2 : float (default = None)
-            Frequency of the earlier time operator. If set to None will default
+            Frequency of the later time operator. If set to None will default
             to freq_2=freq_1.
         time_2 : float (default = None)
-            Time the earlier operator acts. If set to None will default to
+            Time the later operator acts. If set to None will default to
             time_2=time_1.
         dw : tuple (default = (1.0,1.0)):
             Bandwidth of about each frequency comparing correlations between.
@@ -162,10 +161,22 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             Pair of times of each operation.
         correlation : complex
             Bath correlation function
-            <a^{dagg[0]}_{freq_1} (time_1) a^{dagg[1]}_{freq_2} (time_2)>
+            <a^{dagg[0]}_{freq_2} (time_2) a^{dagg[1]}_{freq_1} (time_1)>
+
+        The calculation consists of a double integral of the form:
+
+        .. math::
+
+            \int_0^t \int_0^t' \Re[\langle O(t')O(t'') \rangle] K_R(t',t'')
+                               + i \Im[\langle O(t')O(t'') \rangle] K_I(t',t'')
+                                       dt'' dt'
+
+        where :math:`O` is the system operator coupled to the bath and
+        :math:`K_R` and :math:`K_I` are generally piecewise kernels which
+        depend on the exact bath correlation function desired.
         """
-        dt = self._process_tensor.times[1]-self._process_tensor.times[0]
-        corr_mat_dim = int(np.round(time_1/dt))
+        dt = self._process_tensor.dt
+        corr_mat_dim = int(np.round(time_2/dt))
         current_corr_dim = self._system_correlations.shape[0]
         if time_2 is None:
             time_2 = time_1
@@ -208,13 +219,13 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         Parameters
         ----------
         freq_1 : float
-            Frequency of the later time operator.
-        time_1 : float
-            Time the later operator acts.
-        freq_2 : float
             Frequency of the earlier time operator.
-        time_2 : float
+        time_1 : float
             Time the earlier operator acts.
+        freq_2 : float
+            Frequency of the later time operator.
+        time_2 : float
+            Time the later operator acts.
         dagg : tuple
             Determines whether each operator is daggered or not e.g. (1,0)
             would correspond to < a^\dagger a >
@@ -228,83 +239,126 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             An array that multiplies the imaginary part of the system
             correlation functions before being summed.
 
+        The general structure of the kernel is piecewise and different for the
+        real and imaginary parts of the correlation function. To accommodate
+        the most general case we split the integrals up in the following way:
+
+        .. math::
+            \int_0^t \int_0^t' = \int_0^{t_1} \int_0^{t'}+
+                                 \int_{t_1}^{t} \int_0^{t_1}+
+                                 \int_{t_1}^{t} \int_{t_1}^{t'}
+
+        where :math:`t_1` is the time the earlier operator acts. We will refer
+        to these as `region_a`, `region_b` and `region_c` in the code. In the
+        actual implementation we build the kernel for the full square
+        integration region and then simply keep the upper triangular portion of
+        the matrix.
+
         """
-        dt = self._process_tensor.times[1]-self._process_tensor.times[0]
+        dt = self._process_tensor.dt
+        #pieces of kernel consist of some combination of phases and
+        #Bose-Einstein factors
         def bose_einstein(w,temp):
             if temp == 0:
                 return 0
             return np.exp(-w/temp)/(1-np.exp(-w/temp))
         def phase(i,j):
-            ph = np.exp(-1j*((2*dagg[0]-1)*freq_1*i+(2*dagg[1]-1)*freq_2*j)*dt)
+            ph = np.exp(-1j*((2*dagg[0]-1)*freq_2*i+(2*dagg[1]-1)*freq_1*j)*dt)
             return ph
-        ker_dim = int(np.round(time_1/dt))
-        switch = int(np.round(time_2/dt))
+        ker_dim = int(np.round(time_2/dt))
+        switch = int(np.round(time_1/dt)) #calculate index corresponding to t_1
         re_kernel = np.zeros((ker_dim,ker_dim),dtype=NpDtype)
         im_kernel = np.zeros((ker_dim,ker_dim),dtype=NpDtype)
         tpp_index,tp_index = np.meshgrid(np.arange(ker_dim),np.arange(ker_dim),
-                                      indexing='ij')
+                                      indexing='ij') #array of indices for each
+                                                     #array element
         n_1,n_2 = bose_einstein(freq_1,self.bath.correlations.temperature),\
                       bose_einstein(freq_2,self.bath.correlations.temperature)
+
+        region_a = (slice(switch),slice(switch))           #(0->t_1, 0->t_1)
+        region_b = (slice(switch),slice(switch,None))      #(0->t_1, t_1->t)
+        region_c = (slice(switch,None),slice(switch,None)) #(t_1->t, t_1->t)
+
         if dagg == (0,1):
-            re_kernel[:switch,:] = phase(tp_index[:switch,:],
-                                          tpp_index[:switch,:])
-            re_kernel[:switch,:switch] += phase(tpp_index[:switch,:switch],
-                                                tp_index[:switch,:switch])
-            im_kernel[:switch,:switch] = -(2*n_1+1)*phase(tpp_index[:switch,
-                                                                    :switch],
-                                                          tp_index[:switch,
-                                                                   :switch])
-            im_kernel[:switch,:] += (2*n_2+1)*phase(tp_index[:switch,:],
-                                                    tpp_index[:switch,:])
-            im_kernel[switch:,switch:] = -2*(n_2+1)*phase(tp_index[switch:,
-                                                                  switch:],
-                                                         tpp_index[switch:,
-                                                                   switch:])
+            re_kernel[region_a] = phase(tp_index[region_a],
+                                          tpp_index[region_a])
+            re_kernel[region_a] += phase(tpp_index[region_a],
+                                                tp_index[region_a])
+
+            re_kernel[region_b] = phase(tp_index[region_b],
+                                          tpp_index[region_b])
+
+            im_kernel[region_a] = -(2*n_2+1)*phase(tpp_index[region_a],
+                                                          tp_index[region_a])
+            im_kernel[region_a] += (2*n_1+1)*phase(tp_index[region_a],
+                                                    tpp_index[region_a])
+
+            im_kernel[region_b] = (2*n_1+1)*phase(tp_index[region_b],
+                                                    tpp_index[region_b])
+
+            im_kernel[region_c] = -2*(n_1+1)*phase(tp_index[region_c],
+                                                         tpp_index[region_c])
+
         elif dagg == (1,0):
-            re_kernel[:switch,:] = phase(tp_index[:switch,:],
-                                          tpp_index[:switch,:])
-            re_kernel[:switch,:switch] += phase(tpp_index[:switch,:switch],
-                                                tp_index[:switch,:switch])
-            im_kernel[:switch,:switch] = -(2*n_1+1)*phase(tpp_index[:switch,
-                                                                   :switch],
-                                                         tp_index[:switch,
-                                                                  :switch])
-            im_kernel[:switch,:] += (2*n_2+1)*phase(tp_index[:switch,:],
+            re_kernel[region_a] = phase(tp_index[region_a],
+                                          tpp_index[region_a])
+            re_kernel[region_a] += phase(tpp_index[region_a],
+                                                tp_index[region_a])
+
+            re_kernel[region_b] = phase(tp_index[region_b],
+                                          tpp_index[region_b])
+
+            im_kernel[region_a] = -(2*n_2+1)*phase(tpp_index[region_a],
+                                                         tp_index[region_a])
+            im_kernel[region_a] += (2*n_1+1)*phase(tp_index[:switch,:],
                                                     tpp_index[:switch,:])
-            im_kernel[switch:,switch:] = 2*(n_2)*phase(tp_index[switch:,
-                                                                 switch:],
-                                                        tpp_index[switch:,
-                                                                  switch:])
+
+            im_kernel[region_b] = (2*n_1+1)*phase(tp_index[region_b],
+                                                    tpp_index[region_b])
+
+            im_kernel[region_c] = 2*(n_1)*phase(tp_index[region_c],
+                                                        tpp_index[region_c])
+
         elif dagg == (1,1):
-            re_kernel[:switch,:] = -phase(tp_index[:switch,:],
-                                         tpp_index[:switch,:])
-            re_kernel[:switch,:switch] -= phase(tpp_index[:switch,:switch],
-                                                tp_index[:switch,:switch])
-            im_kernel[:switch,:switch] = (2*n_1+1)*phase(tpp_index[:switch,
-                                                                    :switch],
-                                                          tp_index[:switch,
-                                                                   :switch])
-            im_kernel[:switch,:] += (2*n_2+1)*phase(tp_index[:switch,:],
-                                                    tpp_index[:switch,:])
-            im_kernel[switch:,switch:] = 2*(n_2+1)*phase(tp_index[switch:,
-                                                                   switch:],
-                                                          tpp_index[switch:,
-                                                                    switch:])
+            re_kernel[region_a] = -phase(tp_index[region_a],
+                                         tpp_index[region_a])
+            re_kernel[region_a] -= phase(tpp_index[region_a],
+                                                tp_index[region_a])
+
+            re_kernel[region_b] = -phase(tp_index[region_b],
+                                         tpp_index[region_b])
+
+            im_kernel[region_a] = (2*n_2+1)*phase(tpp_index[region_a],
+                                                          tp_index[region_a])
+            im_kernel[region_a] += (2*n_1+1)*phase(tp_index[region_a],
+                                                    tpp_index[region_a])
+
+            im_kernel[region_b] = (2*n_1+1)*phase(tp_index[region_b],
+                                                    tpp_index[region_b])
+
+            im_kernel[region_c] = 2*(n_1+1)*phase(tp_index[region_c],
+                                                          tpp_index[region_c])
+
         elif dagg == (0,0):
-            re_kernel[:switch,:] = -phase(tp_index[:switch,:],
-                                         tpp_index[:switch,:])
-            re_kernel[:switch,:switch] -= phase(tpp_index[:switch,:switch],
-                                                tp_index[:switch,:switch])
-            im_kernel[:switch,:switch] = -(2*n_1+1)*phase(tpp_index[:switch,
-                                                                   :switch],
-                                                         tp_index[:switch,
-                                                                  :switch])
-            im_kernel[:switch,:] -= (2*n_2+1)*phase(tp_index[:switch,:],
-                                                    tpp_index[:switch,:])
-            im_kernel[switch:,switch:] = -2*(n_2)*phase(tp_index[switch:,
-                                                                switch:],
-                                                       tpp_index[switch:,
-                                                                 switch:])
-        re_kernel = np.triu(re_kernel)
+            re_kernel[region_a] = -phase(tp_index[region_a],
+                                         tpp_index[region_a])
+            re_kernel[region_a] -= phase(tpp_index[region_a],
+                                                tp_index[region_a])
+
+            re_kernel[region_b] = -phase(tp_index[region_b],
+                                         tpp_index[region_b])
+
+            im_kernel[region_a] = -(2*n_2+1)*phase(tpp_index[region_a],
+                                                         tp_index[region_a])
+            im_kernel[region_a] -= (2*n_1+1)*phase(tp_index[region_a],
+                                                    tpp_index[region_a])
+
+            im_kernel[region_b] = -(2*n_1+1)*phase(tp_index[region_b],
+                                                    tpp_index[region_b])
+
+            im_kernel[region_c] = -2*(n_1)*phase(tp_index[region_c],
+                                                       tpp_index[region_c])
+
+        re_kernel = np.triu(re_kernel) #only keep triangular region
         im_kernel = np.triu(im_kernel)
         return re_kernel,im_kernel
