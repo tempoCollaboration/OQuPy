@@ -23,6 +23,7 @@ import tensornetwork as tn
 from scipy.linalg import expm
 
 from oqupy import util
+from oqupy.control import Control
 from oqupy.dynamics import Dynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem
@@ -32,6 +33,7 @@ from oqupy.operators import identity
 def compute_dynamics(
         system: BaseSystem,
         process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
+        control: Optional[Control] = None,
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         initial_state: Optional[ndarray] = None,
@@ -55,12 +57,17 @@ def compute_dynamics(
     """
     # -- input parsing --
     assert isinstance(system, BaseSystem), \
-        "Parameter `system` is not of type `tempo.BaseSystem`."
+        "Parameter `system` is not of type `oqupy.BaseSystem`."
 
-    if not isinstance(process_tensor,List):
+    if not isinstance(process_tensor, List):
         process_tensors = [process_tensor]
     else:
         process_tensors = process_tensor
+
+    for pt in process_tensors:
+        assert isinstance(pt, BaseProcessTensor), \
+            "Parameter `process_tensor` is neither a process tensor nor a " \
+                + "list of process tensors. "
 
     if len(process_tensors) > 1:
         assert (initial_state is not None), \
@@ -73,6 +80,13 @@ def compute_dynamics(
     lens = [len(pt) for pt in process_tensors]
     assert len(set(lens)) == 1, \
         "All process tensors must be of the same length."
+
+    if control is not None:
+        assert isinstance(control, Control), \
+            "Parameter `control` is not of type `oqupy.Control`."
+        __control = control
+    else:
+        __control = Control(hs_dim)
 
     if dt is None:
         dts = [pt.dt for pt in process_tensors]
@@ -113,8 +127,18 @@ def compute_dynamics(
         second_step = expm(system.liouvillian(t+__dt*3.0/4.0)*__dt/2.0).T
         return first_step, second_step
 
+    def controls(step: int):
+        """Create the system (pre and post measurement) for the time step
+        `step`. """
+        return __control.get_controls(
+            step,
+            dt=__dt,
+            start_time=__start_time)
+
+
     states = _compute_dynamics(process_tensors=process_tensors,
-                               controls=propagators,
+                               propagators=propagators,
+                               controls=controls,
                                initial_state=initial_state,
                                num_steps=__num_steps,
                                record_all=record_all)
@@ -128,7 +152,7 @@ def compute_dynamics(
 
 def compute_final_state(
         system: BaseSystem,
-        process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
+        process_tensor: Union[List[BaseProcessTensor], BaseProcessTensor],
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         initial_state: Optional[ndarray] = None,
@@ -226,6 +250,7 @@ def _build_mpo_node(
 
 def _compute_dynamics(
         process_tensors: List[BaseProcessTensor],
+        propagators: Callable[[int], Tuple[ndarray, ndarray]],
         controls: Callable[[int], Tuple[ndarray, ndarray]],
         initial_state: Optional[ndarray] = None,
         num_steps: Optional[int] = None,
@@ -260,9 +285,18 @@ def _compute_dynamics(
         __num_steps = num_steps
 
     for step in range(__num_steps):
+        # -- apply pre measurement control --
+        pre_measurement_control, post_measurement_control = controls(step)
+        if pre_measurement_control is not None:
+            raise NotImplementedError() # ToDo
+            # pre_node = tn.Node(pre_measurement_control)
+            # current_state_leg ^ pre_node[0]
+            # current_state_leg = pre_node[1]
+            # current = current @ pre_node
+
+        # -- extract current state --
         if record_all:
-            # -- extract current state --
-            cap_nodes = _build_cap(process_tensors,step)
+            cap_nodes = _build_cap(process_tensors, step)
             node_dict, edge_dict = tn.copy([current])
             for i in range(num_envs):
                 edge_dict[current_bond_legs[i]] ^ cap_nodes[i][0]
@@ -271,33 +305,45 @@ def _compute_dynamics(
             state = state_node.get_tensor().reshape(hs_dim, hs_dim)
             states.append(state)
 
+        # -- apply post measurement control --
+        if post_measurement_control is not None:
+            raise NotImplementedError() # ToDo
+
         # -- propagate one time step --
-        mpo_node = _build_mpo_node(process_tensors,step)
+        mpo_node = _build_mpo_node(process_tensors, step)
         mpo_bond_legs = [mpo_node[0]]
-        mpo_bond_legs += [mpo_node[i*2+1] for i in range(1,num_envs)]
+        mpo_bond_legs += [mpo_node[i*2+1] for i in range(1, num_envs)]
 
-        pre, post = controls(step)
-        pre_node = tn.Node(pre)
-        post_node = tn.Node(post)
+        first_half_prop, second_half_prop = propagators(step)
+        first_half_prop_node = tn.Node(first_half_prop)
+        second_half_prop_node = tn.Node(second_half_prop)
 
-        lams = [process_tensors[i].get_lam_tensor(step) for i in range(num_envs)]
+        lams = [process_tensors[i].get_lam_tensor(step) \
+                for i in range(num_envs)]
 
         for i in range(num_envs):
             current_bond_legs[i] ^ mpo_bond_legs[i]
-        current_state_leg ^ pre_node[0]
-        pre_node[1] ^ mpo_node[2]
-        mpo_node[-1] ^ post_node[0]
+        current_state_leg ^ first_half_prop_node[0]
+        first_half_prop_node[1] ^ mpo_node[2]
+        mpo_node[-1] ^ second_half_prop_node[0]
         current_bond_legs[0] = mpo_node[1]
         for i in range(1,num_envs):
             current_bond_legs[i] = mpo_node[2*i+2]
-        current_state_leg = post_node[1]
-        current = current @ pre_node @ mpo_node @ post_node
+        current_state_leg = second_half_prop_node[1]
+        current = current \
+            @ first_half_prop_node @ mpo_node @ second_half_prop_node
         for i,lam in enumerate(lams):
             if lam is not None:
                 lam_node = tn.Node(lam)
                 current_bond_legs[i] ^ lam_node[0]
                 current_bond_legs[i] = lam_node[1]
                 current @ lam_node
+
+
+    # -- apply last pre measurement control --
+    pre_measurement_control, post_measurement_control = controls(step)
+    if pre_measurement_control is not None:
+        raise NotImplementedError() # ToDo
 
     # -- extract last state --
     cap_nodes = _build_cap(process_tensors, __num_steps)

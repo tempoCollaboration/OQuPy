@@ -22,6 +22,9 @@ __all__ = [
     'Bath',
     'CustomCorrelations',
     'CustomSD',
+    'compute_dynamics',
+    'compute_final_state',
+    'Control',
     'Dynamics',
     'FileProcessTensor',
     'guess_pt_tempo_parameters',
@@ -47,36 +50,36 @@ __all__ = [
 
 from oqupy.bath import Bath
 
-# from oqupy.control import Control
-
 from oqupy.contractions import compute_dynamics
 from oqupy.contractions import compute_final_state
+
+from oqupy.control import Control
+
+from oqupy.correlations import CustomCorrelations
+from oqupy.correlations import CustomSD
+from oqupy.correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
 
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
 
-import oqupy.operators
-
 import oqupy.helpers
+
+import oqupy.operators
 
 from oqupy.process_tensor import import_process_tensor
 from oqupy.process_tensor import TrivialProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
 
+from oqupy.system import System
+from oqupy.system import TimeDependentSystem
+
 from oqupy.tempo.pt_tempo import PtTempo
 from oqupy.tempo.pt_tempo import PtTempoParameters
 from oqupy.tempo.pt_tempo import guess_pt_tempo_parameters
 from oqupy.tempo.pt_tempo import pt_tempo_compute
-
-from oqupy.correlations import CustomCorrelations
-from oqupy.correlations import CustomSD
-from oqupy.correlations import PowerLawSD
-
-from oqupy.system import System
-from oqupy.system import TimeDependentSystem
 
 from oqupy.tempo.tempo import Tempo
 from oqupy.tempo.tempo import TempoParameters
