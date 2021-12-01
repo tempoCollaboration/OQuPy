@@ -15,13 +15,48 @@
 ToDo
 """
 
-pass
-# class Control:
-#     """
-#     ToDo
-#     """
-#     def __init__(self, *args, **kwargs): # ToDo
-#         """
-#         ToDo
-#         """
-#         pass # ToDo
+from typing import Callable, Optional, Tuple, Union
+
+from numpy import ndarray
+
+
+class Control:
+    """
+    ToDo
+    """
+    def __init__(self, dimension: int) -> None:
+        """
+        ToDo
+        """
+        pass # ToDo
+
+    def add_single(
+            self,
+            control_operation: ndarray,
+            time: Union[int, float],
+            pre: Optional[bool] = True) -> None:
+        """
+        ToDo
+        """
+        pass# ToDo
+
+    def add_continuous(
+            self,
+            control_fct: Callable[[ndarray, float], ndarray],
+            pre: Optional[bool] = True) -> None:
+        """
+        ToDo
+        """
+        pass# ToDo
+
+    def get_controls(
+            self,
+            step: int,
+            dt: Optional[float] = None,
+            start_time: Optional[float] = 0.0,
+            ) -> Tuple[ndarray, ndarray]:
+        """
+        ToDo
+        """
+        pass # ToDo
+        return None, None
