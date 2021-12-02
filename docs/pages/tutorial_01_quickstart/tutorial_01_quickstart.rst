@@ -19,11 +19,11 @@ TEMPO method to the strongly coupled spin boson model.
 You can follow this tutorial using any of these options:
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/main?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
 
 - launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.ipynb>`,
-- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/master/tutorials/tutorial_01_quickstart.py>`,
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/main/tutorials/tutorial_01_quickstart.ipynb>`,
+- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/main/tutorials/tutorial_01_quickstart.py>`,
 - read through it and code along below.
 
 -------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ to use
 
     import sys
     sys.path.insert(0,'..')
-    
+
     import time_evolving_mpo as tempo
     import numpy as np
     import matplotlib.pyplot as plt

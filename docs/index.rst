@@ -26,7 +26,7 @@ described in [3] and [4] are work in progress and supported by the
   non-Markovian open quantum systems*, arXiv:2109.08442 (2021).
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/main?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
 
 +--------------------+---------------------------------------------------------------------------------------------------------------+
 | **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                                         |
