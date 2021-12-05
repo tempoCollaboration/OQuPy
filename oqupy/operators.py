@@ -154,3 +154,10 @@ def left_right_super(
         right_operator: ndarray) -> ndarray:
     """Construct left and right acting superoperator from operators. """
     return np.kron(left_operator, right_operator.T)
+
+def preparation(
+        density_matrix: ndarray) -> ndarray:
+    """Construct the super operator that prepares the state. """
+    dim = density_matrix.shape[0]
+    identity_matrix = np.identity(dim, dtype=NpDtype)
+    return np.outer(density_matrix.flatten(), identity_matrix.flatten())
