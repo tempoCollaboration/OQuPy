@@ -284,15 +284,17 @@ def _compute_dynamics(
     else:
         __num_steps = num_steps
 
-    for step in range(__num_steps):
+    for step in range(__num_steps+1):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
         if pre_measurement_control is not None:
-            raise NotImplementedError() # ToDo
-            # pre_node = tn.Node(pre_measurement_control)
-            # current_state_leg ^ pre_node[0]
-            # current_state_leg = pre_node[1]
-            # current = current @ pre_node
+            pre_node = tn.Node(pre_measurement_control.T)
+            current_state_leg ^ pre_node[0]
+            current_state_leg = pre_node[1]
+            current = current @ pre_node
+
+        if step == __num_steps:
+            break
 
         # -- extract current state --
         if record_all:
@@ -307,7 +309,10 @@ def _compute_dynamics(
 
         # -- apply post measurement control --
         if post_measurement_control is not None:
-            raise NotImplementedError() # ToDo
+            post_node = tn.Node(post_measurement_control.T)
+            current_state_leg ^ post_node[0]
+            current_state_leg = post_node[1]
+            current = current @ post_node
 
         # -- propagate one time step --
         mpo_node = _build_mpo_node(process_tensors, step)
@@ -338,12 +343,6 @@ def _compute_dynamics(
                 current_bond_legs[i] ^ lam_node[0]
                 current_bond_legs[i] = lam_node[1]
                 current @ lam_node
-
-
-    # -- apply last pre measurement control --
-    pre_measurement_control, post_measurement_control = controls(step)
-    if pre_measurement_control is not None:
-        raise NotImplementedError() # ToDo
 
     # -- extract last state --
     cap_nodes = _build_cap(process_tensors, __num_steps)
