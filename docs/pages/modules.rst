@@ -1,14 +1,14 @@
 All Modules
 ===========
 
-tempo.base_api
+oqupy.base_api
 --------------
 
 .. automodule:: oqupy.base_api
     :members:
 
 
-tempo.bath
+oqupy.bath
 ----------
 
 .. automodule:: oqupy.bath
@@ -16,7 +16,15 @@ tempo.bath
     :members:
 
 
-tempo.correlations
+oqupy.contractions
+------------------
+
+.. automodule:: oqupy.contractions
+    :show-inheritance:
+    :members:
+
+
+oqupy.correlations
 ------------------
 
 .. automodule:: oqupy.correlations
@@ -24,7 +32,7 @@ tempo.correlations
     :members:
 
 
-tempo.dynamics
+oqupy.dynamics
 --------------
 
 .. automodule:: oqupy.dynamics
@@ -32,7 +40,7 @@ tempo.dynamics
     :members:
 
 
-tempo.exceptions
+oqupy.exceptions
 ----------------
 
 .. automodule:: oqupy.exceptions
@@ -40,28 +48,28 @@ tempo.exceptions
     :members:
 
 
-tempo.file_formats
+oqupy.file_formats
 ------------------
 
 .. automodule:: oqupy.file_formats
     :members:
 
 
-tempo.helpers
+oqupy.helpers
 -------------
 
 .. automodule:: oqupy.helpers
     :members:
 
 
-tempo.operators
+oqupy.operators
 ---------------
 
 .. automodule:: oqupy.operators
     :members:
 
 
-tempo.process_tensor
+oqupy.process_tensor
 --------------------
 
 .. automodule:: oqupy.process_tensor
@@ -69,7 +77,7 @@ tempo.process_tensor
     :members:
 
 
-tempo.pt_tempo
+oqupy.pt_tempo
 --------------
 
 .. automodule:: oqupy.pt_tempo
@@ -77,7 +85,7 @@ tempo.pt_tempo
     :members:
 
 
-tempo.system
+oqupy.system
 ------------
 
 .. automodule:: oqupy.system
@@ -85,7 +93,7 @@ tempo.system
     :members:
 
 
-tempo.tempo
+oqupy.tempo
 -----------
 
 .. automodule:: oqupy.tempo
@@ -93,14 +101,14 @@ tempo.tempo
     :members:
 
 
-tempo.util
+oqupy.util
 ----------
 
 .. automodule:: oqupy.util
     :members:
 
 
-tempo.backends
+oqupy.backends
 --------------
 
 base_backends
