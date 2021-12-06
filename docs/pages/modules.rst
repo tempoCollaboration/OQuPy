@@ -48,13 +48,6 @@ oqupy.exceptions
     :members:
 
 
-oqupy.file_formats
-------------------
-
-.. automodule:: oqupy.file_formats
-    :members:
-
-
 oqupy.helpers
 -------------
 
@@ -77,14 +70,6 @@ oqupy.process_tensor
     :members:
 
 
-oqupy.pt_tempo
---------------
-
-.. automodule:: oqupy.pt_tempo
-    :show-inheritance:
-    :members:
-
-
 oqupy.system
 ------------
 
@@ -93,10 +78,18 @@ oqupy.system
     :members:
 
 
-oqupy.tempo
------------
+oqupy.tempo.pt_tempo
+--------------------
 
-.. automodule:: oqupy.tempo
+.. automodule:: oqupy.tempo.pt_tempo
+    :show-inheritance:
+    :members:
+
+
+oqupy.tempo.tempo
+-----------------
+
+.. automodule:: oqupy.tempo.tempo
     :show-inheritance:
     :members:
 

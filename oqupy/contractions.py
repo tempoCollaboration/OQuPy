@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module on the discrete time evolution of a density matrix.
+Module for various applications involving contractions of the process tensor.
 """
 
 from typing import Callable, List, Optional, Text, Tuple, Union
