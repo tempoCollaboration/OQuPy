@@ -344,8 +344,8 @@ class Tempo(BaseAPIClass):
         step `step`. """
         dt = self._parameters.dt
         t = self._time(step)
-        first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0).T
-        second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0).T
+        first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0)
+        second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
         return first_step, second_step
 
     def _time(self, step: int):

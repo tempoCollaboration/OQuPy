@@ -136,11 +136,11 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
         """
         self._step += 1
         prop_1, prop_2 = self._propagators(self._step-1)
-        prop_1_na = na.NodeArray([prop_1],
+        prop_1_na = na.NodeArray([prop_1.T],
                                  left=False,
                                  right=False,
                                  name="first half-step")
-        prop_2_na = na.NodeArray([prop_2],
+        prop_2_na = na.NodeArray([prop_2.T],
                                  left=True,
                                  right=False,
                                  name="second half-step")

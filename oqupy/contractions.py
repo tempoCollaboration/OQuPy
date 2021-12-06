@@ -123,8 +123,8 @@ def compute_dynamics(
         """Create the system propagators (first and second half) for the
         time step `step`. """
         t = __start_time + step * __dt
-        first_step = expm(system.liouvillian(t+__dt/4.0)*__dt/2.0).T
-        second_step = expm(system.liouvillian(t+__dt*3.0/4.0)*__dt/2.0).T
+        first_step = expm(system.liouvillian(t+__dt/4.0)*__dt/2.0)
+        second_step = expm(system.liouvillian(t+__dt*3.0/4.0)*__dt/2.0)
         return first_step, second_step
 
     def controls(step: int):
@@ -320,8 +320,8 @@ def _compute_dynamics(
         mpo_bond_legs += [mpo_node[i*2+1] for i in range(1, num_envs)]
 
         first_half_prop, second_half_prop = propagators(step)
-        first_half_prop_node = tn.Node(first_half_prop)
-        second_half_prop_node = tn.Node(second_half_prop)
+        first_half_prop_node = tn.Node(first_half_prop.T)
+        second_half_prop_node = tn.Node(second_half_prop.T)
 
         lams = [process_tensors[i].get_lam_tensor(step) \
                 for i in range(num_envs)]
