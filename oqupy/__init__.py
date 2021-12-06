@@ -50,6 +50,7 @@ __all__ = [
 
 from oqupy.bath import Bath
 
+from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
 from oqupy.contractions import compute_final_state
 
