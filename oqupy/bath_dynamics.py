@@ -28,6 +28,7 @@ from oqupy.process_tensor import BaseProcessTensor
 from oqupy.bath import Bath
 from oqupy.system import BaseSystem
 from oqupy.config import NpDtype
+from oqupy.contractions import compute_correlations
 
 
 class TwoTimeBathCorrelations(BaseAPIClass):
@@ -53,6 +54,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             system: BaseSystem,
             bath: Bath,
             process_tensor: BaseProcessTensor,
+            initial_state: Optional[np.ndarray],
             system_correlations: Optional[np.ndarray] = np.array([[]],
                                                               dtype=NpDtype),
             name: Optional[Text] = None,
@@ -62,6 +64,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         self._system = system
         self._bath = bath
         self._process_tensor = process_tensor
+        self._initial_state = initial_state
         self._system_correlations = system_correlations
         self._bath_correlations = {}
         super().__init__(name, description, description_dict)
@@ -80,7 +83,14 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         """
         return self._bath
 
-    def bath_occupation(self,
+    @property
+    def initial_state(self):
+        """
+        Bath properties
+        """
+        return self._initial_state
+
+    def occupation(self,
                     freq: float,
                     dw: Optional[float] = 1.0):
         r"""
@@ -100,30 +110,47 @@ class TwoTimeBathCorrelations(BaseAPIClass):
 
         bath_energy: float
         """
-        corr_mat_dim = len(self._process_tensor.times)
+        corr_mat_dim = len(self._process_tensor)
         current_corr_dim = self._system_correlations.shape[0]
-        correlation_set = [(x,y) for y in range(current_corr_dim,corr_mat_dim)\
-                           for x in range(y+1)]
-        if len(correlation_set)>0:
-            dim_diff = corr_mat_dim-self._system_correlations.shape[0]
-            coup_op = self.bath.coupling_operator
-            _new_sys_correlations = \
-                self._process_tensor.calc_correlations(coup_op,correlation_set)
+        dt = self._process_tensor.dt
+        last_time = corr_mat_dim*dt
+        tlist = np.arange(0,last_time+dt,dt)
+        if freq == 0:
+            return tlist,np.zeros(len(tlist))
+        times_a = slice(corr_mat_dim)
+        if self._system_correlations.size == 0:
+            times_b = slice(corr_mat_dim)
+        else:
+            times_b = slice(current_corr_dim,corr_mat_dim)
+        dim_diff = corr_mat_dim-current_corr_dim
+        if dim_diff>0:
+            coup_op = self.bath.unitary_transform@self.bath.coupling_operator@\
+                self.bath.unitary_transform.conjugate().T
+            _,_,_new_sys_correlations =\
+                compute_correlations(self.system,
+                                     self._process_tensor,
+                                     coup_op, coup_op,
+                                     times_a, times_b,
+                                     initial_state=self.initial_state)
+
             self._system_correlations = np.pad(self._system_correlations,
-                                               ((0,dim_diff),
-                                                (0,dim_diff)))
-            for n,i in enumerate(correlation_set):
-                self._system_correlations[i] = _new_sys_correlations[n]
+                                               ((0,dim_diff),(0,0)),
+                                               'constant',
+                                               constant_values=np.nan)
+            self._system_correlations = np.append(self._system_correlations,
+                                                  _new_sys_correlations,
+                                                  axis=1)
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
-        last_time = self._process_tensor.times[-1]
+        _sys_correlations = np.nan_to_num(_sys_correlations)
+        last_time = len(self._process_tensor)*self._process_tensor.dt
         re_kernel,im_kernel = self._calc_kernel(freq,last_time,
                                                 freq,last_time,(1,0))
         coup = self._bath.correlations.spectral_density(freq)*dw
         bath_energy = np.diag(np.cumsum(np.cumsum(_sys_correlations.real*re_kernel+\
                              1j*_sys_correlations.imag*im_kernel,axis=0),axis=1)).real*coup
         bath_energy = np.append([0],bath_energy)
-        return self._process_tensor.times, bath_energy
+        return tlist, bath_energy
 
     def correlation(self,
                     freq_1: float,
@@ -180,24 +207,37 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         current_corr_dim = self._system_correlations.shape[0]
         if time_2 is None:
             time_2 = time_1
-        assert time_2 <= time_1, \
+        assert time_1 <= time_2, \
             "The argument time_1 must be greater than or equal to time_2"
         if freq_2 is None:
             freq_2 = freq_1
-        correlation_set = [(x,y) for y in range(current_corr_dim,corr_mat_dim)\
-                           for x in range(y+1)]
-        if len(correlation_set)>0:
-            dim_diff = corr_mat_dim-self._system_correlations.shape[0]
-            coup_op = self.bath.coupling_operator
-            _new_sys_correlations = \
-                self._process_tensor.calc_correlations(coup_op,correlation_set)
+        times_a = slice(corr_mat_dim)
+        if self._system_correlations.size == 0:
+            times_b = slice(corr_mat_dim)
+        else:
+            times_b = slice(current_corr_dim,corr_mat_dim)
+        dim_diff = corr_mat_dim-current_corr_dim
+        if dim_diff>0:
+            coup_op = self.bath.unitary_transform@self.bath.coupling_operator@\
+                self.bath.unitary_transform.conjugate().T
+            _,_,_new_sys_correlations =\
+                compute_correlations(self.system,
+                                     self._process_tensor,
+                                     coup_op, coup_op,
+                                     times_a, times_b,
+                                     initial_state=self.initial_state)
+
             self._system_correlations = np.pad(self._system_correlations,
-                                               ((0,dim_diff),
-                                                (0,dim_diff)))
-            for n,i in enumerate(correlation_set):
-                self._system_correlations[i] = _new_sys_correlations[n]
+                                               ((0,dim_diff),(0,0)),
+                                               'constant',
+                                               constant_values=np.nan)
+            self._system_correlations = np.append(self._system_correlations,
+                                                  _new_sys_correlations,
+                                                  axis=1)
+
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
+        _sys_correlations = np.nan_to_num(_sys_correlations)
         re_kernel,im_kernel = self._calc_kernel(freq_1,time_1,
                                                 freq_2,time_2,dagg)
         coup_1 = dw[0]*self._bath.correlations.spectral_density(freq_1)**0.5
@@ -310,8 +350,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
 
             im_kernel[region_a] = -(2*n_2+1)*phase(tpp_index[region_a],
                                                          tp_index[region_a])
-            im_kernel[region_a] += (2*n_1+1)*phase(tp_index[:switch,:],
-                                                    tpp_index[:switch,:])
+            im_kernel[region_a] += (2*n_1+1)*phase(tp_index[region_a],
+                                                    tpp_index[region_a])
 
             im_kernel[region_b] = (2*n_1+1)*phase(tp_index[region_b],
                                                     tpp_index[region_b])
