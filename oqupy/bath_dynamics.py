@@ -167,9 +167,13 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         re_kernel,im_kernel = self._calc_kernel(freq,last_time,
                                                 freq,last_time,(1,0))
         coup = self._bath.correlations.spectral_density(freq)*dw
-        bath_energy = np.diag(np.cumsum(np.cumsum(_sys_correlations.real*re_kernel+\
-                             1j*_sys_correlations.imag*im_kernel,axis=0),axis=1)).real*coup
-        bath_energy = np.append([0],bath_energy)
+        bath_energy = np.diag(
+            np.cumsum(
+                np.cumsum(_sys_correlations.real*re_kernel \
+                          + 1j*_sys_correlations.imag*im_kernel, axis=0),
+                axis=1)
+            ).real * coup
+        bath_energy = np.append([0], bath_energy)
         if not change_only:
             bath_energy += np.exp(-freq/self._temp)/(1-np.exp(-freq/self._temp))
         return tlist, bath_energy
