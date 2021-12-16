@@ -172,7 +172,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                 np.cumsum(_sys_correlations.real*re_kernel \
                           + 1j*_sys_correlations.imag*im_kernel, axis=0),
                 axis=1)
-            ).real * coup
+            ).real * coup * dt**2
         bath_energy = np.append([0], bath_energy)
         if not change_only:
             bath_energy += np.exp(-freq/self._temp)/(1-np.exp(-freq/self._temp))
