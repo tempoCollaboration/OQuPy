@@ -188,8 +188,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                     interaction_picture: Optional[bool] = False,
                     change_only: Optional[bool] = False):
         r"""
-        Function to calculate two-time correlation function between to frequency
-        bands of a bath.
+        Function to calculate two-time correlation function between two
+        frequency bands of a bath.
 
         Parameters
         ----------
