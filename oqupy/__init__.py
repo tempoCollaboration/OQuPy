@@ -44,11 +44,14 @@ __all__ = [
     'TempoParameters',
     'TimeDependentSystem',
     'TrivialProcessTensor',
+    'TwoTimeBathCorrelations',
     ]
 
 # -- Modules in alphabetical order --------------------------------------------
 
 from oqupy.bath import Bath
+
+from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
 from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
