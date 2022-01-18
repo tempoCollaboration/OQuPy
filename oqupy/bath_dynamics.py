@@ -176,9 +176,9 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                 np.cumsum(_sys_correlations.real*re_kernel \
                           + 1j*_sys_correlations.imag*im_kernel, axis = 0),
                 axis = 1)
-            ).real * coup * dt**2
+            ).real * coup
         bath_energy = np.append([0], bath_energy)
-        if not change_only:
+        if not change_only and self._temp > 0:
             bath_energy += np.exp(-freq/self._temp) \
                 / (1 - np.exp(-freq/self._temp))
         return tlist, bath_energy
@@ -284,10 +284,11 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         coup_2 = dw[1] * self._bath.correlations.spectral_density(freq_2)**0.5
         correlation = np.sum(_sys_correlations.real*re_kernel + \
                              1j*_sys_correlations.imag*im_kernel) * \
-            coup_1 * coup_2 * dt**2
+            coup_1 * coup_2
         if (not change_only) and (freq_1 == freq_2) and (dagg in ((1, 0), (0, 1))):
-            correlation += np.exp(-freq_1/self._temp) \
-                / (1 - np.exp(-freq_1/self._temp))
+            if self._temp > 0:
+                correlation += np.exp(-freq_1/self._temp) \
+                    / (1 - np.exp(-freq_1/self._temp))
             if dagg == (0, 1):
                 correlation += 1
 
@@ -348,11 +349,18 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         dt = self._process_tensor.dt
         #pieces of kernel consist of some combination of phases and
         #Bose-Einstein factors
-        n_1 = np.exp(-freq_1/self._temp) / (1 - np.exp(-freq_1/self._temp))
-        n_2 = np.exp(-freq_2/self._temp) / (1 - np.exp(-freq_2/self._temp))
+        n_1, n_2 = 0, 0
+        if self._temp > 0:
+            n_1 += np.exp(-freq_1/self._temp) / (1 - np.exp(-freq_1/self._temp))
+            n_2 += np.exp(-freq_2/self._temp) / (1 - np.exp(-freq_2/self._temp))
         def phase(i, j):
-            ph = np.exp(-1j * ((2*dagg[0] - 1) * freq_2 * i \
-                               + (2*dagg[1] - 1) * freq_1 * j) * dt)
+            a = -1j * ((2*dagg[0] - 1)) * freq_2
+            b = -1j * ((2*dagg[1] - 1)) * freq_1
+            ph = np.exp(a * (i+1)*dt + b * (j+1)*dt)
+            ph -= np.exp(a * (i+1)*dt + b * j*dt)
+            ph -= np.exp(a * i*dt + b * (j+1)*dt)
+            ph += np.exp(a * i*dt + b * j*dt)
+            ph /= (a*b)
             return ph
         ker_dim = int(np.round(time_2 / dt))
         switch = int(np.round(time_1 / dt)) #calculate index corresponding to t_1
