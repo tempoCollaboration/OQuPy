@@ -55,6 +55,14 @@ oqupy.helpers
     :members:
 
 
+oqupy.mps_mpo
+-------------
+
+.. automodule:: oqupy.mps_mpo
+    :show-inheritance:
+    :members:
+
+
 oqupy.operators
 ---------------
 
