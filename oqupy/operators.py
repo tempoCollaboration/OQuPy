@@ -161,3 +161,44 @@ def preparation(
     dim = density_matrix.shape[0]
     identity_matrix = np.identity(dim, dtype=NpDtype)
     return np.outer(density_matrix.flatten(), identity_matrix.flatten())
+
+
+# -- two site superoperators --------------------------------------------------
+
+def cross_commutator(
+        operator_1: ndarray,
+        operator_2: ndarray) -> ndarray:
+    """Construct commutator of cross term (acting on two Hilbert spaces). """
+    id1 = np.identity(operator_1.shape[1])
+    id2 = np.identity(operator_2.shape[1])
+    op1_id = np.kron(operator_1, id1)
+    op2_id = np.kron(operator_2, id2)
+    id_op1 = np.kron(id1, operator_1.T)
+    id_op2 = np.kron(id2, operator_2.T)
+    return np.kron(op1_id, op2_id) - np.kron(id_op1, id_op2)
+
+def cross_acommutator(
+        operator_1: ndarray,
+        operator_2: ndarray) -> ndarray:
+    """
+    Construct anit-commutator of cross term (acting on two Hilbert spaces).
+    """
+    id1 = np.identity(operator_1.shape[1])
+    id2 = np.identity(operator_2.shape[1])
+    op1_id = np.kron(operator_1, id1)
+    op2_id = np.kron(operator_2, id2)
+    id_op1 = np.kron(id1, operator_1.T)
+    id_op2 = np.kron(id2, operator_2.T)
+    return np.kron(op1_id, op2_id) + np.kron(id_op1, id_op2)
+
+def cross_left_right_super(
+        operator_1_l: ndarray,
+        operator_1_r: ndarray,
+        operator_2_l: ndarray,
+        operator_2_r: ndarray) -> ndarray:
+    """
+    Construct anit-commutator of cross term (acting on two Hilbert spaces).
+    """
+    op1l_op1r = np.kron(operator_1_l, operator_1_r.T)
+    op2l_op2r = np.kron(operator_2_l, operator_2_r.T)
+    return np.kron(op1l_op1r, op2l_op2r)
