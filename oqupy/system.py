@@ -24,9 +24,7 @@ from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype
-from oqupy.operators import acommutator, commutator
-from oqupy.operators import left_right_super
-
+import oqupy.operators as opr
 
 def _check_hamiltonian(hamiltonian):
     """Input checking for a single Hamiltonian. """
@@ -46,11 +44,11 @@ def _check_hamiltonian(hamiltonian):
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
     """Lindbladian for a specific Hamiltonian, gammas and lindblad_operators.
     """
-    liouvillian = -1j * commutator(hamiltonian)
+    liouvillian = -1j * opr.commutator(hamiltonian)
     for gamma, op in zip(gammas, lindblad_operators):
         op_dagger = op.conjugate().T
-        liouvillian += gamma * (left_right_super(op, op_dagger) \
-                                - 0.5 * acommutator(np.dot(op_dagger, op)))
+        liouvillian += gamma * (opr.left_right_super(op, op_dagger) \
+                                - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
     return liouvillian
 
 
@@ -362,3 +360,282 @@ class TimeDependentSystem(BaseSystem):
     def lindblad_operators(self) -> List[Callable[[float], ndarray]]:
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
+
+
+class SystemChain(BaseAPIClass):
+    """
+    Represents a 1D chain of systems with nearest neighbor interactions.
+
+    Parameters
+    ----------
+    hilbert_space_dimensions: List[int]
+        Hilbert space dimension for each chain site.
+    name: str
+        An optional name for the system chain.
+    description: str
+        An optional description of the system chain.
+    description_dict: dict
+        An optional dictionary with descriptive data.
+    """
+    def __init__(
+            self,
+            hilbert_space_dimensions: List[int],
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """Create a SystemChain object. """
+        __hs_dims = np.array(hilbert_space_dimensions, int)
+        assert len(__hs_dims.shape) == 1
+        assert len(hilbert_space_dimensions) >= 1
+        assert np.all(__hs_dims > 0)
+        self._hs_dims = __hs_dims
+
+        self._site_liouvillians = []
+        for hs_dim in self._hs_dims:
+            self._site_liouvillians.append(
+                np.zeros((hs_dim**2, hs_dim**2), dtype=NpDtype))
+
+        self._nn_liouvillians = []
+        for hs_dim_l, hs_dim_r in zip(self._hs_dims[:-1], self._hs_dims[1:]):
+            self._nn_liouvillians.append(
+                np.zeros((hs_dim_l**4, hs_dim_r**4), dtype=NpDtype))
+
+        super().__init__(name, description, description_dict)
+
+    def __len__(self):
+        """Chain length. """
+        return len(self._hs_dims)
+
+    @property
+    def hs_dims(self):
+        """Hilbert space dimension for each chain site. """
+        return self._hs_dims
+
+    @property
+    def site_liouvillians(self):
+        """The single site Liouvillians. """
+        return self._site_liouvillians
+
+    @property
+    def nn_liouvillians(self):
+        """The nearest neighbor Liouvillians. """
+        return self._nn_liouvillians
+
+    def add_site_hamiltonian(
+            self,
+            site: int,
+            hamiltonian: ndarray) -> None:
+        r"""
+        Add a hamiltonian term to a single site Liouvillian
+
+        .. math::
+
+            \mathcal{L} \rho_n = -i [\hat{H}, \rho_n]
+
+        with `site` :math:`n` and `hamiltonian` :math:`\hat{H}`.
+
+        Parameters
+        ----------
+        site: int
+            Index of the site.
+        hamiltonian: ndarray
+            Hamiltonian acting on the single site.
+        """
+        assert isinstance(site, int)
+        assert site >= 0
+        assert site < len(self)
+        op = np.array(hamiltonian, dtype=NpDtype)
+        assert len(op.shape) == 2
+        assert op.shape[0] == op.shape[1]
+        assert self._hs_dims[site] == op.shape[0]
+
+        self._site_liouvillians[site] += (0.0-1.0j) * opr.commutator(op)
+
+    def add_site_liouvillian(
+            self,
+            site: int,
+            liouvillian: ndarray) -> None:
+        """
+        Add a single site Liouvillian.
+
+        Parameters
+        ----------
+        site: int
+            Index of the site.
+        liouvillian: ndarray
+            Liouvillian acting on the single site.
+        """
+        raise NotImplementedError()
+
+    def add_site_dissipation(
+            self,
+            site: int,
+            lindblad_operator: ndarray,
+            gamma: Optional[float] = 1.0) -> None:
+        r"""
+        Add single site lindblad dissipator
+
+        .. math::
+
+            \mathcal{L} \rho_n = \gamma \left(
+                    \hat{A} \rho_n \hat{A}^\dagger
+                    - \frac{1}{2} \hat{A}^\dagger \hat{A} \rho_n
+                    - \frac{1}{2} \rho_n \hat{A}^\dagger \hat{A} \right)
+
+        with `site` :math:`n`, `lindblad_operator` :math:`\hat{A}`,
+        and `gamma` :math:`\gamma`.
+
+        Parameters
+        ----------
+        site: int
+            Index of the site.
+        lindblad_operator: ndarray
+            Lindblad dissipator acting on the single site.
+        gamma: float
+            Optional multiplicative factor :math:`\gamma`.
+        """
+        op = lindblad_operator
+        op_dagger = op.conjugate().T
+        self._site_liouvillians[site] += \
+            gamma * (opr.left_right_super(op, op_dagger)
+                      - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
+
+    def add_nn_hamiltonian(
+            self,
+            site: int,
+            hamiltonian_l: ndarray,
+            hamiltonian_r: ndarray) -> None:
+        r"""
+        Add a hamiltonian term to the Liouvillian of two neighboring sites:
+
+        .. math::
+
+            \mathcal{L} \rho_{n,n+1} =
+                -i [\hat{H}_l \otimes \hat{H}_r, \rho_{n,n+1}]
+
+        with `site` :math:`n`, `hamiltonian_l` :math:`\hat{H}_l` and
+        `hamiltonian_r` :math:`\hat{H}_r`.
+
+        Parameters
+        ----------
+        site: int
+            Index of the left site :math:`n`.
+        hamiltonian_l: ndarray
+            Hamiltonian acting on the left site :math:`n`.
+        hamiltonian_r: ndarray
+            Hamiltonian acting on the right site :math:`n+1`.
+        """
+        assert isinstance(site, int)
+        assert site >= 0
+        assert site < len(self) - 1
+        op_l = np.array(hamiltonian_l, dtype=NpDtype)
+        op_r = np.array(hamiltonian_r, dtype=NpDtype)
+        assert len(op_l.shape) == 2
+        assert len(op_r.shape) == 2
+        assert op_l.shape[0] == op_l.shape[1]
+        assert op_r.shape[0] == op_r.shape[1]
+        assert self._hs_dims[site] == op_l.shape[0]
+        assert self._hs_dims[site+1] == op_r.shape[0]
+
+        self._nn_liouvillians[site] += (0.0-1.0j) \
+                                       * opr.cross_commutator(op_l, op_r)
+
+    def add_nn_liouvillian(
+            self,
+            site: int,
+            liouvillian_l_r: ndarray) -> None:
+        """
+        Add Liouvillian of for the two neighboring sites `site` and `site` +1.
+
+        Parameters
+        ----------
+        site: int
+            Index of the left site :math:`n`.
+        liouvillian_l_r: ndarray
+            Liouvillian acting on sites :math:`n` and :math:`n+1`.
+        """
+        self._nn_liouvillians[site] += liouvillian_l_r
+
+    def add_nn_dissipation(
+            self,
+            site: int,
+            lindblad_operator_l: ndarray,
+            lindblad_operator_r: ndarray,
+            gamma: Optional[float] = 1.0) -> None:
+        r"""
+        Add two site lindblad dissipator
+
+        .. math::
+
+            \mathcal{L} \rho_{n,n+1} = \gamma \left(
+                    \hat{A} \rho_{n,n+1} \hat{A}^\dagger
+                    - \frac{1}{2} \hat{A}^\dagger \hat{A} \rho_{n,n+1}
+                    - \frac{1}{2} \rho_{n,n+1} \hat{A}^\dagger \hat{A} \right)
+
+        where :math:`\hat{A}=\hat{A}_l\otimes\hat{A}_r`, with `site` :math:`n`,
+        `lindblad_operator_l` :math:`\hat{A}_l`,
+        `lindblad_operator_r` :math:`\hat{A}_r`, and `gamma` :math:`\gamma`.
+
+        Parameters
+        ----------
+        site: int
+            Index of the left site :math:`n`.
+        lindblad_operator_l: ndarray
+            Lindblad dissipator acting on the left site :math:`n`.
+        lindblad_operator_r: ndarray
+            Lindblad dissipator acting on the right site :math:`n+1`.
+        gamma: float
+            Optional multiplicative factor :math:`\gamma`.
+        """
+        assert isinstance(site, int)
+        assert site >= 0
+        assert site < len(self) - 1
+        op_l = np.array(lindblad_operator_l, dtype=NpDtype)
+        op_r = np.array(lindblad_operator_r, dtype=NpDtype)
+        assert len(op_l.shape) == 2
+        assert len(op_r.shape) == 2
+        assert op_l.shape[0] == op_l.shape[1]
+        assert op_r.shape[0] == op_r.shape[1]
+        assert self._hs_dims[site] == op_l.shape[0]
+        assert self._hs_dims[site+1] == op_r.shape[0]
+
+        cross_lr = opr.cross_left_right_super(
+            operator_1_l=op_l,
+            operator_1_r=op_l.T.conjugate(),
+            operator_2_l=op_r,
+            operator_2_r=op_r.T.conjugate())
+        cross_acomm = opr.cross_acommutator(
+            operator_1=op_l.T.conjugate() @ op_l,
+            operator_2=op_r.T.conjugate() @ op_r)
+
+        self._nn_liouvillians[site] += \
+            gamma * (cross_lr - 0.5 * cross_acomm)
+
+    def get_nn_full_liouvillians(self) -> List[ndarray]:
+        """
+        Return the list of nearest neighbor Liouvillians
+        (incorporating single site terms).
+        """
+        assert len(self) >= 2, \
+            "To return a full set of nearest neighbor liouvillians, " \
+            + "the chain has to be at least two sites long."
+
+        nn_full_liouvillians = []
+        for i in range(len(self)-1):
+            factor_l = 1 if i == 0 else 0.5
+            factor_r = 1 if i == len(self)-2 else 0.5
+
+            liouv_l = self._site_liouvillians[i]
+            id_l = np.identity(self._hs_dims[i]**2)
+            liouv_r = self._site_liouvillians[i+1]
+            id_r = np.identity(self._hs_dims[i+1]**2)
+            liouv_nn = self._nn_liouvillians[i]
+
+            nn_full_liouvillian = \
+                factor_l * np.kron(liouv_l, id_r) \
+                + factor_r * np.kron(id_l, liouv_r) \
+                + liouv_nn
+
+            nn_full_liouvillians.append(nn_full_liouvillian)
+
+        return nn_full_liouvillians
