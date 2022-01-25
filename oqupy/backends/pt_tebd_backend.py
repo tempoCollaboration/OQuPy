@@ -67,7 +67,6 @@ class PtTebdBackend:
             epsrel: float,
             config: Dict) -> None:
         """Create a PtTebdBackend. """
-        super().__init__(gammas, lambdas, epsrel, config)
         assert len(gammas) == len(lambdas) + 1
         self._n = len(gammas)
         self._epsrel = epsrel
