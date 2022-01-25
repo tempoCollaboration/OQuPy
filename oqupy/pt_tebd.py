@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for the yummy mountain shaped chocolate bar.
+Module for the process tensor approach to time evolving block decimation.
+
+This module is based on [Fux2022].
 """
 
 from typing import Dict, List, Optional, Text, Union
@@ -305,7 +307,7 @@ class PtTebd(BaseAPIClass):
         return self._start_time + self._parameters.dt*(step - self._start_step)
 
     @property
-    def chain_control(self) -> float:
+    def chain_control(self) -> ChainControl:
         """The chain control object. """
         return self._chain_control
 

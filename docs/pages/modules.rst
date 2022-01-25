@@ -78,6 +78,13 @@ oqupy.process_tensor
     :members:
 
 
+oqupy.pt_tebd
+--------------------
+
+.. automodule:: oqupy.pt_tebd
+    :members:
+
+
 oqupy.system
 ------------
 
