@@ -15,13 +15,14 @@
 ToDo
 """
 
-from typing import Callable, Dict, Optional, Text, Tuple, Union
+from typing import Callable, Dict, List, Optional, Text, Tuple, Union
+from copy import deepcopy
 
 import numpy as np
 from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
-
+from oqupy.config import NpDtype
 
 class Control(BaseAPIClass):
     """
@@ -137,3 +138,113 @@ class Control(BaseAPIClass):
         if not post_control_bool:
             post_control = None
         return pre_control, post_control
+
+class ChainControl(BaseAPIClass):
+    """
+    Control operations on a linear system chain.
+
+    Parameters
+    ----------
+    hilbert_space_dimensions: List[int]
+        Hilbert space dimension for each chain site.
+    name: str
+        An optional name for the chain controls.
+    description: str
+        An optional description of the chain controls.
+    description_dict: dict
+        An optional dictionary with descriptive data.
+    """
+    def __init__(
+            self,
+            hilbert_space_dimensions: List[int],
+            name: Optional[Text] = None,
+            description: Optional[Text] = None,
+            description_dict: Optional[Dict] = None) -> None:
+        """Create a ChainControl object. """
+        __hs_dims = np.array(hilbert_space_dimensions, int)
+        assert len(__hs_dims.shape) == 1
+        assert len(__hs_dims) >= 1
+        assert np.all(__hs_dims > 0)
+        self._hs_dims = __hs_dims
+
+        self._single_site_controls_pre = []
+        self._single_site_controls_post = []
+
+        super().__init__(name, description, description_dict)
+
+    def __len__(self):
+        """Length of the chain. """
+        return len(self._hs_dims)
+
+    @property
+    def hs_dims(self):
+        """Hilbert space dimensions. """
+        return self._hs_dims
+
+    def add_single_site_control(
+            self,
+            control: ndarray,
+            site: int,
+            step: int,
+            pre: Optional[bool] = True,
+            name: Optional[Text] = None):
+        """
+        Add a control operation at site `site` and time step `step`.
+
+        Parameters
+        ----------
+        control: ndarray
+            Control operation in Liouville space.
+        site: int
+            Site index.
+        step: int
+            Timestep to which the control should be applied.
+        pre: bool
+            True if the control should be applied before the measurement of this
+            time step.
+        name: Text
+            An optional name to recognize a control operation.
+        """
+        assert isinstance(site, int)
+        assert site < len(self)
+        assert isinstance(step, int)
+        contr = np.array(control,  dtype=NpDtype)
+        assert contr.shape == (self._hs_dims[site]**2, self._hs_dims[site]**2)
+        if pre:
+            self._single_site_controls_pre.append({
+                "contr":contr,
+                "site":site,
+                "step":step,
+                "name":name})
+        else:
+            self._single_site_controls_pre.append({
+                "contr":contr,
+                "site":site,
+                "step":step,
+                "name":name})
+
+    def get_single_site_controls(
+            self,
+            step: int,
+            pre: bool):
+        """Get a list of single site controls for the time step `step`. """
+        empty = True
+        controls = [None] * len(self)
+
+        if pre:
+            ss_controls = self._single_site_controls_pre
+        else:
+            ss_controls = self._single_site_controls_post
+
+        for ssc in ss_controls:
+            if ssc["step"] == step:
+                empty = False
+                if controls[ssc["site"]] is None:
+                    controls[ssc["site"]] = ssc["contr"]
+                else:
+                    controls[ssc["site"]] = \
+                        controls[ssc["site"]] @ ssc["contr"]
+
+        if empty:
+            return None
+        return deepcopy(controls)
