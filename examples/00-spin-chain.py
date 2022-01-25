@@ -25,12 +25,6 @@ import oqupy
 
 # -----------------------------------------------------------------------------
 
-sx = oqupy.operators.sigma("x")
-sy = oqupy.operators.sigma("y")
-sz = oqupy.operators.sigma("z")
-
-up_dm = oqupy.operators.spin_dm("z+")
-down_dm = oqupy.operators.spin_dm("z-")
 
 # --- Parameters --------------------------------------------------------------
 

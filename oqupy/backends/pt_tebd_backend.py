@@ -13,9 +13,13 @@
 # limitations under the License.
 """
 Module for Process Tensor Time Evolving Block Decimation (PT-TEBD) backend.
-
 The algorithms in this module are explained in the supplemental material
 of [Fux2022].
+
+**[Fux2022]**
+G. E. Fux, D. Kilda, B. W. Lovett, and J. Keeling, *Thermalization of a
+spin chain strongly coupled to its environment*, arXiv:2201.05529 (2022).
+
 """
 
 import concurrent
