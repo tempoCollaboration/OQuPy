@@ -107,13 +107,3 @@ oqupy.util
 
 .. automodule:: oqupy.util
     :members:
-
-
-oqupy.backends
---------------
-
-base_backends
-~~~~~~~~~~~~~
-
-.. automodule:: oqupy.backends.base_backends
-    :members:
