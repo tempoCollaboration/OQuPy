@@ -500,7 +500,7 @@ known-third-party=enchant
 max-args=15 # GEFux
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=15 # GEFux
+max-attributes=20 # GEFux
 
 # Maximum number of boolean expressions in a if statement
 max-bool-expr=5
