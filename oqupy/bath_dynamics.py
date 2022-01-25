@@ -101,11 +101,54 @@ class TwoTimeBathCorrelations(BaseAPIClass):
     @property
     def initial_state(self) -> ndarray:
         """
-        Bath properties
+        Initial system state
         """
         return self._initial_state
 
+    def gen_sys_correlations(
+            self,
+            final_time: float
+            ) -> None:
+        r"""
+        Function to generate all ordered system correlations up to a given time
+        using the process tensor.
+        Parameters
+        ----------
+        final_time: float
+            The latest time appearing in the generated system correlation
+            functions.
 
+        Returns
+        -------
+        None.
+        """
+        dt = self._process_tensor.dt
+        corr_mat_dim = int(np.round(final_time/dt))
+        current_corr_dim = self._system_correlations.shape[0]
+        times_a = slice(corr_mat_dim)
+        if self._system_correlations.size == 0:
+            times_b = slice(corr_mat_dim)
+        else:
+            times_b = slice(current_corr_dim, corr_mat_dim)
+        dim_diff = corr_mat_dim - current_corr_dim
+        if dim_diff > 0:
+            coup_op = self.bath.unitary_transform \
+                @ self.bath.coupling_operator \
+                @ self.bath.unitary_transform.conjugate().T
+            _,_,_new_sys_correlations = \
+                compute_correlations(self.system,
+                                     self._process_tensor,
+                                     coup_op, coup_op,
+                                     times_a, times_b,
+                                     initial_state = self.initial_state)
+
+            self._system_correlations = np.pad(self._system_correlations,
+                                               ((0, dim_diff), (0, 0)),
+                                               'constant',
+                                               constant_values = np.nan)
+            self._system_correlations = np.append(self._system_correlations,
+                                                  _new_sys_correlations,
+                                                  axis = 1)
 
     def occupation(
             self,
@@ -133,37 +176,13 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         bath_energy: float
         """
         corr_mat_dim = len(self._process_tensor)
-        current_corr_dim = self._system_correlations.shape[0]
         dt = self._process_tensor.dt
         last_time = corr_mat_dim * dt
         tlist = np.arange(0, last_time+dt, dt)
         if freq == 0:
             return tlist, np.ones(len(tlist),
                                   dtype=NpDtype) * (np.nan + 1.0j*np.nan)
-        times_a = slice(corr_mat_dim)
-        if self._system_correlations.size == 0:
-            times_b = slice(corr_mat_dim)
-        else:
-            times_b = slice(current_corr_dim, corr_mat_dim)
-        dim_diff = corr_mat_dim - current_corr_dim
-        if dim_diff > 0:
-            coup_op = self.bath.unitary_transform \
-                @ self.bath.coupling_operator \
-                @ self.bath.unitary_transform.conjugate().T
-            _,_,_new_sys_correlations = \
-                compute_correlations(self.system,
-                                     self._process_tensor,
-                                     coup_op, coup_op,
-                                     times_a, times_b,
-                                     initial_state = self.initial_state)
-
-            self._system_correlations = np.pad(self._system_correlations,
-                                               ((0, dim_diff), (0, 0)),
-                                               'constant',
-                                               constant_values = np.nan)
-            self._system_correlations = np.append(self._system_correlations,
-                                                  _new_sys_correlations,
-                                                  axis = 1)
+        self.gen_sys_correlations(last_time)
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
         _sys_correlations = np.nan_to_num(_sys_correlations)
@@ -171,12 +190,10 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         re_kernel, im_kernel = self._calc_kernel(freq, last_time,
                                                 freq, last_time, (1, 0))
         coup = self._bath.correlations.spectral_density(freq) * dw
-        bath_energy = np.diag(
-            np.cumsum(
-                np.cumsum(_sys_correlations.real*re_kernel \
-                          + 1j*_sys_correlations.imag*im_kernel, axis = 0),
-                axis = 1)
-            ).real * coup
+        bath_energy = np.cumsum(
+            np.sum(_sys_correlations.real*re_kernel \
+                          + 1j*_sys_correlations.imag*im_kernel, axis = 0)
+                ).real * coup
         bath_energy = np.append([0], bath_energy)
         if not change_only and self._temp > 0:
             bath_energy += np.exp(-freq/self._temp) \
@@ -242,39 +259,12 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         depend on the exact bath correlation function desired.
         """
         dt = self._process_tensor.dt
-        corr_mat_dim = int(np.round(time_2/dt))
-        current_corr_dim = self._system_correlations.shape[0]
         if time_2 is None:
             time_2 = time_1
-        assert time_1 <= time_2, \
-            "The argument time_1 must be greater than or equal to time_2"
         if freq_2 is None:
             freq_2 = freq_1
-        times_a = slice(corr_mat_dim)
-        if self._system_correlations.size == 0:
-            times_b = slice(corr_mat_dim)
-        else:
-            times_b = slice(current_corr_dim, corr_mat_dim)
-        dim_diff = corr_mat_dim - current_corr_dim
-        if dim_diff > 0:
-            coup_op = self.bath.unitary_transform \
-                @ self.bath.coupling_operator \
-                @ self.bath.unitary_transform.conjugate().T
-            _,_,_new_sys_correlations = \
-                compute_correlations(self.system,
-                                     self._process_tensor,
-                                     coup_op, coup_op,
-                                     times_a, times_b,
-                                     initial_state = self.initial_state)
-
-            self._system_correlations = np.pad(self._system_correlations,
-                                               ((0, dim_diff), (0, 0)),
-                                               'constant',
-                                               constant_values = np.nan)
-            self._system_correlations = np.append(self._system_correlations,
-                                                  _new_sys_correlations,
-                                                  axis = 1)
-
+        self.gen_sys_correlations(time_2)
+        corr_mat_dim = int(np.round(time_2/dt))
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
         _sys_correlations = np.nan_to_num(_sys_correlations)
@@ -340,11 +330,9 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                                  \int_{t_1}^{t} \int_{t_1}^{t'}
 
         where :math:`t_1` is the time the earlier operator acts. We will refer
-        to these as `region_a`, `region_b` and `region_c` in the code. In the
-        actual implementation we build the kernel for the full square
-        integration region and then simply keep the upper triangular portion of
-        the matrix.
-
+        to these as regions `a`, `b` and `c` in the code. In the actual
+        implementation we build the kernel for the full square integration
+        region and then simply keep the upper triangular portion of the matrix.
         """
         dt = self._process_tensor.dt
         #pieces of kernel consist of some combination of phases and
@@ -353,106 +341,96 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         if self._temp > 0:
             n_1 += np.exp(-freq_1/self._temp) / (1 - np.exp(-freq_1/self._temp))
             n_2 += np.exp(-freq_2/self._temp) / (1 - np.exp(-freq_2/self._temp))
-        def phase(i, j):
-            a = -1j * ((2*dagg[0] - 1)) * freq_2
-            b = -1j * ((2*dagg[1] - 1)) * freq_1
-            ph = np.exp(a * (i+1)*dt + b * (j+1)*dt)
-            ph -= np.exp(a * (i+1)*dt + b * j*dt)
-            ph -= np.exp(a * i*dt + b * (j+1)*dt)
-            ph += np.exp(a * i*dt + b * j*dt)
-            ph /= (a*b)
-            return ph
+
         ker_dim = int(np.round(time_2 / dt))
         switch = int(np.round(time_1 / dt)) #calculate index corresponding to t_1
         re_kernel = np.zeros((ker_dim, ker_dim), dtype = NpDtype)
         im_kernel = np.zeros((ker_dim, ker_dim), dtype = NpDtype)
+
         tpp_index, tp_index = np.meshgrid(np.arange(ker_dim), np.arange(ker_dim),
                                       indexing='ij') #array of indices for each
                                                      #array element
+        regions = {'a': (slice(switch), slice(switch)),             #(0->t_1, 0->t_1)
+                   'b': (slice(switch), slice(switch, None)),       #(0->t_1, t_1->t)
+                   'c': (slice(switch, None), slice(switch, None))} #(t_1->t, t_1->t)
 
-        region_a = (slice(switch), slice(switch))             #(0->t_1, 0->t_1)
-        region_b = (slice(switch), slice(switch, None))       #(0->t_1, t_1->t)
-        region_c = (slice(switch, None), slice(switch, None)) #(t_1->t, t_1->t)
+        def phase(region, swap_ts = False):
+            tk = tp_index[regions[region]]
+            tkp = tpp_index[regions[region]]
+            if tk.size == 0 or tkp.size == 0:
+                return 0
+            a = -1j * ((2*dagg[0] - 1)) * freq_2
+            b = -1j * ((2*dagg[1] - 1)) * freq_1
+            if swap_ts:
+                a, b = b, a
+            if region in ('a','c'):
+                ph = np.triu(np.exp(a * (tk+1)*dt + b * (tkp+1)*dt) / (a * b), k = 1)
+                ph -= np.triu(np.exp(a * (tk+1)*dt + b * tkp*dt) / (a * b), k = 1)
+                ph -= np.triu(np.exp(a * tk*dt + b * (tkp+1)*dt) / (a * b), k = 1)
+                ph += np.triu(np.exp(a * tk*dt + b * tkp*dt) / (a * b), k = 1)
+                sel = np.diag(tk)
+                di = -np.exp((a * (sel + 1) + b * sel) * dt) / (a * b)
+                if a + b != 0:
+                    di += np.exp((a + b) * (sel + 1) * dt) / (b * (a+b))
+                    di += np.exp((a + b) * sel * dt) / (a * (a+b))
+                else:
+                    di += (1 + a * sel * dt + b * (sel + 1) * dt) / (a * b)
+                ph += np.diag(di)
+            else:
+                ph = np.exp(a * (tk+1)*dt + b * (tkp+1)*dt) / (a * b)
+                ph -= np.exp(a * (tk+1)*dt + b * tkp*dt) / (a * b)
+                ph -= np.exp(a * tk*dt + b * (tkp+1)*dt) / (a * b)
+                ph += np.exp(a * tk*dt + b * tkp*dt) / (a * b)
+            return ph
+
 
         if dagg == (0, 1):
-            re_kernel[region_a] = phase(tp_index[region_a],
-                                        tpp_index[region_a])
-            re_kernel[region_a] += phase(tpp_index[region_a],
-                                         tp_index[region_a])
+            re_kernel[regions['a']] = phase('a') + phase('a', 1)
 
-            re_kernel[region_b] = phase(tp_index[region_b],
-                                        tpp_index[region_b])
+            re_kernel[regions['b']] = phase('b')
 
-            im_kernel[region_a] = -(2*n_2 + 1) * phase(tpp_index[region_a],
-                                                       tp_index[region_a])
-            im_kernel[region_a] += (2*n_1 + 1) * phase(tp_index[region_a],
-                                                       tpp_index[region_a])
+            im_kernel[regions['a']] = ((2*n_1 + 1) * phase('a') -
+                                       (2*n_2 + 1) * phase('a', 1))
 
-            im_kernel[region_b] = (2*n_1 + 1) * phase(tp_index[region_b],
-                                                      tpp_index[region_b])
+            im_kernel[regions['b']] = (2*n_1 + 1) * phase('b')
 
-            im_kernel[region_c] = -2 * (n_1 + 1) * phase(tp_index[region_c],
-                                                         tpp_index[region_c])
+            im_kernel[regions['c']] = -2 * (n_1 + 1) * phase('c')
 
         elif dagg == (1, 0):
-            re_kernel[region_a] = phase(tp_index[region_a],
-                                          tpp_index[region_a])
-            re_kernel[region_a] += phase(tpp_index[region_a],
-                                                tp_index[region_a])
+            re_kernel[regions['a']] = phase('a') + phase('a', 1)
 
-            re_kernel[region_b] = phase(tp_index[region_b],
-                                          tpp_index[region_b])
+            re_kernel[regions['b']] = phase('b')
 
-            im_kernel[region_a] = -(2*n_2 + 1) * phase(tpp_index[region_a],
-                                                       tp_index[region_a])
-            im_kernel[region_a] += (2*n_1 + 1) * phase(tp_index[region_a],
-                                                       tpp_index[region_a])
+            im_kernel[regions['a']] = ((2*n_1 + 1) * phase('a') -
+                                       (2*n_2 + 1) * phase('a', 1))
 
-            im_kernel[region_b] = (2*n_1 + 1) * phase(tp_index[region_b],
-                                                      tpp_index[region_b])
+            im_kernel[regions['b']] = (2*n_1 + 1) * phase('b')
 
-            im_kernel[region_c] = 2 * n_1 * phase(tp_index[region_c],
-                                                  tpp_index[region_c])
+            im_kernel[regions['c']] = 2 * n_1 * phase('c')
 
         elif dagg == (1, 1):
-            re_kernel[region_a] = -phase(tp_index[region_a],
-                                         tpp_index[region_a])
-            re_kernel[region_a] -= phase(tpp_index[region_a],
-                                         tp_index[region_a])
+            re_kernel[regions['a']] = -(phase('a') + phase('a', 1))
 
-            re_kernel[region_b] = -phase(tp_index[region_b],
-                                         tpp_index[region_b])
+            re_kernel[regions['b']] = -phase('b')
 
-            im_kernel[region_a] = (2*n_2 + 1) * phase(tpp_index[region_a],
-                                                      tp_index[region_a])
-            im_kernel[region_a] += (2*n_1 + 1) * phase(tp_index[region_a],
-                                                       tpp_index[region_a])
+            im_kernel[regions['a']] = ((2*n_1 + 1) * phase('a') +
+                                       (2*n_2 + 1) * phase('a', 1))
 
-            im_kernel[region_b] = (2*n_1 + 1) * phase(tp_index[region_b],
-                                                      tpp_index[region_b])
+            im_kernel[regions['b']] = (2*n_1 + 1) * phase('b')
 
-            im_kernel[region_c] = 2 * (n_1 + 1) * phase(tp_index[region_c],
-                                                        tpp_index[region_c])
+            im_kernel[regions['c']] = 2 * (n_1 + 1) * phase('c')
 
         elif dagg == (0, 0):
-            re_kernel[region_a] = -phase(tp_index[region_a],
-                                         tpp_index[region_a])
-            re_kernel[region_a] -= phase(tpp_index[region_a],
-                                         tp_index[region_a])
+            re_kernel[regions['a']] = -(phase('a') + phase('a', 1))
 
-            re_kernel[region_b] = -phase(tp_index[region_b],
-                                         tpp_index[region_b])
+            re_kernel[regions['b']] = -phase('b')
 
-            im_kernel[region_a] = -(2*n_2 + 1) * phase(tpp_index[region_a],
-                                                       tp_index[region_a])
-            im_kernel[region_a] -= (2*n_1 + 1) * phase(tp_index[region_a],
-                                                       tpp_index[region_a])
+            im_kernel[regions['a']] = -((2*n_2 + 1) * phase('a', 1) +
+                                        (2*n_1 + 1) * phase('a'))
 
-            im_kernel[region_b] = -(2*n_1 + 1) * phase(tp_index[region_b],
-                                                       tpp_index[region_b])
+            im_kernel[regions['b']] = -(2*n_1 + 1) * phase('b')
 
-            im_kernel[region_c] = -2 * n_1 * phase(tp_index[region_c],
-                                                   tpp_index[region_c])
+            im_kernel[regions['c']] = -2 * n_1 * phase('c')
 
         re_kernel = np.triu(re_kernel) #only keep triangular region
         im_kernel = np.triu(im_kernel)
