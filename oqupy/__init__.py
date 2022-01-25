@@ -19,7 +19,9 @@ from oqupy.version import __version__
 
 # all API functionallity is in __all__
 __all__ = [
+    'AugmentedMPS',
     'Bath',
+    'ChainControl',
     'CustomCorrelations',
     'CustomSD',
     'compute_dynamics',
@@ -35,10 +37,12 @@ __all__ = [
     'NumericsWarning',
     'operators',
     'PowerLawSD',
+    'PtTebd',
     'PtTempo',
     'pt_tempo_compute',
     'SimpleProcessTensor',
     'System',
+    'SystemChain',
     'Tempo',
     'tempo_compute',
     'TempoParameters',
@@ -58,6 +62,7 @@ from oqupy.contractions import compute_dynamics
 from oqupy.contractions import compute_final_state
 
 from oqupy.control import Control
+from oqupy.control import ChainControl
 
 from oqupy.correlations import CustomCorrelations
 from oqupy.correlations import CustomSD
@@ -70,6 +75,8 @@ from oqupy.exceptions import NumericsWarning
 
 import oqupy.helpers
 
+from oqupy.mps_mpo import AugmentedMPS
+
 import oqupy.operators
 
 from oqupy.process_tensor import import_process_tensor
@@ -77,8 +84,12 @@ from oqupy.process_tensor import TrivialProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
 
+from oqupy.pt_tebd import PtTebd
+from oqupy.pt_tebd import PtTebdParameters
+
 from oqupy.system import System
 from oqupy.system import TimeDependentSystem
+from oqupy.system import SystemChain
 
 from oqupy.tempo.pt_tempo import PtTempo
 from oqupy.tempo.pt_tempo import PtTempoParameters

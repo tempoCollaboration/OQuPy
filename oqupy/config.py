@@ -66,3 +66,12 @@ PT_MAX_DKMAX = 256
 
 # default tolerance for process tensor tempo parameter guessing function
 PT_DEFAULT_TOLERANCE = 3.9e-3
+
+
+# -- PT_TEBD -----------------------------------------------------------------
+
+# Default Trotter splitting order
+PT_TEBD_DEFAULT_ORDER = 2
+
+# Default relative singular value truncation tolerance
+PT_TEBD_DEFAULT_EPSREL = 1.0e-5
