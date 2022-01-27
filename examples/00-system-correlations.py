@@ -32,19 +32,23 @@ correlations = oqupy.PowerLawSD(alpha=alpha,
                                 zeta=3,
                                 cutoff=omega_cutoff,
                                 cutoff_type='gaussian',
-                                add_correlation_time=5.0,
                                 temperature=temperature)
 bath = oqupy.Bath(op.sigma("z")/2.0, correlations)
 
-pt_tempo_parameters = oqupy.PtTempoParameters(
+
+tempo_parameters = oqupy.TempoParameters(
     dt=0.10,
-    dkmax=40,
-    epsrel=10**(-5))
+    dkmax=20,
+    epsrel=10**(-5),
+    add_correlation_time=2.0)
+
+oqupy.helpers.plot_correlations_with_parameters(correlations, tempo_parameters)
+
 start_time = -1.0
 process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                         start_time=start_time,
                                         end_time=1.0,
-                                        parameters=pt_tempo_parameters)
+                                        parameters=tempo_parameters)
 
 def hamiltonian_t(t, delta=0.0):
     return delta/2.0 * op.sigma("z") \
@@ -89,6 +93,7 @@ t, s_x = dynamics.expectations(op.sigma("x"))
 _, s_y = dynamics.expectations(op.sigma("y"))
 _, s_z = dynamics.expectations(op.sigma("z"))
 
+plt.figure(2)
 
 for i, s_xyz in enumerate([s_x, s_y, s_z]):
     plt.plot(t, s_xyz.real, color=f"C{i}", linestyle="solid")
