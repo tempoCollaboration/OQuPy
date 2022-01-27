@@ -51,16 +51,17 @@ def exact_result(t):
 
 rho_E = exact_result(t_end_E)
 
-correlations_E = oqupy.PowerLawSD(alpha=alpha_E,
-                                  zeta=3.0,
-                                  cutoff=cutoff_E,
-                                  cutoff_type="exponential",
-                                  temperature=temperature_E,
-                                  name="superohmic",
-                        )
-bath_E = oqupy.Bath(coupling_operator_E,
-                    correlations_E,
-                    name="superohmic phonon bath")
+correlations_E = oqupy.PowerLawSD(
+    alpha=alpha_E,
+    zeta=3.0,
+    cutoff=cutoff_E,
+    cutoff_type="exponential",
+    temperature=temperature_E,
+    name="superohmic")
+bath_E = oqupy.Bath(
+    coupling_operator_E,
+    correlations_E,
+    name="superohmic phonon bath")
 system_E = oqupy.System(h_sys_E)
 
 # -----------------------------------------------------------------------------
@@ -68,16 +69,18 @@ system_E = oqupy.System(h_sys_E)
 @pytest.mark.parametrize('backend,backend_config',
                         [("tensor-network", {"backend":"numpy"}),])
 def test_tensor_network_tempo_backend_E(backend, backend_config):
-    tempo_params_E = oqupy.TempoParameters(dt=0.4,
-                                           dkmax=5,
-                                           epsrel=1.0e-6)
-    tempo_E = oqupy.Tempo(system_E,
-                          bath_E,
-                          tempo_params_E,
-                          initial_state_E,
-                          start_time=t_start_E,
-                          backend=backend,
-                          backend_config=backend_config)
+    tempo_params_E = oqupy.TempoParameters(
+        dt=0.4,
+        dkmax=5,
+        epsrel=1.0e-6)
+    tempo_E = oqupy.Tempo(
+        system_E,
+        bath_E,
+        tempo_params_E,
+        initial_state_E,
+        start_time=t_start_E,
+        backend=backend,
+        backend_config=backend_config)
     tempo_E.compute(end_time=t_end_E)
     dyn_E = tempo_E.get_dynamics()
     np.testing.assert_almost_equal(dyn_E.states[-1], rho_E, decimal=4)
@@ -85,16 +88,17 @@ def test_tensor_network_tempo_backend_E(backend, backend_config):
 @pytest.mark.parametrize('backend,backend_config',
                         [("tensor-network", {"backend":"numpy"}),])
 def test_tensor_network_pt_tempo_backend_E(backend,backend_config):
-    tempo_params_E = oqupy.PtTempoParameters(dt=0.4,
-                                             dkmax=5,
-                                             epsrel=1.0e-6)
+    tempo_params_E = oqupy.TempoParameters(
+        dt=0.4,
+        dkmax=5,
+        epsrel=1.0e-6)
     pt = oqupy.pt_tempo_compute(
-                bath_E,
-                start_time=t_start_E,
-                end_time=t_end_E,
-                parameters=tempo_params_E,
-                backend=backend,
-                backend_config=backend_config)
+        bath_E,
+        start_time=t_start_E,
+        end_time=t_end_E,
+        parameters=tempo_params_E,
+        backend=backend,
+        backend_config=backend_config)
     state = oqupy.compute_final_state(
         system=system_E,
         process_tensor=pt,

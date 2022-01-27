@@ -67,6 +67,7 @@ class TempoParameters(BaseAPIClass):
             dt: float,
             dkmax: int,
             epsrel: float,
+            max_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -74,6 +75,7 @@ class TempoParameters(BaseAPIClass):
         self.dt = dt
         self.dkmax = dkmax
         self.epsrel = epsrel
+        self.max_correlation_time = max_correlation_time
         super().__init__(name, description, description_dict)
 
     def __str__(self) -> Text:
@@ -138,6 +140,30 @@ class TempoParameters(BaseAPIClass):
             "Argument 'epsrel' must be bigger than 0."
         self._epsrel = __epsrel
 
+    @property
+    def max_correlation_time(self):
+        """Maximal correlation time. """
+        return self._max_correlation_time
+
+    @max_correlation_time.setter
+    def max_correlation_time(self, new_tau: Optional[float] = None):
+        if new_tau is None:
+            del self.max_correlation_time
+        else:
+            # check input: cutoff
+            try:
+                __new_tau = float(new_tau)
+            except Exception as e:
+                raise AssertionError( \
+                    "Maximum correlation time must be a float.") from e
+            if __new_tau < 0:
+                raise ValueError(
+                    "Maximum correlation time must be non-negative.")
+            self._max_correlation_time = __new_tau
+
+    @max_correlation_time.deleter
+    def max_correlation_time(self):
+        self._max_correlation_time = None
 
 class Tempo(BaseAPIClass):
     """
@@ -309,10 +335,10 @@ class Tempo(BaseAPIClass):
             shape = "upper-triangle"
         elif dk < 0:
             time_1 = float(dkmax) * dt
-            if self._correlations.max_correlation_time is not None:
+            if self._parameters.max_correlation_time is not None:
                 time_2 = np.min([
                     float(dkmax-dk) * dt,
-                    self._correlations.max_correlation_time])
+                    self._parameters.max_correlation_time])
             else:
                 time_2 = float(dkmax-dk) * dt
             shape = "rectangle"
@@ -524,8 +550,6 @@ def guess_tempo_parameters(
     print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
 
     max_tau = __end_time - __start_time
-    if bath.correlations.max_correlation_time is not None:
-        max_tau = min([max_tau, bath.correlations.max_correlation_time])
 
     corr_func = np.vectorize(bath.correlations.correlation)
     new_times = np.linspace(0, max_tau, 11, endpoint=True)

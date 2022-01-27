@@ -42,9 +42,9 @@ def test_base_correlations():
 
 def test_custom_correlations():
     correlation_fun = lambda w: (np.cos(w)+1j*np.sin(w*0.7)) * np.exp(-w/2)
-    cor = CustomCorrelations(correlation_fun, max_correlation_time=15.0)
+    cor = CustomCorrelations(correlation_fun)
     str(cor)
-    t = np.linspace(0, 4.0/cor.max_correlation_time, 10)
+    t = np.linspace(0, 4.0/15.0, 10)
     [cor.correlation(tt) for tt in t]
     for shape in ["square", "upper-triangle", "lower-triangle"]:
         cor.correlation_2d_integral(time_1=0.25,
@@ -55,13 +55,8 @@ def test_custom_correlations():
                                     shape=shape)
 
 def test_custom_correlations_bad_input():
-    correlation_fun = lambda w: (np.cos(w)+1j*np.sin(w*0.7)) * np.exp(-w/2)
     with pytest.raises(AssertionError):
-        cor = CustomCorrelations("ohh-o", max_correlation_time=15.0)
-    with pytest.raises(AssertionError):
-        cor = CustomCorrelations(correlation_fun, max_correlation_time="ohh-o")
-    with pytest.raises(ValueError):
-        cor = CustomCorrelations(correlation_fun, max_correlation_time=-2.0)
+        cor = CustomCorrelations("ohh-o")
 
 
 def test_custom_s_d():

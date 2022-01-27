@@ -43,9 +43,9 @@ bath = oqupy.Bath(0.5*oqupy.operators.sigma("z"),
 bath2 = oqupy.Bath(0.5*oqupy.operators.sigma("z"),
                     correlations2,
                     name="half-coupling phonon bath")
-tempo_params = oqupy.PtTempoParameters(dt=0.1,
-                                         dkmax=5,
-                                         epsrel=10**(-6))
+tempo_params = oqupy.TempoParameters(dt=0.1,
+                                     dkmax=5,
+                                     epsrel=10**(-6))
 pt = oqupy.pt_tempo_compute(bath,
                             start_time=0.0,
                             end_time=1.0,

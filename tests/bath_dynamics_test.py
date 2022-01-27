@@ -18,7 +18,7 @@ import numpy as np
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
 from oqupy.correlations import PowerLawSD
-from oqupy import PtTempoParameters, System, Bath, PtTempo
+from oqupy import TempoParameters, System, Bath, PtTempo
 from oqupy.config import NpDtype
 
 def exact_correlation(t_1, t_2, w_1, w_2, dagg,
@@ -61,7 +61,7 @@ def test():
                               temperature=temperature)
     coupling_operator = np.array([[1,0],[0,-1]])
     system_hamiltonian = np.array([[1,0],[0,-1]])
-    parameters = PtTempoParameters(dt, dkmax, epsrel)
+    parameters = TempoParameters(dt, dkmax, epsrel)
     system = System(system_hamiltonian)
     bath = Bath(coupling_operator,correlations)
     pt = PtTempo(bath, 0.0, final_time, parameters)

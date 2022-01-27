@@ -69,16 +69,18 @@ system_D = oqupy.TimeDependentSystem(h_sys_D,
                          ("tensor-network", None)])
 
 def test_tensor_network_tempo_backend_D(backend, backend_config):
-    tempo_params_D = oqupy.TempoParameters(dt=0.05,
-                                           dkmax=None,
-                                           epsrel=10**(-7))
-    tempo_D = oqupy.Tempo(system_D,
-                          bath_D,
-                          tempo_params_D,
-                          initial_state_D,
-                          start_time=0.0,
-                          backend=backend,
-                          backend_config=backend_config)
+    tempo_params_D = oqupy.TempoParameters(
+        dt=0.05,
+        dkmax=None,
+        epsrel=10**(-7))
+    tempo_D = oqupy.Tempo(
+        system_D,
+        bath_D,
+        tempo_params_D,
+        initial_state_D,
+        start_time=0.0,
+        backend=backend,
+        backend_config=backend_config)
     tempo_D.compute(end_time=1.0)
     dyn_D = tempo_D.get_dynamics()
     print(dyn_D.states[-1])
@@ -88,16 +90,17 @@ def test_tensor_network_tempo_backend_D(backend, backend_config):
                         [("tensor-network", {"backend":"numpy"}),
                          ("tensor-network", None)])
 def test_tensor_network_pt_tempo_backend_D(backend,backend_config):
-    tempo_params_D = oqupy.PtTempoParameters(dt=0.05,
-                                             dkmax=None,
-                                             epsrel=10**(-7))
+    tempo_params_D = oqupy.TempoParameters(
+        dt=0.05,
+        dkmax=None,
+        epsrel=10**(-7))
     pt = oqupy.pt_tempo_compute(
-                bath_D,
-                start_time=0.0,
-                end_time=1.0,
-                parameters=tempo_params_D,
-                backend=backend,
-                backend_config=backend_config)
+        bath_D,
+        start_time=0.0,
+        end_time=1.0,
+        parameters=tempo_params_D,
+        backend=backend,
+        backend_config=backend_config)
     state = oqupy.compute_final_state(
         system=system_D,
         process_tensor=pt,

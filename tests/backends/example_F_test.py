@@ -57,21 +57,24 @@ tebd_epsrel = 1.0e-7
 
 # --- Compute process tensors -------------------------------------------------
 
-correlations = oqupy.PowerLawSD(alpha=alpha,
-                                zeta=3,
-                                cutoff=omega_cutoff,
-                                cutoff_type='exponential',
-                                max_correlation_time=5.0,
-                                temperature=temperature)
+correlations = oqupy.PowerLawSD(
+    alpha=alpha,
+    zeta=3,
+    cutoff=omega_cutoff,
+    cutoff_type='exponential',
+    temperature=temperature)
 bath = oqupy.Bath(0.5 * oqupy.operators.sigma("z"), correlations)
-pt_tempo_parameters = oqupy.PtTempoParameters(dt=dt,
-                                              dkmax=pt_dkmax,
-                                              epsrel=pt_epsrel)
-pt = oqupy.pt_tempo_compute(bath=bath,
-                            start_time=0.0,
-                            end_time=num_steps * dt,
-                            parameters=pt_tempo_parameters,
-                            progress_type='bar')
+tempo_parameters = oqupy.TempoParameters(
+    dt=dt,
+    dkmax=pt_dkmax,
+    epsrel=pt_epsrel,
+    max_correlation_time=5.0)
+pt = oqupy.pt_tempo_compute(
+    bath=bath,
+    start_time=0.0,
+    end_time=num_steps * dt,
+    parameters=tempo_parameters,
+    progress_type='bar')
 
 # --- PT-TEBD preperation -----------------------------------------------------
 

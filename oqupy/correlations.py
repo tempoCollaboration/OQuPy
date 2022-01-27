@@ -121,32 +121,6 @@ class BaseCorrelations(BaseAPIClass):
                 type(self).__name__))
 
 
-    @property
-    def max_correlation_time(self):
-        """Maximal correlation time. """
-        return self._max_correlation_time
-
-    @max_correlation_time.setter
-    def max_correlation_time(self, new_tau: Optional[float] = None):
-        if new_tau is None:
-            del self.max_correlation_time
-        else:
-            # check input: cutoff
-            try:
-                __new_tau = float(new_tau)
-            except Exception as e:
-                raise AssertionError( \
-                    "Maximum correlation time must be a float.") from e
-            if __new_tau < 0:
-                raise ValueError(
-                    "Maximum correlation time must be non-negative.")
-            self._max_correlation_time = __new_tau
-
-    @max_correlation_time.deleter
-    def max_correlation_time(self):
-        self._max_correlation_time = None
-
-
 class CustomCorrelations(BaseCorrelations):
     r"""
     Encodes a custom auto-correlation function
@@ -164,8 +138,6 @@ class CustomCorrelations(BaseCorrelations):
     ----------
     correlation_function : callable
         The correlation function :math:`C`.
-    max_correlation_time : float
-        The maximal occurring correlation time :math:`\tau_\mathrm{max}`.
     name: str
         An optional name for the correlations.
     description: str
@@ -177,7 +149,6 @@ class CustomCorrelations(BaseCorrelations):
     def __init__(
             self,
             correlation_function: Callable[[float], float],
-            max_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -192,14 +163,11 @@ class CustomCorrelations(BaseCorrelations):
                 + "and must return float.") from e
         self.correlation_function = __correlation_function
 
-        self.max_correlation_time = max_correlation_time
-
         super().__init__(name, description, description_dict)
 
     def __str__(self) -> Text:
         ret = []
         ret.append(super().__str__())
-        ret.append(f"  max_correlation_time = {self.max_correlation_time} \n")
         return "".join(ret)
 
     def correlation(
@@ -548,8 +516,6 @@ class CustomSD(BaseCorrelations):
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
-    max_correlation_time : float
-        The maximal occurring correlation time :math:`\tau_\mathrm{max}`.
     name: str
         An optional name for the correlations.
     description: str
@@ -564,7 +530,6 @@ class CustomSD(BaseCorrelations):
             cutoff: float,
             cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
-            max_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -600,8 +565,6 @@ class CustomSD(BaseCorrelations):
             raise ValueError("Temperature must be >= 0.0 (but is {})".format(
                 __temperature))
         self.temperature = __temperature
-
-        self.max_correlation_time = max_correlation_time
 
         self._cutoff_function = \
             lambda omega: CUTOFF_DICT[self.cutoff_type](omega, self.cutoff)
@@ -840,8 +803,6 @@ class PowerLawSD(CustomSD):
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
-    max_correlation_time : float
-        The maximal occurring correlation time :math:`\tau_\mathrm{max}`.
     name: str
         An optional name for the correlations.
     description: str
@@ -857,7 +818,6 @@ class PowerLawSD(CustomSD):
             cutoff: float,
             cutoff_type: Text = 'exponential',
             temperature: Optional[float] = 0.0,
-            max_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -888,13 +848,10 @@ class PowerLawSD(CustomSD):
         j_function = lambda w: 2.0 * self.alpha * w**self.zeta \
                                     * self.cutoff**(1-zeta)
 
-        self.max_correlation_time = max_correlation_time
-
         super().__init__(j_function,
                          cutoff=cutoff,
                          cutoff_type=cutoff_type,
                          temperature=temperature,
-                         max_correlation_time=max_correlation_time,
                          name=name,
                          description=description,
                          description_dict=description_dict)

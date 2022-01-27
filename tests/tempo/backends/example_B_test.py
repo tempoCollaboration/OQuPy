@@ -43,15 +43,17 @@ def test_tensor_network_tempo_backend_non_diag(backend):
     results = []
     for i, base in enumerate(bases):
         system = oqupy.System(0.5*base["sys_op"])
-        correlations = oqupy.PowerLawSD(alpha=alpha,
-                                        zeta=1,
-                                        cutoff=omega_cutoff,
-                                        cutoff_type='exponential',
-                                        max_correlation_time=8.0)
+        correlations = oqupy.PowerLawSD(
+            alpha=alpha,
+            zeta=1,
+            cutoff=omega_cutoff,
+            cutoff_type='exponential')
         bath = oqupy.Bath(0.5*base["coupling_op"], correlations)
-        tempo_parameters = oqupy.TempoParameters(dt=0.1,
-                                                 dkmax=30,
-                                                 epsrel=10**(-5))
+        tempo_parameters = oqupy.TempoParameters(
+            dt=0.1,
+            dkmax=30,
+            epsrel=10**(-5),
+            max_correlation_time=8.0)
 
         dynamics = oqupy.tempo_compute(system=system,
                                        bath=bath,
@@ -98,25 +100,28 @@ def test_tensor_network_pt_tempo_backend_non_diag(backend):
     results = []
     for i, base in enumerate(bases):
         system = oqupy.System(0.5*base["sys_op"])
-        correlations = oqupy.PowerLawSD(alpha=alpha,
-                                        zeta=1,
-                                        cutoff=omega_cutoff,
-                                        cutoff_type='exponential',
-                                        max_correlation_time=8.0)
+        correlations = oqupy.PowerLawSD(
+            alpha=alpha,
+            zeta=1,
+            cutoff=omega_cutoff,
+            cutoff_type='exponential')
         bath = oqupy.Bath(0.5*base["coupling_op"], correlations)
-        tempo_parameters = oqupy.PtTempoParameters(dt=0.1,
-                                                 dkmax=30,
-                                                 epsrel=10**(-5))
+        tempo_parameters = oqupy.TempoParameters(
+            dt=0.1,
+            dkmax=30,
+            epsrel=10**(-5),
+            max_correlation_time=8.0)
 
-        pt = oqupy.pt_tempo_compute(bath=bath,
-                                    start_time=0.0,
-                                    end_time=1.0,
-                                    parameters=tempo_parameters,
-                                    backend=backend)
+        pt = oqupy.pt_tempo_compute(
+            bath=bath,
+            start_time=0.0,
+            end_time=1.0,
+            parameters=tempo_parameters,
+            backend=backend)
         dynamics = oqupy.compute_dynamics(
-                    system=system,
-                    process_tensor=pt,
-                    initial_state=base["init_state"])
+            system=system,
+            process_tensor=pt,
+            initial_state=base["init_state"])
         _, s_x = dynamics.expectations(0.5*oqupy.operators.sigma("x"),
                                        real=True)
         _, s_y = dynamics.expectations(0.5*oqupy.operators.sigma("y"),
