@@ -29,7 +29,6 @@ __all__ = [
     'Control',
     'Dynamics',
     'FileProcessTensor',
-    'guess_pt_tempo_parameters',
     'guess_tempo_parameters',
     'helpers',
     'import_process_tensor',
@@ -92,8 +91,6 @@ from oqupy.system import TimeDependentSystem
 from oqupy.system import SystemChain
 
 from oqupy.tempo.pt_tempo import PtTempo
-from oqupy.tempo.pt_tempo import PtTempoParameters
-from oqupy.tempo.pt_tempo import guess_pt_tempo_parameters
 from oqupy.tempo.pt_tempo import pt_tempo_compute
 
 from oqupy.tempo.tempo import Tempo

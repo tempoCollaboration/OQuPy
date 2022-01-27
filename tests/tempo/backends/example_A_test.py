@@ -68,16 +68,18 @@ system_A = oqupy.System(h_sys_A,
                         [("tensor-network", {"backend":"numpy"}),
                          ("tensor-network", None)])
 def test_tensor_network_tempo_backend_A(backend, backend_config):
-    tempo_params_A = oqupy.TempoParameters(dt=0.05,
-                                           dkmax=None,
-                                           epsrel=10**(-7))
-    tempo_A = oqupy.Tempo(system_A,
-                          bath_A,
-                          tempo_params_A,
-                          initial_state_A,
-                          start_time=0.0,
-                          backend=backend,
-                          backend_config=backend_config)
+    tempo_params_A = oqupy.TempoParameters(
+        dt=0.05,
+        dkmax=None,
+        epsrel=10**(-7))
+    tempo_A = oqupy.Tempo(
+        system_A,
+        bath_A,
+        tempo_params_A,
+        initial_state_A,
+        start_time=0.0,
+        backend=backend,
+        backend_config=backend_config)
     tempo_A.compute(end_time=1.0)
     dyn_A = tempo_A.get_dynamics()
     np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
@@ -86,16 +88,17 @@ def test_tensor_network_tempo_backend_A(backend, backend_config):
                         [("tensor-network", {"backend":"numpy"}),
                          ("tensor-network", None)])
 def test_tensor_network_pt_tempo_backend_A(backend,backend_config):
-    tempo_params_A = oqupy.PtTempoParameters(dt=0.05,
-                                             dkmax=None,
-                                             epsrel=10**(-7))
+    tempo_params_A = oqupy.TempoParameters(
+        dt=0.05,
+        dkmax=None,
+        epsrel=10**(-7))
     pt = oqupy.pt_tempo_compute(
-                bath_A,
-                start_time=0.0,
-                end_time=1.0,
-                parameters=tempo_params_A,
-                backend=backend,
-                backend_config=backend_config)
+        bath_A,
+        start_time=0.0,
+        end_time=1.0,
+        parameters=tempo_params_A,
+        backend=backend,
+        backend_config=backend_config)
     state = oqupy.compute_final_state(
         system=system_A,
         process_tensor=pt,

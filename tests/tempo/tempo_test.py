@@ -21,7 +21,8 @@ import numpy as np
 import oqupy as tempo
 
 def test_tempo_parameters():
-    tempo_param = tempo.TempoParameters(0.1, None, 1.0e-5, "rough", "bla", {})
+    tempo_param = tempo.TempoParameters(
+        0.1, None, 1.0e-5, None, "rough", "bla", {})
     str(tempo_param)
     assert tempo_param.dt == 0.1
     assert tempo_param.dkmax == None
@@ -37,11 +38,11 @@ def test_tempo_parameters():
 
 def test_tempo_parameters_bad_input():
     with pytest.raises(AssertionError):
-        tempo.TempoParameters("x", 42, 1.0e-5, "rough", "bla", {})
+        tempo.TempoParameters("x", 42, 1.0e-5, None, "rough", "bla", {})
     with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, "x", 1.0e-5, "rough", "bla", {})
+        tempo.TempoParameters(0.1, "x", 1.0e-5, None, "rough", "bla", {})
     with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, "x", "rough", "bla", {})
+        tempo.TempoParameters(0.1, 42, "x", None, "rough", "bla", {})
 
 def test_tempo():
     start_time = -0.3
@@ -52,8 +53,7 @@ def test_tempo():
     system = tempo.System(0.5 * tempo.operators.sigma("x"))
     correlation_function = lambda t: (np.cos(6.0*t)+1j*np.sin(6.0*t)) \
                                         * np.exp(-12.0*t)
-    correlations = tempo.CustomCorrelations(correlation_function,
-                                            max_correlation_time=0.5)
+    correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
@@ -77,8 +77,7 @@ def test_tempo_bad_input():
     system = tempo.System(0.5 * tempo.operators.sigma("x"))
     correlation_function = lambda t: (np.cos(6.0*t)+1j*np.sin(6.0*t)) \
                                         * np.exp(-12.0*t)
-    correlations = tempo.CustomCorrelations(correlation_function,
-                                            max_correlation_time=0.5)
+    correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
@@ -108,8 +107,7 @@ def test_tempo_bad_input():
 def test_guess_tempo_parameters():
     system = tempo.System(0.5 * tempo.operators.sigma("x"))
     correlation_function = lambda t: (np.cos(t)+1j*np.sin(6.0*t)) * np.exp(-2.0*t)
-    correlations = tempo.CustomCorrelations(correlation_function,
-                                            max_correlation_time=10.0)
+    correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     with pytest.warns(UserWarning):
         param = tempo.guess_tempo_parameters(bath=bath,
@@ -151,8 +149,7 @@ def test_tempo_compute():
     system = tempo.System(0.5 * tempo.operators.sigma("x"))
     correlation_function = lambda t: (np.cos(6.0*t)+1j*np.sin(6.0*t)) \
                                         * np.exp(-12.0*t)
-    correlations = tempo.CustomCorrelations(correlation_function,
-                                            max_correlation_time=0.5)
+    correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
@@ -168,8 +165,7 @@ def test_tempo_dynamics_reference():
     correlations = tempo.PowerLawSD(alpha=0.1,
                                     zeta=1,
                                     cutoff=1.0,
-                                    cutoff_type='exponential',
-                                    max_correlation_time=0.5)
+                                    cutoff_type='exponential')
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-4))
     tempo_A= tempo.Tempo(system=system,

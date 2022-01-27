@@ -69,8 +69,7 @@ correlations_C = oqupy.PowerLawSD(alpha=alpha_C,
                                   cutoff=cutoff_C,
                                   cutoff_type="exponential",
                                   temperature=temperature_C,
-                                  name="ohmic",
-                                  max_correlation_time=0.55)
+                                  name="ohmic")
 bath_C = oqupy.Bath(coupling_operator_C,
                     correlations_C,
                     name="phonon bath")
@@ -84,9 +83,11 @@ system_C = oqupy.System(h_sys_C,
 
 @pytest.mark.parametrize('backend',["tensor-network"])
 def test_tensor_network_tempo_backend_C(backend):
-    tempo_params_C = oqupy.TempoParameters(dt=0.05,
-                                           dkmax=10,
-                                           epsrel=10**(-7))
+    tempo_params_C = oqupy.TempoParameters(
+        dt=0.05,
+        dkmax=10,
+        epsrel=10**(-7),
+        max_correlation_time=0.55)
     tempo_C = oqupy.Tempo(system_C,
                           bath_C,
                           tempo_params_C,
@@ -100,9 +101,11 @@ def test_tensor_network_tempo_backend_C(backend):
 
 @pytest.mark.parametrize('backend',["tensor-network"])
 def test_tensor_network_pt_tempo_backend_C(backend):
-    tempo_params_C = oqupy.PtTempoParameters(dt=0.05,
-                                             dkmax=10,
-                                             epsrel=10**(-7))
+    tempo_params_C = oqupy.TempoParameters(
+        dt=0.05,
+        dkmax=10,
+        epsrel=10**(-7),
+        max_correlation_time=0.55)
     pt = oqupy.pt_tempo_compute(
                 bath_C,
                 start_time=0.0,

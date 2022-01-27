@@ -62,30 +62,6 @@ from oqupy.util import get_progress
 PT_CLASS = {"simple": SimpleProcessTensor}
 
 
-class PtTempoParameters(TempoParameters):
-    r"""
-    Parameters for the PT-TEMPO computation.
-
-    Parameters
-    ----------
-    dt: float
-        Length of a time step :math:`\delta t`. - It should be small enough
-        such that a trotterisation between the system Hamiltonian and the
-        environment it valid, and the environment auto-correlation function
-        is reasonably well sampled.
-    dkmax: int
-        Number of time steps :math:`K\in\mathbb{N}` that should be included in
-        the non-Markovian memory. - It must be large
-        enough such that :math:`\delta t \times K` is larger than the
-        necessary memory time :math:`\tau_\mathrm{cut}`.
-    epsrel: float
-        The maximal relative error in the singular value truncation (done
-        in the underlying tensor network algorithm). - It must be small enough
-        such that the numerical compression (using tensor network algorithms)
-        does not truncate relevant correlations.
-    """
-    pass # Inherit everything from TempoParameters
-
 
 class PtTempo(BaseAPIClass):
     """
@@ -95,7 +71,7 @@ class PtTempo(BaseAPIClass):
     ----------
     bath: Bath
         The Bath (includes the coupling operator to the system).
-    parameters: PtTempoParameters
+    parameters: TempoParameters
         The parameters for the PT-TEMPO computation.
     start_time: float
         The start time.
@@ -117,7 +93,7 @@ class PtTempo(BaseAPIClass):
             bath: Bath,
             start_time: float,
             end_time: float,
-            parameters: PtTempoParameters,
+            parameters: TempoParameters,
             process_tensor_file: Optional[Union[Text, bool]] = None,
             overwrite: Optional[bool] = False,
             backend: Optional[Text] = None,
@@ -144,8 +120,8 @@ class PtTempo(BaseAPIClass):
             raise AssertionError("End time must be a float.") from e
         self._end_time = __end_time
 
-        assert isinstance(parameters, PtTempoParameters), \
-            "Argument 'parameters' must be an instance of PtTempoParameters."
+        assert isinstance(parameters, TempoParameters), \
+            "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
 
         self._process_tensor = None
@@ -248,10 +224,10 @@ class PtTempo(BaseAPIClass):
             shape = "upper-triangle"
         elif dk < 0:
             time_1 = float(dkmax) * dt
-            if self._correlations.max_correlation_time is not None:
+            if self._parameters.max_correlation_time is not None:
                 time_2 = np.min([
                     float(dkmax-dk) * dt,
-                    self._correlations.max_correlation_time])
+                    self._parameters.max_correlation_time])
             else:
                 time_2 = float(dkmax-dk) * dt
             shape = "rectangle"
@@ -337,7 +313,7 @@ def pt_tempo_compute(
         bath: Bath,
         start_time: float,
         end_time: float,
-        parameters: Optional[PtTempoParameters] = None,
+        parameters: Optional[TempoParameters] = None,
         tolerance: Optional[float] = PT_DEFAULT_TOLERANCE,
         process_tensor_file: Optional[Union[Text, bool]] = None,
         overwrite: Optional[bool] = False,
@@ -359,7 +335,7 @@ def pt_tempo_compute(
         The start time.
     end_time: float
         The time to which the PT-TEMPO should be computed.
-    parameters: PtTempoParameters
+    parameters: TempoParameters
         The parameters for the PT-TEMPO computation.
     tolerance: float
         Tolerance for the parameter estimation (only applicable if
@@ -385,10 +361,10 @@ def pt_tempo_compute(
         assert tolerance is not None, \
             "If 'parameters' is 'None' then 'tolerance' must be " \
             + "a positive float."
-        parameters = guess_pt_tempo_parameters(bath=bath,
-                                               start_time=start_time,
-                                               end_time=end_time,
-                                               tolerance=tolerance)
+        parameters = guess_tempo_parameters(bath=bath,
+                                            start_time=start_time,
+                                            end_time=end_time,
+                                            tolerance=tolerance)
     ptt = PtTempo(bath,
                   start_time,
                   end_time,
@@ -402,48 +378,3 @@ def pt_tempo_compute(
                   description_dict)
     ptt.compute(progress_type=progress_type)
     return ptt.get_process_tensor()
-
-def guess_pt_tempo_parameters(
-        bath: Bath,
-        start_time: float,
-        end_time: float,
-        tolerance: Optional[float] = PT_DEFAULT_TOLERANCE
-        ) -> PtTempoParameters:
-    """
-    Function to roughly estimate appropriate parameters for a PT-TEMPO
-    computation.
-
-    .. warning::
-
-        No guarantee that resulting PT-TEMPO calculation converges towards the
-        correct dynamics! Please refer to the TEMPO documentation and check
-        convergence by varying the parameters for PT-TEMPO manually.
-
-    Parameters
-    ----------
-    bath: Bath
-        The bath.
-    start_time: float
-        The start time.
-    end_time: float
-        The time to which the TEMPO should be computed.
-    tolerance: float
-        Tolerance for the parameter estimation.
-
-    Returns
-    -------
-    pt_tempo_parameters : TempoParameters
-        Estimate of appropriate tempo parameters.
-    """
-    param = guess_tempo_parameters(
-                bath=bath,
-                start_time=start_time,
-                end_time=end_time,
-                tolerance=tolerance)
-    return PtTempoParameters(
-        dt=param.dt,
-        dkmax=param.dkmax,
-        epsrel=param.epsrel,
-        name="Roughly estimated parameters",
-        description="Estimated with 'guess_pt_tempo_parameters()'",
-        description_dict={"tolerance":tolerance})

@@ -26,22 +26,26 @@ TEMP_FILE = "tests/data/temp.processTensor"
 
 system = tempo.System(tempo.operators.sigma("x"))
 initial_state = tempo.operators.spin_dm("z+")
-correlations = tempo.PowerLawSD(alpha=0.3,
-                                zeta=1.0,
-                                cutoff=5.0,
-                                cutoff_type="exponential",
-                                temperature=0.2,
-                                name="ohmic")
-bath = tempo.Bath(0.5*tempo.operators.sigma("z"),
-                    correlations,
-                    name="phonon bath")
-tempo_params = tempo.PtTempoParameters(dt=0.1,
-                                         dkmax=5,
-                                         epsrel=10**(-5))
-pt = tempo.pt_tempo_compute(bath,
-                            start_time=0.0,
-                            end_time=1.0,
-                            parameters=tempo_params)
+correlations = tempo.PowerLawSD(
+    alpha=0.3,
+    zeta=1.0,
+    cutoff=5.0,
+    cutoff_type="exponential",
+    temperature=0.2,
+    name="ohmic")
+bath = tempo.Bath(
+    0.5*tempo.operators.sigma("z"),
+    correlations,
+    name="phonon bath")
+tempo_params = tempo.TempoParameters(
+    dt=0.1,
+    dkmax=5,
+    epsrel=10**(-5))
+pt = tempo.pt_tempo_compute(
+    bath,
+    start_time=0.0,
+    end_time=1.0,
+    parameters=tempo_params)
 pt.export(TEMP_FILE, overwrite=True)
 del pt
 
