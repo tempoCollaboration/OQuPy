@@ -38,10 +38,32 @@ def plot_correlations_with_parameters(
     parameters: TempoParameters
         The tempo parameters that determine the grid.
     """
-    times = parameters.dt/3.0 * np.arange(int(parameters.dkmax*3.3))
-    corr_func = np.vectorize(correlations.correlation)
-    corr_vals = corr_func(times)
-    sample = [3*i for i in range(parameters.dkmax+1)]
+    if parameters.add_correlation_time is None:
+        add_time = 0.0
+        infinity = False
+    elif parameters.add_correlation_time == np.infty:
+        add_time = 0.0
+        infinity = True
+    else:
+        add_time = parameters.add_correlation_time
+        infinity = False
+
+    dt = parameters.dt
+    dkmax = parameters.dkmax
+    int(add_time/dt)
+
+
+    times_infl = dt/3.0 * np.arange((dkmax+1)*3 - 2)
+    times_add = np.hstack((dt * np.arange(dkmax, dkmax+int(add_time/dt)),
+                           np.array([dt * dkmax + add_time])))
+    times_extra = np.linspace(times_add[-1], times_add[-1]*1.5, 10)
+
+    corr = np.vectorize(correlations.correlation)
+
+    corr_infl = corr(times_infl)
+    sample = [3*i for i in range(dkmax+1)]
+    corr_add = corr(times_add)
+    corr_extra = corr(times_extra)
 
     show = False
     if ax is None:
@@ -49,10 +71,42 @@ def plot_correlations_with_parameters(
         show = True
         ax.set_xlabel(r"$\tau$")
         ax.set_ylabel(r"$C(\tau)$")
-    ax.plot(times, np.real(corr_vals), color="C0", linestyle="-", label="real")
-    ax.scatter(times[sample], np.real(corr_vals[sample]), marker="d", color="C0")
-    ax.plot(times, np.imag(corr_vals), color="C1", linestyle="-", label="imag")
-    ax.scatter(times[sample], np.imag(corr_vals[sample]), marker="o", color="C1")
+    ax.plot(
+        times_infl, np.real(corr_infl),
+        color="C0", linestyle="-", label="real")
+    ax.scatter(
+        times_infl[sample], np.real(corr_infl[sample]),
+        marker="d", color="C0")
+    ax.plot(
+        times_infl, np.imag(corr_infl),
+        color="C1", linestyle="-", label="imag")
+    ax.scatter(
+        times_infl[sample], np.imag(corr_infl[sample]),
+        marker="o", color="C1")
+    ax.plot(times_extra, np.real(corr_extra), color="C0", linestyle="-")
+    ax.plot(times_extra, np.imag(corr_extra), color="C1", linestyle="-")
+
+    if infinity:
+        ax.axvline(times_add[0], color="r", linestyle="dashed")
+        ax.fill_between(
+            times_extra, np.real(corr_extra),
+            0.0, color="C0", alpha=0.30)
+        ax.fill_between(
+            times_extra, np.imag(corr_extra),
+            0.0, color="C1", alpha=0.30)
+    elif add_time != 0.0:
+        ax.plot(times_add, np.real(corr_add), color="C0", linestyle="-")
+        ax.plot(times_add, np.imag(corr_add), color="C1", linestyle="-")
+        ax.fill_between(
+            times_add, np.real(corr_add),
+            0.0, color="C0", alpha=0.30)
+        ax.fill_between(
+            times_add, np.imag(corr_add),
+            0.0, color="C1", alpha=0.30)
+        ax.axvline(times_add[0], color="k", linestyle="dashed")
+        ax.axvline(times_add[-1], color="k", linestyle="dotted")
+    else:
+        pass
     ax.legend()
 
     if show:
