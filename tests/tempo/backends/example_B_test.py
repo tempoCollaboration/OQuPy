@@ -53,7 +53,7 @@ def test_tensor_network_tempo_backend_non_diag(backend):
             dt=0.1,
             dkmax=30,
             epsrel=10**(-5),
-            max_correlation_time=8.0)
+            add_correlation_time=8.0)
 
         dynamics = oqupy.tempo_compute(system=system,
                                        bath=bath,
@@ -110,7 +110,7 @@ def test_tensor_network_pt_tempo_backend_non_diag(backend):
             dt=0.1,
             dkmax=30,
             epsrel=10**(-5),
-            max_correlation_time=8.0)
+            add_correlation_time=8.0)
 
         pt = oqupy.pt_tempo_compute(
             bath=bath,

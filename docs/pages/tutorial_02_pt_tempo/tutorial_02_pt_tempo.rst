@@ -157,7 +157,7 @@ B.3: Create time dependent system object
                                     zeta=3, 
                                     cutoff=omega_cutoff, 
                                     cutoff_type='gaussian', 
-                                    max_correlation_time=5.0,
+                                    add_correlation_time=5.0,
                                     temperature=temperature)
     bath = tempo.Bath(tempo.operators.sigma("z")/2.0, correlations)
 

@@ -49,7 +49,7 @@ correlations = tempo.PowerLawSD(alpha=alpha,
                                 zeta=1, 
                                 cutoff=omega_cutoff, 
                                 cutoff_type='exponential', 
-                                max_correlation_time=8.0)
+                                add_correlation_time=8.0)
 bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
 tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4))
 
@@ -132,7 +132,7 @@ correlations_A = tempo.PowerLawSD(alpha=alpha_A,
                                   zeta=1, 
                                   cutoff=omega_cutoff_A, 
                                   cutoff_type='exponential', 
-                                  max_correlation_time=8.0)
+                                  add_correlation_time=8.0)
 
 
 # #### Bath

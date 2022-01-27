@@ -75,7 +75,7 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
         if self._dkmax is None:
             dkmax_pre_compute = 1
         else:
-            dkmax_pre_compute = self._dkmax
+            dkmax_pre_compute = self._dkmax + 1
 
         for i in range(dkmax_pre_compute):
             infl = self._influence(i)
@@ -156,23 +156,27 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
                                 self._mpo,
                                 name="Thee Time Evolving MPO",
                                 copy=False)
-        elif self._step < self._dkmax:
+        elif self._step <= self._dkmax:
             _, mpo = na.split(self._mpo,
                               int(0 - self._step),
                               copy=True)
         elif self._step == self._dkmax:
             mpo = self._mpo.copy()
-        else:
+        else: # self._step >= self._dkmax
             mpo = self._mpo.copy()
             infl = self._influence(self._dkmax-self._step)
-            infl_four_legs = create_delta(infl, [1, 0, 0, 1])
-            infl_na = na.NodeArray([infl_four_legs],
-                                   left=True,
-                                   right=True)
-            mpo = na.join(infl_na,
-                          mpo,
-                          name="Thee Time Evolving MPO",
-                          copy=False)
+            if infl is not None:
+                infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+                infl_na = na.NodeArray([infl_four_legs],
+                                       left=True,
+                                       right=True)
+                _, mpo = na.split(self._mpo,
+                                  index=1,
+                                  copy=True)
+                mpo = na.join(infl_na,
+                              mpo,
+                              name="Thee Time Evolving MPO",
+                              copy=False)
 
         mpo.name = "temporary MPO"
         mpo.apply_vector(self._sum_west, left=True)
@@ -187,6 +191,14 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
                          relative=True,
                          copy=False)
 
+        if len(self._mps) != len(mpo):
+            self._mps.contract(self._sum_north_na,
+                               axes=[(0,0)],
+                               left_index=0,
+                               right_index=0,
+                               direction="right",
+                               copy=True)
+
         self._mps.zip_up(mpo,
                          axes=[(0, 0)],
                          left_index=0,
@@ -196,14 +208,6 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
                          max_truncation_err=self._epsrel,
                          relative=True,
                          copy=False)
-
-        if self._dkmax is not None and self._step > self._dkmax:
-            self._mps.contract(self._sum_north_na,
-                               axes=[(0,0)],
-                               left_index=0,
-                               right_index=0,
-                               direction="right",
-                               copy=True)
 
         self._mps.svd_sweep(from_index=-1,
                             to_index=0,

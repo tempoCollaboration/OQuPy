@@ -41,7 +41,7 @@ def plot_correlations_with_parameters(
     times = parameters.dt/3.0 * np.arange(int(parameters.dkmax*3.3))
     corr_func = np.vectorize(correlations.correlation)
     corr_vals = corr_func(times)
-    sample = [3*i for i in range(parameters.dkmax)]
+    sample = [3*i for i in range(parameters.dkmax+1)]
 
     show = False
     if ax is None:
