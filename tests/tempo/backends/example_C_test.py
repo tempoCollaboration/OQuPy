@@ -87,7 +87,7 @@ def test_tensor_network_tempo_backend_C(backend):
         dt=0.05,
         dkmax=10,
         epsrel=10**(-7),
-        max_correlation_time=0.55)
+        add_correlation_time=None)
     tempo_C = oqupy.Tempo(system_C,
                           bath_C,
                           tempo_params_C,
@@ -105,7 +105,7 @@ def test_tensor_network_pt_tempo_backend_C(backend):
         dt=0.05,
         dkmax=10,
         epsrel=10**(-7),
-        max_correlation_time=0.55)
+        add_correlation_time=None)
     pt = oqupy.pt_tempo_compute(
                 bath_C,
                 start_time=0.0,

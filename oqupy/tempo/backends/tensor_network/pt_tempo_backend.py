@@ -83,10 +83,7 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
                 infl_mpo = util.create_delta(infl, [1, 1, 0])
                 infl_mps = infl.T / scale
             elif i == self._num_infl-1:
-                if self._dkmax < self._num_steps:
-                    infl = self._influence(-1)
-                else:
-                    infl = self._influence(i)
+                infl = self._influence(i)
                 infl_mpo = util.add_singleton(infl, 1)
                 infl_mpo = util.add_singleton(infl_mpo, 3)
                 infl_mps = util.add_singleton(infl, 2)
@@ -182,22 +179,23 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
             if self._dkmax is not None:
                 dk = int(0 - self._step)
                 infl = self._influence(dk)
-                infl_mpo = util.add_singleton(infl, 1)
-                infl_mpo = util.add_singleton(infl_mpo, 3)
-                last_mpo = na.NodeArray(
-                        [infl_mpo],
-                        left=True,
-                        right=True,
-                        name="The integrating back to zero infl. func.",
-                        backend=self._backend)
-                self._mpo, _ = na.split(self._mpo,
-                                        index=-1,
+                if infl is not None:
+                    infl_mpo = util.add_singleton(infl, 1)
+                    infl_mpo = util.add_singleton(infl_mpo, 3)
+                    last_mpo = na.NodeArray(
+                            [infl_mpo],
+                            left=True,
+                            right=True,
+                            name="The integrating back to zero infl. func.",
+                            backend=self._backend)
+                    self._mpo, _ = na.split(self._mpo,
+                                            index=-1,
+                                            copy=False,
+                                            name_left="Shortened MPO")
+                    self._mpo = na.join(self._mpo,
+                                        last_mpo,
                                         copy=False,
-                                        name_left="Shortened MPO")
-                self._mpo = na.join(self._mpo,
-                                    last_mpo,
-                                    copy=False,
-                                    name="Thee updated MPO")
+                                        name="Thee updated MPO")
 
             one = self._one_na.copy()
             self._mps = na.join(self._mps,

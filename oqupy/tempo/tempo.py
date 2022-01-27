@@ -67,7 +67,7 @@ class TempoParameters(BaseAPIClass):
             dt: float,
             dkmax: int,
             epsrel: float,
-            max_correlation_time: Optional[float] = None,
+            add_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
@@ -75,7 +75,7 @@ class TempoParameters(BaseAPIClass):
         self.dt = dt
         self.dkmax = dkmax
         self.epsrel = epsrel
-        self.max_correlation_time = max_correlation_time
+        self.add_correlation_time = add_correlation_time
         super().__init__(name, description, description_dict)
 
     def __str__(self) -> Text:
@@ -141,14 +141,14 @@ class TempoParameters(BaseAPIClass):
         self._epsrel = __epsrel
 
     @property
-    def max_correlation_time(self):
+    def add_correlation_time(self):
         """Maximal correlation time. """
-        return self._max_correlation_time
+        return self._add_correlation_time
 
-    @max_correlation_time.setter
-    def max_correlation_time(self, new_tau: Optional[float] = None):
+    @add_correlation_time.setter
+    def add_correlation_time(self, new_tau: Optional[float] = None):
         if new_tau is None:
-            del self.max_correlation_time
+            del self.add_correlation_time
         else:
             # check input: cutoff
             try:
@@ -159,11 +159,11 @@ class TempoParameters(BaseAPIClass):
             if __new_tau < 0:
                 raise ValueError(
                     "Maximum correlation time must be non-negative.")
-            self._max_correlation_time = __new_tau
+            self._add_correlation_time = __new_tau
 
-    @max_correlation_time.deleter
-    def max_correlation_time(self):
-        self._max_correlation_time = None
+    @add_correlation_time.deleter
+    def add_correlation_time(self):
+        self._add_correlation_time = None
 
 class Tempo(BaseAPIClass):
     """
@@ -335,12 +335,12 @@ class Tempo(BaseAPIClass):
             shape = "upper-triangle"
         elif dk < 0:
             time_1 = float(dkmax) * dt
-            if self._parameters.max_correlation_time is not None:
-                time_2 = np.min([
-                    float(dkmax-dk) * dt,
-                    self._parameters.max_correlation_time])
+            if self._parameters.add_correlation_time is not None:
+                time_2 = float(dkmax) * dt \
+                    + np.min([float(-dk) * dt,
+                              1.0*dt + self._parameters.add_correlation_time])
             else:
-                time_2 = float(dkmax-dk) * dt
+                return None
             shape = "rectangle"
         else:
             time_1 = float(dk) * dt

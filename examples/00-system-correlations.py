@@ -32,7 +32,7 @@ correlations = oqupy.PowerLawSD(alpha=alpha,
                                 zeta=3,
                                 cutoff=omega_cutoff,
                                 cutoff_type='gaussian',
-                                max_correlation_time=5.0,
+                                add_correlation_time=5.0,
                                 temperature=temperature)
 bath = oqupy.Bath(op.sigma("z")/2.0, correlations)
 

@@ -224,12 +224,12 @@ class PtTempo(BaseAPIClass):
             shape = "upper-triangle"
         elif dk < 0:
             time_1 = float(dkmax) * dt
-            if self._parameters.max_correlation_time is not None:
-                time_2 = np.min([
-                    float(dkmax-dk) * dt,
-                    self._parameters.max_correlation_time])
+            if self._parameters.add_correlation_time is not None:
+                time_2 = float(dkmax) * dt \
+                    + np.min([float(-dk) * dt,
+                              1.0*dt + self._parameters.add_correlation_time])
             else:
-                time_2 = float(dkmax-dk) * dt
+                return None
             shape = "rectangle"
         else:
             time_1 = float(dk) * dt
