@@ -29,6 +29,7 @@ from copy import copy
 import numpy as np
 from numpy import ndarray
 from scipy.linalg import expm
+from oqupy.correlations import BaseCorrelations
 
 from oqupy.tempo.backends.backend_factory import get_tempo_backend
 from oqupy.bath import Bath
@@ -81,9 +82,11 @@ class TempoParameters(BaseAPIClass):
     def __str__(self) -> Text:
         ret = []
         ret.append(super().__str__())
-        ret.append("  dt            = {} \n".format(self.dt))
-        ret.append("  dkmax         = {} \n".format(self.dkmax))
-        ret.append("  epsrel        = {} \n".format(self.epsrel))
+        ret.append("  dt                   = {} \n".format(self.dt))
+        ret.append("  dkmax                = {} \n".format(self.dkmax))
+        ret.append("  epsrel               = {} \n".format(self.epsrel))
+        ret.append("  add_correlation_time = {} \n".format(
+            self.add_correlation_time))
         return "".join(ret)
 
     @property
@@ -155,10 +158,10 @@ class TempoParameters(BaseAPIClass):
                 __new_tau = float(new_tau)
             except Exception as e:
                 raise AssertionError( \
-                    "Maximum correlation time must be a float.") from e
+                    "Additional correlation time must be a float.") from e
             if __new_tau < 0:
                 raise ValueError(
-                    "Maximum correlation time must be non-negative.")
+                    "Additional correlation time must be non-negative.")
             self._add_correlation_time = __new_tau
 
     @add_correlation_time.deleter
@@ -326,44 +329,12 @@ class Tempo(BaseAPIClass):
     def _influence(self, dk: int):
         """Create the influence functional matrix for a time step distance
         of dk. """
-        dt = self._parameters.dt
-        dkmax = self._parameters.dkmax
-
-        if dk == 0:
-            time_1 = 0.0
-            time_2 = None
-            shape = "upper-triangle"
-        elif dk < 0:
-            time_1 = float(dkmax) * dt
-            if self._parameters.add_correlation_time is not None:
-                time_2 = float(dkmax) * dt \
-                    + np.min([float(-dk) * dt,
-                              1.0*dt + self._parameters.add_correlation_time])
-            else:
-                return None
-            shape = "rectangle"
-        else:
-            time_1 = float(dk) * dt
-            time_2 = None
-            shape = "square"
-
-        eta_dk = self._correlations.correlation_2d_integral( \
-            delta=dt,
-            time_1=time_1,
-            time_2=time_2,
-            shape=shape,
-            epsrel=self._parameters.epsrel)
-        op_p = self._coupling_acomm
-        op_m = self._coupling_comm
-
-        if dk == 0:
-            infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
-                                          + 1j*eta_dk.imag*op_p)))
-        else:
-            infl = np.exp(-np.outer(eta_dk.real*op_m \
-                                  + 1j*eta_dk.imag*op_p, op_m))
-
-        return infl
+        return influence_matrix(
+            dk,
+            parameters=self._parameters,
+            correlations=self._correlations,
+            coupling_acomm=self._coupling_acomm,
+            coupling_comm=self._coupling_comm)
 
     def _propagators(self, step: int):
         """Create the system propagators (first and second half) for the time
@@ -435,6 +406,51 @@ class Tempo(BaseAPIClass):
         """
         return self._dynamics
 
+def influence_matrix(
+        dk: int,
+        parameters: TempoParameters,
+        correlations: BaseCorrelations,
+        coupling_acomm: ndarray,
+        coupling_comm: ndarray):
+    """Compute the influence functional matrix. """
+    dt = parameters.dt
+    dkmax = parameters.dkmax
+
+    if dk == 0:
+        time_1 = 0.0
+        time_2 = None
+        shape = "upper-triangle"
+    elif dk < 0:
+        time_1 = float(dkmax) * dt
+        if parameters.add_correlation_time is not None:
+            time_2 = float(dkmax) * dt \
+                + np.min([float(-dk) * dt,
+                            1.0*dt + parameters.add_correlation_time])
+        else:
+            return None
+        shape = "rectangle"
+    else:
+        time_1 = float(dk) * dt
+        time_2 = None
+        shape = "square"
+
+    eta_dk = correlations.correlation_2d_integral( \
+        delta=dt,
+        time_1=time_1,
+        time_2=time_2,
+        shape=shape,
+        epsrel=parameters.epsrel)
+    op_p = coupling_acomm
+    op_m = coupling_comm
+
+    if dk == 0:
+        infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
+                                        + 1j*eta_dk.imag*op_p)))
+    else:
+        infl = np.exp(-np.outer(eta_dk.real*op_m \
+                                + 1j*eta_dk.imag*op_p, op_m))
+
+    return infl
 
 def _analyse_correlation(
         corr_func: Callable[[np.ndarray],np.ndarray],

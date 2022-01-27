@@ -46,14 +46,13 @@ import numpy as np
 from oqupy.tempo.backends.backend_factory import get_pt_tempo_backend
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
-# from oqupy.config import NpDtype
-# from oqupy.config import PT_MAX_DKMAX, PT_DEFAULT_TOLERANCE
 from oqupy.config import PT_DEFAULT_TOLERANCE
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
 from oqupy.tempo.tempo import TempoParameters
 from oqupy.tempo.tempo import guess_tempo_parameters
+from oqupy.tempo.tempo import influence_matrix
 from oqupy.operators import commutator, acommutator
 from oqupy.operators import left_right_super
 from oqupy.util import get_progress
@@ -215,44 +214,12 @@ class PtTempo(BaseAPIClass):
     def _influence(self, dk: int):
         """Create the influence functional matrix for a time step distance
         of dk. """
-        dt = self._parameters.dt
-        dkmax = self._parameters.dkmax
-
-        if dk == 0:
-            time_1 = 0.0
-            time_2 = None
-            shape = "upper-triangle"
-        elif dk < 0:
-            time_1 = float(dkmax) * dt
-            if self._parameters.add_correlation_time is not None:
-                time_2 = float(dkmax) * dt \
-                    + np.min([float(-dk) * dt,
-                              1.0*dt + self._parameters.add_correlation_time])
-            else:
-                return None
-            shape = "rectangle"
-        else:
-            time_1 = float(dk) * dt
-            time_2 = None
-            shape = "square"
-
-        eta_dk = self._correlations.correlation_2d_integral( \
-            delta=dt,
-            time_1=time_1,
-            time_2=time_2,
-            shape=shape,
-            epsrel=self._parameters.epsrel)
-        op_p = self._coupling_acomm
-        op_m = self._coupling_comm
-
-        if dk == 0:
-            infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
-                                          + 1j*eta_dk.imag*op_p)))
-        else:
-            infl = np.exp(-np.outer(eta_dk.real*op_m \
-                                  + 1j*eta_dk.imag*op_p, op_m))
-
-        return infl
+        return influence_matrix(
+            dk,
+            parameters=self._parameters,
+            correlations=self._correlations,
+            coupling_acomm=self._coupling_acomm,
+            coupling_comm=self._coupling_comm)
 
     @property
     def dimension(self) -> np.ndarray:
