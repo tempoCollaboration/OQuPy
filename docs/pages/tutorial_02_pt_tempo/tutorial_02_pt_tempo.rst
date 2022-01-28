@@ -1,5 +1,5 @@
-Tutorial 02 - Time dependence and PT-TEMPO
-==========================================
+02 - Time dependence and PT-TEMPO
+=================================
 
 A quick introduction on how to use the TimeEvolvingMPO package to
 compute the dynamics of a time dependent quantum system and how to
@@ -25,7 +25,7 @@ to use
     import sys
     sys.path.insert(0,'..')
     
-    import oqupy as tempo
+    import oqupy
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -33,16 +33,28 @@ and check what version of tempo we are using.
 
 .. code:: ipython3
 
-    tempo.__version__
+    oqupy.__version__
 
 
 
 
 .. parsed-literal::
 
-    '0.1.2'
+    '0.2-dev'
 
 
+
+Let’s also import some shorthands for the spin Pauli operators and
+density matrices.
+
+.. code:: ipython3
+
+    sigma_x = oqupy.operators.sigma("x")
+    sigma_y = oqupy.operators.sigma("y")
+    sigma_z = oqupy.operators.sigma("z")
+    up_density_matrix = oqupy.operators.spin_dm("z+")
+    down_density_matrix = oqupy.operators.spin_dm("z-")
+    mixed_density_matrix = oqupy.operators.spin_dm("mixed")
 
 --------------
 
@@ -83,11 +95,13 @@ where :math:`\hat{\sigma}_i` are the Pauli operators, and the
 .. math::  J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \frac{\omega^3}{\omega_\mathrm{cutoff}^2} \, \exp\left(-\frac{\omega^2}{\omega_\mathrm{cutoff}^2}\right) \mathrm{.} 
 
 Also, let’s assume the initial density matrix of the quantum dot is the
-ground state
+ground state $ :raw-latex:`\rho`\_0 =
 
-.. math::  \rho_0 = \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix} 
+.. raw:: latex
 
-and the bath is initially at temperature :math:`T`.
+   \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix}
+
+$ and the bath is initially at temperature :math:`T`.
 
 | We express all frequencies, temperatures and times in units of 1/ps
   and ps respectively.
@@ -100,7 +114,7 @@ and the bath is initially at temperature :math:`T`.
     omega_cutoff = 3.04 
     alpha = 0.126
     temperature = 0.1309
-    initial_state=tempo.operators.spin_dm("z-")
+    initial_state=down_density_matrix
 
 B.2: Laser pulse / time dependent system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,12 +149,12 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f6a0ad0e3c8>
+    <matplotlib.legend.Legend at 0x7f1452ab1c50>
 
 
 
 
-.. image:: output_14_1.png
+.. image:: output_16_1.png
 
 
 B.3: Create time dependent system object
@@ -149,17 +163,16 @@ B.3: Create time dependent system object
 .. code:: ipython3
 
     def hamiltonian_t(t):
-        return detuning(t)/2.0 * tempo.operators.sigma("z") \
-               + gaussian_shape(t, area = np.pi/2.0, tau = 0.245)/2.0 * tempo.operators.sigma("x") 
+        return detuning(t)/2.0 * sigma_z \
+               + gaussian_shape(t, area = np.pi/2.0, tau = 0.245)/2.0 * sigma_x
     
-    system = tempo.TimeDependentSystem(hamiltonian_t)
-    correlations = tempo.PowerLawSD(alpha=alpha, 
-                                    zeta=3, 
-                                    cutoff=omega_cutoff, 
-                                    cutoff_type='gaussian', 
-                                    add_correlation_time=5.0,
+    system = oqupy.TimeDependentSystem(hamiltonian_t)
+    correlations = oqupy.PowerLawSD(alpha=alpha,
+                                    zeta=3,
+                                    cutoff=omega_cutoff,
+                                    cutoff_type='gaussian',
                                     temperature=temperature)
-    bath = tempo.Bath(tempo.operators.sigma("z")/2.0, correlations)
+    bath = oqupy.Bath(sigma_z/2.0, correlations)
 
 B.4: TEMPO computation
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -170,9 +183,9 @@ parameters):
 
 .. code:: ipython3
 
-    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
     
-    tempo_sys = tempo.Tempo(system=system,
+    tempo_sys = oqupy.Tempo(system=system,
                             bath=bath,
                             initial_state=initial_state,
                             start_time=-2.0,
@@ -182,8 +195,8 @@ parameters):
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:02
-    Elapsed time: 2.1s
+    100.0%   50 of   50 [########################################] 00:00:01
+    Elapsed time: 1.8s
 
 
 and extract the expectation values
@@ -192,8 +205,8 @@ for plotting:
 
 .. code:: ipython3
 
-    t, s_x = dynamics.expectations(tempo.operators.sigma("x"), real=True)
-    t, s_y = dynamics.expectations(tempo.operators.sigma("y"), real=True)
+    t, s_x = dynamics.expectations(sigma_x, real=True)
+    t, s_y = dynamics.expectations(sigma_y, real=True)
     s_xy = np.sqrt(s_x**2 + s_y**2)
     plt.plot(t, s_xy, label=r'$\Delta = 0.0$')
     plt.xlabel(r'$t\,\Omega$')
@@ -206,12 +219,12 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f6a0027f080>
+    <matplotlib.legend.Legend at 0x7f14517d4438>
 
 
 
 
-.. image:: output_21_1.png
+.. image:: output_23_1.png
 
 
 B.5: Using PT-TEMPO to explore many different laser pulses
@@ -228,18 +241,18 @@ with many different system Hamiltonians at relatively little cost.
 
 .. code:: ipython3
 
-    pt_tempo_parameters = tempo.PtTempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
     
-    process_tensor = tempo.pt_tempo_compute(bath=bath,
+    process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                             start_time=-2.0,
                                             end_time=3.0,
-                                            parameters=pt_tempo_parameters)
+                                            parameters=tempo_parameters)
 
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:03
-    Elapsed time: 3.0s
+    100.0%   50 of   50 [########################################] 00:00:00
+    Elapsed time: 1.0s
 
 
 Given we want to calculate :math:`\langle\sigma_{xy}\rangle(t)` for 5
@@ -257,9 +270,9 @@ each laser pulse:
         #       https://docs.python-guide.org/writing/gotchas/#late-binding-closures
         #       for more information on this.
         def hamiltonian_t(t, delta=delta): 
-            return delta/2.0 * tempo.operators.sigma("z") \
-                + gaussian_shape(t, area = np.pi/2.0, tau = 0.245)/2.0 * tempo.operators.sigma("x") 
-        system = tempo.TimeDependentSystem(hamiltonian_t)
+            return delta/2.0 * sigma_z \
+                + gaussian_shape(t, area = np.pi/2.0, tau = 0.245)/2.0 * sigma_x 
+        system = oqupy.TimeDependentSystem(hamiltonian_t)
         systems.append(system)
 
 We can then use the process tensor to compute the dynamics for each
@@ -270,14 +283,16 @@ laser pulse
     s_xy_list = []
     t_list = []
     for system in systems:
-        dynamics = process_tensor.compute_dynamics_from_system(
-            system=system, 
-            initial_state=initial_state)
-        t, s_x = dynamics.expectations(tempo.operators.sigma("x"), real=True)
-        _, s_y = dynamics.expectations(tempo.operators.sigma("y"), real=True)
+        dynamics = oqupy.compute_dynamics(
+            process_tensor=process_tensor,
+            system=system,
+            initial_state=initial_state,
+            start_time=-2.0)
+        t, s_x = dynamics.expectations(sigma_x, real=True)
+        _, s_y = dynamics.expectations(sigma_y, real=True)
         s_xy = np.sqrt(s_x**2 + s_y**2)
         s_xy_list.append(s_xy)
-        t_list.append(t)   
+        t_list.append(t)
         print(".", end="", flush=True)
     print(" done.", flush=True)
 
@@ -303,11 +318,11 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f6a00346c18>
+    <matplotlib.legend.Legend at 0x7f1451716c50>
 
 
 
 
-.. image:: output_29_1.png
+.. image:: output_31_1.png
 
 
