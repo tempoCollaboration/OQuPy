@@ -1,7 +1,7 @@
 02 - Time dependence and PT-TEMPO
 =================================
 
-A quick introduction on how to use the TimeEvolvingMPO package to
+A quick introduction on how to use the OQuPy package to
 compute the dynamics of a time dependent quantum system and how to
 employ the process tensor TEMPO method. We illustrate this by applying
 TEMPO and PT-TEMPO to a quantum dot driven by a time dependent laser
@@ -17,7 +17,7 @@ pulse.
    -  B.4: TEMPO computation
    -  B.5: Using PT-TEMPO to explore many different laser pulses
 
-First, let’s import TimeEvolvingMPO and some other packages we are going
+First, let’s import OQuPy and some other packages we are going
 to use
 
 .. code:: ipython3
