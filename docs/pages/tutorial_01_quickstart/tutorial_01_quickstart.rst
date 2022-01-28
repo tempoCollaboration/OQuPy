@@ -1,7 +1,7 @@
 01 - Quickstart
 ===============
 
-A quick introduction on how to use the TimeEvolvingMPO package to
+A quick introduction on how to use the OQuPy package to
 compute the dynamics of a quantum system that is possibly strongly
 coupled to a structured environment. We illustrate this by applying the
 TEMPO method to the strongly coupled spin boson model.
@@ -14,7 +14,7 @@ TEMPO method to the strongly coupled spin boson model.
    -  A.2: Create system, correlations and bath objects
    -  A.3: TEMPO computation
 
-First, let’s import TimeEvolvingMPO and some other packages we are going
+First, let’s import OQuPy and some other packages we are going
 to use
 
 .. code:: ipython3
