@@ -13,7 +13,12 @@
 # limitations under the License.
 """
 Module on for the original time evolving matrix product operator (TEMPO)
-algorithm. This code is based on [Strathearn2018].
+algorithm. This code is based on [Strathearn2017] and [Strathearn2018].
+
+**[Strathearn2017]**
+A. Strathearn, B.W. Lovett, and P. Kirton, *Efficient real-time path integrals
+for non-Markovian spin-boson models*. New Journal of Physics, 19(9),
+p.093009 (2017).
 
 **[Strathearn2018]**
 A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
@@ -62,6 +67,9 @@ class TempoParameters(BaseAPIClass):
         in the underlying tensor network algorithm). - It must be small enough
         such that the numerical compression (using tensor network algorithms)
         does not truncate relevant correlations.
+    add_correlation_time: float
+        Additional correlation time to include in the last influence
+        functional as explained in [Strathearn2017].
     """
     def __init__(
             self,
@@ -144,12 +152,15 @@ class TempoParameters(BaseAPIClass):
         self._epsrel = __epsrel
 
     @property
-    def add_correlation_time(self):
-        """Maximal correlation time. """
+    def add_correlation_time(self) -> float:
+        """
+        Additional correlation time to include in the last influence
+        functional.
+        """
         return self._add_correlation_time
 
     @add_correlation_time.setter
-    def add_correlation_time(self, new_tau: Optional[float] = None):
+    def add_correlation_time(self, new_tau: Optional[float] = None) -> None:
         if new_tau is None:
             del self.add_correlation_time
         else:
@@ -165,7 +176,7 @@ class TempoParameters(BaseAPIClass):
             self._add_correlation_time = __new_tau
 
     @add_correlation_time.deleter
-    def add_correlation_time(self):
+    def add_correlation_time(self) -> None:
         self._add_correlation_time = None
 
 class Tempo(BaseAPIClass):
