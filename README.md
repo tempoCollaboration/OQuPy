@@ -1,4 +1,5 @@
-# Open Quantum Systems in Python: OQuPy
+# OQuPy: Open Quantum Systems in Python
+
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
