@@ -1,5 +1,5 @@
-TimeEvolvingMPO reference documentation
-=======================================
+OQuPy - Open Quantum Systems in Python
+======================================
 
 **A Python 3 package to efficiently compute non-Markovian open quantum
 systems.**
