@@ -3,31 +3,45 @@ Bibliography
 
 The code in this project is based on ideas from the following publications:
 
-**[Strathearn2017]**
-A. Strathearn, B.W. Lovett, and P. Kirton, *Efficient real-time path integrals
-for non-Markovian spin-boson models*. New Journal of Physics, 19(9),
-p.093009 (2017).
-
-**[Strathearn2018]**
-A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
-B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
-time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
-
-**[Pollock2018]**
-F.  A.  Pollock,  C.  Rodriguez-Rosario,  T.  Frauenheim,
-M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
-framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
-
-**[Jorgensen2019]**
-M. R. Jørgensen and F. A. Pollock, *Exploiting the causaltensor network
-structure of quantum processes to efficiently simulate non-markovian path
-integrals*, Phys. Rev. Lett. 123, 240602 (2019)
-
-**[Fux2021]**
-G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
-J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-optimal control of non-Markovian open quantum systems*, 
-Phys. Rev. Lett. 126, 200401(2021).
+- **[Stratearn2017]** Strathearn et al.,
+  *Efficient real-time path integrals for non-Markovian spin-boson models*.
+  `New J. Phys. 19(9), p.093009 <http://dx.doi.org/10.1088/1367-2630/aa8744>`_
+  (2017).
+- **[Strathearn2018]]** Strathearn et al.,
+  *Efficient non-Markovian quantum dynamics using time-evolving matrix product
+  operators*,
+  `Nat. Commun. 9, 3322 <https://doi.org/10.1038/s41467-018-05617-3>`_
+  (2018).
+- **[Pollock2018]** Pollock et al.,
+  *Non-Markovian quantum processes: Complete framework and efficient
+  characterization*,
+  `Phys. Rev. A 97, 012127 <http://dx.doi.org/10.1103/PhysRevA.97.012127>`_
+  (2018).
+- **[Jorgensen2019]** Jørgensen and Pollock,
+  *Exploiting the causal tensor network structure of quantum processes to
+  efficiently simulate non-Markovian path integrals*,
+  `Phys. Rev. Lett. 123, 240602 <http://dx.doi.org/10.1103/PhysRevLett.123.240602>`_
+  (2019).
+- **[Strathearn2019]** Strathearn,
+  *Modelling Non-Markovian Quantum Systems Using Tensor Networks*,
+  `Springer Theses <http://link.springer.com/10.1007/978-3-030-54975-6>`_
+  (2020).
+- **[Fux2021]** Fux et al.,
+  *Efficient exploration of Hamiltonian parameter space for optimal control
+  of non-Markovian open quantum systems*,
+  `Phys. Rev. Lett. 126, 200401 <https://link.aps.org/doi/10.1103/PhysRevLett.126.200401>`_
+  (2021).
+- **[Gribben2021a]** Gribben et al.,
+  *Using the Environment to Understand non-Markovian Open Quantum Systems*,
+  `arXiv:2106.04212 <http://arxiv.org/abs/2106.04212>`_
+  (2021).
+- **[Gribben2021b]** Gribben et al.,
+  *Exact dynamics of non-additive environments in non-Markovian open quantum
+  systems*,
+  `arXiv:2109.08442 <http://arxiv.org/abs/2109.08442>`_ (2021).
+- **[Fux2022]** Fux et al.,
+  *Thermalization of a spin chain strongly coupled to its environment*,
+  `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_ (2022).
 
 .. _bibtex:
 
