@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for tensor network tempo backend.
+Module for tempo backend.
 """
 
 from typing import Callable, Dict, Tuple
@@ -20,14 +20,37 @@ from copy import copy
 
 from numpy import ndarray, moveaxis, dot
 
-from oqupy.tempo.backends.tensor_network import node_array as na
-from oqupy.tempo.backends.base_backends import BaseTempoBackend
+from oqupy.tempo.backends import node_array as na
 from oqupy.util import create_delta
 from oqupy import operators
 
 
-class TensorNetworkTempoBackend(BaseTempoBackend):
-    """See BaseTempoBackend for docstring. """
+class TempoBackend:
+    """
+    Backend class for TEMPO.
+
+    Parameters
+    ----------
+    initial_state: ndarray
+        The initial density matrix (as a vector).
+    influence: callable(int) -> ndarray
+        Callable that takes an integer `step` and returns the influence super
+        operator of that `step`.
+    unitary_transform: ndarray
+        Unitary that transforms the coupling operator into a diagonal form.
+    propagators: callable(int) -> ndarray, ndarray
+        Callable that takes an integer `step` and returns the first and second
+        half of the system propagator of that `step`.
+    sum_north: ndarray
+        The summing vector for the north leggs.
+    sum_west: ndarray
+        The summing vector for the west leggs.
+    dkmax: int
+        Number of influences to include. If ``dkmax == None`` then all influences
+        are included.
+    epsrel: float
+        Maximal relative SVD truncation error.
+    """
     def __init__(
             self,
             initial_state: ndarray,
@@ -39,24 +62,41 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
             dkmax: int,
             epsrel: float,
             config: Dict):
-        """Create a TensorNetworkTempoBackend object. """
-        super().__init__(initial_state,
-                         influence,
-                         unitary_transform,
-                         propagators,
-                         sum_north,
-                         sum_west,
-                         dkmax,
-                         epsrel,
-                         config)
+        """Create a TempoBackend object. """
+        self._initial_state = initial_state
+        self._influence = influence
+        self._unitary_transform = unitary_transform
+        self._propagators = propagators
+        self._sum_north = sum_north
+        self._sum_west = sum_west
+        self._dkmax = dkmax
+        self._epsrel = epsrel
+        self._step = None
+        self._state = None
+        self._config = config
         self._mps = None
         self._mpo = None
         self._super_u = None
         self._super_u_dagg = None
         self._sum_north_na = None
 
+    @property
+    def step(self) -> int:
+        """The current step in the TEMPO computation. """
+        return self._step
+
     def initialize(self) -> Tuple[int, ndarray]:
-        """See BaseBackend.initialize() for docstring."""
+        """
+        Initializes the TEMPO tensor network.
+
+        Returns
+        -------
+        step: int = 0
+            The current step count, which after initialization, is 0 .
+        state: ndarray
+            Density matrix (as a vector) at the current step, which after
+            initialization, is just the initial state.
+        """
         self._initial_state = copy(self._initial_state).reshape(-1)
 
         self._super_u = operators.left_right_super(
@@ -104,7 +144,7 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
 
     def compute_step(self) -> Tuple[int, ndarray]:
         """
-        See BaseTempoBackend.compute_step() for docstring.
+        Takes a step in the TEMPO tensor network computation.
 
         For example, for at step 4, we start with:
 
@@ -132,6 +172,13 @@ class TensorNetworkTempoBackend(BaseTempoBackend):
         effects:
             self._mpo will grow to the left with the next influence functional
             self._mps will be contraction of A,B,w,p1,p2
+
+        Returns
+        -------
+        step: int
+            The current step count.
+        state: ndarray
+            Density matrix at the current step.
 
         """
         self._step += 1

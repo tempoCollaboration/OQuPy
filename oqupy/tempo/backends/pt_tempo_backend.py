@@ -20,15 +20,33 @@ from typing import Callable, Dict
 import numpy as np
 from numpy import ndarray
 
-from oqupy.tempo.backends.tensor_network import node_array as na
-from oqupy.tempo.backends.base_backends import BasePtTempoBackend
+from oqupy.tempo.backends import node_array as na
 from oqupy.config import NpDtype
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy import util
 
 
-class TensorNetworkPtTempoBackend(BasePtTempoBackend):
-    """See BasePtTempoBackend for docstring. """
+class PtTempoBackend:
+    """
+    Base class for process tensor tempo backends.
+
+    Parameters
+    ----------
+    influence: callable(int) -> ndarray
+        Callable that takes an integer `step` and returns the influence super
+        operator of that `step`.
+    unitary_transform: ndarray
+        ToDo
+    sum_north: ndarray
+        The summing vector for the north leggs.
+    sum_west: ndarray
+        The summing vector for the west leggs.
+    dkmax: int
+        Number of influences to include. If ``dkmax == None`` then all
+        influences are included.
+    epsrel: float
+        Maximal relative SVD truncation error.
+    """
     def __init__(
             self,
             dimension: int,
@@ -40,16 +58,18 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
             dkmax: int,
             epsrel: float,
             config: Dict):
-        """Create a TensorNetworkPtTempoBackend object. """
-        super().__init__(dimension,
-                         influence,
-                         process_tensor,
-                         sum_north,
-                         sum_west,
-                         num_steps,
-                         dkmax,
-                         epsrel,
-                         config)
+        """Create a BasePtTempoBackend object. """
+        self._dimension = dimension
+        self._influence = influence
+        self._process_tensor = process_tensor
+        self._sum_north = sum_north
+        self._sum_west = sum_west
+        self._num_steps = num_steps
+        self._dkmax = dkmax
+        self._epsrel = epsrel
+        self._config = config
+        self._step = None
+
         if "backend" in config:
             self._backend = config["backend"]
         else:
@@ -64,12 +84,21 @@ class TensorNetworkPtTempoBackend(BasePtTempoBackend):
         self._sum_north_scaled = None
         self._one_na = None
 
+    @property
+    def step(self) -> int:
+        """The current step in the PT-TEMPO computation. """
+        return self._step
+
+    @property
+    def num_steps(self) -> int:
+        """The current step in the PT-TEMPO computation. """
+        return self._num_steps
 
     def initialize(self) -> None:
         """Initializes the PT-TEMPO tensor network. """
         # create mpo
         # create mpo last
-        # copy and contrac mpo to mps
+        # copy and contract mpo to mps
         scale = self._dimension
 
         self._sum_north_scaled = self._sum_north * scale

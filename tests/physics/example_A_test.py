@@ -64,10 +64,7 @@ system_A = oqupy.System(h_sys_A,
 
 # -----------------------------------------------------------------------------
 
-@pytest.mark.parametrize('backend,backend_config',
-                        [("tensor-network", {"backend":"numpy"}),
-                         ("tensor-network", None)])
-def test_tensor_network_tempo_backend_A(backend, backend_config):
+def test_tempo_backend_A():
     tempo_params_A = oqupy.TempoParameters(
         dt=0.05,
         dkmax=None,
@@ -77,17 +74,12 @@ def test_tensor_network_tempo_backend_A(backend, backend_config):
         bath_A,
         tempo_params_A,
         initial_state_A,
-        start_time=0.0,
-        backend=backend,
-        backend_config=backend_config)
+        start_time=0.0)
     tempo_A.compute(end_time=1.0)
     dyn_A = tempo_A.get_dynamics()
     np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
 
-@pytest.mark.parametrize('backend,backend_config',
-                        [("tensor-network", {"backend":"numpy"}),
-                         ("tensor-network", None)])
-def test_tensor_network_pt_tempo_backend_A(backend,backend_config):
+def test_tensor_network_pt_tempo_backend_A():
     tempo_params_A = oqupy.TempoParameters(
         dt=0.05,
         dkmax=None,
@@ -96,9 +88,7 @@ def test_tensor_network_pt_tempo_backend_A(backend,backend_config):
         bath_A,
         start_time=0.0,
         end_time=1.0,
-        parameters=tempo_params_A,
-        backend=backend,
-        backend_config=backend_config)
+        parameters=tempo_params_A)
     state = oqupy.compute_final_state(
         system=system_A,
         process_tensor=pt,
