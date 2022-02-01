@@ -275,7 +275,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         correlation = np.sum(_sys_correlations.real*re_kernel + \
                              1j*_sys_correlations.imag*im_kernel) * \
             coup_1 * coup_2
-        if (not change_only) and (freq_1 == freq_2) and (dagg in ((1, 0), (0, 1))):
+        if (not change_only) and (freq_1 == freq_2) \
+            and (dagg in ((1, 0), (0, 1))):
             if self._temp > 0:
                 correlation += np.exp(-freq_1/self._temp) \
                     / (1 - np.exp(-freq_1/self._temp))
@@ -343,16 +344,18 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             n_2 += np.exp(-freq_2/self._temp) / (1 - np.exp(-freq_2/self._temp))
 
         ker_dim = int(np.round(time_2 / dt))
-        switch = int(np.round(time_1 / dt)) #calculate index corresponding to t_1
+        # calculate index corresponding to t_1
+        switch = int(np.round(time_1 / dt))
         re_kernel = np.zeros((ker_dim, ker_dim), dtype = NpDtype)
         im_kernel = np.zeros((ker_dim, ker_dim), dtype = NpDtype)
 
-        tpp_index, tp_index = np.meshgrid(np.arange(ker_dim), np.arange(ker_dim),
-                                      indexing='ij') #array of indices for each
-                                                     #array element
-        regions = {'a': (slice(switch), slice(switch)),             #(0->t_1, 0->t_1)
-                   'b': (slice(switch), slice(switch, None)),       #(0->t_1, t_1->t)
-                   'c': (slice(switch, None), slice(switch, None))} #(t_1->t, t_1->t)
+        tpp_index, tp_index = np.meshgrid(
+            np.arange(ker_dim), np.arange(ker_dim),
+            indexing='ij') #array of indices for each array element
+        regions = {
+            'a': (slice(switch), slice(switch)),             #(0->t_1, 0->t_1)
+            'b': (slice(switch), slice(switch, None)),       #(0->t_1, t_1->t)
+            'c': (slice(switch, None), slice(switch, None))} #(t_1->t, t_1->t)
 
         def phase(region, swap_ts = False):
             tk = tp_index[regions[region]]
@@ -364,10 +367,14 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             if swap_ts:
                 a, b = b, a
             if region in ('a','c'):
-                ph = np.triu(np.exp(a * (tk+1)*dt + b * (tkp+1)*dt) / (a * b), k = 1)
-                ph -= np.triu(np.exp(a * (tk+1)*dt + b * tkp*dt) / (a * b), k = 1)
-                ph -= np.triu(np.exp(a * tk*dt + b * (tkp+1)*dt) / (a * b), k = 1)
-                ph += np.triu(np.exp(a * tk*dt + b * tkp*dt) / (a * b), k = 1)
+                ph = np.triu(
+                    np.exp(a * (tk+1)*dt + b * (tkp+1)*dt) / (a * b), k = 1)
+                ph -= np.triu(
+                    np.exp(a * (tk+1)*dt + b * tkp*dt) / (a * b), k = 1)
+                ph -= np.triu(
+                    np.exp(a * tk*dt + b * (tkp+1)*dt) / (a * b), k = 1)
+                ph += np.triu(
+                    np.exp(a * tk*dt + b * tkp*dt) / (a * b), k = 1)
                 sel = np.diag(tk)
                 di = -np.exp((a * (sel + 1) + b * sel) * dt) / (a * b)
                 if a + b != 0:

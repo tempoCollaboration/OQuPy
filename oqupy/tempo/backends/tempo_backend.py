@@ -46,8 +46,8 @@ class TempoBackend:
     sum_west: ndarray
         The summing vector for the west leggs.
     dkmax: int
-        Number of influences to include. If ``dkmax == None`` then all influences
-        are included.
+        Number of influences to include. If ``dkmax == None`` then all
+        influences are included.
     epsrel: float
         Maximal relative SVD truncation error.
     """
