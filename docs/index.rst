@@ -7,6 +7,7 @@ systems.**
 .. image:: https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge
  :target: http://unitary.fund
 
+
 This open source project aims to facilitate versatile numerical tools to
 efficiently compute the dynamics of quantum systems that are possibly strongly
 coupled to structured environments. It allows to conveniently apply the so
@@ -15,15 +16,24 @@ process tensor TEMPO method (PT-TEMPO) [2]. An extension to the methods
 described in [3] and [4] are work in progress and supported by the
 `unitary fund <http://unitary.fund>`_.
 
-- **[1]** Strathearn et al.,  *Efficient non-Markovian quantum dynamics using
+.. figure:: graphics/overview.svg
+    :align: center
+    :alt: OQuPy - overview
+
+- **[1]** Strathearn et al., *Efficient real-time path integrals
+  for non-Markovian spin-boson models*. New Journal of Physics, 19(9),
+  p.093009 (2017).
+- **[2]** Strathearn et al.,  *Efficient non-Markovian quantum dynamics using
   time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
-- **[2]** Fux et al., *Efficient exploration of Hamiltonian parameter space for
+- **[3]** Fux et al., *Efficient exploration of Hamiltonian parameter space for
   optimal control of non-Markovian open quantum systems*,
   Phys. Rev. Lett. 126, 200401(2021).
-- **[3]** Gribben et al., *Using the Environment to Understand non-Markovian
+- **[4]** Gribben et al., *Using the Environment to Understand non-Markovian
   Open Quantum Systems*, arXiv:2106.04212 (2021).
-- **[4]** Gribben et al., *Exact dynamics of non-additive environments in
+- **[5]** Gribben et al., *Exact dynamics of non-additive environments in
   non-Markovian open quantum systems*, arXiv:2109.08442 (2021).
+- **[6]** Fux et al., *Thermalization of a spin chain strongly coupled to its
+  environment*, arXiv:2201.05529 (2022).
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
@@ -37,6 +47,8 @@ described in [3] and [4] are work in progress and supported by the
 +--------------------+---------------------------------------------------------------------------------------------------------------+
 | **Tutorial**       | launch |binder-tutorial|                                                                                      |
 +--------------------+---------------------------------------------------------------------------------------------------------------+
+
+-------------------------------------------------------------------------------
 
 .. toctree::
    :maxdepth: 1
