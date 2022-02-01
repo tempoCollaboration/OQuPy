@@ -36,12 +36,13 @@ from numpy import ndarray
 from scipy.linalg import expm
 from oqupy.correlations import BaseCorrelations
 
-from oqupy.tempo.backends.backend_factory import get_tempo_backend
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
+from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.dynamics import Dynamics
 from oqupy.system import BaseSystem
+from oqupy.tempo.backends.tempo_backend import TempoBackend
 from oqupy.operators import commutator, acommutator
 from oqupy.util import get_progress
 
@@ -216,14 +217,11 @@ class Tempo(BaseAPIClass):
             parameters: TempoParameters,
             initial_state: ndarray,
             start_time: float,
-            backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a Tempo object. """
-        self._backend_class, self._backend_config = \
-            get_tempo_backend(backend, backend_config)
 
         assert isinstance(system, BaseSystem), \
             "Argument 'system' must be an instance of BaseSystem."
@@ -258,6 +256,11 @@ class Tempo(BaseAPIClass):
             raise AssertionError("Start time must be a float.") from e
         self._start_time = __start_time
 
+        if backend_config is None:
+            self._backend_config = TEMPO_BACKEND_CONFIG
+        else:
+            self._backend_config = backend_config
+
         assert self._bath.dimension == self._dimension and \
             self._system.dimension == self._dimension, \
             "Hilbertspace dimensions are unequal: " \
@@ -288,7 +291,7 @@ class Tempo(BaseAPIClass):
         sum_west = np.array([1.0]*(dim**2))
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
-        self._backend_instance = self._backend_class(
+        self._backend_instance = TempoBackend(
                 initial_state,
                 influence,
                 unitary_transform,
@@ -327,7 +330,6 @@ class Tempo(BaseAPIClass):
                 self._correlations.description,
             "correlations_description_dict": \
                 self._correlations.description_dict,
-            "backend_class":str(self._backend_class),
             "initial_state":self._initial_state,
             "dt":self._parameters.dt,
             "dkmax":self._parameters.dkmax,
@@ -623,7 +625,6 @@ def tempo_compute(
         end_time: float,
         parameters: Optional[TempoParameters] = None,
         tolerance: Optional[float] = DEFAULT_TOLERANCE,
-        backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
         name: Optional[Text] = None,
@@ -649,9 +650,6 @@ def tempo_compute(
     tolerance: float
         Tolerance for the parameter estimation (only applicable if
         `parameters` is None).
-    backend: str (default = None)
-        The name of the backend to use for the computation. If `backend` is
-        ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -680,7 +678,6 @@ def tempo_compute(
                   parameters,
                   initial_state,
                   start_time,
-                  backend,
                   backend_config,
                   name,
                   description,

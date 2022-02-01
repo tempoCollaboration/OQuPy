@@ -23,8 +23,7 @@ import oqupy
 # -----------------------------------------------------------------------------
 # -- Test B: non-diagonal coupling --------------------------------------------
 
-@pytest.mark.parametrize('backend',["tensor-network"])
-def test_tensor_network_tempo_backend_non_diag(backend):
+def test_tensor_network_tempo_backend_non_diag():
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
@@ -60,8 +59,7 @@ def test_tensor_network_tempo_backend_non_diag(backend):
                                        initial_state=base["init_state"],
                                        start_time=0.0,
                                        end_time=1.0,
-                                       parameters=tempo_parameters,
-                                       backend=backend)
+                                       parameters=tempo_parameters)
 
         _, s_x = dynamics.expectations(0.5*oqupy.operators.sigma("x"),
                                        real=True)
@@ -80,8 +78,7 @@ def test_tensor_network_tempo_backend_non_diag(backend):
     assert np.allclose(results[0], results[2], atol=tempo_parameters.epsrel)
 
 
-@pytest.mark.parametrize('backend',["tensor-network"])
-def test_tensor_network_pt_tempo_backend_non_diag(backend):
+def test_tensor_network_pt_tempo_backend_non_diag():
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
@@ -116,8 +113,7 @@ def test_tensor_network_pt_tempo_backend_non_diag(backend):
             bath=bath,
             start_time=0.0,
             end_time=1.0,
-            parameters=tempo_parameters,
-            backend=backend)
+            parameters=tempo_parameters)
         dynamics = oqupy.compute_dynamics(
             system=system,
             process_tensor=pt,

@@ -22,7 +22,7 @@ import pytest
 import numpy as np
 import tensornetwork as tn
 
-import oqupy.tempo.backends.tensor_network.node_array as node_array
+import oqupy.tempo.backends.node_array as node_array
 
 
 def test_node_array():

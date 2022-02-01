@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test for the time_evovling_mpo.process_tensor module multiple environment 
+Test for the time_evovling_mpo.process_tensor module multiple environment
 functionality.
 """
 
@@ -60,4 +60,3 @@ def test_multi_env_dynamics():
     dyns = oqupy.compute_dynamics(system, [pt,pt],initial_state=initial_state)
     dyns2 = oqupy.compute_dynamics(system, [pt2],initial_state=initial_state)
     np.testing.assert_almost_equal(dyns.states,dyns2.states,decimal=5)
-

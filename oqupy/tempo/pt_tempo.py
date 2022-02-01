@@ -43,13 +43,14 @@ from copy import copy
 
 import numpy as np
 
-from oqupy.tempo.backends.backend_factory import get_pt_tempo_backend
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
 from oqupy.config import PT_DEFAULT_TOLERANCE
+from oqupy.config import PT_TEMPO_BACKEND_CONFIG
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
+from oqupy.tempo.backends.pt_tempo_backend import PtTempoBackend
 from oqupy.tempo.tempo import TempoParameters
 from oqupy.tempo.tempo import guess_tempo_parameters
 from oqupy.tempo.tempo import influence_matrix
@@ -74,9 +75,6 @@ class PtTempo(BaseAPIClass):
         The parameters for the PT-TEMPO computation.
     start_time: float
         The start time.
-    backend: str (default = None)
-        The name of the backend to use for the computation. If
-        `backend` is ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -95,7 +93,6 @@ class PtTempo(BaseAPIClass):
             parameters: TempoParameters,
             process_tensor_file: Optional[Union[Text, bool]] = None,
             overwrite: Optional[bool] = False,
-            backend: Optional[Text] = None,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None,
@@ -133,8 +130,10 @@ class PtTempo(BaseAPIClass):
         else:
             self._init_simple_process_tensor()
 
-        self._backend_class, self._backend_config = \
-            get_pt_tempo_backend(backend, backend_config)
+        if backend_config is None:
+            self._backend_config = PT_TEMPO_BACKEND_CONFIG
+        else:
+            self._backend_config = backend_config
 
         super().__init__(name, description, description_dict)
 
@@ -200,7 +199,7 @@ class PtTempo(BaseAPIClass):
         dkmax = self._parameters.dkmax
         if dkmax is None:
             dkmax = self._num_steps
-        self._backend_instance = self._backend_class(
+        self._backend_instance = PtTempoBackend(
                 dimension=self._dimension,
                 influence=self._influence,
                 process_tensor=self._process_tensor,
@@ -284,7 +283,6 @@ def pt_tempo_compute(
         tolerance: Optional[float] = PT_DEFAULT_TOLERANCE,
         process_tensor_file: Optional[Union[Text, bool]] = None,
         overwrite: Optional[bool] = False,
-        backend: Optional[Text] = None,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
         name: Optional[Text] = None,
@@ -307,9 +305,6 @@ def pt_tempo_compute(
     tolerance: float
         Tolerance for the parameter estimation (only applicable if
         `parameters` is None).
-    backend: str (default = None)
-        The name of the backend to use for the computation. If `backend` is
-        ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -338,7 +333,6 @@ def pt_tempo_compute(
                   parameters,
                   process_tensor_file,
                   overwrite,
-                  backend,
                   backend_config,
                   name,
                   description,
