@@ -20,7 +20,7 @@ D. Gribben, A. Strathearn, G. E. Fux, P. Kirton, and B. W. Lovett,
 arXiv:2106.04212 [quant-ph] (2021).
 """
 
-from typing import Dict, Optional, Text
+from typing import Dict, Optional, Text, Tuple
 import numpy as np
 from numpy import ndarray
 
@@ -155,7 +155,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             freq: float,
             dw: Optional[float] = 1.0,
             change_only: Optional[bool] = False
-            ) -> (ndarray, ndarray):
+            ) -> Tuple[ndarray, ndarray]:
         r"""
         Function to calculate the change in bath occupation in a particular
         bandwidth.
@@ -294,7 +294,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                     freq_2: float,
                     time_2: float,
                     dagg: tuple
-                    ) -> (ndarray, ndarray):
+                    ) -> Tuple[ndarray, ndarray]:
         r"""
         Function to calculate the corresponding kernel for the desired
         correlation function.
