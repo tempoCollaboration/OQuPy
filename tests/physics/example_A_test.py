@@ -89,11 +89,6 @@ def test_tensor_network_pt_tempo_backend_A():
         start_time=0.0,
         end_time=1.0,
         parameters=tempo_params_A)
-    state = oqupy.compute_final_state(
-        system=system_A,
-        process_tensor=pt,
-        initial_state=initial_state_A)
-    np.testing.assert_almost_equal(state, rho_A, decimal=4)
 
     dyn = oqupy.compute_dynamics(
         system=system_A,

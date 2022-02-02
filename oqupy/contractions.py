@@ -37,9 +37,9 @@ Indices = Union[int, slice, List[Union[int, slice]]]
 def compute_dynamics(
         system: BaseSystem,
         process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
+        initial_state: Optional[ndarray] = None,
         control: Optional[Control] = None,
         start_time: Optional[float] = 0.0,
-        initial_state: Optional[ndarray] = None,
         dt: Optional[float] = None,
         num_steps: Optional[int] = None,
         record_all: Optional[bool] = True) -> Dynamics:
@@ -52,8 +52,16 @@ def compute_dynamics(
         Object containing the system Hamiltonian information.
     process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
         A process tensor object or list of process tensor objects.
-    ToDo: ToDo
-        ToDo
+    initial_state: ndarray
+        Initial system state.
+    control: Control
+        Optional control operations.
+    start_time: float
+        Optional start time offset.
+    num_steps: int
+        Optional number of time steps to be computed.
+    record_all: bool
+        If `false` function also computes the final state.
 
     Returns
     -------
@@ -94,18 +102,13 @@ def compute_dynamics(
     else:
         __control = Control(hs_dim)
 
+    dts = [pt.dt for pt in process_tensors]
+    assert len(set(dts)) == 1, \
+        "All process tensors must be calculated with same timestep."
+    dt = dts[0]
     if dt is None:
-        dts = [pt.dt for pt in process_tensors]
-        assert len(set(dts)) == 1, \
-            "All process tensors must be calculated with same timestep."
-        dt = dts[0]
-        if dt is None:
-            raise ValueError("Process tensor has no timestep, "\
-                + "please specify time step 'dt'.")
-    try:
-        __dt = float(dt)
-    except Exception as e:
-        raise AssertionError("Time step 'dt' must be a float.") from e
+        raise ValueError("Process tensor has no timestep, "\
+            + "please specify time step 'dt'.")
 
     try:
         __start_time = float(start_time)
@@ -128,9 +131,9 @@ def compute_dynamics(
     def propagators(step: int):
         """Create the system propagators (first and second half) for the
         time step `step`. """
-        t = __start_time + step * __dt
-        first_step = expm(system.liouvillian(t+__dt/4.0)*__dt/2.0)
-        second_step = expm(system.liouvillian(t+__dt*3.0/4.0)*__dt/2.0)
+        t = __start_time + step * dt
+        first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
+        second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
         return first_step, second_step
 
     def controls(step: int):
@@ -138,7 +141,7 @@ def compute_dynamics(
         `step`. """
         return __control.get_controls(
             step,
-            dt=__dt,
+            dt=dt,
             start_time=__start_time)
 
 
@@ -149,32 +152,12 @@ def compute_dynamics(
                                num_steps=__num_steps,
                                record_all=record_all)
     if record_all:
-        times = __start_time + np.arange(len(states))*__dt
+        times = __start_time + np.arange(len(states))*dt
     else:
-        times = [__start_time + len(states)*__dt]
+        times = [__start_time + len(states)*dt]
 
     return Dynamics(times=list(times),states=states)
 
-
-def compute_final_state(
-        system: BaseSystem,
-        process_tensor: Union[List[BaseProcessTensor], BaseProcessTensor],
-        start_time: Optional[float] = 0.0,
-        dt: Optional[float] = None,
-        initial_state: Optional[ndarray] = None,
-        num_steps: Optional[int] = None) -> ndarray:
-    """
-    ToDo.
-    """
-    dynamics = compute_dynamics(
-        system=system,
-        process_tensor=process_tensor,
-        start_time=start_time,
-        dt=dt,
-        initial_state=initial_state,
-        num_steps=num_steps,
-        record_all=False)
-    return dynamics.states[-1]
 
 def _build_cap(
         process_tensors: List[BaseProcessTensor],

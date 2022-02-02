@@ -25,7 +25,6 @@ __all__ = [
     'CustomCorrelations',
     'CustomSD',
     'compute_dynamics',
-    'compute_final_state',
     'Control',
     'Dynamics',
     'FileProcessTensor',
@@ -58,7 +57,6 @@ from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
 from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
-from oqupy.contractions import compute_final_state
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
