@@ -24,6 +24,14 @@ oqupy.contractions
     :members:
 
 
+oqupy.control
+-------------
+
+.. automodule:: oqupy.control
+    :show-inheritance:
+    :members:
+
+
 oqupy.correlations
 ------------------
 

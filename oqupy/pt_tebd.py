@@ -249,7 +249,7 @@ class PtTebd(BaseAPIClass):
                 epsrel=self._parameters.epsrel,
                 config=self._backend_config)
         self._init_results()
-        self._apply_controls(step=self.step, pre=True)
+        self._apply_controls(step=self.step, post=False)
         self._append_results()
 
     def _init_results(self) -> None:
@@ -291,9 +291,9 @@ class PtTebd(BaseAPIClass):
     def _apply_controls(
             self,
             step: int,
-            pre: bool) -> None:
+            post: bool) -> None:
         """Apply the control operations. """
-        controls = self._chain_control.get_single_site_controls(step, pre)
+        controls = self._chain_control.get_single_site_controls(step, post)
         if controls is None:
             return
 
@@ -406,7 +406,7 @@ class PtTebd(BaseAPIClass):
 
     def compute_step(self):
         """Take a step in the PT-TEBD tensor network computation. """
-        self._apply_controls(step=self.step, pre=False)
+        self._apply_controls(step=self.step, post=True)
         self._step += 1
         for gate_layer in self._tebd_propagator.gate_layers:
             self._t_mps.apply_nn_gate_layer(gate_layer)
@@ -414,5 +414,5 @@ class PtTebd(BaseAPIClass):
                                           self._process_tensors)
         for gate_layer in self._tebd_propagator.gate_layers:
             self._t_mps.apply_nn_gate_layer(gate_layer)
-        self._apply_controls(step=self.step, pre=True)
+        self._apply_controls(step=self.step, post=False)
         self._append_results()

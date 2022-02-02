@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-ToDo
+Module for system 'control operations' as discussed in [Pollock2018].
+
+**[Pollock2018]**
+F.  A.  Pollock,  C.  Rodriguez-Rosario,  T.  Frauenheim,
+M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
+framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 """
 
 from typing import Callable, List, Optional, Text, Tuple, Union
@@ -26,7 +31,19 @@ from oqupy.config import NpDtype
 
 class Control(BaseAPIClass):
     """
-    ToDo
+    Represents a set of system control operations.
+
+    A control operation is a superoperator that acts on the system
+    instantaneously at a particular time, as described in [Pollock2018].
+
+    Parameters
+    ----------
+    dimension: int
+        The Hilbert space dimension of the system.
+    name: str
+        An optional name for the set of control operations.
+    description: str
+        An optional description of the set of control operations.
     """
     def __init__(
             self,
@@ -50,8 +67,22 @@ class Control(BaseAPIClass):
             time: Union[int, float],
             control_operation: ndarray,
             post: Optional[bool] = False) -> None:
-        """
-        ToDo
+        r"""
+        Adds a single control operation at time `time`.
+
+        Parameters
+        ----------
+        time: Union[int, float]
+            The time at which the operation should be applied. If `type(time)`
+            is `int` then `time` is understood as the *timestep* to which it
+            shall be applied.
+        control_operation: ndarray
+            The control operation super operator of shape
+            :math:`d^2 \times d^2`, where :math:`d` is the system Hilbert space
+            dimension.
+        post: bool
+            If `True` (`False`) the operator is applied at the corresponding
+            time step *after* (*before*) a possible measurement of the state.
         """
         if post:
             pre_post = 'post'
@@ -81,7 +112,7 @@ class Control(BaseAPIClass):
     def add_continuous(
             self,
             control_fct: Callable[[ndarray, float], ndarray],
-            pre: Optional[bool] = True) -> None:
+            post: Optional[bool] = False) -> None:
         """
         ToDo
         """
@@ -94,7 +125,26 @@ class Control(BaseAPIClass):
             start_time: Optional[float] = 0.0,
             ) -> Tuple[ndarray, ndarray]:
         """
-        ToDo
+        Get the pre and post measurement control operation for a specific
+        time step.
+
+        Parameters
+        ----------
+        step: int
+            The time step.
+        dt: float
+            The time step length.
+        start_time: float
+            The initial time step off-set.
+
+        Returns
+        -------
+        pre: ndarray
+            The control superoperator that should be applied before a state
+            measurement.
+        post: ndarray
+            The control superoperator that should be applied after a state
+            measurement.
         """
         pre_control_bool = False
         post_control_bool = False
@@ -182,8 +232,8 @@ class ChainControl(BaseAPIClass):
             control: ndarray,
             site: int,
             step: int,
-            pre: Optional[bool] = True,
-            name: Optional[Text] = None):
+            post: Optional[bool] = False,
+            name: Optional[Text] = None) -> None:
         """
         Add a control operation at site `site` and time step `step`.
 
@@ -195,9 +245,9 @@ class ChainControl(BaseAPIClass):
             Site index.
         step: int
             Timestep to which the control should be applied.
-        pre: bool
-            True if the control should be applied before the measurement of this
-            time step.
+        post: bool
+            True if the control should be applied *after* the measurement of
+            this time step.
         name: Text
             An optional name to recognize a control operation.
         """
@@ -206,14 +256,14 @@ class ChainControl(BaseAPIClass):
         assert isinstance(step, int)
         contr = np.array(control,  dtype=NpDtype)
         assert contr.shape == (self._hs_dims[site]**2, self._hs_dims[site]**2)
-        if pre:
+        if not post:
             self._single_site_controls_pre.append({
                 "contr":contr,
                 "site":site,
                 "step":step,
                 "name":name})
         else:
-            self._single_site_controls_pre.append({
+            self._single_site_controls_post.append({
                 "contr":contr,
                 "site":site,
                 "step":step,
@@ -222,12 +272,27 @@ class ChainControl(BaseAPIClass):
     def get_single_site_controls(
             self,
             step: int,
-            pre: bool):
-        """Get a list of single site controls for the time step `step`. """
+            post: bool) -> List[ndarray]:
+        """
+        Get a list of single site controls for the time step `step`.
+
+        Parameters
+        ----------
+        step: int
+            The time step.
+        post: bool
+            If `True` (`False`) the set of control superoperators that should be
+            applied *after* (*before*) the measurement is returned.
+
+        Returns
+        -------
+        superoperators_list: list[ndarray]
+            List of single site control superoperators.
+        """
         empty = True
         controls = [None] * len(self)
 
-        if pre:
+        if not post:
             ss_controls = self._single_site_controls_pre
         else:
             ss_controls = self._single_site_controls_post
