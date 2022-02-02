@@ -8,7 +8,7 @@
    version="1.1"
    id="svg307204"
    inkscape:version="1.1.1 (1:1.1+202109281949+c3084ef5ed)"
-   sodipodi:docname="overview.svg"
+   sodipodi:docname="overview-portrait.svg"
    inkscape:export-filename="/home/gefux/bitmap.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150"
@@ -152,7 +152,8 @@
      id="layer9"
      inkscape:label="bg"
      style="display:inline"
-     transform="translate(-106.08334,18.270832)">
+     transform="translate(-106.08334,18.270832)"
+     sodipodi:insensitive="true">
     <rect
        style="display:inline;fill:#91c4f3;fill-opacity:1;stroke:none;stroke-width:0.600001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect169705"
@@ -211,9 +212,9 @@
          style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect10440);display:inline;opacity:1;fill:#02284b;fill-opacity:1"><tspan
            x="310"
            y="186.73408"
-           id="tspan1147"><tspan
+           id="tspan23522"><tspan
              style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-             id="tspan1145">OQuPy</tspan></tspan></text>
+             id="tspan23520">OQuPy</tspan></tspan></text>
     </g>
     <g
        inkscape:groupmode="layer"
@@ -227,9 +228,9 @@
          style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect10469);display:inline;opacity:1;fill:#feffff;fill-opacity:1"><tspan
            x="310"
            y="186.73408"
-           id="tspan1151"><tspan
+           id="tspan23526"><tspan
              style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-             id="tspan1149">OQuPy</tspan></tspan></text>
+             id="tspan23524">OQuPy</tspan></tspan></text>
     </g>
   </g>
   <g
@@ -246,9 +247,9 @@
        style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect322230);fill:#02284b;fill-opacity:1"><tspan
          x="310"
          y="186.73408"
-         id="tspan1155"><tspan
+         id="tspan23530"><tspan
            style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-           id="tspan1153">OQuPy</tspan></tspan></text>
+           id="tspan23528">OQuPy</tspan></tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -258,26 +259,20 @@
      transform="translate(-105.72519,16.960427)">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.26458333px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.264583px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
        x="264.1835"
        y="61.831238"
        id="text43075"><tspan
          sodipodi:role="line"
-         id="tspan43073"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
-         x="264.1835"
-         y="61.831238">Multiple Environments [5]:</tspan></text>
+         id="tspan22040">Multiple Environments [7]:</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.26458333px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.264583px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
        x="264.18353"
        y="125.33124"
        id="text103593"><tspan
          sodipodi:role="line"
-         id="tspan103591"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
-         x="264.18353"
-         y="125.33124">Chain of Open Quantum Systems [6]:</tspan></text>
+         id="tspan23362">Chain of Open Quantum Systems [8]:</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.264583px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
@@ -285,10 +280,7 @@
        y="-1.6687603"
        id="text137437"><tspan
          sodipodi:role="line"
-         id="tspan137435"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;text-anchor:end;stroke-width:0.264583"
-         x="264.44812"
-         y="-1.6687603">System and Env. Dynamics [1-4]:</tspan></text>
+         id="tspan20248">System and Env. Dynamics [1-6]:</tspan></text>
     <g
        id="g170012"
        transform="translate(20,10.5)">
