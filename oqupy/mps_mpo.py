@@ -59,20 +59,20 @@ class Gate:
         self._length = len(sites)
         self._span = sites[-1] - sites[0]
 
-        __tensors = []
+        tmp_tensors = []
         for tensor in tensors:
-            __tensor = np.array(tensor, dtype=NpDtype)
-            __tensors.append(__tensor)
+            tmp_tensor = np.array(tensor, dtype=NpDtype)
+            tmp_tensors.append(tmp_tensor)
 
-        for i, tensor in enumerate(__tensors):
+        for i, tensor in enumerate(tmp_tensors):
             number_of_legs = 4
             number_of_legs -= 1 if i == 0 else 0
             number_of_legs -= 1 if i == self._length-1 else 0
             assert len(tensor.shape) == number_of_legs
 
-        for tensor_l, tensor_r in zip(__tensors[:-1], __tensors[1:]):
+        for tensor_l, tensor_r in zip(tmp_tensors[:-1], tmp_tensors[1:]):
             assert tensor_l.shape[-1] == tensor_r.shape[0]
-        self._tensors = __tensors
+        self._tensors = tmp_tensors
 
     def __len__(self):
         """Number of sites onto which the gate acts. """
@@ -392,53 +392,54 @@ class AugmentedMPS(BaseAPIClass):
         if lambdas is not None:
             assert len(lambdas) == len(gammas)-1
 
-        __gammas = []
+        tmp_gammas = []
         for g in gammas:
-            __gamma = np.array(g, dtype=NpDtype)
-            shape = deepcopy(__gamma.shape)
+            tmp_gamma = np.array(g, dtype=NpDtype)
+            shape = deepcopy(tmp_gamma.shape)
             rank = len(shape)
             if rank == 4:
                 pass
             elif rank == 3:
-                __gamma.shape = (shape[0], shape[1], shape[2], 1)
+                tmp_gamma.shape = (shape[0], shape[1], shape[2], 1)
             elif rank == 2:
-                __gamma.shape = (1, shape[0]*shape[1], 1, 1)
+                tmp_gamma.shape = (1, shape[0]*shape[1], 1, 1)
             elif rank == 1:
-                __gamma.shape = (1, shape[0], 1, 1)
+                tmp_gamma.shape = (1, shape[0], 1, 1)
             else:
                 raise ValueError()
-            __gammas.append(__gamma)
+            tmp_gammas.append(tmp_gamma)
 
         bond_dims = []
-        for g1, g2 in zip(__gammas[:-1], __gammas[1:]):
+        for g1, g2 in zip(tmp_gammas[:-1], tmp_gammas[1:]):
             assert g1.shape[3] == g2.shape[0]
             bond_dims.append(g1.shape[3])
 
         if lambdas is None:
             lambdas = [None] * (self._n - 1)
 
-        __lambdas = []
+        tmp_lambdas = []
         for bond_dim, l in zip(bond_dims, lambdas):
             if l is None:
-                __lambda = np.ones(bond_dim, dtype=NpDtypeReal)
+                tmp_lambda = np.ones(bond_dim, dtype=NpDtypeReal)
             else:
-                __lambda = np.array(l, dtype=NpDtypeReal)
-                shape = __lambda.shape
+                tmp_lambda = np.array(l, dtype=NpDtypeReal)
+                shape = tmp_lambda.shape
                 rank = len(shape)
                 if rank == 2:
-                    assert np.all(__lambda == np.diag(np.diagonal(__lambda)))
-                    __lambda = np.diagonal(__lambda)
+                    assert np.all(
+                        tmp_lambda == np.diag(np.diagonal(tmp_lambda)))
+                    tmp_lambda = np.diagonal(tmp_lambda)
                 elif rank == 1:
                     pass
                 else:
                     raise ValueError()
-                assert np.all(__lambda > 0.0), \
+                assert np.all(tmp_lambda > 0.0), \
                     "All lambda matrix diagonal values must be positive. "
-                assert len(__lambda) == bond_dim
-            __lambdas.append(__lambda)
+                assert len(tmp_lambda) == bond_dim
+            tmp_lambdas.append(tmp_lambda)
 
-        self._gammas = __gammas
-        self._lambdas = __lambdas
+        self._gammas = tmp_gammas
+        self._lambdas = tmp_lambdas
         super().__init__(name, description, description_dict)
 
     @property

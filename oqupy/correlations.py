@@ -156,12 +156,12 @@ class CustomCorrelations(BaseCorrelations):
 
         # check input: j_function
         try:
-            __correlation_function = np.vectorize(correlation_function)
-            complex(__correlation_function(1.0))
+            tmp_correlation_function = np.vectorize(correlation_function)
+            complex(tmp_correlation_function(1.0))
         except Exception as e:
             raise AssertionError("Correlation function must be vectorizable " \
                 + "and must return float.") from e
-        self.correlation_function = __correlation_function
+        self.correlation_function = tmp_correlation_function
 
         super().__init__(name, description, description_dict)
 
@@ -537,19 +537,19 @@ class CustomSD(BaseCorrelations):
 
         # check input: j_function
         try:
-            __j_function = np.vectorize(j_function)
-            float(__j_function(1.0))
+            tmp_j_function = np.vectorize(j_function)
+            float(tmp_j_function(1.0))
         except Exception as e:
             raise AssertionError("Spectral density must be vectorizable " \
                 + "and must return float.") from e
-        self.j_function = __j_function
+        self.j_function = tmp_j_function
 
         # check input: cutoff
         try:
-            __cutoff = float(cutoff)
+            tmp_cutoff = float(cutoff)
         except Exception as e:
             raise AssertionError("Cutoff must be a float.") from e
-        self.cutoff = __cutoff
+        self.cutoff = tmp_cutoff
 
         # check input: cutoff_type
         assert cutoff_type in CUTOFF_DICT, \
@@ -558,13 +558,13 @@ class CustomSD(BaseCorrelations):
 
         # input check for temperature.
         try:
-            __temperature = float(temperature)
+            tmp_temperature = float(temperature)
         except Exception as e:
             raise AssertionError("Temperature must be a float.") from e
-        if __temperature < 0.0:
+        if tmp_temperature < 0.0:
             raise ValueError("Temperature must be >= 0.0 (but is {})".format(
-                __temperature))
-        self.temperature = __temperature
+                tmp_temperature))
+        self.temperature = tmp_temperature
 
         self._cutoff_function = \
             lambda omega: CUTOFF_DICT[self.cutoff_type](omega, self.cutoff)
@@ -825,24 +825,24 @@ class PowerLawSD(CustomSD):
 
         # check input: alpha
         try:
-            __alpha = float(alpha)
+            tmp_alpha = float(alpha)
         except Exception as e:
             raise AssertionError("Alpha must be a float.") from e
-        self.alpha = __alpha
+        self.alpha = tmp_alpha
 
         # check input: zeta
         try:
-            __zeta = float(zeta)
+            tmp_zeta = float(zeta)
         except Exception as e:
             raise AssertionError("Nu must be a float.") from e
-        self.zeta = __zeta
+        self.zeta = tmp_zeta
 
         # check input: cutoff
         try:
-            __cutoff = float(cutoff)
+            tmp_cutoff = float(cutoff)
         except Exception as e:
             raise AssertionError("Cutoff must be a float.") from e
-        self.cutoff = __cutoff
+        self.cutoff = tmp_cutoff
 
         # use parent class for all the rest.
         j_function = lambda w: 2.0 * self.alpha * w**self.zeta \

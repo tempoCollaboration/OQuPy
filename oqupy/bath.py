@@ -58,31 +58,31 @@ class Bath(BaseAPIClass):
         """Creates a Bath object. """
         # input check for coupling_operator.
         try:
-            __coupling_operator = np.array(coupling_operator, dtype=NpDtype)
-            __coupling_operator.setflags(write=False)
+            tmp_coupling_operator = np.array(coupling_operator, dtype=NpDtype)
+            tmp_coupling_operator.setflags(write=False)
         except Exception as e:
             raise AssertionError("Coupling operator must be numpy array") \
                 from e
-        assert len(__coupling_operator.shape) == 2, \
+        assert len(tmp_coupling_operator.shape) == 2, \
             "Coupling operator must be a matrix."
-        assert __coupling_operator.shape[0] == \
-            __coupling_operator.shape[1], \
+        assert tmp_coupling_operator.shape[0] == \
+            tmp_coupling_operator.shape[1], \
             "Coupling operator must be a square matrix."
-        assert np.allclose(__coupling_operator.conjugate().T,
-                           __coupling_operator), \
+        assert np.allclose(tmp_coupling_operator.conjugate().T,
+                           tmp_coupling_operator), \
             "Coupling operator must be a hermitian matrix."
-        self._dimension = __coupling_operator.shape[0]
+        self._dimension = tmp_coupling_operator.shape[0]
 
         # diagonalise the coupling operator
-        if np.allclose(np.diag(__coupling_operator.diagonal()),
-                        __coupling_operator):
-            self._coupling_operator = __coupling_operator
+        if np.allclose(np.diag(tmp_coupling_operator.diagonal()),
+                        tmp_coupling_operator):
+            self._coupling_operator = tmp_coupling_operator
             self._unitary = np.identity(self._dimension)
         else:
-            w, v = np.linalg.eig(__coupling_operator)
+            w, v = np.linalg.eig(tmp_coupling_operator)
             self._coupling_operator = np.diag(w)
             self._unitary = v
-            assert np.allclose(__coupling_operator, \
+            assert np.allclose(tmp_coupling_operator, \
                 self._unitary @ self._coupling_operator \
                 @ self._unitary.conjugate().T)
 

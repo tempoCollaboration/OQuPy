@@ -106,12 +106,12 @@ class TempoParameters(BaseAPIClass):
     @dt.setter
     def dt(self, new_dt: float) -> None:
         try:
-            __dt = float(new_dt)
+            tmp_dt = float(new_dt)
         except Exception as e:
             raise AssertionError("Argument 'dt' must be float.") from e
-        assert __dt > 0.0, \
+        assert tmp_dt > 0.0, \
             "Argument 'dt' must be bigger than 0."
-        self._dt = __dt
+        self._dt = tmp_dt
 
     @property
     def dkmax(self) -> float:
@@ -123,15 +123,15 @@ class TempoParameters(BaseAPIClass):
     def dkmax(self, new_dkmax: float) -> None:
         try:
             if new_dkmax is None:
-                __dkmax = None
+                tmp_dkmax = None
             else:
-                __dkmax = int(new_dkmax)
+                tmp_dkmax = int(new_dkmax)
         except Exception as e:
             raise AssertionError("Argument 'dkmax' must be int or None.") \
                 from e
-        assert __dkmax is None or __dkmax > 0, \
+        assert tmp_dkmax is None or tmp_dkmax > 0, \
             "Argument 'dkmax' must be bigger than or equal to 0 or None."
-        self._dkmax = __dkmax
+        self._dkmax = tmp_dkmax
 
     @dkmax.deleter
     def dkmax(self) -> None:
@@ -145,12 +145,12 @@ class TempoParameters(BaseAPIClass):
     @epsrel.setter
     def epsrel(self, new_epsrel: float) -> None:
         try:
-            __epsrel = float(new_epsrel)
+            tmp_epsrel = float(new_epsrel)
         except Exception as e:
             raise AssertionError("Argument 'epsrel' must be float.") from e
-        assert __epsrel > 0.0, \
+        assert tmp_epsrel > 0.0, \
             "Argument 'epsrel' must be bigger than 0."
-        self._epsrel = __epsrel
+        self._epsrel = tmp_epsrel
 
     @property
     def add_correlation_time(self) -> float:
@@ -167,14 +167,14 @@ class TempoParameters(BaseAPIClass):
         else:
             # check input: cutoff
             try:
-                __new_tau = float(new_tau)
+                tmp_new_tau = float(new_tau)
             except Exception as e:
                 raise AssertionError( \
                     "Additional correlation time must be a float.") from e
-            if __new_tau < 0:
+            if tmp_new_tau < 0:
                 raise ValueError(
                     "Additional correlation time must be non-negative.")
-            self._add_correlation_time = __new_tau
+            self._add_correlation_time = tmp_new_tau
 
     @add_correlation_time.deleter
     def add_correlation_time(self) -> None:
@@ -238,23 +238,23 @@ class Tempo(BaseAPIClass):
         self._parameters = parameters
 
         try:
-            __initial_state = np.array(initial_state, dtype=NpDtype)
-            __initial_state.setflags(write=False)
+            tmp_initial_state = np.array(initial_state, dtype=NpDtype)
+            tmp_initial_state.setflags(write=False)
         except Exception as e:
             raise AssertionError("Initial state must be numpy array.") from e
-        assert len(__initial_state.shape) == 2, \
+        assert len(tmp_initial_state.shape) == 2, \
             "Initial state is not a matrix."
-        assert __initial_state.shape[0] == \
-            __initial_state.shape[1], \
+        assert tmp_initial_state.shape[0] == \
+            tmp_initial_state.shape[1], \
             "Initial state is not a square matrix."
-        self._initial_state = __initial_state
+        self._initial_state = tmp_initial_state
         self._dimension = self._initial_state.shape[0]
 
         try:
-            __start_time = float(start_time)
+            tmp_start_time = float(start_time)
         except Exception as e:
             raise AssertionError("Start time must be a float.") from e
-        self._start_time = __start_time
+        self._start_time = tmp_start_time
 
         if backend_config is None:
             self._backend_config = TEMPO_BACKEND_CONFIG
@@ -270,10 +270,10 @@ class Tempo(BaseAPIClass):
 
         super().__init__(name, description, description_dict)
 
-        __coupling_comm = commutator(self._bath._coupling_operator)
-        __coupling_acomm = acommutator(self._bath._coupling_operator)
-        self._coupling_comm = __coupling_comm.diagonal()
-        self._coupling_acomm = __coupling_acomm.diagonal()
+        tmp_coupling_comm = commutator(self._bath._coupling_operator)
+        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
+        self._coupling_comm = tmp_coupling_comm.diagonal()
+        self._coupling_acomm = tmp_coupling_acomm.diagonal()
 
         self._dynamics = None
         self._backend_instance = None
@@ -390,7 +390,7 @@ class Tempo(BaseAPIClass):
             The instance of Dynamics associated with the TEMPO object.
         """
         try:
-            __end_time = float(end_time)
+            tmp_end_time = float(end_time)
         except Exception as e:
             raise AssertionError("End time must be a float.") from e
 
@@ -406,7 +406,7 @@ class Tempo(BaseAPIClass):
 
         progress = get_progress(progress_type)
         with progress(num_step) as prog_bar:
-            while self._time(self._backend_instance.step) < __end_time:
+            while self._time(self._backend_instance.step) < tmp_end_time:
                 step, state = self._backend_instance.compute_step()
                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
                 prog_bar.update(self._backend_instance.step - start_step)
@@ -561,24 +561,24 @@ def guess_tempo_parameters(
     assert isinstance(bath, Bath), \
         "Argument 'bath' must be a oqupy.Bath object."
     try:
-        __start_time = float(start_time)
-        __end_time = float(end_time)
+        tmp_start_time = float(start_time)
+        tmp_end_time = float(end_time)
     except Exception as e:
         raise AssertionError("Start and end time must be a float.") from e
-    if __end_time <= __start_time:
+    if tmp_end_time <= tmp_start_time:
         raise ValueError("End time must be bigger than start time.")
     assert isinstance(system, (type(None), BaseSystem)), \
         "Argument 'system' must be 'None' or a oqupy.BaseSystem object."
     try:
-        __tolerance = float(tolerance)
+        tmp_tolerance = float(tolerance)
     except Exception as e:
         raise AssertionError("Argument 'tolerance' must be float.") from e
-    assert __tolerance > 0.0, \
+    assert tmp_tolerance > 0.0, \
         "Argument 'tolerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
     print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
 
-    max_tau = __end_time - __start_time
+    max_tau = tmp_end_time - tmp_start_time
 
     corr_func = np.vectorize(bath.correlations.correlation)
     new_times = np.linspace(0, max_tau, 11, endpoint=True)

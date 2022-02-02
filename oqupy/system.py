@@ -29,16 +29,16 @@ import oqupy.operators as opr
 def _check_hamiltonian(hamiltonian):
     """Input checking for a single Hamiltonian. """
     try:
-        __hamiltonian = np.array(hamiltonian, dtype=NpDtype)
-        __hamiltonian.setflags(write=False)
+        tmp_hamiltonian = np.array(hamiltonian, dtype=NpDtype)
+        tmp_hamiltonian.setflags(write=False)
     except Exception as e:
         raise AssertionError("Coupling operator must be numpy array") from e
-    assert len(__hamiltonian.shape) == 2, \
+    assert len(tmp_hamiltonian.shape) == 2, \
         "Coupling operator is not a matrix."
-    assert __hamiltonian.shape[0] == \
-        __hamiltonian.shape[1], \
+    assert tmp_hamiltonian.shape[0] == \
+        tmp_hamiltonian.shape[1], \
         "Coupling operator is not a square matrix."
-    return __hamiltonian
+    return tmp_hamiltonian
 
 
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
@@ -142,7 +142,7 @@ class System(BaseSystem):
         """Create a System object. """
         # input check for Hamiltonian.
         self._hamiltonian = _check_hamiltonian(hamiltonian)
-        __dimension = self._hamiltonian.shape[0]
+        tmp_dimension = self._hamiltonian.shape[0]
 
         # input check gammas and lindblad_operators
         if gammas is None:
@@ -156,25 +156,25 @@ class System(BaseSystem):
         assert len(gammas) == len(lindblad_operators), \
             "Lists `gammas` and `lindblad_operators` must have the same length."
         try:
-            __gammas = []
+            tmp_gammas = []
             for gamma in gammas:
-                __gammas.append(float(gamma))
+                tmp_gammas.append(float(gamma))
         except Exception as e:
             raise AssertionError("All elements of `gammas` must be floats.") \
                 from e
         try:
-            __lindblad_operators = []
+            tmp_lindblad_operators = []
             for lindblad_operator in lindblad_operators:
-                __lindblad_operators.append(
+                tmp_lindblad_operators.append(
                     np.array(lindblad_operator, dtype=NpDtype))
         except Exception as e:
             raise AssertionError(
                 "All elements of `lindblad_operators` must be numpy arrays.") \
                     from e
-        self._gammas = __gammas
-        self._lindblad_operators = __lindblad_operators
+        self._gammas = tmp_gammas
+        self._lindblad_operators = tmp_lindblad_operators
 
-        super().__init__(__dimension, name, description, description_dict)
+        super().__init__(tmp_dimension, name, description, description_dict)
 
     @lru_cache(4)
     def liouvillian(self, t: Optional[float] = None) -> ndarray:
@@ -263,14 +263,14 @@ class TimeDependentSystem(BaseSystem):
         """Create a System object."""
         # input check for Hamiltonian.
         try:
-            __hamiltonian = np.vectorize(hamiltonian)
-            _check_hamiltonian(__hamiltonian(1.0))
+            tmp_hamiltonian = np.vectorize(hamiltonian)
+            _check_hamiltonian(tmp_hamiltonian(1.0))
         except Exception as e:
             raise AssertionError(
                 "Time dependent Hamiltonian must be vectorizable callable.") \
                     from e
-        self._hamiltonian = __hamiltonian
-        __dimension = self._hamiltonian(1.0).shape[0]
+        self._hamiltonian = tmp_hamiltonian
+        tmp_dimension = self._hamiltonian(1.0).shape[0]
 
         # input check gammas and lindblad_operators
         if gammas is None:
@@ -284,29 +284,29 @@ class TimeDependentSystem(BaseSystem):
         assert len(gammas) == len(lindblad_operators), \
             "Lists `gammas` and `lindblad_operators` must have the same length."
         try:
-            __gammas = []
+            tmp_gammas = []
             for gamma in gammas:
                 float(gamma(1.0))
-                __gamma = np.vectorize(gamma)
-                __gammas.append(__gamma)
+                tmp_gamma = np.vectorize(gamma)
+                tmp_gammas.append(tmp_gamma)
         except Exception as e:
             raise AssertionError(
                 "All elements of `gammas` must be vectorizable " \
                  + "callables returning floats.") from e
         try:
-            __lindblad_operators = []
+            tmp_lindblad_operators = []
             for lindblad_operator in lindblad_operators:
-                __lindblad_operator = np.vectorize(lindblad_operator)
-                np.array(__lindblad_operator(1.0))
-                __lindblad_operators.append(__lindblad_operator)
+                tmp_lindblad_operator = np.vectorize(lindblad_operator)
+                np.array(tmp_lindblad_operator(1.0))
+                tmp_lindblad_operators.append(tmp_lindblad_operator)
         except Exception as e:
             raise AssertionError(
                 "All elements of `lindblad_operators` must be vectorizable " \
                 + "callables returning numpy arrays.") from e
-        self._gammas = __gammas
-        self._lindblad_operators = __lindblad_operators
+        self._gammas = tmp_gammas
+        self._lindblad_operators = tmp_lindblad_operators
 
-        super().__init__(__dimension, name, description, description_dict)
+        super().__init__(tmp_dimension, name, description, description_dict)
 
     def liouvillian(self, t: Optional[float] = None) -> ndarray:
         r"""
@@ -384,11 +384,11 @@ class SystemChain(BaseAPIClass):
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a SystemChain object. """
-        __hs_dims = np.array(hilbert_space_dimensions, int)
-        assert len(__hs_dims.shape) == 1
+        tmp_hs_dims = np.array(hilbert_space_dimensions, int)
+        assert len(tmp_hs_dims.shape) == 1
         assert len(hilbert_space_dimensions) >= 1
-        assert np.all(__hs_dims > 0)
-        self._hs_dims = __hs_dims
+        assert np.all(tmp_hs_dims > 0)
+        self._hs_dims = tmp_hs_dims
 
         self._site_liouvillians = []
         for hs_dim in self._hs_dims:

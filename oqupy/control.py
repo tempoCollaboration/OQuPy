@@ -161,11 +161,11 @@ class ChainControl(BaseAPIClass):
             description: Optional[Text] = None,
             description_dict: Optional[Dict] = None) -> None:
         """Create a ChainControl object. """
-        __hs_dims = np.array(hilbert_space_dimensions, int)
-        assert len(__hs_dims.shape) == 1
-        assert len(__hs_dims) >= 1
-        assert np.all(__hs_dims > 0)
-        self._hs_dims = __hs_dims
+        tmp_hs_dims = np.array(hilbert_space_dimensions, int)
+        assert len(tmp_hs_dims.shape) == 1
+        assert len(tmp_hs_dims) >= 1
+        assert np.all(tmp_hs_dims > 0)
+        self._hs_dims = tmp_hs_dims
 
         self._single_site_controls_pre = []
         self._single_site_controls_post = []

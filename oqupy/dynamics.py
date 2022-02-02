@@ -88,9 +88,9 @@ class Dynamics(BaseAPIClass):
     def _sort(self) -> None:
         """Sort the time evolution (chronologically). """
         tuples = zip(self._times, self._states)
-        __times, __states = zip(*sorted(tuples)) # ToDo: make more elegant
-        self._times = list(__times)
-        self._states = list(__states)
+        tmp_times, tmp_states = zip(*sorted(tuples)) # ToDo: make more elegant
+        self._times = list(tmp_times)
+        self._states = list(tmp_states)
 
     @property
     def times(self) -> ndarray:
@@ -122,30 +122,30 @@ class Dynamics(BaseAPIClass):
             The state at the time `time`.
         """
         try:
-            __time = float(time)
+            tmp_time = float(time)
         except Exception as e:
             raise AssertionError("Argument `time` must be float.") from e
         try:
-            __state = np.array(state, dtype=NpDtype)
+            tmp_state = np.array(state, dtype=NpDtype)
         except Exception as e:
             raise AssertionError("Argument `state` must be ndarray.") from e
         if self._shape is None:
-            __shape = __state.shape
-            assert len(__shape) == 2, \
+            tmp_shape = tmp_state.shape
+            assert len(tmp_shape) == 2, \
                 "State must be a square matrix. " \
-                + "But the dimensions are {}.".format(__shape)
-            assert __shape[0] == __shape[1], \
+                + "But the dimensions are {}.".format(tmp_shape)
+            assert tmp_shape[0] == tmp_shape[1], \
                 "State must be a square matrix. " \
-                + "But the dimensions are {}.".format(__shape)
-            self._shape = __shape
+                + "But the dimensions are {}.".format(tmp_shape)
+            self._shape = tmp_shape
         else:
-            assert __state.shape == self._shape, \
+            assert tmp_state.shape == self._shape, \
                 "Appended state doesn't have the same shape as previous " \
-                + "states ({}, but should be {})".format(__state.shape,
+                + "states ({}, but should be {})".format(tmp_state.shape,
                                                          self._shape)
 
-        self._times.append(__time)
-        self._states.append(__state)
+        self._times.append(tmp_time)
+        self._states.append(tmp_state)
 
         # ToDo: do this more elegantly and less resource draining.
         if len(self) > 1 and (self._times[-1] < np.max(self._times[:-1])):
@@ -183,29 +183,29 @@ class Dynamics(BaseAPIClass):
         if len(self) == 0:
             return None, None
         if operator is None:
-            __operator = np.identity(self._shape[0], dtype=NpDtype)
+            tmp_operator = np.identity(self._shape[0], dtype=NpDtype)
         else:
             try:
-                __operator = np.array(operator, dtype=NpDtype)
+                tmp_operator = np.array(operator, dtype=NpDtype)
             except Exception as e:
                 raise AssertionError("Argument `operator` must be ndarray.") \
                     from e
-            assert __operator.shape == self._shape, \
+            assert tmp_operator.shape == self._shape, \
                 "Argument `operator` must have the same shape as the " \
-                + "states. Has shape {}, ".format(__operator.shape) \
+                + "states. Has shape {}, ".format(tmp_operator.shape) \
                 + "but should be {}.".format(self._shape)
 
         operator_index = next((i for i, op in \
             enumerate(self._expectation_operators) if \
-            np.array_equal(op, __operator)), -1)
+            np.array_equal(op, tmp_operator)), -1)
         if operator_index == -1: # Operator not seen before
-            self._expectation_operators.append(__operator)
+            self._expectation_operators.append(tmp_operator)
             self._expectation_lists.append([])
 
         expectations_list = self._expectation_lists[operator_index]
 
         for state in self._states[len(expectations_list):]:
-            expectations_list.append(np.trace(__operator @ state))
+            expectations_list.append(np.trace(tmp_operator @ state))
 
         self._expectation_lists[operator_index] = expectations_list
 

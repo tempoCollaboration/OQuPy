@@ -98,9 +98,9 @@ def compute_dynamics(
     if control is not None:
         assert isinstance(control, Control), \
             "Parameter `control` is not of type `oqupy.Control`."
-        __control = control
+        tmp_control = control
     else:
-        __control = Control(hs_dim)
+        tmp_control = Control(hs_dim)
 
     dts = [pt.dt for pt in process_tensors]
     assert len(set(dts)) == 1, \
@@ -111,7 +111,7 @@ def compute_dynamics(
             + "please specify time step 'dt'.")
 
     try:
-        __start_time = float(start_time)
+        tmp_start_time = float(start_time)
     except Exception as e:
         raise AssertionError("Start time must be a float.") from e
 
@@ -120,18 +120,18 @@ def compute_dynamics(
 
     if num_steps is not None:
         try:
-            __num_steps = int(num_steps)
+            tmp_num_steps = int(num_steps)
         except Exception as e:
             raise AssertionError("Number of steps must be an integer.") from e
     else:
-        __num_steps = None
+        tmp_num_steps = None
 
     # -- compute dynamics --
 
     def propagators(step: int):
         """Create the system propagators (first and second half) for the
         time step `step`. """
-        t = __start_time + step * dt
+        t = tmp_start_time + step * dt
         first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
         second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
         return first_step, second_step
@@ -139,22 +139,22 @@ def compute_dynamics(
     def controls(step: int):
         """Create the system (pre and post measurement) for the time step
         `step`. """
-        return __control.get_controls(
+        return tmp_control.get_controls(
             step,
             dt=dt,
-            start_time=__start_time)
+            start_time=tmp_start_time)
 
 
     states = _compute_dynamics(process_tensors=process_tensors,
                                propagators=propagators,
                                controls=controls,
                                initial_state=initial_state,
-                               num_steps=__num_steps,
+                               num_steps=tmp_num_steps,
                                record_all=record_all)
     if record_all:
-        times = __start_time + np.arange(len(states))*dt
+        times = tmp_start_time + np.arange(len(states))*dt
     else:
-        times = [__start_time + len(states)*dt]
+        times = [tmp_start_time + len(states)*dt]
 
     return Dynamics(times=list(times),states=states)
 
@@ -269,11 +269,11 @@ def _compute_dynamics(
     current_state_leg = current[-1]
     states = []
     if num_steps is None:
-        __num_steps = len(process_tensors[0])
+        tmp_num_steps = len(process_tensors[0])
     else:
-        __num_steps = num_steps
+        tmp_num_steps = num_steps
 
-    for step in range(__num_steps+1):
+    for step in range(tmp_num_steps+1):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
         if pre_measurement_control is not None:
@@ -282,7 +282,7 @@ def _compute_dynamics(
             current_state_leg = pre_node[1]
             current = current @ pre_node
 
-        if step == __num_steps:
+        if step == tmp_num_steps:
             break
 
         # -- extract current state --
@@ -334,7 +334,7 @@ def _compute_dynamics(
                 current @ lam_node
 
     # -- extract last state --
-    cap_nodes = _build_cap(process_tensors, __num_steps)
+    cap_nodes = _build_cap(process_tensors, tmp_num_steps)
     for i in range(num_envs):
         current_bond_legs[i] ^ cap_nodes[i][0]
         current = current @ cap_nodes[i]

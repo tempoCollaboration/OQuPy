@@ -105,16 +105,16 @@ class PtTempo(BaseAPIClass):
         self._correlations = self._bath.correlations
 
         try:
-            __start_time = float(start_time)
+            tmp_start_time = float(start_time)
         except Exception as e:
             raise AssertionError("Start time must be a float.") from e
-        self._start_time = __start_time
+        self._start_time = tmp_start_time
 
         try:
-            __end_time = float(end_time)
+            tmp_end_time = float(end_time)
         except Exception as e:
             raise AssertionError("End time must be a float.") from e
-        self._end_time = __end_time
+        self._end_time = tmp_end_time
 
         assert isinstance(parameters, TempoParameters), \
             "Argument 'parameters' must be an instance of TempoParameters."
@@ -137,16 +137,16 @@ class PtTempo(BaseAPIClass):
 
         super().__init__(name, description, description_dict)
 
-        __coupling_comm = commutator(self._bath._coupling_operator)
-        __coupling_acomm = acommutator(self._bath._coupling_operator)
-        self._coupling_comm = __coupling_comm.diagonal()
-        self._coupling_acomm = __coupling_acomm.diagonal()
+        tmp_coupling_comm = commutator(self._bath._coupling_operator)
+        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
+        self._coupling_comm = tmp_coupling_comm.diagonal()
+        self._coupling_acomm = tmp_coupling_acomm.diagonal()
 
-        __num_steps = int((end_time - self._start_time)/self._parameters.dt)
-        assert __num_steps >= 2, \
+        tmp_num_steps = int((end_time - self._start_time)/self._parameters.dt)
+        assert tmp_num_steps >= 2, \
             "Parameter `end_time` must be more than two times steps " \
             + "larger than the parameter `start_time`!"
-        self._num_steps = __num_steps
+        self._num_steps = tmp_num_steps
 
         self._backend_instance = None
         self._init_pt_tempo_backend()

@@ -56,11 +56,11 @@ class BaseProcessTensor(BaseAPIClass):
         self._trace_square = self._trace**2
 
         if transform_in is not None:
-            __transform_in = np.array(transform_in, dtype=NpDtype)
-            assert len(__transform_in.shape) == 2
-            assert __transform_in.shape[0] == self._rho_dim
-            self._in_dim = __transform_in.shape[1]
-            self._transform_in = __transform_in
+            tmp_transform_in = np.array(transform_in, dtype=NpDtype)
+            assert len(tmp_transform_in.shape) == 2
+            assert tmp_transform_in.shape[0] == self._rho_dim
+            self._in_dim = tmp_transform_in.shape[1]
+            self._transform_in = tmp_transform_in
             self._trace_in = self._trace @ self._transform_in
         else:
             self._in_dim = self._rho_dim
@@ -68,11 +68,11 @@ class BaseProcessTensor(BaseAPIClass):
             self._trace_in = self._trace
 
         if transform_out is not None:
-            __transform_out = np.array(transform_out, dtype=NpDtype)
-            assert len(__transform_out.shape) == 2
-            assert __transform_out.shape[1] == self._rho_dim
-            self._out_dim = __transform_out.shape[0]
-            self._transform_out = __transform_out
+            tmp_transform_out = np.array(transform_out, dtype=NpDtype)
+            assert len(tmp_transform_out.shape) == 2
+            assert tmp_transform_out.shape[1] == self._rho_dim
+            self._out_dim = tmp_transform_out.shape[0]
+            self._transform_out = tmp_transform_out
             self._trace_out = self._transform_out @ self._trace
         else:
             self._out_dim = self._rho_dim
@@ -432,11 +432,11 @@ class FileProcessTensor(BaseProcessTensor):
         if write:
             if filename is None:
                 self._removeable = True
-                __filename = tempfile._get_default_tempdir() + "/pt_" \
+                tmp_filename = tempfile._get_default_tempdir() + "/pt_" \
                     + next(tempfile._get_candidate_names()) + ".hdf5"
             else:
                 self._removeable = overwrite
-                __filename = filename
+                tmp_filename = filename
             assert isinstance(hilbert_space_dimension, int)
             super().__init__(
                 hilbert_space_dimension,
@@ -446,8 +446,8 @@ class FileProcessTensor(BaseProcessTensor):
                 name,
                 description,
                 description_dict)
-            self._filename = __filename
-            self._create_file(__filename, overwrite)
+            self._filename = tmp_filename
+            self._create_file(tmp_filename, overwrite)
         else:
             assert filename is not None
             self._filename = filename
@@ -600,13 +600,13 @@ class FileProcessTensor(BaseProcessTensor):
             tensor: Optional[ndarray]=None) -> None:
         """ToDo. """
         if tensor is None:
-            __tensor = np.array([0.0])
+            tmp_tensor = np.array([0.0])
         else:
-            __tensor = tensor
+            tmp_tensor = tensor
         _set_data_and_shape(step,
                             data=self._mpo_tensors_data,
                             shape=self._mpo_tensors_shape,
-                            tensor=__tensor)
+                            tensor=tmp_tensor)
 
     def get_mpo_tensor(
             self,

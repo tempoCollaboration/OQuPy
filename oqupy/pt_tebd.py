@@ -91,12 +91,12 @@ class PtTebdParameters(BaseAPIClass):
     @dt.setter
     def dt(self, new_dt: float) -> None:
         try:
-            __dt = float(new_dt)
+            tmp_dt = float(new_dt)
         except Exception as e:
             raise AssertionError("Argument 'dt' must be float.") from e
-        assert __dt > 0.0, \
+        assert tmp_dt > 0.0, \
             "Argument 'dt' must be bigger than 0."
-        self._dt = __dt
+        self._dt = tmp_dt
 
     @property
     def order(self) -> float:
@@ -105,10 +105,10 @@ class PtTebdParameters(BaseAPIClass):
 
     @order.setter
     def order(self, new_order: int) -> None:
-        __order = int(new_order)
-        assert __order > 0, \
+        tmp_order = int(new_order)
+        assert tmp_order > 0, \
             "Argument 'order' must be an integer bigger than 0."
-        self._order = __order
+        self._order = tmp_order
 
     @order.deleter
     def order(self) -> None:
@@ -122,12 +122,12 @@ class PtTebdParameters(BaseAPIClass):
     @epsrel.setter
     def epsrel(self, new_epsrel: float) -> None:
         try:
-            __epsrel = float(new_epsrel)
+            tmp_epsrel = float(new_epsrel)
         except Exception as e:
             raise AssertionError("Argument 'epsrel' must be float.") from e
-        assert __epsrel > 0.0, \
+        assert tmp_epsrel > 0.0, \
             "Argument 'epsrel' must be bigger than 0."
-        self._epsrel = __epsrel
+        self._epsrel = tmp_epsrel
 
     @epsrel.deleter
     def epsrel(self) -> None:
@@ -216,13 +216,13 @@ class PtTebd(BaseAPIClass):
 
         if dynamics_sites is not None:
             assert isinstance(dynamics_sites, list)
-            __dynamics_sites = []
+            tmp_dynamics_sites = []
             for sites in dynamics_sites:
                 if isinstance(sites, int):
-                    __dynamics_sites.append(sites)
+                    tmp_dynamics_sites.append(sites)
                 elif isinstance(sites, tuple):
-                    __dynamics_sites.append(sites)
-            self._dynamics_sites = __dynamics_sites
+                    tmp_dynamics_sites.append(sites)
+            self._dynamics_sites = tmp_dynamics_sites
         else:
             self._dynamics_sites = []
 
@@ -382,7 +382,7 @@ class PtTebd(BaseAPIClass):
             the default progress type is used.
         """
         try:
-            __end_step = int(end_step)
+            tmp_end_step = int(end_step)
         except Exception as e:
             raise AssertionError("End step must be an integer.") from e
 
@@ -394,7 +394,7 @@ class PtTebd(BaseAPIClass):
 
         progress = get_progress(progress_type)
         with progress(num_step) as prog_bar:
-            while self.step < __end_step:
+            while self.step < tmp_end_step:
                 self.compute_step()
                 prog_bar.update(self.step - start_step)
             prog_bar.update(self.step - start_step)
