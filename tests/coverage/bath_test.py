@@ -56,15 +56,12 @@ def test_bath():
         bath_A.name = 0.1
     with pytest.raises(AssertionError):
         bath_A.description = ["bla"]
-    with pytest.raises(AssertionError):
-        bath_A.description_dict = ["bla"]
 
     # try a full example
     Bath(coupling_operator,
          correlations,
          name=name,
-         description=description,
-         description_dict=description_dict)
+         description=description)
 
     # try non-diagonal coupling
     coupling_op = np.array([[0.0,-1.0j],[1.0j,0.0]])

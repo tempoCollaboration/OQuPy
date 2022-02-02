@@ -22,7 +22,7 @@ import oqupy as tempo
 
 def test_tempo_parameters():
     tempo_param = tempo.TempoParameters(
-        0.1, None, 1.0e-5, None, "rough", "bla", {})
+        0.1, None, 1.0e-5, None, "rough", "bla")
     str(tempo_param)
     assert tempo_param.dt == 0.1
     assert tempo_param.dkmax == None
@@ -38,11 +38,11 @@ def test_tempo_parameters():
 
 def test_tempo_parameters_bad_input():
     with pytest.raises(AssertionError):
-        tempo.TempoParameters("x", 42, 1.0e-5, None, "rough", "bla", {})
+        tempo.TempoParameters("x", 42, 1.0e-5, None, "rough", "bla")
     with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, "x", 1.0e-5, None, "rough", "bla", {})
+        tempo.TempoParameters(0.1, "x", 1.0e-5, None, "rough", "bla")
     with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, "x", None, "rough", "bla", {})
+        tempo.TempoParameters(0.1, 42, "x", None, "rough", "bla")
 
 def test_tempo():
     start_time = -0.3

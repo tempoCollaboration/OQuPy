@@ -60,6 +60,10 @@ class PtTebdParameters(BaseAPIClass):
         in the underlying TEBD tensor network algorithm). - It must be small
         enough such that the numerical compression does not truncate relevant
         correlations.
+    name: str (default = None)
+        An optional name for the PT-TEBD parameters object.
+    description: str (default = None)
+        An optional description of the PT-TEBD parameters object.
     """
     def __init__(
             self,
@@ -67,13 +71,12 @@ class PtTebdParameters(BaseAPIClass):
             epsrel: Optional[float] = PT_TEBD_DEFAULT_EPSREL,
             order: Optional[int] = PT_TEBD_DEFAULT_ORDER,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a PtTebdParameters object."""
         self.dt = dt
         self.order = order
         self.epsrel = epsrel
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []

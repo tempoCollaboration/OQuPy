@@ -15,7 +15,7 @@
 ToDo
 """
 
-from typing import Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import Callable, List, Optional, Text, Tuple, Union
 from copy import deepcopy
 
 import numpy as np
@@ -32,14 +32,13 @@ class Control(BaseAPIClass):
             self,
             dimension: int,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Creates a Control object. """
         self._dimension = dimension
         self._step_controls = {'pre':{}, 'post':{}}
         self._time_controls = {'pre':{}, 'post':{}}
         self._control_times = {'pre':np.array([]), 'post':np.array([])}
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     @property
     def dimension(self):
@@ -151,15 +150,12 @@ class ChainControl(BaseAPIClass):
         An optional name for the chain controls.
     description: str
         An optional description of the chain controls.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
             hilbert_space_dimensions: List[int],
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a ChainControl object. """
         tmp_hs_dims = np.array(hilbert_space_dimensions, int)
         assert len(tmp_hs_dims.shape) == 1
@@ -170,7 +166,7 @@ class ChainControl(BaseAPIClass):
         self._single_site_controls_pre = []
         self._single_site_controls_post = []
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __len__(self):
         """Length of the chain. """

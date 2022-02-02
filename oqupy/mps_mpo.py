@@ -16,7 +16,7 @@ Module for MPSs and MPOs.
 """
 
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Text, Tuple
+from typing import Any, List, Optional, Text, Tuple
 
 import numpy as np
 from numpy import ndarray
@@ -375,16 +375,13 @@ class AugmentedMPS(BaseAPIClass):
         An optional name for the augmented MPS.
     description: str
         An optional description of the augmented MPS.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
             gammas: List[ndarray],
             lambdas: Optional[List[ndarray]] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create an AugmentedMPS object. """
         # input parsing
         self._n = len(gammas)
@@ -440,7 +437,7 @@ class AugmentedMPS(BaseAPIClass):
 
         self._gammas = tmp_gammas
         self._lambdas = tmp_lambdas
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     @property
     def gammas(self) -> ndarray:

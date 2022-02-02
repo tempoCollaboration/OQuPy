@@ -15,7 +15,7 @@
 Module on the discrete time evolution of a density matrix.
 """
 
-from typing import Dict, List, Optional, Text, Tuple
+from typing import List, Optional, Text, Tuple
 from copy import copy
 
 import numpy as np
@@ -39,16 +39,13 @@ class Dynamics(BaseAPIClass):
         An optional name for the dynamics.
     description: str
         An optional description of the dynamics.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
             times: Optional[List[float]] = None,
             states: Optional[List[ndarray]] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a Dynamics object. """
         # input check times and states
         if times is None:
@@ -69,7 +66,7 @@ class Dynamics(BaseAPIClass):
         for time, state in zip(times, states):
             self.add(time, state)
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []

@@ -15,7 +15,7 @@
 Module for environment correlations.
 """
 
-from typing import Callable, Dict, Optional, Text
+from typing import Callable, Optional, Text
 from typing import Any as ArrayLike
 import functools
 
@@ -142,16 +142,13 @@ class CustomCorrelations(BaseCorrelations):
         An optional name for the correlations.
     description: str
         An optional description of the correlations.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
 
     def __init__(
             self,
             correlation_function: Callable[[float], float],
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Creates a CustomCorrelations object. """
 
         # check input: j_function
@@ -163,7 +160,7 @@ class CustomCorrelations(BaseCorrelations):
                 + "and must return float.") from e
         self.correlation_function = tmp_correlation_function
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []
@@ -520,8 +517,6 @@ class CustomSD(BaseCorrelations):
         An optional name for the correlations.
     description: str
         An optional description of the correlations.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
 
     def __init__(
@@ -531,8 +526,7 @@ class CustomSD(BaseCorrelations):
             cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a CustomFunctionSD (spectral density) object. """
 
         # check input: j_function
@@ -571,7 +565,7 @@ class CustomSD(BaseCorrelations):
         self._spectral_density = \
             lambda omega: self.j_function(omega) * self._cutoff_function(omega)
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []
@@ -807,8 +801,6 @@ class PowerLawSD(CustomSD):
         An optional name for the correlations.
     description: str
         An optional description of the correlations.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
 
     def __init__(
@@ -819,8 +811,7 @@ class PowerLawSD(CustomSD):
             cutoff_type: Text = 'exponential',
             temperature: Optional[float] = 0.0,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a StandardSD (spectral density) object. """
 
         # check input: alpha
@@ -853,8 +844,7 @@ class PowerLawSD(CustomSD):
                          cutoff_type=cutoff_type,
                          temperature=temperature,
                          name=name,
-                         description=description,
-                         description_dict=description_dict)
+                         description=description)
 
     def __str__(self) -> Text:
         ret = []

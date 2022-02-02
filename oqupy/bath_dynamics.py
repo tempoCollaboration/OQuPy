@@ -20,7 +20,7 @@ D. Gribben, A. Strathearn, G. E. Fux, P. Kirton, and B. W. Lovett,
 arXiv:2106.04212 [quant-ph] (2021).
 """
 
-from typing import Dict, Optional, Text, Tuple
+from typing import Optional, Text, Tuple
 import numpy as np
 from numpy import ndarray
 
@@ -53,8 +53,6 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         An optional name for the bath.
     description: str (default = None)
         An optional description of the bath.
-    description_dict: dict (default = None)
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
@@ -65,8 +63,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             system_correlations: Optional[ndarray] = np.array([[]],
                                                               dtype=NpDtype),
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None
+            description: Optional[Text] = None
             ) -> None:
         self._system = system
         self._bath = bath
@@ -82,7 +79,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         self._system_correlations = system_correlations
         self._temp = bath.correlations.temperature
         self._bath_correlations = {}
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     @property
     def system(self) -> BaseSystem:

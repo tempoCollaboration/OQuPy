@@ -15,7 +15,7 @@
 Module on physical information of the system.
 """
 
-from typing import Callable, Dict, List, Optional, Text
+from typing import Callable, List, Optional, Text
 from copy import copy
 from functools import lru_cache
 
@@ -58,11 +58,10 @@ class BaseSystem(BaseAPIClass):
             self,
             dimension: int,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a BaseSystem object."""
         self._dimension = dimension
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     @property
     def dimension(self) -> ndarray:
@@ -128,8 +127,6 @@ class System(BaseSystem):
         An optional name for the system.
     description: str
         An optional description of the system.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
@@ -137,8 +134,7 @@ class System(BaseSystem):
             gammas: Optional[List[float]] = None,
             lindblad_operators: Optional[List[ndarray]] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a System object. """
         # input check for Hamiltonian.
         self._hamiltonian = _check_hamiltonian(hamiltonian)
@@ -174,7 +170,7 @@ class System(BaseSystem):
         self._gammas = tmp_gammas
         self._lindblad_operators = tmp_lindblad_operators
 
-        super().__init__(tmp_dimension, name, description, description_dict)
+        super().__init__(tmp_dimension, name, description)
 
     @lru_cache(4)
     def liouvillian(self, t: Optional[float] = None) -> ndarray:
@@ -247,8 +243,6 @@ class TimeDependentSystem(BaseSystem):
         An optional name for the system.
     description: str
         An optional description of the system.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
@@ -258,8 +252,7 @@ class TimeDependentSystem(BaseSystem):
             lindblad_operators: \
                 Optional[List[Callable[[float], ndarray]]] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a System object."""
         # input check for Hamiltonian.
         try:
@@ -306,7 +299,7 @@ class TimeDependentSystem(BaseSystem):
         self._gammas = tmp_gammas
         self._lindblad_operators = tmp_lindblad_operators
 
-        super().__init__(tmp_dimension, name, description, description_dict)
+        super().__init__(tmp_dimension, name, description)
 
     def liouvillian(self, t: Optional[float] = None) -> ndarray:
         r"""
@@ -374,15 +367,12 @@ class SystemChain(BaseAPIClass):
         An optional name for the system chain.
     description: str
         An optional description of the system chain.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
             hilbert_space_dimensions: List[int],
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a SystemChain object. """
         tmp_hs_dims = np.array(hilbert_space_dimensions, int)
         assert len(tmp_hs_dims.shape) == 1
@@ -400,7 +390,7 @@ class SystemChain(BaseAPIClass):
             self._nn_liouvillians.append(
                 np.zeros((hs_dim_l**4, hs_dim_r**4), dtype=NpDtype))
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __len__(self):
         """Chain length. """

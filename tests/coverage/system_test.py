@@ -85,8 +85,7 @@ def test_system_B():
                  gammasB,
                  lindblad_operatorsB,
                  name="bla",
-                 description="blub",
-                 description_dict={"the answer":42})
+                 description="blub")
     str(sys)
     assert isinstance(sys.hamiltonian, np.ndarray)
     assert isinstance(sys.gammas, list)
@@ -138,8 +137,7 @@ def test_time_dependent_system_D():
             gammasD,
             lindblad_operatorsD,
             name="bla",
-            description="blub",
-            description_dict={"the answer":42})
+            description="blub")
     with pytest.raises(ValueError):
         sys.liouvillian()
 

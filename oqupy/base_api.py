@@ -15,7 +15,7 @@
 Module for base classes of API objects.
 """
 
-from typing import Dict, Optional, Text
+from typing import Optional, Text
 
 from oqupy.config import SEPERATOR
 
@@ -30,18 +30,14 @@ class BaseAPIClass:
         An optional name for the object.
     description: str
         An optional description of the object.
-    description_dict: dict
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a BaseAPIClass object. """
         self.name = name
         self.description = description
-        self.description_dict = description_dict
 
     def __str__(self) -> Text:
         ret = []
@@ -84,21 +80,3 @@ class BaseAPIClass:
     @description.deleter
     def description(self):
         self.description = None
-
-    @property
-    def description_dict(self):
-        """A dictionary for descriptive data. """
-        return self._description_dict
-
-    @description_dict.setter
-    def description_dict(self, new_dict: Dict = None):
-        if new_dict is None:
-            new_dict = dict({})
-        else:
-            assert isinstance(new_dict, dict), \
-                "Description dictionary must be a dictionary."
-        self._description_dict = new_dict
-
-    @description_dict.deleter
-    def description_dict(self):
-        self.description_dict = None

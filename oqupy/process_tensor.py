@@ -23,7 +23,7 @@ framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 
 import os
 import tempfile
-from typing import Dict, Optional, Text
+from typing import Optional, Text
 
 import numpy as np
 from numpy import ndarray
@@ -45,8 +45,7 @@ class BaseProcessTensor(BaseAPIClass):
             transform_in: Optional[ndarray] = None,
             transform_out: Optional[ndarray] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """ToDo. """
         self._hs_dim = hilbert_space_dimension
         self._dt = dt
@@ -79,7 +78,7 @@ class BaseProcessTensor(BaseAPIClass):
             self._transform_out = None
             self._trace_out = self._trace
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     @property
     def hilbert_space_dimension(self):
@@ -183,14 +182,12 @@ class TrivialProcessTensor(BaseProcessTensor):
     def __init__(
             self,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """ToDo. """
         super().__init__(
             hilbert_space_dimension=1,
             name=name,
-            description=description,
-            description_dict=description_dict)
+            description=description)
 
     def __len__(self) -> int:
         """Length of process tensor. """
@@ -230,8 +227,7 @@ class SimpleProcessTensor(BaseProcessTensor):
             transform_in: Optional[ndarray] = None,
             transform_out: Optional[ndarray] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """ToDo. """
         self._initial_tensor = None
         self._mpo_tensors = []
@@ -243,8 +239,7 @@ class SimpleProcessTensor(BaseProcessTensor):
             transform_in,
             transform_out,
             name,
-            description,
-            description_dict)
+            description)
 
     def __len__(self) -> int:
         """Length of process tensor. """
@@ -377,8 +372,7 @@ class SimpleProcessTensor(BaseProcessTensor):
             transform_in=self._transform_in,
             transform_out=self._transform_out,
             name=self.name,
-            description=self.description,
-            description_dict=self.description_dict)
+            description=self.description)
 
         pt_file.set_initial_tensor(self._initial_tensor)
         for step, mpo in enumerate(self._mpo_tensors):
@@ -402,8 +396,7 @@ class FileProcessTensor(BaseProcessTensor):
             transform_in: Optional[ndarray] = None,
             transform_out: Optional[ndarray] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """ToDo. """
 
         if mode == "read":
@@ -444,8 +437,7 @@ class FileProcessTensor(BaseProcessTensor):
                 transform_in,
                 transform_out,
                 name,
-                description,
-                description_dict)
+                description)
             self._filename = tmp_filename
             self._create_file(tmp_filename, overwrite)
         else:
@@ -554,7 +546,6 @@ class FileProcessTensor(BaseProcessTensor):
             "transform_out":transform_out,
             "name":None,
             "description":None,
-            "description_dict":None,
         }
 
     def __len__(self) -> int:
@@ -736,8 +727,7 @@ def import_process_tensor(
             transform_in=pt_file.transform_in,
             transform_out=pt_file.transform_out,
             name=pt_file.name,
-            description=pt_file.description,
-            description_dict=pt_file.description_dict)
+            description=pt_file.description)
         pt.set_initial_tensor(pt_file.get_initial_tensor())
 
         step = 0

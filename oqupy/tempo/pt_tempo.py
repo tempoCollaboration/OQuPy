@@ -82,8 +82,6 @@ class PtTempo(BaseAPIClass):
         An optional name for the tempo object.
     description: str (default = None)
         An optional description of the tempo object.
-    description_dict: dict (default = None)
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
@@ -95,8 +93,7 @@ class PtTempo(BaseAPIClass):
             overwrite: Optional[bool] = False,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a PtTempo object. """
         assert isinstance(bath, Bath), \
             "Argument 'bath' must be an instance of Bath."
@@ -135,7 +132,7 @@ class PtTempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
         tmp_coupling_comm = commutator(self._bath._coupling_operator)
         tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
@@ -286,8 +283,7 @@ def pt_tempo_compute(
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
         name: Optional[Text] = None,
-        description: Optional[Text] = None,
-        description_dict: Optional[Dict] = None) -> BaseProcessTensor:
+        description: Optional[Text] = None) -> BaseProcessTensor:
     """
     Shortcut for creating a process tensor by performing a PT-TEMPO
     computation.
@@ -316,8 +312,6 @@ def pt_tempo_compute(
         An optional name for the tempo object.
     description: str (default = None)
         An optional description of the tempo object.
-    description_dict: dict (default = None)
-        An optional dictionary with descriptive data.
     """
     if parameters is None:
         assert tolerance is not None, \
@@ -335,7 +329,6 @@ def pt_tempo_compute(
                   overwrite,
                   backend_config,
                   name,
-                  description,
-                  description_dict)
+                  description)
     ptt.compute(progress_type=progress_type)
     return ptt.get_process_tensor()

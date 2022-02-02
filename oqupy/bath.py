@@ -14,7 +14,7 @@
 """
 Module on physical information on the bath and its coupling to the system.
 """
-from typing import Dict, Optional, Text
+from typing import Optional, Text
 from copy import copy
 
 import numpy as np
@@ -40,8 +40,6 @@ class Bath(BaseAPIClass):
         An optional name for the bath.
     description: str
         An optional description of the bath.
-    description_dict: dict
-        An optional dictionary with descriptive data.
 
     Raises
     ------
@@ -53,8 +51,7 @@ class Bath(BaseAPIClass):
             coupling_operator: ndarray,
             correlations: BaseCorrelations,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Creates a Bath object. """
         # input check for coupling_operator.
         try:
@@ -93,7 +90,7 @@ class Bath(BaseAPIClass):
                 + "BaseCorrelations.")
         self._correlations = copy(correlations)
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []

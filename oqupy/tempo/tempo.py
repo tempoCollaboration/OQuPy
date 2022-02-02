@@ -71,6 +71,10 @@ class TempoParameters(BaseAPIClass):
     add_correlation_time: float
         Additional correlation time to include in the last influence
         functional as explained in [Strathearn2017].
+    name: str (default = None)
+        An optional name for the tempo parameters object.
+    description: str (default = None)
+        An optional description of the tempo parameters object.
     """
     def __init__(
             self,
@@ -79,14 +83,13 @@ class TempoParameters(BaseAPIClass):
             epsrel: float,
             add_correlation_time: Optional[float] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a TempoParameters object."""
         self.dt = dt
         self.dkmax = dkmax
         self.epsrel = epsrel
         self.add_correlation_time = add_correlation_time
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []
@@ -207,8 +210,6 @@ class Tempo(BaseAPIClass):
         An optional name for the tempo object.
     description: str (default = None)
         An optional description of the tempo object.
-    description_dict: dict (default = None)
-        An optional dictionary with descriptive data.
     """
     def __init__(
             self,
@@ -219,8 +220,7 @@ class Tempo(BaseAPIClass):
             start_time: float,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            description_dict: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a Tempo object. """
 
         assert isinstance(system, BaseSystem), \
@@ -268,7 +268,7 @@ class Tempo(BaseAPIClass):
             + "initial state ({}), ".format(self._dimension) \
             + "and bath coupling ({}), ".format(self._bath.dimension)
 
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
 
         tmp_coupling_comm = commutator(self._bath._coupling_operator)
         tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
@@ -306,38 +306,8 @@ class Tempo(BaseAPIClass):
         """Create a Dynamics object with metadata from the Tempo object. """
         name = None
         description = "computed from '{}' tempo".format(self.name)
-        description_dict = {
-            "tempo_type":str(type(self)),
-            "tempo_name":self.name,
-            "tempo_description":self.description,
-            "tempo_description_dict":self.description_dict,
-            "parameters_type":str(type(self._parameters)),
-            "parameters_name":self._parameters.name,
-            "parameters_description":self._parameters.description,
-            "parameters_description_dict":self._parameters.description_dict,
-            "system_type":str(type(self._system)),
-            "system_name":self._system.name,
-            "system_description":self._system.description,
-            "system_description_dict":self._system.description_dict,
-            "bath_type":str(type(self._bath)),
-            "bath_name":self._bath.name,
-            "bath_description":self._bath.description,
-            "bath_description_dict":self._bath.description_dict,
-            "correlations_type":str(type(self._correlations)),
-            "correlations_name": \
-                self._correlations.name,
-            "correlations_description": \
-                self._correlations.description,
-            "correlations_description_dict": \
-                self._correlations.description_dict,
-            "initial_state":self._initial_state,
-            "dt":self._parameters.dt,
-            "dkmax":self._parameters.dkmax,
-            "epsrel":self._parameters.epsrel,
-            }
         self._dynamics = Dynamics(name=name,
-                                  description=description,
-                                  description_dict=description_dict)
+                                  description=description)
 
     def _influence(self, dk: int):
         """Create the influence functional matrix for a time step distance
@@ -613,8 +583,7 @@ def guess_tempo_parameters(
         dkmax=dkmax,
         epsrel=epsrel,
         name="Roughly estimated parameters",
-        description="Estimated with 'guess_tempo_parameters()'",
-        description_dict={"tolerance":tolerance})
+        description="Estimated with 'guess_tempo_parameters()'")
 
 
 def tempo_compute(
@@ -628,8 +597,7 @@ def tempo_compute(
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
         name: Optional[Text] = None,
-        description: Optional[Text] = None,
-        description_dict: Optional[Dict] = None) -> Dynamics:
+        description: Optional[Text] = None) -> Dynamics:
     """
     Shortcut for creating a Tempo object and running the computation.
 
@@ -661,8 +629,6 @@ def tempo_compute(
         An optional name for the tempo object.
     description: str (default = None)
         An optional description of the tempo object.
-    description_dict: dict (default = None)
-        An optional dictionary with descriptive data.
     """
     if parameters is None:
         assert tolerance is not None, \
@@ -680,7 +646,6 @@ def tempo_compute(
                   start_time,
                   backend_config,
                   name,
-                  description,
-                  description_dict)
+                  description)
     tempo.compute(end_time, progress_type=progress_type)
     return tempo.get_dynamics()
