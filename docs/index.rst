@@ -76,8 +76,9 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
    :maxdepth: 1
    :caption: Tutorials
 
-   pages/01_quickstart/01_quickstart
-   pages/02_pt_tempo/02_pt_tempo
+   pages/tutorials/quickstart/quickstart
+   pages/tutorials/pt_tempo/pt_tempo
+   pages/tutorials/pt_tebd/pt_tebd
 
 .. toctree::
    :maxdepth: 1

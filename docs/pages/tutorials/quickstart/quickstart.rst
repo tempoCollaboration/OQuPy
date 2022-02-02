@@ -1,21 +1,28 @@
 Quickstart
 ==========
 
-A quick introduction on how to use the OQuPy package to
-compute the dynamics of a quantum system that is possibly strongly
-coupled to a structured environment. We illustrate this by applying the
-TEMPO method to the strongly coupled spin boson model.
+A quick introduction on how to use the OQuPy package to compute the
+dynamics of a quantum system that is possibly strongly coupled to a
+structured environment. We illustrate this by applying the TEMPO method
+to the strongly coupled spin boson model.
 
 **Contents:**
 
--  Example A - The spin boson model
+-  Example - The spin boson model
 
-   -  A.1: The model and its parameters
-   -  A.2: Create system, correlations and bath objects
-   -  A.3: TEMPO computation
+   -  
 
-First, let’s import OQuPy and some other packages we are going
-to use
+      1. The model and its parameters
+
+   -  
+
+      2. Create system, correlations and bath objects
+
+   -  
+
+      3. TEMPO computation
+
+First, let’s import OQuPy and some other packages we are going to use
 
 .. code:: ipython3
 
@@ -25,7 +32,6 @@ to use
     import oqupy
     import numpy as np
     import matplotlib.pyplot as plt
-    %matplotlib inline
 
 and check what version of tempo we are using.
 
@@ -56,8 +62,8 @@ density matrices.
 
 --------------
 
-Example A - The spin boson model
---------------------------------
+Example - The spin boson model
+------------------------------
 
 As a first example let’s try to reconstruct one of the lines in figure
 2a of [Strathearn2018] (`Nat. Comm. 9, 3322
@@ -73,7 +79,7 @@ the job - just to have an idea where we are going:
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
-
+    
     system = oqupy.System(0.5 * Omega * sigma_x)
     correlations = oqupy.PowerLawSD(alpha=alpha,
                                     zeta=1,
@@ -98,15 +104,15 @@ the job - just to have an idea where we are going:
 
 .. parsed-literal::
 
-    100.0%  150 of  150 [########################################] 00:00:12
-    Elapsed time: 12.6s
+    100.0%  150 of  150 [########################################] 00:00:11
+    Elapsed time: 11.6s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff359b5d588>
+    <matplotlib.legend.Legend at 0x7f26bda967b8>
 
 
 
@@ -114,8 +120,8 @@ the job - just to have an idea where we are going:
 .. image:: output_9_2.png
 
 
-A.1: The model and its parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. The model and its parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We consider a system Hamiltonian
 
@@ -152,12 +158,12 @@ frequency. Here, we choose :math:`\Omega` for this and write:
 
 .. code:: ipython3
 
-    Omega_A = 1.0
-    omega_cutoff_A = 5.0
-    alpha_A = 0.3
+    Omega = 1.0
+    omega_cutoff = 5.0
+    alpha = 0.3
 
-A.2: Create system, correlations and bath objects
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2. Create system, correlations and bath objects
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 System
 ^^^^^^
@@ -166,7 +172,7 @@ System
 
 .. code:: ipython3
 
-    system_A = oqupy.System(0.5 * Omega_A * sigma_x)
+    system = oqupy.System(0.5 * Omega * sigma_x)
 
 Correlations
 ^^^^^^^^^^^^
@@ -182,9 +188,9 @@ define the spectral density with:
 
 .. code:: ipython3
 
-    correlations_A = oqupy.PowerLawSD(alpha=alpha_A,
+    correlations = oqupy.PowerLawSD(alpha=alpha,
                                       zeta=1,
-                                      cutoff=omega_cutoff_A,
+                                      cutoff=omega_cutoff,
                                       cutoff_type='exponential')
 
 Bath
@@ -195,10 +201,10 @@ the system.
 
 .. code:: ipython3
 
-    bath_A = oqupy.Bath(0.5 * sigma_z, correlations_A)
+    bath = oqupy.Bath(0.5 * sigma_z, correlations)
 
-A.3: TEMPO computation
-~~~~~~~~~~~~~~~~~~~~~~
+3. TEMPO computation
+~~~~~~~~~~~~~~~~~~~~
 
 Now, that we have the system and the bath objects ready we can compute
 the dynamics of the spin starting in the up state, from time :math:`t=0`
@@ -206,8 +212,8 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. code:: ipython3
 
-    dynamics_A_1 = oqupy.tempo_compute(system=system_A,
-                                       bath=bath_A,
+    dynamics_1 = oqupy.tempo_compute(system=system,
+                                       bath=bath,
                                        initial_state=up_density_matrix,
                                        start_time=0.0,
                                        end_time=5.0,
@@ -216,7 +222,7 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    ../oqupy/tempo/tempo.py:565: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo/tempo.py:548: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -231,8 +237,8 @@ and plot the result:
 
 .. code:: ipython3
 
-    t_A_1, z_A_1 = dynamics_A_1.expectations(0.5*sigma_z, real=True)
-    plt.plot(t_A_1, z_A_1, label=r'$\alpha=0.3$')
+    t_1, z_1 = dynamics_1.expectations(0.5*sigma_z, real=True)
+    plt.plot(t_1, z_1, label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
     plt.ylabel(r'$<S_z>$')
     plt.legend()
@@ -242,7 +248,7 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff3598c1a58>
+    <matplotlib.legend.Legend at 0x7f26bd737e10>
 
 
 
@@ -290,8 +296,8 @@ whether it satisfies the above requirements:
 
 .. code:: ipython3
 
-    parameters = oqupy.guess_tempo_parameters(system=system_A,
-                                              bath=bath_A,
+    parameters = oqupy.guess_tempo_parameters(system=system,
+                                              bath=bath,
                                               start_time=0.0,
                                               end_time=5.0,
                                               tolerance=0.01)
@@ -300,7 +306,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    ../oqupy/tempo/tempo.py:565: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo/tempo.py:548: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -320,7 +326,7 @@ whether it satisfies the above requirements:
 .. code:: ipython3
 
     fig, ax = plt.subplots(1,1)
-    oqupy.helpers.plot_correlations_with_parameters(bath_A.correlations, parameters, ax=ax)
+    oqupy.helpers.plot_correlations_with_parameters(bath.correlations, parameters, ax=ax)
 
 
 
@@ -349,8 +355,8 @@ We can choose a set of parameters by hand and bundle them into a
 
 .. code:: ipython3
 
-    tempo_parameters_A = oqupy.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4), name="my rough parameters")
-    print(tempo_parameters_A)
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4), name="my rough parameters")
+    print(tempo_parameters)
 
 
 .. parsed-literal::
@@ -370,7 +376,7 @@ and check again with the helper function:
 .. code:: ipython3
 
     fig, ax = plt.subplots(1,1)
-    oqupy.helpers.plot_correlations_with_parameters(bath_A.correlations, tempo_parameters_A, ax=ax)
+    oqupy.helpers.plot_correlations_with_parameters(bath.correlations, tempo_parameters, ax=ax)
 
 
 
@@ -394,9 +400,9 @@ without having to start over. For this we start with creating a
 
 .. code:: ipython3
 
-    tempo_A = oqupy.Tempo(system=system_A,
-                          bath=bath_A,
-                          parameters=tempo_parameters_A,
+    tempo = oqupy.Tempo(system=system,
+                          bath=bath,
+                          parameters=tempo_parameters,
                           initial_state=up_density_matrix,
                           start_time=0.0)
 
@@ -405,20 +411,20 @@ We can start by computing the dynamics up to time
 
 .. code:: ipython3
 
-    tempo_A.compute(end_time=5.0)
+    tempo.compute(end_time=5.0)
 
 
 .. parsed-literal::
 
     100.0%   50 of   50 [########################################] 00:00:02
-    Elapsed time: 2.5s
+    Elapsed time: 2.9s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7ff3597864e0>
+    <oqupy.dynamics.Dynamics at 0x7f26bd5c9ef0>
 
 
 
@@ -426,8 +432,8 @@ then get and plot the dynamics of expecatation values,
 
 .. code:: ipython3
 
-    dynamics_A_2 = tempo_A.get_dynamics()
-    plt.plot(*dynamics_A_2.expectations(0.5*sigma_z, real=True), label=r'$\alpha=0.3$')
+    dynamics_2 = tempo.get_dynamics()
+    plt.plot(*dynamics_2.expectations(0.5*sigma_z, real=True), label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
     plt.ylabel(r'$<S_z>$')
     plt.legend()
@@ -437,7 +443,7 @@ then get and plot the dynamics of expecatation values,
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff35997f160>
+    <matplotlib.legend.Legend at 0x7f26bd9580b8>
 
 
 
@@ -449,20 +455,20 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 
 .. code:: ipython3
 
-    tempo_A.compute(end_time=15.0)
+    tempo.compute(end_time=15.0)
 
 
 .. parsed-literal::
 
-    100.0%  100 of  100 [########################################] 00:00:11
-    Elapsed time: 11.6s
+    100.0%  100 of  100 [########################################] 00:00:12
+    Elapsed time: 12.0s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7ff3597864e0>
+    <oqupy.dynamics.Dynamics at 0x7f26bd5c9ef0>
 
 
 
@@ -470,8 +476,8 @@ and then again get and plot the dynamics of expecatation values.
 
 .. code:: ipython3
 
-    dynamics_A_2 = tempo_A.get_dynamics()
-    plt.plot(*dynamics_A_2.expectations(0.5*sigma_z, real=True), label=r'$\alpha=0.3$')
+    dynamics_2 = tempo.get_dynamics()
+    plt.plot(*dynamics_2.expectations(0.5*sigma_z, real=True), label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
     plt.ylabel(r'$<S_z>$')
     plt.legend()
@@ -481,7 +487,7 @@ and then again get and plot the dynamics of expecatation values.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff35988de48>
+    <matplotlib.legend.Legend at 0x7f26bd8caba8>
 
 
 

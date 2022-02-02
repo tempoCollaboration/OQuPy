@@ -8,13 +8,27 @@ PT-TEMPO to a quantum dot driven by a time dependent laser pulse.
 
 **Contents:**
 
--  Example B - Quantum dot driven by a laser pulse
+-  Example - Quantum dot driven by a laser pulse
 
-   -  B.1: Hamiltonian for driven quantum dot with bosonic environment
-   -  B.2: Laser pulse / time dependent system
-   -  B.3: Create time dependent system object
-   -  B.4: TEMPO computation
-   -  B.5: Using PT-TEMPO to explore many different laser pulses
+   -  
+
+      1. Hamiltonian for driven quantum dot with bosonic environment
+
+   -  
+
+      2. Laser pulse / time dependent system
+
+   -  
+
+      3. Create time dependent system object
+
+   -  
+
+      4. TEMPO computation
+
+   -  
+
+      5. Using PT-TEMPO to explore many different laser pulses
 
 First, let’s import OQuPy and some other packages we are going to use
 
@@ -56,8 +70,8 @@ density matrices.
 
 --------------
 
-Example B - Quantum Dot driven by a laser pulse
------------------------------------------------
+Example - Quantum Dot driven by a laser pulse
+---------------------------------------------
 
 As a first example let’s try to reconstruct one of the lines in figure
 3c of [Fux2021] (`Phys. Rev. Lett. 126, 200401
@@ -67,8 +81,8 @@ example we compute the time evolution of a quantum dot which is driven
 with a :math:`\pi/2` laser pulse and is strongly coupled to an ohmic
 bath (spin-boson model).
 
-B.1: Hamiltonian for driven quantum dot with bosonic environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. Hamiltonian for driven quantum dot with bosonic environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We consider a time dependent system Hamiltonian
 
@@ -113,8 +127,8 @@ ps respectively.
     temperature = 0.1309
     initial_state=down_density_matrix
 
-B.2: Laser pulse / time dependent system
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+2. Laser pulse / time dependent system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We choose a gaussian laser pulse shape with an adjustable pulse area and
 pulse width :math:`\tau`.
@@ -146,7 +160,7 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f9ba02cd358>
+    <matplotlib.legend.Legend at 0x7f5315c6e710>
 
 
 
@@ -154,8 +168,8 @@ detuning, we can check the shape of the laser pulse.
 .. image:: output_16_1.png
 
 
-B.3: Create time dependent system object
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3. Create time dependent system object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -171,8 +185,8 @@ B.3: Create time dependent system object
                                     temperature=temperature)
     bath = oqupy.Bath(sigma_z/2.0, correlations)
 
-B.4: TEMPO computation
-~~~~~~~~~~~~~~~~~~~~~~
+4. TEMPO computation
+~~~~~~~~~~~~~~~~~~~~
 
 With all physical objects defined, we are now ready to compute the
 dynamics of the quantum dot using TEMPO (using quite rough convergence
@@ -192,8 +206,8 @@ parameters):
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:02
-    Elapsed time: 2.0s
+    100.0%   50 of   50 [########################################] 00:00:01
+    Elapsed time: 1.4s
 
 
 and extract the expectation values
@@ -216,7 +230,7 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f9af65fef28>
+    <matplotlib.legend.Legend at 0x7f530c8b5f28>
 
 
 
@@ -224,8 +238,8 @@ for plotting:
 .. image:: output_23_1.png
 
 
-B.5: Using PT-TEMPO to explore many different laser pulses
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+5. Using PT-TEMPO to explore many different laser pulses
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If we want to do the same computation for a set of different laser
 pulses (and thus different time dependent system Hamiltonians), we could
@@ -248,8 +262,8 @@ with many different system Hamiltonians at relatively little cost.
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:00
-    Elapsed time: 1.0s
+    100.0%   50 of   50 [########################################] 00:00:01
+    Elapsed time: 1.3s
 
 
 Given we want to calculate :math:`\langle\sigma_{xy}\rangle(t)` for 5
@@ -315,7 +329,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f9af6487ef0>
+    <matplotlib.legend.Legend at 0x7f530c7e8588>
 
 
 
