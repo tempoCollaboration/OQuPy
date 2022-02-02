@@ -23,7 +23,7 @@ How To Install
     pip 20.0.2 from /home/gefux/.local/lib/python3.6/site-packages/pip (python 3.6)
 
 
-* Install TimeEvolvingMPO via pip
+* Install OQuPy via pip
 
   .. code-block:: none
 
@@ -50,7 +50,7 @@ This should give you the following message:
 Uninstall
 ---------
 
-Uninstall TimeEvolvingMPO with pip:
+Uninstall OQuPy with pip:
 
 .. code-block:: none
 

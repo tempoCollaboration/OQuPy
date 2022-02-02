@@ -4,7 +4,7 @@ How to Cite this Project
 Citing the Code
 ---------------
 
-- **[TimeEvolvingMPO]** The TEMPO collaboration, *TimeEvolvingMPO: A Python 3
+- **[OQuPy]** The TEMPO collaboration, *OQuPy: A Python 3
   package to efficiently compute non-Markovianopen quantum systems*,
   `GitHub <https://doi.org/10.5281/zenodo.4428316>`_ (2020).
 

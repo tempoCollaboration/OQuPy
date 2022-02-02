@@ -142,9 +142,9 @@ BibTeX
     year = {2020}
   }
 
-  @misc{TimeEvolvingMPO,
+  @misc{OQuPy,
     author={{The TEMPO collaboration}},
-    title={{TimeEvolvingMPO: A Python 3 package to efficiently compute
+    title={{OQuPy: A Python 3 package to efficiently compute
             non-Markovian open quantum systems.}},
     year=2020,
     publisher={GitHub},

@@ -47,7 +47,7 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
 
 ## Installation
-You can install TimeEvolvingMPO using pip like this:
+You can install OQuPy using pip like this:
 ```
 $ python3 -m pip install oqupy
 ```
