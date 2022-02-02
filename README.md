@@ -26,16 +26,15 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
 ![OQuPy - overview](docs/graphics/overview.svg)
 
-- **[1]** Strathearn et al., *Efficient real-time path integrals for non-Markovian spin-boson models*. [New J. Phys. 19(9), p.093009](http://dx.doi.org/10.1088/1367-2630/aa8744) (2017).
-- **[2]** Strathearn et al., *Efficient non-Markovian quantum dynamics using time-evolving matrix product operators*, [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3)
+- **[1]** Strathearn et al., [New J. Phys. 19(9), p.093009](http://dx.doi.org/10.1088/1367-2630/aa8744) (2017).
+- **[2]** Strathearn et al., [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3)
   (2018).
-- **[3]** Pollock et al., *Non-Markovian quantum processes: Complete framework and efficient characterization*, [Phys. Rev. A 97, 012127](http://dx.doi.org/10.1103/PhysRevA.97.012127) (2018).
-- **[4]** Jørgensen and Pollock, *Exploiting the causal tensor network structure of quantum processes to efficiently simulate non-Markovian path integrals*, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
-- **[5]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control
-  of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
-- **[6]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*, [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
-- **[7]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
-- **[8]** Fux et al., *Thermalization of a spin chain strongly coupled to its environment*, [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
+- **[3]** Pollock et al., [Phys. Rev. A 97, 012127](http://dx.doi.org/10.1103/PhysRevA.97.012127) (2018).
+- **[4]** Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
+- **[5]** Fux et al., [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
+- **[6]** Gribben et al., [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
+- **[7]** Gribben et al., [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
+- **[8]** Fux et al., [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
 
 -------------------------------------------------------------------------------
 
