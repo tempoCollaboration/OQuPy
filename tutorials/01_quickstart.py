@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # 01 - Quickstart
+# # Quickstart
 # A quick introduction on how to use the OQuPy package to compute the dynamics of a quantum system that is possibly strongly coupled to a structured environment. We illustrate this by applying the TEMPO method to the strongly coupled spin boson model.
 
 # **Contents:**

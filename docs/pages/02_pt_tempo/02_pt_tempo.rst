@@ -1,11 +1,10 @@
-02 - Time dependence and PT-TEMPO
-=================================
+Time dependence and PT-TEMPO
+============================
 
-A quick introduction on how to use the OQuPy package to
-compute the dynamics of a time dependent quantum system and how to
-employ the process tensor TEMPO method. We illustrate this by applying
-TEMPO and PT-TEMPO to a quantum dot driven by a time dependent laser
-pulse.
+A quick introduction on how to use the OQuPy package to compute the
+dynamics of a time dependent quantum system and how to employ the
+process tensor TEMPO method. We illustrate this by applying TEMPO and
+PT-TEMPO to a quantum dot driven by a time dependent laser pulse.
 
 **Contents:**
 
@@ -17,8 +16,7 @@ pulse.
    -  B.4: TEMPO computation
    -  B.5: Using PT-TEMPO to explore many different laser pulses
 
-First, let’s import OQuPy and some other packages we are going
-to use
+First, let’s import OQuPy and some other packages we are going to use
 
 .. code:: ipython3
 
@@ -95,19 +93,18 @@ where :math:`\hat{\sigma}_i` are the Pauli operators, and the
 .. math::  J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \frac{\omega^3}{\omega_\mathrm{cutoff}^2} \, \exp\left(-\frac{\omega^2}{\omega_\mathrm{cutoff}^2}\right) \mathrm{.} 
 
 Also, let’s assume the initial density matrix of the quantum dot is the
-ground state $ :raw-latex:`\rho`\_0 =
+ground state
 
-.. raw:: latex
+.. math::  \rho_0 = \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix} 
 
-   \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix}
+and the bath is initially at temperature :math:`T`.
 
-$ and the bath is initially at temperature :math:`T`.
+We express all frequencies, temperatures and times in units of 1/ps and
+ps respectively.
 
-| We express all frequencies, temperatures and times in units of 1/ps
-  and ps respectively.
-| \* :math:`\omega_c = 3.04 \frac{1}{\mathrm{ps}}` \*
-  :math:`\alpha = 0.126` \*
-  :math:`T = 1 K = 0.1309 \frac{1}{\mathrm{ps}\,\mathrm{k}_B}`
+-  :math:`\omega_c = 3.04 \frac{1}{\mathrm{ps}}`
+-  :math:`\alpha = 0.126`
+-  :math:`T = 1 K = 0.1309 \frac{1}{\mathrm{ps}\,\mathrm{k}_B}`
 
 .. code:: ipython3
 
@@ -149,7 +146,7 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1452ab1c50>
+    <matplotlib.legend.Legend at 0x7f9ba02cd358>
 
 
 
@@ -195,8 +192,8 @@ parameters):
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:01
-    Elapsed time: 1.8s
+    100.0%   50 of   50 [########################################] 00:00:02
+    Elapsed time: 2.0s
 
 
 and extract the expectation values
@@ -219,7 +216,7 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f14517d4438>
+    <matplotlib.legend.Legend at 0x7f9af65fef28>
 
 
 
@@ -318,7 +315,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1451716c50>
+    <matplotlib.legend.Legend at 0x7f9af6487ef0>
 
 
 

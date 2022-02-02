@@ -1,5 +1,5 @@
-01 - Quickstart
-===============
+Quickstart
+==========
 
 A quick introduction on how to use the OQuPy package to
 compute the dynamics of a quantum system that is possibly strongly
@@ -73,7 +73,7 @@ the job - just to have an idea where we are going:
     Omega = 1.0
     omega_cutoff = 5.0
     alpha = 0.3
-    
+
     system = oqupy.System(0.5 * Omega * sigma_x)
     correlations = oqupy.PowerLawSD(alpha=alpha,
                                     zeta=1,

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # 02 - Time dependence and PT-TEMPO
+# # Time dependence and PT-TEMPO
 # A quick introduction on how to use the OQuPy package to compute the dynamics of a time dependent quantum system and how to employ the process tensor TEMPO method. We illustrate this by applying TEMPO and PT-TEMPO to a quantum dot driven by a time dependent laser pulse.
 
 # **Contents:**
-#
+# 
 # * Example B - Quantum dot driven by a laser pulse
 #     * B.1: Hamiltonian for driven quantum dot with bosonic environment
 #     * B.2: Laser pulse / time dependent system
@@ -49,8 +49,8 @@ mixed_density_matrix = oqupy.operators.spin_dm("mixed")
 
 # -------------------------------------------------
 # ## Example B - Quantum Dot driven by a laser pulse
-#
-# As a first example let's try to reconstruct one of the lines in figure 3c of [Fux2021] ([Phys. Rev. Lett. 126, 200401 (2021)](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) / [arXiv:2101.03071](https://arxiv.org/abs/2101.03071)). In this example we compute the time evolution of a quantum dot which is driven with a $\pi/2$ laser pulse and is strongly coupled to an ohmic bath (spin-boson model).
+# 
+# As a first example let's try to reconstruct one of the lines in figure 3c of [Fux2021] ([Phys. Rev. Lett. 126, 200401 (2021)](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) / [arXiv:2101.03071](https://arxiv.org/abs/2101.03071)). In this example we compute the time evolution of a quantum dot which is driven with a $\pi/2$ laser pulse and is strongly coupled to an ohmic bath (spin-boson model). 
 
 # ### B.1: Hamiltonian for driven quantum dot with bosonic environment
 # We consider a time dependent system Hamiltonian
@@ -63,9 +63,10 @@ mixed_density_matrix = oqupy.operators.spin_dm("mixed")
 # where $\hat{\sigma}_i$ are the Pauli operators, and the $g_k$ and $\omega_k$ are such that the spectral density $J(\omega)$ is
 # $$ J(\omega) = \sum_k |g_k|^2 \delta(\omega - \omega_k) = 2 \, \alpha \, \frac{\omega^3}{\omega_\mathrm{cutoff}^2} \, \exp\left(-\frac{\omega^2}{\omega_\mathrm{cutoff}^2}\right) \mathrm{.} $$
 # Also, let's assume the initial density matrix of the quantum dot is the ground state
-# $ \rho_0 = \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix} $ and the bath is initially at temperature $T$.
+# $$ \rho_0 = \begin{pmatrix} 0 & 0 \\ 0 & 1 \end{pmatrix} $$ and the bath is initially at temperature $T$.
 
 # We express all frequencies, temperatures and times in units of 1/ps and ps respectively.
+# 
 # * $\omega_c = 3.04 \frac{1}{\mathrm{ps}}$
 # * $\alpha = 0.126$
 # * $T = 1 K = 0.1309 \frac{1}{\mathrm{ps}\,\mathrm{k}_B}$
@@ -73,7 +74,7 @@ mixed_density_matrix = oqupy.operators.spin_dm("mixed")
 # In[4]:
 
 
-omega_cutoff = 3.04
+omega_cutoff = 3.04 
 alpha = 0.126
 temperature = 0.1309
 initial_state=down_density_matrix
@@ -181,11 +182,11 @@ systems = []
 for delta in deltas:
     # NOTE: omitting "delta=delta" in the parameter definition below
     #       would lead to all systems having the same detuning.
-    #       This is a common python pitfall. Check out
+    #       This is a common python pitfall. Check out 
     #       https://docs.python-guide.org/writing/gotchas/#late-binding-closures
     #       for more information on this.
-    def hamiltonian_t(t, delta=delta):
-        return delta/2.0 * sigma_z             + gaussian_shape(t, area = np.pi/2.0, tau = 0.245)/2.0 * sigma_x
+    def hamiltonian_t(t, delta=delta): 
+        return delta/2.0 * sigma_z             + gaussian_shape(t, area = np.pi/2.0, tau = 0.245)/2.0 * sigma_x 
     system = oqupy.TimeDependentSystem(hamiltonian_t)
     systems.append(system)
 
