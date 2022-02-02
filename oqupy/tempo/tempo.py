@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 Module on for the original time evolving matrix product operator (TEMPO)
-algorithm. This code is based on [Strathearn2017] and [Strathearn2018].
+algorithm. This module is based on [Strathearn2017] and [Strathearn2018].
 
 **[Strathearn2017]**
 A. Strathearn, B.W. Lovett, and P. Kirton, *Efficient real-time path integrals

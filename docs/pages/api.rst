@@ -1,33 +1,27 @@
 API Outline
 ===========
 
-The TEMPO Collaboration is continuously developing extensions to the original
-TEMPO algorithm to make this package applicable to a wider set of scenarios
-(the process tensor approach is one such extension). This calls for a flexible
+The TEMPO Collaboration is continuously developing new methods to make this
+package applicable to a wider set of scenarios. This calls for a flexible
 API design to allow to reuse the same objects with different algorithms. We
-therefore choose an almost fully object oriented approach and separate the
-code into three layers:
+therefore choose an almost fully object oriented approach. The functions and
+objects fall into 4 categories:
 
-1. **The physical layer**: Consists of objects that describe physical
-   quantities, like a system (with a specific Hamiltonian) or the spectral
-   density of an environment.
-2. **The algorithms layer**: Gathers the information from the physical
-   layer and feeds it (with particular simulation parameters) into the backend.
-   It has the opportunity to make use of specific, extra information from the
-   physical layer.
-3. **The backend layer**: Is the part of the code where the task has been
-   reduced to a mathematically well defined computation, such as a specific
-   tensor network or an integral. This not only allows to compare the
-   performance of different implementations, it also allows to write hardware
-   specialised implementations (single CPU, cluster, GPU) while keeping the
-   other two layers untouched.
+1. **Physical**: Consists of objects that describe physical quantities, like
+   for example a system Hamiltonian or the spectral density of an environment.
+2. **Methods**: Gathers the information from physical objects and applies
+   numerical method using with particular simulation parameters.
+3. **Results**: Encode the results of a computation. Unlike physical objects,
+   these objects may depend on computation parameters (like for example a
+   specific time step length).
+4. **Utilities**: Supplies some handy utilities such as shortcuts for the
+   Pauli operators.
 
-Also, we try to supply some handy utilities such as shortcuts for the
-Pauli operators for example.
+Physical
+--------
 
-
-The physical layer
-------------------
+Systems
+*******
 
 class :class:`oqupy.system.BaseSystem`
   Abstract class representing a quantum system of interest.
@@ -38,6 +32,23 @@ class :class:`oqupy.system.BaseSystem`
   class :class:`oqupy.system.TimeDependentSystem`
     Encodes a time dependent system Hamiltonian and possibly some additional
     time dependent Markovian decay.
+
+class :class:`oqupy.system.SystemChain`
+  Encodes a 1D chain of systems and possibly some additional Markovian decay.
+
+
+Control
+*******
+
+class :class:`oqupy.control.Control`
+  Encodes control operations on `oqupy.system.BaseSystem` objects.
+
+class :class:`oqupy.control.ChainControl`
+  Encodes control operations on `oqupy.system.SystemChain` objects.
+
+
+Envoronment
+***********
 
 class :class:`oqupy.correlations.BaseCorrelations`
   Abstract class representing the environments auto-correlations.
@@ -56,11 +67,13 @@ class :class:`oqupy.bath.Bath`
   Bundles a :class:`oqupy.correlations.BaseCorrelations` object
   together with a coupling operator.
 
-The algorithms layer
---------------------
+
+Methods
+-------
 
 TEMPO
 *****
+(Time Evolving Matrix Product Operator)
 
 class :class:`oqupy.tempo.TempoParameters`
   Stores a set of parameters for a TEMPO computation.
@@ -69,10 +82,8 @@ class :class:`oqupy.tempo.Tempo`
   Class to facilitate a TEMPO computation.
 
   method :meth:`oqupy.tempo.Tempo.compute`
-    Method that carries out a TEMPO computation.
-
-class :class:`oqupy.dynamics.Dynamics`
-  Object that encodes the time evolution of a system (with discrete time steps).
+    Method that carries out a TEMPO computation and creates an
+    :class:`oqupy.dynamics.Dynamics` object.
 
 function :func:`oqupy.tempo.guess_tempo_parameters`
   Function that chooses an appropriate set of parameters for a particular
@@ -81,40 +92,69 @@ function :func:`oqupy.tempo.guess_tempo_parameters`
 
 PT-TEMPO
 ********
-
-class :class:`oqupy.pt_tempo.PtTempoParameters`
-  Stores a set of parameters for a PT-TEMPO computation.
+(Process Tensor - Time Evolving Matrix Product Operator)
 
 class :class:`oqupy.pt_tempo.PtTempo`
   Class to facilitate a PT-TEMPO computation.
 
   method :meth:`oqupy.pt_tempo.PtTempo.compute`
-    Method that carries out a PT-TEMPO computation.
+    Method that carries out a PT-TEMPO computation and creates an
+    :class:`oqupy.process_tensor.BaseProcessTensor` object.
 
-class :class:`oqupy.process_tensor.ProcessTensor`
+
+Process Tensor Applications
+***************************
+
+function :func:`oqupy.contractions.compute_dynamics`
+  Compute a :class:`oqupy.dynamics.Dynamics` object for given
+  :class:`oqupy.system.BaseSystem` and
+  :class:`oqupy.control.Control` and
+  :class:`oqupy.process_tensor.BaseProcessTensor` objects.
+
+function :func:`oqupy.contractions.compute_correlations`
+  Compute two time correlations for given
+  :class:`oqupy.system.BaseSystem` and
+  :class:`oqupy.process_tensor.BaseProcessTensor` objects.
+
+class :class:`oqupy.bath_dynamics.TwoTimeBathCorrelations`
+  Class to facilitate calculation of two-time bath correlations.
+
+  method :meth:`oqupy.bath_dynamics.TwoTimeBathCorrelations.occupation`
+    Function to calculate the change in bath occupation in a particular
+    bandwidth.
+
+  method :meth:`oqupy.bath_dynamics.TwoTimeBathCorrelations.correlation`
+    Function to calculate two-time correlation function between two
+    frequency bands of a bath.
+
+
+PT-TEBD
+*******
+(Process Tensor - Time Evolving Block Decimation)
+
+class :class:`oqupy.pt_tebd.PtTebdParameters`
+  Stores a set of parameters for a PT-TEBD computation.
+
+class :class:`oqupy.pt_tebd.PtTebd`
+  Class to facilitate a PT-TEBD computation.
+
+  method :meth:`oqupy.pt_tebd.PtTebd.compute`
+    Method that carries out a PT-TEMPO computation and returns an results
+    dictionary.
+
+
+
+Results
+-------
+
+class :class:`oqupy.dynamics.Dynamics`
+  Object that encodes the discretized evolution of the reduced density matrix
+  of a system.
+
+class :class:`oqupy.process_tensor.BaseProcessTensor`
   Object that encodes a so called process tensor (which captures all possible
   Markovian and non-Markovian interactions between some system and an
   environment).
-
-
-The backend layer
------------------
-
-Currently the only backend available is the ``'tensor-network'`` backend,
-makes use of the external python package
-`TensorNetwork <https://github.com/google/TensorNetwork>`_ to carry out the
-heavy lifting of the tensor network computations. This package itself can,
-however, be configured to use different tensor network backends
-(such as "numpy", "tensorflow" and "pytorch"). All the classes belonging to the
-algorithm layer allow you to choose the backend and its configuration
-(with the parameters ``backend`` and ``backend_config``).
-
-The default uses:
-
-.. code-block:: python3
-
-  backend = 'tensor-network'
-  backend_config = {'backend':'numpy'}
 
 
 Utillities

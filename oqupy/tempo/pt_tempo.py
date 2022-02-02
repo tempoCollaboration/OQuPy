@@ -13,8 +13,8 @@
 # limitations under the License.
 """
 Module for the process tensor time evolving matrix product operator algorithm
-(PT-TEMPO).
-This code is based on [Strathearn2018, Pollock2018, Jorgensen2019, Fux2021].
+(PT-TEMPO). This module is based on [Strathearn2018], [Pollock2018],
+[Jorgensen2019], and [Fux2021].
 
 **[Strathearn2018]**
 A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
@@ -34,8 +34,8 @@ integrals*, Phys. Rev. Lett. 123, 240602 (2019)
 **[Fux2021]**
 G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
 J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-optimal control of non-Markovian open quantum systems*, arXiv2101.03071
-(2021).
+optimal control of non-Markovian open quantum systems*, Phys. Rev. Lett. 126,
+200401 (2021).
 """
 
 from typing import Dict, Optional, Text, Union
