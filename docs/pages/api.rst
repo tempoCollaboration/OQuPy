@@ -9,12 +9,12 @@ objects fall into 4 categories:
 
 1. **Physical**: Consists of objects that describe physical quantities, like
    for example a system Hamiltonian or the spectral density of an environment.
-2. **Methods**: Gathers the information from physical objects and applies
-   numerical method using with particular simulation parameters.
+2. **Methods**: Gathers the information from physical objects and applies a
+   numerical method using particular simulation parameters.
 3. **Results**: Encode the results of a computation. Unlike physical objects,
-   these objects may depend on computation parameters (like for example a
+   these objects may depend on computational parameters (like for example a
    specific time step length).
-4. **Utilities**: Supplies some handy utilities such as shortcuts for the
+4. **Utilities**: Supplies some handy utilities such as shorthands for the
    Pauli operators.
 
 Physical
