@@ -47,7 +47,7 @@ class :class:`oqupy.control.ChainControl`
   Encodes control operations on `oqupy.system.SystemChain` objects.
 
 
-Envoronment
+Environment
 ***********
 
 class :class:`oqupy.correlations.BaseCorrelations`

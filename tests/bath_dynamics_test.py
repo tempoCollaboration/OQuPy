@@ -113,6 +113,6 @@ def test():
         assert np.allclose(int_corrs,exact_corrs * int_phase)
     corr2 = TwoTimeBathCorrelations(system, bath, pt,
                                     initial_state=initial_state)
-    corr2.gen_sys_correlations(1)
+    corr2.generate_system_correlations(1)
     assert np.allclose(corr2._system_correlations[0,:],
                        np.ones(int(len(tlist)/2)))

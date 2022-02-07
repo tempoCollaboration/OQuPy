@@ -16,6 +16,14 @@ oqupy.bath
     :members:
 
 
+oqupy.bath_dynamics
+-------------------
+
+.. automodule:: oqupy.bath_dynamics
+    :show-inheritance:
+    :members:
+
+
 oqupy.contractions
 ------------------
 
@@ -82,8 +90,21 @@ oqupy.process_tensor
 --------------------
 
 .. automodule:: oqupy.process_tensor
-    :show-inheritance:
-    :members:
+
+    .. autoclass:: oqupy.process_tensor.BaseProcessTensor
+        :show-inheritance:
+        :members:
+
+    .. autoclass:: oqupy.process_tensor.FileProcessTensor
+        :show-inheritance:
+
+    .. autoclass:: oqupy.process_tensor.SimpleProcessTensor
+        :show-inheritance:
+
+    .. autoclass:: oqupy.process_tensor.TrivialProcessTensor
+        :show-inheritance:
+
+    .. autofunction:: oqupy.process_tensor.import_process_tensor
 
 
 oqupy.pt_tebd

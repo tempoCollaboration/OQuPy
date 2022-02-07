@@ -1,7 +1,7 @@
 Environment Dynamics
 ====================
 
-An example on how to compute the dynamics of an gaussian bosonic
+An example on how to compute the dynamics of a gaussian bosonic
 environment using the OquPy package.
 
 First let’s import the necessary packages

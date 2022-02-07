@@ -35,6 +35,7 @@ from oqupy.contractions import compute_correlations
 class TwoTimeBathCorrelations(BaseAPIClass):
     """
     Class to facilitate calculation of two-time bath correlations.
+
     Parameters
     ----------
     system: BaseSystem
@@ -43,16 +44,16 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         The bath object containing all coupling information and temperature.
     process_tensor: ProcessTensor
         The corresponding process tensor calculated for the given bath.
-    initial_state: Optional[ndarray] (default = None)
+    initial_state: ndarray
         Initial state of the system.
-    system_correlations: Optional[ndarray] (default = np.array([[]]))
-        Previously calculated system correlations. To be compatible must
+    system_correlations: ndarray
+        Optional previously calculated system correlations. This must
         be an upper triangular array with all ordered correlations up to a
         certain time.
-    name: str (default = None)
-        An optional name for the bath.
-    description: str (default = None)
-        An optional description of the bath.
+    name: str
+        An optional name for the bath dynamics object.
+    description: str
+        An optional description of the bath dynamics object.
     """
     def __init__(
             self,
@@ -60,14 +61,13 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             bath: Bath,
             process_tensor: BaseProcessTensor,
             initial_state: Optional[ndarray] = None,
-            system_correlations: Optional[ndarray] = np.array([[]],
-                                                              dtype=NpDtype),
+            system_correlations: Optional[ndarray] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None
             ) -> None:
+        """Create a TwoTimeBathCorrelations object."""
         self._system = system
         self._bath = bath
-
 
         initial_tensor = process_tensor.get_initial_tensor()
         assert (initial_state is None) ^ (initial_tensor is None), \
@@ -76,48 +76,43 @@ class TwoTimeBathCorrelations(BaseAPIClass):
 
         self._process_tensor = process_tensor
         self._initial_state = initial_state
-        self._system_correlations = system_correlations
+
+        if system_correlations is None:
+            self._system_correlations = np.array([[]], dtype=NpDtype)
+        else:
+            self._system_correlations = system_correlations
         self._temp = bath.correlations.temperature
         self._bath_correlations = {}
         super().__init__(name, description)
 
     @property
     def system(self) -> BaseSystem:
-        """
-        System Hamiltonian
-        """
+        """The system. """
         return self._system
 
     @property
     def bath(self) -> Bath:
-        """
-        Bath properties
-        """
+        """The bath. """
         return self._bath
 
     @property
     def initial_state(self) -> ndarray:
-        """
-        Initial system state
-        """
+        """The initial system state. """
         return self._initial_state
 
-    def gen_sys_correlations(
+    def generate_system_correlations(
             self,
             final_time: float
             ) -> None:
         r"""
         Function to generate all ordered system correlations up to a given time
         using the process tensor.
+
         Parameters
         ----------
         final_time: float
             The latest time appearing in the generated system correlation
             functions.
-
-        Returns
-        -------
-        None.
         """
         dt = self._process_tensor.dt
         corr_mat_dim = int(np.round(final_time/dt))
@@ -159,18 +154,21 @@ class TwoTimeBathCorrelations(BaseAPIClass):
 
         Parameters
         ----------
-        freq : float
-            Frequency about which to calculate the change in occupation.
-        dw : float (default = 1.0)
-            Bandwidth of about the frequency to calculate the energy within. By
-            default what is returned by this method is a *density*.
-        change_only : bool (default = False)
-            Option to include the initial occupation in the result.
+        freq: float
+            Central frequency of the frequency band.
+        dw: float
+            Width of the the frequency band. By default this method returns a
+            a *density* by setting the frequency band `dw=1.0`.
+        change_only: bool
+            Option to include the initial occupation (density) in the result.
+
         Returns
         -------
-        times : List[float]
-
-        bath_energy: float
+        times: ndarray
+            Times of the occupation dynamics.
+        bath_occupation: ndarray
+            Occupation (density) (difference) of the bath in the specified
+            frequency band.
         """
         corr_mat_dim = len(self._process_tensor)
         dt = self._process_tensor.dt
@@ -179,7 +177,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         if freq == 0:
             return tlist, np.ones(len(tlist),
                                   dtype=NpDtype) * (np.nan + 1.0j*np.nan)
-        self.gen_sys_correlations(last_time)
+        self.generate_system_correlations(last_time)
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
         _sys_correlations = np.nan_to_num(_sys_correlations)
@@ -187,15 +185,15 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         re_kernel, im_kernel = self._calc_kernel(freq, last_time,
                                                 freq, last_time, (1, 0))
         coup = self._bath.correlations.spectral_density(freq) * dw
-        bath_energy = np.cumsum(
+        bath_occupation = np.cumsum(
             np.sum(_sys_correlations.real*re_kernel \
                           + 1j*_sys_correlations.imag*im_kernel, axis = 0)
                 ).real * coup
-        bath_energy = np.append([0], bath_energy)
+        bath_occupation = np.append([0], bath_occupation)
         if not change_only and self._temp > 0:
-            bath_energy += np.exp(-freq/self._temp) \
+            bath_occupation += np.exp(-freq/self._temp) \
                 / (1 - np.exp(-freq/self._temp))
-        return tlist, bath_energy
+        return tlist, bath_occupation
 
     def correlation(self,
                     freq_1: float,
@@ -206,61 +204,61 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                     dagg: Optional[tuple] = (1, 0),
                     interaction_picture: Optional[bool] = False,
                     change_only: Optional[bool] = False
-                    ) -> NpDtype:
+                    ) -> complex:
         r"""
         Function to calculate two-time correlation function between two
         frequency bands of a bath.
-
-        Parameters
-        ----------
-        freq_1 : float
-            Frequency of the earlier time operator.
-        time_1 : float
-            Time the earlier operator acts.
-        freq_2 : float (default = None)
-            Frequency of the later time operator. If set to None will default
-            to freq_2=freq_1.
-        time_2 : float (default = None)
-            Time the later operator acts. If set to None will default to
-            time_2=time_1.
-        dw : tuple (default = (1.0,1.0))
-            Bandwidth of about each frequency comparing correlations between.
-            By default what is returned by this method is a correlation
-            *density*.
-        dagg : tuple (default = (1,0))
-            Determines whether each operator is daggered or not e.g. (1,0)
-            would correspond to < a^\dagger a >.
-        interaction_picture : bool (default = False)
-            Option whether to generate the result within the bath interaction
-            picture.
-        change_only : bool (default = False)
-            Option to include the initial occupation in the result.
-        Returns
-        -------
-        times : tuple
-            Pair of times of each operation.
-        correlation : complex
-            Bath correlation function
-            <a^{dagg[0]}_{freq_2} (time_2) a^{dagg[1]}_{freq_1} (time_1)>
 
         The calculation consists of a double integral of the form:
 
         .. math::
 
-            \int_0^t \int_0^t' \Re[\langle O(t')O(t'') \rangle] K_R(t',t'')
-                               + i \Im[\langle O(t')O(t'') \rangle] K_I(t',t'')
-                                       dt'' dt'
+            \int_0^t \int_0^{t'} \left\{
+                \mathrm{Re} \langle O(t')O(t'') \rangle \, K_R(t',t'')
+                + i \,\mathrm{Im} \langle O(t')O(t'') \rangle \, K_I(t',t'')
+                \right\} dt'' dt'
 
         where :math:`O` is the system operator coupled to the bath and
         :math:`K_R` and :math:`K_I` are generally piecewise kernels which
         depend on the exact bath correlation function desired.
+
+        Parameters
+        ----------
+        freq_1: float
+            Frequency of the earlier time operator.
+        time_1: float
+            Time the earlier operator acts.
+        freq_2: float
+            Frequency of the later time operator. If set to None will default
+            to freq_2=freq_1.
+        time_2: float
+            Time the later operator acts. If set to None will default to
+            time_2=time_1.
+        dw: tuple
+            Width of the the frequency bands. By default this method returns a
+            correlation *density* by setting the frequency bands to
+            `dw=(1.0, 1.0)`.
+        dagg: tuple
+            Determines whether each operator is daggered or not e.g. (1,0)
+            would correspond to :math:`< a^\dagger a >`.
+        interaction_picture: bool
+            Option whether to generate the result within the bath interaction
+            picture.
+        change_only: bool
+            Option to include the initial occupation in the result.
+
+        Returns
+        -------
+        correlation : complex
+            Bath correlation function
+            <a^{dagg[0]}_{freq_2} (time_2) a^{dagg[1]}_{freq_1} (time_1)>
         """
         dt = self._process_tensor.dt
         if time_2 is None:
             time_2 = time_1
         if freq_2 is None:
             freq_2 = freq_1
-        self.gen_sys_correlations(time_2)
+        self.generate_system_correlations(time_2)
         corr_mat_dim = int(np.round(time_2/dt))
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
@@ -307,7 +305,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             Time the later operator acts.
         dagg : tuple
             Determines whether each operator is daggered or not e.g. (1,0)
-            would correspond to < a^\dagger a >
+            would correspond to :math:`< a^\dagger a >`
 
         Returns
         -------
