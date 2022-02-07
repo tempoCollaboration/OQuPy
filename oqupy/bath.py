@@ -40,11 +40,6 @@ class Bath(BaseAPIClass):
         An optional name for the bath.
     description: str
         An optional description of the bath.
-
-    Raises
-    ------
-    ValueError:
-        If the temperature :math:`T` is smaller then 0.
     """
     def __init__(
             self,
