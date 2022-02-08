@@ -1,3 +1,5 @@
+**_NOTE:_**  With the next version bump to 0.2.0 this package will have the name **OQuPy**.
+
 # TimeEvolvingMPO
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
