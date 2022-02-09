@@ -25,6 +25,11 @@ import oqupy
 
 # -----------------------------------------------------------------------------
 
+sx = oqupy.operators.sigma("x")
+sy = oqupy.operators.sigma("y")
+sz = oqupy.operators.sigma("z")
+up_dm = oqupy.operators.spin_dm("z+")
+down_dm = oqupy.operators.spin_dm("z-")
 
 # --- Parameters --------------------------------------------------------------
 
@@ -53,12 +58,11 @@ correlations = oqupy.PowerLawSD(alpha=alpha,
                                 zeta=1,
                                 cutoff=omega_cutoff,
                                 cutoff_type='exponential',
-                                add_correlation_time=10.0,
                                 temperature=temperature)
 bath = oqupy.Bath(0.5 * sy, correlations)
-pt_tempo_parameters = oqupy.PtTempoParameters(dt=dt,
-                                              dkmax=pt_dkmax,
-                                              epsrel=pt_epsrel)
+pt_tempo_parameters = oqupy.TempoParameters(dt=dt,
+                                            dkmax=pt_dkmax,
+                                            epsrel=pt_epsrel)
 
 print("Process tensor (PT) computation:")
 pt = oqupy.pt_tempo_compute(bath=bath,
