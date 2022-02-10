@@ -15,7 +15,7 @@
 Module on the discrete time evolution of a density matrix.
 """
 
-from typing import List, Optional, Text, Tuple
+from typing import Dict, List, Optional, Text, Tuple
 from copy import copy
 
 import numpy as np
@@ -107,7 +107,8 @@ class Dynamics(BaseAPIClass):
     def add(
             self,
             time: float,
-            state: ndarray) -> None:
+            state: ndarray,
+            field: Optional[complex] = None) -> None:
         """
         Append a state at a specific time to the time evolution.
 
@@ -212,3 +213,103 @@ class Dynamics(BaseAPIClass):
         else:
             expectations = np.array(expectations_list)
         return times, expectations
+
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# -- partly copied code -------------------------------------------------------
+
+class DynamicsWithField(Dynamics, BaseAPIClass):
+    """
+    Represents a specific time evolution of a density matrix together with a
+    coherent field.
+
+    Parameters
+    ----------
+    times: List[float] (default = None)
+        A list of points in time.
+    states: List[ndarray] (default = None)
+        A list of states at the times `times`.
+    fields: List[complex] (default = None)
+        A list of fields at the times `times`.
+    name: str
+        An optional name for the dynamics.
+    description: str
+        An optional description of the dynamics (unused).
+    """
+    def __init__(
+            self,
+            times: Optional[List[float]] = None,
+            states: Optional[List[ndarray]] = None,
+            fields: Optional[List[complex]] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        if times is None:
+            times = []
+        if states is None:
+            states = []
+        if fields is None:
+            fields = []
+        assert isinstance(times, list), \
+            "Argument `times` must be a list."
+        assert isinstance(states, list), \
+            "Argument `states` must be a list."
+        assert isinstance(fields, list), \
+            "Argument `fields` must be a list."
+        assert len(times) == len(states), \
+            "Lists `times` and `states` must have the same length."
+        assert len(times) == len(fields), \
+            "Lists `times` and `fields` must have the same length."
+        self._times = []
+        self._states = []
+        self._fields = []
+        self._expectation_operators = []
+        self._expectation_lists = []
+        self._shape = None
+        for time, state, field in zip(times, states, fields):
+            self.add(time, state, field)
+        BaseAPIClass.__init__(self, name, description)
+
+    @property
+    def fields(self) -> ndarray:
+        """Fields of the dynamics. """
+        return np.array(self._fields, dtype=NpDtype)
+
+    def field_expectations(self):
+        r"""
+        Return the time evolution of the coherent field.
+
+        Returns
+        -------
+        times: ndarray
+            The points in time :math:`t`.
+        field_expectations: ndarray
+            Values :math:`\langle a(t) \rangle`.
+        """
+        if len(self) == 0:
+            return None, None
+        return np.array(copy(self._times), dtype=NpDtypeReal), np.array(copy(self._fields),
+                dtype=NpDtype)
+
+    def add(
+            self,
+            time: float,
+            state: ndarray,
+            field: Optional[complex] = None) -> None:
+        """
+        Append a state and field at a specific time to the time evolution.
+
+        Parameters
+        ----------
+        time: float
+            The point in time.
+        state: ndarray
+            The state at the time `time`.
+        field: complex
+            The field at the time `time`.
+        """
+        try:
+            __field = complex(field)
+        except Exception as e:
+            raise AssertionError("Argument `field` must be complex.") from e
+        super().add(time, state)
+        self._fields.append(__field)

@@ -57,6 +57,7 @@ from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
 from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
+from oqupy.contractions import compute_dynamics_with_field
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
@@ -66,6 +67,7 @@ from oqupy.correlations import CustomSD
 from oqupy.correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
+from oqupy.dynamics import DynamicsWithField
 
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
@@ -85,13 +87,15 @@ from oqupy.pt_tebd import PtTebd
 from oqupy.pt_tebd import PtTebdParameters
 
 from oqupy.system import System
-from oqupy.system import TimeDependentSystem
 from oqupy.system import SystemChain
+from oqupy.system import TimeDependentSystem
+from oqupy.system import TimeDependentSystemWithField
 
 from oqupy.tempo.pt_tempo import PtTempo
 from oqupy.tempo.pt_tempo import pt_tempo_compute
 
 from oqupy.tempo.tempo import Tempo
 from oqupy.tempo.tempo import TempoParameters
+from oqupy.tempo.tempo import TempoWithField
 from oqupy.tempo.tempo import guess_tempo_parameters
 from oqupy.tempo.tempo import tempo_compute

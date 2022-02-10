@@ -180,3 +180,45 @@ def test_tempo_dynamics_reference():
     t_2, sz_2 = dynamics_2.expectations(tempo.operators.sigma("z"))
     assert dynamics_1 == dynamics_2
     assert len(t_2) > len(t_1)
+
+def test_tempo_with_field():
+	system = tempo.TimeDependentSystemWithField(
+				lambda t, field: 0.2 * tempo.operators.sigma("x") * np.abs(field),
+				lambda t, state, field: -0.1*field -0.1j * np.matmul(
+				tempo.operators.sigma("x"), state).trace().real)
+	correlations = tempo.PowerLawSD(alpha=0.1,
+								zeta=1,
+								cutoff=5.0,
+								cutoff_type='gaussian',
+								temperature=0.1)
+	bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
+	tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-7))
+	tempo_sys = tempo.TempoWithField(system=system,
+						bath=bath,
+						initial_state=tempo.operators.spin_dm("z-"),
+						initial_field=1.0+1.0j,
+						start_time=0.0,
+						parameters=tempo_parameters)
+	dynamics = tempo_sys.compute(end_time=0.5, progress_type="silent")
+	assert tempo_sys.dimension == 2
+	assert isinstance(dynamics, tempo.dynamics.DynamicsWithField)
+	assert len(dynamics.times == 6)
+	# bad input
+	with pytest.raises(AssertionError):
+		# wrong system type
+		wrong_system = tempo.TimeDependentSystem(
+			lambda t: 0.2 * tempo.operators.sigma("x")
+			)
+		tempo.TempoWithField(system=wrong_system,
+						bath=bath,
+						initial_state=tempo.operators.spin_dm("z-"),
+						initial_field=1.0+1.0j,
+						start_time=0.0,
+						parameters=tempo_parameters)
+	with pytest.raises(TypeError):
+		# no initial field
+		tempo.TempoWithField(system=system,
+						bath=bath,
+						initial_state=tempo.operators.spin_dm("z-"),
+						start_time=0.0,
+						parameters=tempo_parameters)

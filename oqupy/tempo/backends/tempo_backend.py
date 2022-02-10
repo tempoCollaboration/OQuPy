@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for tempo backend.
+Module for tempo and mean-field tempo backend.
 """
 
-from typing import Callable, Dict, Tuple
+from typing import Callable, Dict, Optional, Tuple
 from copy import copy
 
 from numpy import ndarray, moveaxis, dot
 
+from oqupy import operators
+from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.tempo.backends import node_array as na
 from oqupy.util import create_delta
-from oqupy import operators
 
-
-class TempoBackend:
+class BaseTempoBackend:
     """
     Backend class for TEMPO.
 
@@ -38,13 +38,10 @@ class TempoBackend:
         operator of that `step`.
     unitary_transform: ndarray
         Unitary that transforms the coupling operator into a diagonal form.
-    propagators: callable(int) -> ndarray, ndarray
-        Callable that takes an integer `step` and returns the first and second
-        half of the system propagator of that `step`.
     sum_north: ndarray
-        The summing vector for the north leggs.
+        The summing vector for the north legs.
     sum_west: ndarray
-        The summing vector for the west leggs.
+        The summing vector for the west legs.
     dkmax: int
         Number of influences to include. If ``dkmax == None`` then all
         influences are included.
@@ -56,24 +53,22 @@ class TempoBackend:
             initial_state: ndarray,
             influence: Callable[[int], ndarray],
             unitary_transform: ndarray,
-            propagators: Callable[[int], Tuple[ndarray, ndarray]],
             sum_north: ndarray,
             sum_west: ndarray,
             dkmax: int,
             epsrel: float,
-            config: Dict):
+            config: Optional[Dict] = None):
         """Create a TempoBackend object. """
         self._initial_state = initial_state
         self._influence = influence
         self._unitary_transform = unitary_transform
-        self._propagators = propagators
         self._sum_north = sum_north
         self._sum_west = sum_west
         self._dkmax = dkmax
         self._epsrel = epsrel
         self._step = None
         self._state = None
-        self._config = config
+        self._config = TEMPO_BACKEND_CONFIG if config is None else config
         self._mps = None
         self._mpo = None
         self._super_u = None
@@ -85,18 +80,8 @@ class TempoBackend:
         """The current step in the TEMPO computation. """
         return self._step
 
-    def initialize(self) -> Tuple[int, ndarray]:
-        """
-        Initializes the TEMPO tensor network.
-
-        Returns
-        -------
-        step: int = 0
-            The current step count, which after initialization, is 0 .
-        state: ndarray
-            Density matrix (as a vector) at the current step, which after
-            initialization, is just the initial state.
-        """
+    def _initialize_mps_mpo(self) :
+        """ToDo"""
         self._initial_state = copy(self._initial_state).reshape(-1)
 
         self._super_u = operators.left_right_super(
@@ -110,7 +95,6 @@ class TempoBackend:
                                           left=False,
                                           right=False,
                                           name="Sum north")
-
         influences = []
         if self._dkmax is None:
             dkmax_pre_compute = 1
@@ -137,12 +121,8 @@ class TempoBackend:
                                  right=True,
                                  name="Thee Time Evolving MPO")
 
-        self._step = 0
-        self._state = self._initial_state
 
-        return self._step, copy(self._state)
-
-    def compute_step(self) -> Tuple[int, ndarray]:
+    def _compute_system_step(self, current_step, prop_1, prop_2) -> ndarray:
         """
         Takes a step in the TEMPO tensor network computation.
 
@@ -181,8 +161,6 @@ class TempoBackend:
             Density matrix at the current step.
 
         """
-        self._step += 1
-        prop_1, prop_2 = self._propagators(self._step-1)
         prop_1_na = na.NodeArray([prop_1.T],
                                  left=False,
                                  right=False,
@@ -201,17 +179,15 @@ class TempoBackend:
                                    right=True)
             self._mpo = na.join(infl_na,
                                 self._mpo,
-                                name="Thee Time Evolving MPO",
+                                name="The Time Evolving MPO",
                                 copy=False)
-        elif self._step <= self._dkmax:
+        elif current_step <= self._dkmax:
             _, mpo = na.split(self._mpo,
-                              int(0 - self._step),
+                              int(0 - current_step),
                               copy=True)
-        elif self._step == self._dkmax:
+        else: # current_step > self._dkmax
             mpo = self._mpo.copy()
-        else: # self._step >= self._dkmax
-            mpo = self._mpo.copy()
-            infl = self._influence(self._dkmax-self._step)
+            infl = self._influence(self._dkmax-current_step)
             if infl is not None:
                 infl_four_legs = create_delta(infl, [1, 0, 0, 1])
                 infl_na = na.NodeArray([infl_four_legs],
@@ -265,7 +241,7 @@ class TempoBackend:
         self._mps = na.join(self._mps,
                             prop_2_na,
                             copy=False,
-                            name=f"Thee MPS ({self._step})")
+                            name=f"The MPS ({current_step})")
 
         tmp_mps = self._mps.copy()
         for _ in range(len(tmp_mps)-1):
@@ -280,6 +256,144 @@ class TempoBackend:
         assert not tmp_mps.left
         assert not tmp_mps.right
         assert tmp_mps.rank == 1
-        self._state = tmp_mps.nodes[0].get_tensor()
+        state = tmp_mps.nodes[0].get_tensor()
 
-        return copy(self._step), copy(self._state)
+        return state
+
+class TempoBackend(BaseTempoBackend):
+    """
+    ToDo
+    """
+    def __init__(
+            self,
+            initial_state: ndarray,
+            influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
+            propagators: Callable[[int], Tuple[ndarray, ndarray]],
+            sum_north: ndarray,
+            sum_west: ndarray,
+            dkmax: int,
+            epsrel: float,
+            config: Optional[Dict] = None):
+        """Create a TempoBackend object. """
+        super().__init__(
+            initial_state,
+            influence,
+            unitary_transform,
+            sum_north,
+            sum_west,
+            dkmax,
+            epsrel,
+            config)
+        self._propagators = propagators
+
+    def initialize(self)-> Tuple[int, ndarray]:
+        """
+        ToDo
+        """
+        self._step = 0
+        self._initialize_mps_mpo()
+        self._state = self._initial_state
+        return self._step, copy(self._state)
+
+    def compute_step(self) -> Tuple[int, ndarray]:
+        """
+        ToDo
+        """
+        self._step += 1
+        prop_1, prop_2 = self._propagators(self._step-1)
+        self._state = self._compute_system_step(self._step, prop_1, prop_2)
+        return self._step, copy(self._state)
+
+
+class TempoWithFieldBackend(BaseTempoBackend):
+    """
+    backend for tensor network tempo with coherent field evolution.
+    Note the only difference from TensorNetworkTempoBackend in the
+    signature is the addition of the initial_field and compute_field
+    parameters, and the change of the propagator signature.
+
+    Parameters
+    ----------
+    initial_state: ndarray
+        The initial density matrix (as a vector).
+    initial_field: complex
+        The initial field value.
+    influence: callable(int) -> ndarray
+        Callable that takes an integer `step` and returns the influence super
+        operator of that `step`.
+    unitary_transform: ndarray
+        Unitary that transforms the coupling operator into a diagonal form.
+    propagators: callable(int, ndarray, complex) -> ndarray, ndarray
+        Callable that takes an integer `step`, an ndarray `state` and a complex
+        `field` and returns the first and second half of the system propagator
+        of that `step`.
+    compute_field: callable(int, ndarray, complex,  ndarray) -> complex
+        Callable that takes an integer `step`, a complex `field` (the current
+        value of the field) and two ndarrays for (respectively) the current and
+        next density matrix as vectors, and returns the next field value.
+    sum_north: ndarray
+        The summing vector for the north legs.
+    sum_west: ndarray
+        The summing vector for the west legs.
+    dkmax: int
+        Number of influences to include. If ``dkmax == -1`` then all influences
+        are included.
+    epsrel: float
+        Maximal relative SVD truncation error.
+    """
+    def __init__(
+            self,
+            initial_state: ndarray,
+            initial_field: ndarray,
+            influence: Callable[[int], ndarray],
+            unitary_transform: ndarray,
+            propagators: Callable[[int, ndarray, complex], Tuple[ndarray, ndarray]],
+            compute_field: Callable[[float, ndarray, complex], complex],
+            sum_north: ndarray,
+            sum_west: ndarray,
+            dkmax: int,
+            epsrel: float,
+            config: Dict):
+        # Field specific variables
+        self._initial_field = initial_field
+        self._compute_field = compute_field
+        self._field = initial_field
+        self._propagators = propagators
+        """Create a TempoWithFieldBackend object. """
+        super().__init__(initial_state,
+                         influence,
+                         unitary_transform,
+                         sum_north,
+                         sum_west,
+                         dkmax,
+                         epsrel,
+                         config)
+
+    def initialize(self) -> Tuple[int, ndarray, complex]:
+        """See BaseBackend.initialize() for main docstring."""
+        self._step = 0
+        self._initialize_mps_mpo()
+        self._state = self._initial_state
+        self._field = self._initial_field
+        return self._step, copy(self._state), self._field
+
+    def compute_step(self) -> Tuple[int, ndarray, complex]:
+        """
+        ToDo
+        """
+        current_step = self._step
+        next_step = current_step + 1
+        current_state = copy(self._state)
+        current_field = self._field
+        prop_1, prop_2 = self._propagators(current_step, current_state,
+                current_field)
+        next_state = self._compute_system_step(next_step, prop_1, prop_2)
+        next_field = self._compute_field(current_step, current_state,
+                current_field, next_state)
+        self._state = next_state
+        self._field = next_field
+        self._step = next_step
+
+        return self._step, copy(self._state), self._field
+
