@@ -40,6 +40,18 @@ def _check_hamiltonian(hamiltonian):
         "Coupling operator is not a square matrix."
     return tmp_hamiltonian
 
+def _check_field_eom(dim, field_eom):
+    """Input check a field equation of motion"""
+    test_matrix = _create_density_matrix(dim)
+    test_field = 1.0+1.0j
+    test_time = 1.0
+    try:
+        value = field_eom(test_time, test_matrix, test_field)
+        complex(value)
+    except Exception as e:
+        raise AssertionError("Field equation of motion must "\
+                "take a time, (dim,dim) matrix and field value "\
+                "and return a (complex) scalar.") from e
 
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
     """Lindbladian for a specific Hamiltonian, gammas and lindblad_operators.
@@ -50,6 +62,15 @@ def _liouvillian(hamiltonian, gammas, lindblad_operators):
         liouvillian += gamma * (opr.left_right_super(op, op_dagger) \
                                 - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
     return liouvillian
+
+def _create_density_matrix(dim, seed=1):
+    r"""Create a repeatable (dim,dim) matrix that represents
+    a valid density matrix :math:`rho`"""
+    np.random.default_rng(seed)
+    a = np.random.rand(dim, dim) + 1j*np.random.rand(dim,dim)
+    b = np.matmul(a, a.conj().T)
+    rho = b / b.trace()
+    return rho
 
 
 class BaseSystem(BaseAPIClass):
@@ -68,7 +89,12 @@ class BaseSystem(BaseAPIClass):
         """Hilbert space dimension of the system. """
         return self._dimension
 
-    def liouvillian(self, t: Optional[float] = None) -> ndarray:
+    def liouvillian(self,
+            t: Optional[float] = None,
+            tf: Optional[float] = None,
+            state: Optional[ndarray] = None,
+            field: Optional[complex] = None
+            ) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` with
 
@@ -173,7 +199,12 @@ class System(BaseSystem):
         super().__init__(tmp_dimension, name, description)
 
     @lru_cache(4)
-    def liouvillian(self, t: Optional[float] = None) -> ndarray:
+    def liouvillian(self,
+            t: Optional[float] = None,
+            tf: Optional[float] = None,
+            state: Optional[ndarray] = None,
+            field: Optional[complex] = None
+            ) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}` with
 
@@ -301,7 +332,12 @@ class TimeDependentSystem(BaseSystem):
 
         super().__init__(tmp_dimension, name, description)
 
-    def liouvillian(self, t: Optional[float] = None) -> ndarray:
+    def liouvillian(self,
+            t: Optional[float] = None,
+            tf: Optional[float] = None,
+            state: Optional[ndarray] = None,
+            field: Optional[complex] = None
+            ) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` with
 
@@ -629,3 +665,202 @@ class SystemChain(BaseAPIClass):
             nn_full_liouvillians.append(nn_full_liouvillian)
 
         return nn_full_liouvillians
+
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# -- partly copied code -------------------------------------------------------
+
+class TimeDependentSystemWithField(BaseSystem):
+    r"""
+    Represents an explicitly time dependent system (without any coupling to a
+    non-Markovian bath) with a coherent field (a complex scalar) :math:`\langle a \rangle`
+    that evolves according to a specified equation of motion :math:`\partial_t\langle a \rangle`.
+
+    It is possible to include (also explicitly
+    time dependent) Lindblad terms in the master equation.
+    The equations of motion for a system density matrix (without any coupling
+    to a non-Markovian bath) is then:
+
+    .. math::
+
+        \frac{d}{dt}\rho(t) = &-i [\hat{H}(t, \langle a \rangle), \rho(t)] \\
+            &+ \sum_n^N \gamma_n(t) \left(
+                \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
+                - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
+                - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t) \right)
+
+    with the  `hamiltionian` :math:`\hat{H}(t, \langle a \rangle)` depending on both
+    time :math:`t` and `field` :math:`\langle a \rangle` (in general), the  time
+    dependent rates `gammas` :math:`\gamma_n(t)` and the time dependent
+    `linblad_operators` :math:`\hat{A}_n(t)`.
+
+    Parameters
+    ----------
+    hamiltonian: callable
+        System-only Hamiltonian :math:`\hat{H}(t, \langle a \rangle)`
+        where :math:`\langle a \rangle` is the field at time :math:`t`.
+    field_eom: callable
+        Field equation of motion :math:`\partial_t \langle a \rangle(t, \rho,
+        \langle a \rangle)`
+        where :math:`\rho` and :math:`\langle a \rangle` are the system density
+        matrix (a square matrix) and field at time :math:`t`.
+    gammas: list(callable)
+        The rates :math:`\gamma_n(t)`.
+    lindblad_operators: list(callable)
+        The Lindblad operators :math:`\hat{A}_n(t)`.
+    name: str
+        An optional name for the system.
+    description: str
+        An optional description of the system.
+    """
+    def __init__(
+            self,
+            hamiltonian: Callable[[float, complex], ndarray],
+            field_eom: Callable[[float, ndarray, complex], complex],
+            gammas: \
+                Optional[List[Callable[[float], float]]] = None,
+            lindblad_operators: \
+                Optional[List[Callable[[float], ndarray]]] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a System object."""
+        # input check for Hamiltonian
+        try:
+            __hamiltonian = np.vectorize(hamiltonian)
+            _check_hamiltonian(__hamiltonian(1.0, 1.0+1.0j))
+        except Exception as e:
+            raise AssertionError(
+                "Time dependent Hamiltonian must be vectorizable callable.") \
+                    from e
+        self._hamiltonian = __hamiltonian
+        __dimension = self._hamiltonian(1.0, 1.0+1.0j).shape[0]
+        # input check for field equation of motion
+        _check_field_eom(__dimension, field_eom)
+        # instance method with same functionality but takes a flattened array
+        self._field_eom = lambda t, state, field: field_eom(
+                t,
+                state.reshape(self._dimension, self._dimension),
+                field)
+
+        # input check gammas and lindblad_operators - repeated form other classes
+        if gammas is None:
+            gammas = []
+        if lindblad_operators is None:
+            lindblad_operators = []
+        assert isinstance(gammas, list), \
+            "Argument `gammas` must be a list)]."
+        assert isinstance(lindblad_operators, list), \
+            "Argument `lindblad_operators` must be a list."
+        assert len(gammas) == len(lindblad_operators), \
+            "Lists `gammas` and `lindblad_operators` must have the same length."
+        try:
+            __gammas = []
+            for gamma in gammas:
+                float(gamma(1.0))
+                __gamma = np.vectorize(gamma)
+                __gammas.append(__gamma)
+        except Exception as e:
+            raise AssertionError(
+                "All elements of `gammas` must be vectorizable " \
+                 + "callables returning floats.") from e
+        try:
+            __lindblad_operators = []
+            for lindblad_operator in lindblad_operators:
+                __lindblad_operator = np.vectorize(lindblad_operator)
+                np.array(__lindblad_operator(1.0))
+                __lindblad_operators.append(__lindblad_operator)
+        except Exception as e:
+            raise AssertionError(
+                "All elements of `lindblad_operators` must be vectorizable " \
+                + "callables returning numpy arrays.") from e
+        self._gammas = __gammas
+        self._lindblad_operators = __lindblad_operators
+
+        super().__init__(__dimension, name, description)
+
+    def _linearised_hamiltonian(self, t: float, tf: float, state: ndarray,
+            field: complex) -> complex:
+        r"""
+        Return value of the system hamiltonian at time tf using a linearisation
+        of the field from its value at time t.
+        """
+        return self._hamiltonian(tf, self._linearised_field(t, tf, state, field))
+
+    def _linearised_field(self, t: float, tf: float, state: ndarray,
+            field: complex) -> complex:
+        r"""
+        Return the value of the field a time (tf-t) after the value at t using
+        the field equation of motion.
+        """
+        #state_matrix = state.reshape(self._dimension, self._dimension)
+        return field + self._field_eom(t, state, field) * (tf-t)
+
+    def liouvillian(self,
+            t: Optional[float] = None,
+            tf: Optional[float] = None,
+            state: Optional[ndarray] = None,
+            field: Optional[complex] = None
+            ) -> ndarray:
+        r"""
+        Returns the Liouvillian super-operator :math:`\mathcal{L}(t_f)` such that
+
+        .. math::
+
+            \mathcal{L}(t_f)\rho = -i [\hat{H}(t_f, \langle a \rangle), \rho]
+                + \sum_n^N \gamma_n \left(
+                    \hat{A}_n(t_f) \rho \hat{A}_n^\dagger(t_f)
+                    - \frac{1}{2} \hat{A}_n^\dagger(t_f) \hat{A}_n(t_f) \rho
+                    - \frac{1}{2} \rho \hat{A}_n^\dagger(t_f) \hat{A}_n(t_f)
+                  \right),
+
+        with time :math:`t_f`.
+
+        Parameters
+        ----------
+        t: float (default = None)
+            Start time of the current step
+        tf: float (default = None)
+            Current time :math:`t_f`
+        state: ndarray (default = None)
+            Flattened system density matrix (vector) at time :math:`t`
+        field: complex (default =  None)
+            Field value at time :math:`t_f` obtained from the
+            linearisation of the field at :math:`t` using the field
+            equation of motion.
+
+        Returns
+        -------
+        liouvillian : ndarray
+            Liouvillian :math:`\mathcal{L}(t_f)` at time :math:`t_f`.
+
+        Raises
+        ------
+        ValueError
+            If and of `t`, `tf`, `state`, `field` is `None`
+        """
+        if any(parameter is None for parameter in [t, tf, state, field]):
+            raise ValueError("Liouvillian must accept arguments t, tf, state, field")
+        hamiltonian = self._linearised_hamiltonian(t, tf, state, field)
+        gammas = [gamma(t) for gamma in self._gammas]
+        lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
+        return _liouvillian(hamiltonian, gammas, lindblad_operators)
+
+    @property
+    def hamiltonian(self) -> Callable[[float, complex], ndarray]:
+        """The system Hamiltonian. """
+        return copy(self._hamiltonian)
+
+    @property
+    def gammas(self) -> List[Callable[[float], float]]:
+        """List of gammas. """
+        return copy(self._gammas)
+
+    @property
+    def field_eom(self) -> Callable[[float, float, ndarray, complex], complex]:
+        """The field equation of motion. """
+        return copy(self._field_eom)
+
+    @property
+    def lindblad_operators(self) -> List[Callable[[float], ndarray]]:
+        """List of lindblad operators. """
+        return copy(self._lindblad_operators)
