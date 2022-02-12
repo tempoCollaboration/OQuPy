@@ -102,7 +102,6 @@ class BaseDynamics(BaseAPIClass):
         dyn = {"version": "1.0",
                "name": self.name,
                "description": self.description,
-               "description_dict": self.description_dict,
                "times": self.times,
                "states": self.states}
         assert_tempo_dynamics_dict(dyn)
@@ -190,7 +189,7 @@ class Dynamics(BaseDynamics):
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a Dynamics object. """
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
         times, states = _parse_times_states(times, states)
         for time, state in zip(times, states):
             self.add(time, state)
@@ -243,7 +242,7 @@ class DynamicsWithField(BaseDynamics):
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a DynamicsWithField object"""
-        super().__init__(name, description, description_dict)
+        super().__init__(name, description)
         self._fields = []
         times, states = _parse_times_states(times, states)
         times, fields = _parse_times_fields(times, fields)
