@@ -43,6 +43,7 @@ class BaseDynamics(BaseAPIClass):
             self,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
+        super().__init__(name, description)
         self._times = []
         self._states = []
         self._expectation_operators = []
@@ -241,6 +242,7 @@ class DynamicsWithField(BaseDynamics):
             fields: Optional[List[complex]] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
+        """Create a DynamicsWithField object"""
         super().__init__(name, description, description_dict)
         self._fields = []
         times, states = _parse_times_states(times, states)
