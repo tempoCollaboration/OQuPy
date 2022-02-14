@@ -1,110 +1,145 @@
 All Modules
 ===========
 
-tempo.base_api
+oqupy.base_api
 --------------
 
-.. automodule:: time_evolving_mpo.base_api
+.. automodule:: oqupy.base_api
     :members:
 
 
-tempo.bath
+oqupy.bath
 ----------
 
-.. automodule:: time_evolving_mpo.bath
+.. automodule:: oqupy.bath
     :show-inheritance:
     :members:
 
 
-tempo.correlations
+oqupy.bath_dynamics
+-------------------
+
+.. automodule:: oqupy.bath_dynamics
+    :show-inheritance:
+    :members:
+
+
+oqupy.contractions
 ------------------
 
-.. automodule:: time_evolving_mpo.correlations
+.. automodule:: oqupy.contractions
     :show-inheritance:
     :members:
 
 
-tempo.dynamics
---------------
-
-.. automodule:: time_evolving_mpo.dynamics
-    :show-inheritance:
-    :members:
-
-
-tempo.exceptions
-----------------
-
-.. automodule:: time_evolving_mpo.exceptions
-    :show-inheritance:
-    :members:
-
-
-tempo.file_formats
-------------------
-
-.. automodule:: time_evolving_mpo.file_formats
-    :members:
-
-
-tempo.helpers
+oqupy.control
 -------------
 
-.. automodule:: time_evolving_mpo.helpers
+.. automodule:: oqupy.control
+    :show-inheritance:
     :members:
 
 
-tempo.operators
+oqupy.correlations
+------------------
+
+.. automodule:: oqupy.correlations
+    :show-inheritance:
+    :members:
+
+
+oqupy.dynamics
+--------------
+
+.. automodule:: oqupy.dynamics
+    :show-inheritance:
+    :members:
+
+
+oqupy.exceptions
+----------------
+
+.. automodule:: oqupy.exceptions
+    :show-inheritance:
+    :members:
+
+
+oqupy.helpers
+-------------
+
+.. automodule:: oqupy.helpers
+    :members:
+
+
+oqupy.mps_mpo
+-------------
+
+.. automodule:: oqupy.mps_mpo
+    :show-inheritance:
+    :members:
+
+
+oqupy.operators
 ---------------
 
-.. automodule:: time_evolving_mpo.operators
+.. automodule:: oqupy.operators
     :members:
 
 
-tempo.process_tensor
+oqupy.process_tensor
 --------------------
 
-.. automodule:: time_evolving_mpo.process_tensor
-    :show-inheritance:
+.. automodule:: oqupy.process_tensor
+
+    .. autoclass:: oqupy.process_tensor.BaseProcessTensor
+        :show-inheritance:
+        :members:
+
+    .. autoclass:: oqupy.process_tensor.FileProcessTensor
+        :show-inheritance:
+
+    .. autoclass:: oqupy.process_tensor.SimpleProcessTensor
+        :show-inheritance:
+
+    .. autoclass:: oqupy.process_tensor.TrivialProcessTensor
+        :show-inheritance:
+
+    .. autofunction:: oqupy.process_tensor.import_process_tensor
+
+
+oqupy.pt_tebd
+--------------------
+
+.. automodule:: oqupy.pt_tebd
     :members:
 
 
-tempo.pt_tempo
---------------
-
-.. automodule:: time_evolving_mpo.pt_tempo
-    :show-inheritance:
-    :members:
-
-
-tempo.system
+oqupy.system
 ------------
 
-.. automodule:: time_evolving_mpo.system
+.. automodule:: oqupy.system
     :show-inheritance:
     :members:
 
 
-tempo.tempo
------------
+oqupy.tempo.pt_tempo
+--------------------
 
-.. automodule:: time_evolving_mpo.tempo
+.. automodule:: oqupy.tempo.pt_tempo
     :show-inheritance:
     :members:
 
 
-tempo.util
+oqupy.tempo.tempo
+-----------------
+
+.. automodule:: oqupy.tempo.tempo
+    :show-inheritance:
+    :members:
+
+
+oqupy.util
 ----------
 
-.. automodule:: time_evolving_mpo.util
-    :members:
-
-
-tempo.backends
---------------
-
-base_backends
-~~~~~~~~~~~~~
-
-.. automodule:: time_evolving_mpo.backends.base_backends
+.. automodule:: oqupy.util
     :members:

@@ -238,10 +238,10 @@ indent-after-paren=4
 indent-string='    '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=80 # GEFux
 
 # Maximum number of lines in a module
-max-module-lines=1000
+max-module-lines=2000
 
 # List of optional constructs for which whitespace checking is disabled. `dict-
 # separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
@@ -500,7 +500,7 @@ known-third-party=enchant
 max-args=15 # GEFux
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=15 # GEFux
+max-attributes=20 # GEFux
 
 # Maximum number of boolean expressions in a if statement
 max-bool-expr=5

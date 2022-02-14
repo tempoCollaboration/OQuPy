@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'TimeEvolvingMPO'
-copyright = '2021, TEMPO Collaboration'
+project = 'OQuPy'
+copyright = '2022, TEMPO Collaboration'
 author = 'TEMPO Collaboration'
 
 # The full version, including alpha/beta/rc tags
-with open('../time_evolving_mpo/version.py') as f:
+with open('../oqupy/version.py') as f:
   exec(f.read(), globals())
 release = __version__
 
@@ -70,5 +70,13 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_favicon = 'graphics/icon.ico'
+html_logo = 'graphics/logo-transparent.svg'
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+    'color': True,
+    'style_nav_header_background': '#59a6ed'
+}
 
 master_doc = 'index'

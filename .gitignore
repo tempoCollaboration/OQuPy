@@ -5,6 +5,7 @@
 # local development
 local_dev/
 *local_dev*
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

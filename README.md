@@ -1,4 +1,7 @@
-# TimeEvolvingMPO
+**_NOTE:_**  The former package **TimeEvolvingMPO** is now integrated into **OQuPy**.
+
+# OQuPy: Open Quantum Systems in Python
+
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
@@ -10,17 +13,32 @@
 
 [![Unitary Fund](https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge)](http://unitary.fund)
 
-This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to structured environments. It allows to conveniently apply the so called time evolving matrix product operator method (TEMPO) [1], as well as the process tensor TEMPO method (PT-TEMPO) [2]. An extension to the methods described in [3] and [4] are work in progress and supported by the [unitary fund](http://unitary.fund).
+This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to structured environments. It allows to conveniently apply several numerical methods related to the time evolving matrix product operator (TEMPO) [1-2] and the process tensor (PT) approach to open quantum
+systems [3-5]. This includes methods to compute ...
 
-- **[1]** Strathearn et al.,  *Efficient non-Markovian quantum dynamics using
-  time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
-- **[2]** Fux et al., *Efficient exploration of Hamiltonian parameter space for
-  optimal control of non-Markovian open quantum systems*,
-  Phys. Rev. Lett. 126, 200401(2021).
-- **[3]** Gribben et al., *Using the Environment to Understand non-Markovian
-  Open Quantum Systems*, arXiv:2106.04212 (2021).
-- **[4]** Gribben et al., *Exact dynamics of non-additive environments in
-  non-Markovian open quantum systems*, arXiv:2109.08442 (2021).
+- the dynamics of a quantum system strongly coupled to a bosonic environment [1-2].
+- the process tensor of a quantum system strongly coupled to a bosonic environment [3-4].
+- optimal control procedures for non-Markovian open quantum systems [5].
+- the dynamics of a strongly coupled bosonic environment [6].
+- the dynamics of a quantum system coupled to multiple non-Markovian environments [7].
+- the dynamics of a chain of non-Markovian open quantum systems [8].
+
+
+Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
+
+![OQuPy - overview](docs/graphics/overview.svg)
+
+- **[1]** Strathearn et al., [New J. Phys. 19(9), p.093009](http://dx.doi.org/10.1088/1367-2630/aa8744) (2017).
+- **[2]** Strathearn et al., [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3)
+  (2018).
+- **[3]** Pollock et al., [Phys. Rev. A 97, 012127](http://dx.doi.org/10.1103/PhysRevA.97.012127) (2018).
+- **[4]** Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
+- **[5]** Fux et al., [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
+- **[6]** Gribben et al., [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
+- **[7]** Gribben et al., [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
+- **[8]** Fux et al., [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
+
+-------------------------------------------------------------------------------
 
 ## Links
 
@@ -31,9 +49,9 @@ This open source project aims to facilitate versatile numerical tools to efficie
 
 
 ## Installation
-You can install TimeEvolvingMPO using pip like this:
+You can install OQuPy using pip like this:
 ```
-$ python3 -m pip install time_evolving_mpo
+$ python3 -m pip install oqupy
 ```
 
 See the
@@ -44,9 +62,7 @@ for more information.
 ## Quickstart Tutorial
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
 
-Click the `launch binder` button above to start a tutorial in a browser based
-jupyter notebook (no installation required) or checkout the
-[tutorial in the documentation](https://timeevolvingmpo.readthedocs.io/en/latest/pages/tutorial_01_quickstart/tutorial_01_quickstart.html).
+Click the `launch binder` button above to start a tutorial in a browser based jupyter notebook (no installation required) or checkout the [tutorial in the documentation](https://timeevolvingmpo.readthedocs.io/en/latest/pages/tutorial_01_quickstart/tutorial_01_quickstart.html).
 
 
 ## Contributing
@@ -59,12 +75,8 @@ Contributions of all kinds are welcome! Get in touch if you ...
  <li> ... have some other thoughts or suggestions.</li>
 </ul>
 
-Please, feel free to file an issue in the [Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section
-on GitHub for this. Also, have a look at [`CONTRIBUTING.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CONTRIBUTING.md) if you want to get involved in the development.
+Please, feel free to file an issue in the [Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section on GitHub for this. Also, have a look at [`CONTRIBUTING.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CONTRIBUTING.md) if you want to get involved in the development.
 
 ## Citing, Authors and Bibliography
-See the files
-[`HOW_TO_CITE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/HOW_TO_CITE.md),
-[`AUTHORS.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/AUTHORS.md)
-and
-[`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/BIBLIOGRAPHY.md).
+See the files [`HOW_TO_CITE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/HOW_TO_CITE.md), [`AUTHORS.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/AUTHORS.md) and [`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/BIBLIOGRAPHY.md).
+
