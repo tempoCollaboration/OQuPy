@@ -17,20 +17,6 @@ pulse.
    -  B.4: TEMPO computation
    -  B.5: Using PT-TEMPO to explore many different laser pulses
 
--------------------------------------------------------------------------------
-
-You can follow this tutorial using any of these options:
-
-.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/main?filepath=tutorials%2Ftutorial_02_pt_tempo.ipynb
-
-- launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/main/tutorials/tutorial_02_pt_tempo.ipynb>`,
-- download the :download:`python3 file <https://raw.githubusercontent.com/tempoCollaboration/TimeEvolvingMPO/main/tutorials/tutorial_02_pt_tempo.py>`,
-- read through it and code along below.
-
--------------------------------------------------------------------------------
-
 First, let’s import TimeEvolvingMPO and some other packages we are going
 to use
 
