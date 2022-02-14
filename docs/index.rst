@@ -24,7 +24,7 @@ systems [3-5]. This includes methods to compute ...
 
 Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
-.. figure:: graphics/overview.svg
+.. figure:: graphics/overview.png
     :align: center
     :alt: OQuPy - overview
 

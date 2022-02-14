@@ -10,8 +10,8 @@
    inkscape:version="1.1.2 (1:1.1+202202050950+0a00cf5339)"
    sodipodi:docname="logo-2to1.svg"
    inkscape:export-filename="/data/git/TimeEvolvingMPOAdmin/docs/graphics/logo-2to1.png"
-   inkscape:export-xdpi="210.85739"
-   inkscape:export-ydpi="210.85739"
+   inkscape:export-xdpi="192"
+   inkscape:export-ydpi="192"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -30,9 +30,9 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:zoom="1.0973349"
-     inkscape:cx="313.03114"
-     inkscape:cy="63.335268"
+     inkscape:zoom="1"
+     inkscape:cx="354.5"
+     inkscape:cy="107.5"
      inkscape:window-width="1920"
      inkscape:window-height="968"
      inkscape:window-x="0"
@@ -166,7 +166,7 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="shadow"
-     style="display:inline"
+     style="display:none"
      transform="translate(-22.757885,-11.326268)">
     <g
        inkscape:groupmode="layer"
@@ -210,9 +210,9 @@
          style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect10440);display:inline;opacity:1;fill:#02284b;fill-opacity:1"><tspan
            x="310"
            y="186.73408"
-           id="tspan1086"><tspan
+           id="tspan1097"><tspan
              style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-             id="tspan1084">OQuPy</tspan></tspan></text>
+             id="tspan1095">OQuPy</tspan></tspan></text>
     </g>
     <g
        inkscape:groupmode="layer"
@@ -256,9 +256,9 @@
          style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect10469);display:inline;opacity:1;fill:#feffff;fill-opacity:1"><tspan
            x="310"
            y="186.73408"
-           id="tspan1090"><tspan
+           id="tspan1101"><tspan
              style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-             id="tspan1088">OQuPy</tspan></tspan></text>
+             id="tspan1099">OQuPy</tspan></tspan></text>
     </g>
   </g>
   <g
@@ -304,9 +304,9 @@
        style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect322230);fill:#02284b;fill-opacity:1"><tspan
          x="310"
          y="186.73408"
-         id="tspan1094"><tspan
+         id="tspan1105"><tspan
            style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-           id="tspan1092">OQuPy</tspan></tspan></text>
+           id="tspan1103">OQuPy</tspan></tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.238125,0,0,0.238125,20.234824,15.236453)"
@@ -314,6 +314,6 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond';letter-spacing:3px;word-spacing:0px;white-space:pre;shape-inside:url(#rect357123);fill:#02284b;fill-opacity:1"><tspan
          x="110"
          y="237.232"
-         id="tspan1096">Open Quantum Systems in Python</tspan></text>
+         id="tspan1107">Open Quantum Systems in Python</tspan></text>
   </g>
 </svg>

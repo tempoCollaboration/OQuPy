@@ -9,7 +9,7 @@
    id="svg307204"
    inkscape:version="1.1.2 (1:1.1+202202050950+0a00cf5339)"
    sodipodi:docname="overview.svg"
-   inkscape:export-filename="/home/gefux/bitmap.png"
+   inkscape:export-filename="/data/git/TimeEvolvingMPOAdmin/docs/graphics/overview.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -186,7 +186,7 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="shadow"
-     style="display:inline"
+     style="display:none"
      transform="translate(-15.87501,-63.5)"
      sodipodi:insensitive="true">
     <g
@@ -201,9 +201,9 @@
          style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect10440);display:inline;opacity:1;fill:#02284b;fill-opacity:1"><tspan
            x="310"
            y="186.73408"
-           id="tspan88775"><tspan
+           id="tspan8631"><tspan
              style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-             id="tspan88773">OQuPy</tspan></tspan></text>
+             id="tspan8629">OQuPy</tspan></tspan></text>
     </g>
     <g
        inkscape:groupmode="layer"
@@ -217,9 +217,9 @@
          style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect10469);display:inline;opacity:1;fill:#feffff;fill-opacity:1"><tspan
            x="310"
            y="186.73408"
-           id="tspan88779"><tspan
+           id="tspan8635"><tspan
              style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-             id="tspan88777">OQuPy</tspan></tspan></text>
+             id="tspan8633">OQuPy</tspan></tspan></text>
     </g>
   </g>
   <g
@@ -236,9 +236,9 @@
        style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect322230);fill:#02284b;fill-opacity:1"><tspan
          x="310"
          y="186.73408"
-         id="tspan88783"><tspan
+         id="tspan8639"><tspan
            style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-           id="tspan88781">OQuPy</tspan></tspan></text>
+           id="tspan8637">OQuPy</tspan></tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
