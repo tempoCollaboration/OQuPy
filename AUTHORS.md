@@ -31,20 +31,21 @@ Project maintainers:
 Major code contributions &dagger;:
 ==================================
 
-&dagger; ... For a complete list of *all* code contributors see [Contributors](https://github.com/tempoCollaboration/TimeEvolvingMPO/graphs/contributors).
+&dagger; ... For a complete list of *all* direct code contributors see [Contributors](https://github.com/tempoCollaboration/TimeEvolvingMPO/graphs/contributors).
 
 **Version 0.2.0**
 - [Gerald E. Fux](https://github.com/gefux): Chains of open quantum systems [Fux2022].
+- Dainius Kilda: Precursor code for chains of open quantum systems [Fux2022].
 - [Dominic Gribben](https://github.com/djgribben): Bath dynamics extension [Gribben2021a].
 - [Dominic Gribben](https://github.com/djgribben): Multiple environments extension [Gribben2021b].
 
-**Version 0.1.2**
+**Version 0.1.2 (TimeEvolvingMPO)**
 - [Gerald E. Fux](https://github.com/gefux): Improved memory cut-off [Strathearn2017].
 
-**Version 0.1.1**
+**Version 0.1.1 (TimeEvolvingMPO)**
 - No major code contributions in this version.
 
-**Version 0.1.0**
+**Version 0.1.0 (TimeEvolvingMPO)**
 - [Gerald E. Fux](https://github.com/gefux): Implement process tensor TEMPO (API and backend) [Fux2021].
 - [Gerald E. Fux](https://github.com/gefux): Implement core TEMPO functionality (API and backend) [Strathearn2018].
 - [Gerald E. Fux](https://github.com/gefux): Setup Project (CI, API design, project planning, etc.).
