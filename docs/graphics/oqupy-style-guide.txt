@@ -1,3 +1,11 @@
+OQuPy fonts
+-----------
+
+The logo: EB Garmamond
+Graphics text: Roboto (google)
+Graphics physics labels: Knuth's Computer Modern (LaTeX default)
+
+
 OQuPy colors
 ------------
 
