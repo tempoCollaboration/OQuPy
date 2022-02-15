@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module just defines what version of tempo we are currently looking at.
+This module just defines what version of OQuPy we are currently looking at.
 """
 
-__version__ = '0.2-dev'
+__version__ = '0.2.0'
