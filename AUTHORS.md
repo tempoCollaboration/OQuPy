@@ -10,7 +10,9 @@ Members of the TEMPO collaboration:
 - [Piper Fowler-Wright](https://github.com/piperfw) (*University of St Andrews*) <pfw1@st-andrews.ac.uk>
 - [Gerald E. Fux](https://github.com/gefux) (*University of St Andrews*) <gf52@st-andrews.ac.uk>
 - [Erik Gauger](https://github.com/erikgauger) (*Heriot-Watt University*) <e.gauger@hw.ac.uk>
+- [Dominic Gribben](https://github.com/djgribben) (*University of St Andrews*)
 - Jonathan Keeling (*University of St Andrews*) <jmjk@st-andrews.ac.uk>
+- Dainius Kilda (*Max Planck Institute of Quantum Optics*)
 - [Peter Kirton](https://github.com/peterkirton) (*University of Strathclyde*) <peter.kirton@strath.ac.uk>
 - [Thibaut Lacroix](https://github.com/tfmlaX) (*University of St Andrews*) <tfml1@st-andrews.ac.uk>
 - Brendon W. Lovett (*University of St Andrews*) <bwl4@st-andrews.ac.uk>
@@ -28,10 +30,8 @@ Project maintainers:
 - [Peter Kirton](https://github.com/peterkirton) (<peter.kirton@strath.ac.uk>)
 
 
-Major code contributions &dagger;:
-==================================
-
-&dagger; ... For a complete list of *all* direct code contributors see [Contributors](https://github.com/tempoCollaboration/TimeEvolvingMPO/graphs/contributors).
+Major code contributions:
+=========================
 
 **Version 0.2.0**
 - [Gerald E. Fux](https://github.com/gefux): Chains of open quantum systems [Fux2022].

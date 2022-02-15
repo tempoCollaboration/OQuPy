@@ -9,7 +9,7 @@ Contributions of all kinds are welcome! Get in touch if you ...
 </ul>
 
 Please, feel free to file an issue in the
-[Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section
+[Issues](https://github.com/tempoCollaboration/OQuPy/issues) section
 on GitHub for this. Also, have a look at the text below if you want to get
 involved in the development.
 
@@ -19,7 +19,7 @@ For the coding bit of the project we try to follow these general guidelines:
 * [the zen of python](https://www.python.org/dev/peps/pep-0020/)
 * [structure](https://docs.python-guide.org/writing/structure/)
 * [code style](https://www.python.org/dev/peps/pep-0008/)
-* [code of conduct](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CODE_OF_CONDUCT.md)
+* [code of conduct](https://github.com/tempoCollaboration/OQuPy/blob/main/CODE_OF_CONDUCT.md)
 
 The current setup uses:
 
@@ -31,13 +31,13 @@ The current setup uses:
 
 ## How to contribute to the code or documentation
 Please use the
-[Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) and
-[Pull requests](https://github.com/tempoCollaboration/TimeEvolvingMPO/pulls)
+[Issues](https://github.com/tempoCollaboration/OQuPy/issues) and
+[Pull requests](https://github.com/tempoCollaboration/OQuPy/pulls)
 system on github.
 
 If you are familiar with the process of contributing to an open source project
 please make sure you tick all (or most) appropriate boxes in
-[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
+[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/PULL_REQUEST_TEMPLATE.md)
 before submitting a pull request.
 
 If you haven't done this sort of thing before, this link
@@ -48,7 +48,7 @@ to this project below.
 
 ### Overview:
 
-1. Discuss the issue in the [Issue section](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues)
+1. Discuss the issue in the [Issue section](https://github.com/tempoCollaboration/OQuPy/issues)
 2. Create a fork of this repository on Github
 3. Setup your local environment
 4. Clone your fork to your local machine
@@ -56,7 +56,7 @@ to this project below.
 6. Make your changes and tick the boxes
 7. Check your code: run tests
 8. Tidy up: Rebase and squash
-9. Create a [pull request](https://github.com/tempoCollaboration/TimeEvolvingMPO/pulls)
+9. Create a [pull request](https://github.com/tempoCollaboration/OQuPy/pulls)
 10. Make changes to your pull request
 
 
@@ -76,7 +76,7 @@ to discuss them first. Communication is essential to make sure your contribution
 fits to the goals of the project.
 
 Go to the
-[Issue section](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues)
+[Issue section](https://github.com/tempoCollaboration/OQuPy/issues)
 and file an issue to share your thoughts. Ideally you discuss your plans with
 others (particularly a maintainer) before you invest any significant amount of
 time to avoid overlap or conflicts with other contributions. This is essential
@@ -85,7 +85,7 @@ to ensure that your work fits well into the project.
 
 ### 2. Create a fork of this repository on Github
 If you have discussed your plans in the
-[Issue section](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues)
+[Issue section](https://github.com/tempoCollaboration/OQuPy/issues)
 and would like to make a direct contribution to the code or documentation,
 you will need to [create a fork](https://help.github.com/en/github/getting-started-with-github/fork-a-repo)
 of the repository on your github account. This creats a linked copy on your
@@ -102,12 +102,12 @@ resource with:
 
 ```bash
 $ #if you use ssh:
-$ git remote add upstream git@github.com:tempoCollaboration/TimeEvolvingMPO.git
+$ git remote add upstream git@github.com:tempoCollaboration/OQuPy.git
 $ #if you use https
-$ git remote add upstream https://github.com/tempoCollaboration/TimeEvolvingMPO.git
+$ git remote add upstream https://github.com/tempoCollaboration/OQuPy.git
 
 $ git fetch upstream
-$ git branch --set-upstream-to=upstream/master master
+$ git branch --set-upstream-to=upstream/main main
 ```
 
 With this, if there is a change to the original repository, you can bring your
@@ -115,9 +115,9 @@ fork up to date by pulling from the `upstream` remote repository (the original
 repository) and pushing to the `origin` remote repository (your fork).
 
 ```bash
-$ git checkout master
-$ git pull upstream master
-$ git push origin master
+$ git checkout main
+$ git pull upstream main
+$ git push origin main
 ```
 
 ### 4. Setup your local environment
@@ -149,7 +149,7 @@ To group together all the changes you make, you should create a new temporary
 branch. We suggest to use a name of the form `pr/topic-name` for this branch.
 Create the new branch on your fork with:
 ```bash
-$ git checkout master
+$ git checkout main
 $ git checkout -b pr/add-documentation-to-dynamics
 $ git push --set-upstream origin pr/add-documentation-to-dynamics
 ```
@@ -161,7 +161,7 @@ cycles and push them to your fork.
 
 Later, when you create the pull request (section 9) these changes will be
 reviewed by a maintainer who will check all neccessary boxes in
-[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
+[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/PULL_REQUEST_TEMPLATE.md)
 to guarantee the quality of the package. Therefore, during the process of
 creating your changes, it is advisable to occasionally compare your work
 against this list and periodically run the automated tests (see section 7).
@@ -171,7 +171,7 @@ not to deter you from contributing.
 
 ### 7. Check your code: run tests
 Three of the boxes in
-[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md) are checked automatically when new commits are
+[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/PULL_REQUEST_TEMPLATE.md) are checked automatically when new commits are
 added to the project, namely:
 
 * execute the tests that check the functionality of the package (with `pytest`)
@@ -239,14 +239,14 @@ Both, squashing and rebasing can be performed with the command
 [here](https://git-scm.com/book/en/v2/Git-Branching-Rebasing). This command
 is destructive (i.e. it is possible to lose information), and therefore you
 should create a local backup before using it. However, if you are
-unsure, feel free to skip this tidying up process.  
+unsure, feel free to skip this tidying up process.
 
 
 ### 9. Create a pull requests
 You can now
 [create a pull request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request).
 This request will then be reviewed by a maintainer who will check all neccessary boxes in
-[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
+[`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/PULL_REQUEST_TEMPLATE.md)
 to guarantee the quality of the package.
 Therefore, before you submit the pull request, go through this checklist once
 more. However, this list is there to *help* all contributors to produce high
@@ -257,12 +257,12 @@ pull request message.
 
 ### 10. Make changes to your pull request
 You should find the pull request you created in section 9 on the
-[pull request page](https://github.com/tempoCollaboration/TimeEvolvingMPO/pulls).
+[pull request page](https://github.com/tempoCollaboration/OQuPy/pulls).
 All the rest of the communication will happen there.
 
 You can expect to hear back from a maintainer within one to two weeks. If your
 contribution checks all the boxes in
-`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/PULL_REQUEST_TEMPLATE.md)
+`PULL_REQUEST_TEMPLATE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/PULL_REQUEST_TEMPLATE.md)
 the maintainer will merge your changes into the project. If some aspects of the
 contribution need to be changed, the maintainer might ask you if you'd be
 willing to perform these changes. In this case you can simply make further

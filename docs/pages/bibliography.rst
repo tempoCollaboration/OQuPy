@@ -149,5 +149,5 @@ BibTeX
     year=2020,
     publisher={GitHub},
     doi={10.5281/zenodo.4428316}
-    url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
+    url={https://github.com/tempoCollaboration/OQuPy}
   }

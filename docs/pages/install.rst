@@ -37,14 +37,14 @@ Open a interactive python3 session and type:
 
 .. code-block:: python
 
-  >>> import oqupy as tempo
-  >>> tempo.__version__
+  >>> import oqupy
+  >>> oqupy.__version__
 
 This should give you the following message:
 
 .. code-block:: none
 
-  '0.1.2'
+  '0.2.0'
 
 
 Uninstall

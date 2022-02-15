@@ -10,7 +10,7 @@ Contributions of all kinds are welcome! Get in touch if you ...
   - ... have some other thoughts or suggestions.
 
 Please, feel free to file an issue in the
-`Issues <https://github.com/tempoCollaboration/TimeEvolvingMPO/issues>`_
+`Issues <https://github.com/tempoCollaboration/OQuPy/issues>`_
 section on GitHub for this. Also, have a look at
-`CONTRIBUTING.md <https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CONTRIBUTING.md>`_
+`CONTRIBUTING.md <https://github.com/tempoCollaboration/OQuPy/blob/main/CONTRIBUTING.md>`_
 if you want to get involved in the development.

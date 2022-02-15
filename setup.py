@@ -29,7 +29,7 @@ with open(os.path.join(here,"oqupy/version.py"), "r") as f:
 
 # get short and long description
 short_description = \
-"A python3 library to efficiently compute non-markovian open quantum systems."
+"A Python 3 package to efficiently compute non-Markovian open quantum systems."
 
 with open(os.path.join(here,"README.md"), "r") as f:
   long_description = f.read()
@@ -42,7 +42,7 @@ with open(os.path.join(here,"requirements.txt"), "r") as requirements_file:
 setup(
     name='oqupy',
     version=__version__,
-    url='http://github.com/tempoCollaboration/TimeEvolvingMPO',
+    url='http://github.com/tempoCollaboration/OQuPy',
     author='TEMPO Collaboration',
     author_email='tempo.collaboration@gmail.com',
     python_requires=('>=3.6.0'),

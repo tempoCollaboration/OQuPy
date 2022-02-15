@@ -21,4 +21,4 @@ Please consider citing
 BibTeX
 ------
 
-See [`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/BIBLIOGRAPHY.md) for the corresponding bibTeX.
+See [`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/BIBLIOGRAPHY.md) for the corresponding bibTeX.

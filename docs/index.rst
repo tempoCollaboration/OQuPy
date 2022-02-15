@@ -52,17 +52,17 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_ (2022).
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb
 
-+--------------------+---------------------------------------------------------------------------------------------------------------+
-| **Github**         | https://github.com/tempoCollaboration/TimeEvolvingMPO                                                         |
-+--------------------+---------------------------------------------------------------------------------------------------------------+
-| **Documentation**  | https://TimeEvolvingMPO.readthedocs.io                                                                        |
-+--------------------+---------------------------------------------------------------------------------------------------------------+
-| **PyPI**           | https://pypi.org/project/time-evolving-mpo/                                                                   |
-+--------------------+---------------------------------------------------------------------------------------------------------------+
-| **Tutorial**       | launch |binder-tutorial|                                                                                      |
-+--------------------+---------------------------------------------------------------------------------------------------------------+
++--------------------+--------------------------------------------------------+
+| **Github**         | https://github.com/tempoCollaboration/OQuPy            |
++--------------------+--------------------------------------------------------+
+| **Documentation**  | https://oqupy.readthedocs.io                           |
++--------------------+--------------------------------------------------------+
+| **PyPI**           | https://pypi.org/project/oqypy/                        |
++--------------------+--------------------------------------------------------+
+| **Tutorial**       | launch |binder-tutorial|                               |
++--------------------+--------------------------------------------------------+
 
 -------------------------------------------------------------------------------
 

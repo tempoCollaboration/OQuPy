@@ -4,11 +4,11 @@
 
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
-[![Build Status](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO.svg?branch=master)](https://www.travis-ci.com/tempoCollaboration/TimeEvolvingMPO)
-[![codecov](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO/branch/master/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/TimeEvolvingMPO)
-[![Documentation Status](https://readthedocs.org/projects/timeevolvingmpo/badge/?version=latest)](https://timeevolvingmpo.readthedocs.io/en/latest/?badge=latest)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
+[![Build Status](https://app.travis-ci.com/tempoCollaboration/OQuPy.svg?branch=main)](https://app.travis-ci.com/tempoCollaboration/OQuPy)
+[![codecov](https://codecov.io/gh/tempoCollaboration/OQuPy/branch/main/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/OQuPy)
+[![Documentation Status](https://readthedocs.org/projects/oqupy/badge/?version=latest)](https://oqupy.readthedocs.io/en/latest/?badge=latest)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/tempoCollaboration/OQuPy/blob/main/CODE_OF_CONDUCT.md)
 [![DOI](https://www.zenodo.org/badge/244404030.svg)](https://www.zenodo.org/badge/latestdoi/244404030)
 
 [![Unitary Fund](https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge)](http://unitary.fund)
@@ -42,11 +42,10 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
 ## Links
 
-* Github:         <https://github.com/tempoCollaboration/TimeEvolvingMPO>
-* Documentation:  <https://TimeEvolvingMPO.readthedocs.io>
-* PyPI:           <https://pypi.org/project/time-evolving-mpo/>
-* Tutorial:       [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
-
+* Github:         <https://github.com/tempoCollaboration/OQupy>
+* Documentation:  <https://oqupy.readthedocs.io>
+* PyPI:           <https://pypi.org/project/oqupy/>
+* Tutorial:       [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
 
 ## Installation
 You can install OQuPy using pip like this:
@@ -55,14 +54,14 @@ $ python3 -m pip install oqupy
 ```
 
 See the
-[documentation](https://TimeEvolvingMPO.readthedocs.io/en/latest/pages/install.html)
+[documentation](https://oqupy.readthedocs.io/en/latest/pages/install.html)
 for more information.
 
 
 ## Quickstart Tutorial
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
 
-Click the `launch binder` button above to start a tutorial in a browser based jupyter notebook (no installation required) or checkout the [tutorial in the documentation](https://timeevolvingmpo.readthedocs.io/en/latest/pages/tutorial_01_quickstart/tutorial_01_quickstart.html).
+Click the `launch binder` button above to start a tutorial in a browser based jupyter notebook (no installation required) or checkout the [tutorial in the documentation](https://oqupy.readthedocs.io/en/latest/pages/tutorials/quickstart/quickstart.html).
 
 
 ## Contributing
@@ -75,8 +74,8 @@ Contributions of all kinds are welcome! Get in touch if you ...
  <li> ... have some other thoughts or suggestions.</li>
 </ul>
 
-Please, feel free to file an issue in the [Issues](https://github.com/tempoCollaboration/TimeEvolvingMPO/issues) section on GitHub for this. Also, have a look at [`CONTRIBUTING.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/CONTRIBUTING.md) if you want to get involved in the development.
+Please, feel free to file an issue in the [Issues](https://github.com/tempoCollaboration/OQuPy/issues) section on GitHub for this. Also, have a look at [`CONTRIBUTING.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/CONTRIBUTING.md) if you want to get involved in the development.
 
 ## Citing, Authors and Bibliography
-See the files [`HOW_TO_CITE.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/HOW_TO_CITE.md), [`AUTHORS.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/AUTHORS.md) and [`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/TimeEvolvingMPO/blob/master/BIBLIOGRAPHY.md).
+See the files [`HOW_TO_CITE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/HOW_TO_CITE.md), [`AUTHORS.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/AUTHORS.md) and [`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/BIBLIOGRAPHY.md).
 
