@@ -23,7 +23,7 @@ from numpy import ndarray
 from scipy import linalg
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype, NpDtypeReal
+from oqupy.config import NpDtype
 SystemChain = Any # from oqupy.system import SystemChain
 
 class Gate:
@@ -417,9 +417,9 @@ class AugmentedMPS(BaseAPIClass):
         tmp_lambdas = []
         for bond_dim, l in zip(bond_dims, lambdas):
             if l is None:
-                tmp_lambda = np.ones(bond_dim, dtype=NpDtypeReal)
+                tmp_lambda = np.ones(bond_dim, dtype=NpDtype)
             else:
-                tmp_lambda = np.array(l, dtype=NpDtypeReal)
+                tmp_lambda = np.array(l, dtype=NpDtype)
                 shape = tmp_lambda.shape
                 rank = len(shape)
                 if rank == 2:
