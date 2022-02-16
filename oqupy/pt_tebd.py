@@ -332,12 +332,14 @@ class PtTebd(BaseAPIClass):
         self._chain_control = ChainControl(hilbert_space_dimensions=hs_dims)
 
     def get_augmented_mps(self) -> AugmentedMPS:
-        """Return the current AugmentedMPS. """
+        """Returns a copy of the current AugmentedMPS. """
+        if self._t_mps is None:
+            return self._initial_augmented_mps
         gammas = []
-        for i in range(len(self._t_mps)):
+        for i in range(self._t_mps.n):
             gammas.append(self._t_mps.get_gamma(i))
         lambdas = []
-        for i in range(len(self._t_mps) - 1):
+        for i in range(self._t_mps.n - 1):
             lambdas.append(self._t_mps.get_lambda(i))
 
         return AugmentedMPS(gammas, lambdas)
