@@ -6,21 +6,26 @@ dynamics of a quantum system that is possibly strongly coupled to a
 structured environment. We illustrate this by applying the TEMPO method
 to the strongly coupled spin boson model.
 
+.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb
+
+You can follow this tutorial using any of these options:
+
+- launch binder |binder-tutorial| (runs in browser),
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/quickstart.ipynb>`,
+- read through it and code along below.
+
+-------------------------------------------------------------------------------
+
 **Contents:**
 
 -  Example - The spin boson model
 
-   -  
+    - 1. The model and its parameters
+    - 2. Create system, correlations and bath objects
+    - 3. TEMPO computation
 
-      1. The model and its parameters
-
-   -  
-
-      2. Create system, correlations and bath objects
-
-   -  
-
-      3. TEMPO computation
+-------------------------------------------------------------------------------
 
 First, let’s import OQuPy and some other packages we are going to use
 

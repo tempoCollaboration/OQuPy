@@ -4,6 +4,29 @@ Environment Dynamics
 An example on how to compute the dynamics of a gaussian bosonic
 environment using the OquPy package.
 
+.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fbath_dynamics.ipynb
+
+You can follow this tutorial using any of these options:
+
+- launch binder |binder-tutorial| (runs in browser),
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/bath_dynamics.ipynb>`,
+- read through it and code along below.
+
+-------------------------------------------------------------------------------
+
+**Contents:**
+
+- Example - Heat transfer in a biased spin-boson model
+
+    - 1. Hamiltonian - Biased spin-boson model
+    - 2. Building the process tensor
+    - 3. Bath dynamics
+    - 4. Recreating Figure 2
+
+-------------------------------------------------------------------------------
+
+
 First let’s import the necessary packages
 
 .. code:: ipython3

@@ -6,29 +6,28 @@ dynamics of a time dependent quantum system and how to employ the
 process tensor TEMPO method. We illustrate this by applying TEMPO and
 PT-TEMPO to a quantum dot driven by a time dependent laser pulse.
 
+.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fpt_tempo.ipynb
+
+You can follow this tutorial using any of these options:
+
+- launch binder |binder-tutorial| (runs in browser),
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/pt_tempo.ipynb>`,
+- read through it and code along below.
+
+-------------------------------------------------------------------------------
+
 **Contents:**
 
 -  Example - Quantum dot driven by a laser pulse
 
-   -  
+    - 1. Hamiltonian for driven quantum dot with bosonic environment
+    - 2. Laser pulse / time dependent system
+    - 3. Create time dependent system object
+    - 4. TEMPO computation
+    - 5. Using PT-TEMPO to explore many different laser pulses
 
-      1. Hamiltonian for driven quantum dot with bosonic environment
-
-   -  
-
-      2. Laser pulse / time dependent system
-
-   -  
-
-      3. Create time dependent system object
-
-   -  
-
-      4. TEMPO computation
-
-   -  
-
-      5. Using PT-TEMPO to explore many different laser pulses
+-------------------------------------------------------------------------------
 
 First, let’s import OQuPy and some other packages we are going to use
 

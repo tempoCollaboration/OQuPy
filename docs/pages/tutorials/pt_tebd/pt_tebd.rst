@@ -11,17 +11,26 @@ is explained in detail in [Fux2022].
 *Thermalization of a spin chain strongly coupled to its environment*,
 arXiv:2201.05529 (2022).
 
+.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
+ :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fpt_tebd.ipynb
+
+You can follow this tutorial using any of these options:
+
+- launch binder |binder-tutorial| (runs in browser),
+- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/pt_tebd.ipynb>`,
+- read through it and code along below.
+
+
+-------------------------------------------------------------------------------
+
 **Contents:**
 
 -  Example - Heisenberg spin chain
 
-   -  
+   - 1. Closed Heisenberg spin chain
+   - 2. Open Heisenberg spin chain
 
-      1. Closed Heisenberg spin chain
-
-   -  
-
-      2. Open Heisenberg spin chain
+-------------------------------------------------------------------------------
 
 First, let’s import OQuPy and some other packages we are going to use
 
