@@ -73,8 +73,8 @@ html_static_path = ['_static']
 html_favicon = 'graphics/icon.ico'
 html_logo = 'graphics/logo-transparent.svg'
 html_theme_options = {
-    'logo_only': True,
-    'display_version': False,
+    'logo_only': False,
+    'display_version': True,
     'color': True,
     'style_nav_header_background': '#59a6ed'
 }
