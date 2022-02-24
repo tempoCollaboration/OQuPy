@@ -46,8 +46,6 @@ class BaseDynamics(BaseAPIClass):
         super().__init__(name, description)
         self._times = []
         self._states = []
-        self._expectation_operators = []
-        self._expectation_lists = []
         self._shape = None
 
     def __str__(self) -> Text:
@@ -85,27 +83,6 @@ class BaseDynamics(BaseAPIClass):
     def shape(self) -> ndarray:
         """Numpy shape of the states. """
         return copy(self._shape)
-
-    def export(
-            self,
-            filename: Text,
-            overwrite: bool = False) -> None:
-        """
-        Save dynamics to a file (format TempoDynamicsFormat version 1.0).
-        Parameters
-        ----------
-        filename: str
-            Path and filename to file that should be created.
-        overwrite: bool (default = False)
-            If set `True` then file is overwritten in case it already exists.
-        """
-        dyn = {"version": "1.0",
-               "name": self.name,
-               "description": self.description,
-               "times": self.times,
-               "states": self.states}
-        assert_tempo_dynamics_dict(dyn)
-        save_object(dyn, filename, overwrite)
 
     def expectations(
             self,
@@ -146,19 +123,10 @@ class BaseDynamics(BaseAPIClass):
                 + "states. Has shape {}, ".format(__operator.shape) \
                 + "but should be {}.".format(self._shape)
 
-        operator_index = next((i for i, op in \
-            enumerate(self._expectation_operators) if \
-            np.array_equal(op, __operator)), -1)
-        if operator_index == -1: # Operator not seen before
-            self._expectation_operators.append(__operator)
-            self._expectation_lists.append([])
+        expectations_list = []
 
-        expectations_list = self._expectation_lists[operator_index]
-
-        for state in self._states[len(expectations_list):]:
+        for state in self._states:
             expectations_list.append(np.trace(__operator @ state))
-
-        self._expectation_lists[operator_index] = expectations_list
 
         times = np.array(self._times)
         if real:
