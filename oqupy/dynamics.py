@@ -62,13 +62,6 @@ class BaseDynamics(BaseAPIClass):
     def __len__(self) -> int:
         return len(self._times)
 
-    def _sort(self) -> None:
-        """Sort the time evolution (chronologically). """
-        tuples = zip(self._times, self._states)
-        __times, __states = zip(*sorted(tuples)) # ToDo: make more elegant
-        self._times = list(__times)
-        self._states = list(__states)
-
     @property
     def times(self) -> ndarray:
         """Times of the dynamics. """
@@ -111,22 +104,22 @@ class BaseDynamics(BaseAPIClass):
         if len(self) == 0:
             return None, None
         if operator is None:
-            __operator = np.identity(self._shape[0], dtype=NpDtype)
+            tmp_operator = np.identity(self._shape[0], dtype=NpDtype)
         else:
             try:
-                __operator = np.array(operator, dtype=NpDtype)
+                tmp_operator = np.array(operator, dtype=NpDtype)
             except Exception as e:
                 raise AssertionError("Argument `operator` must be ndarray.") \
                     from e
-            assert __operator.shape == self._shape, \
+            assert tmp_operator.shape == self._shape, \
                 "Argument `operator` must have the same shape as the " \
-                + "states. Has shape {}, ".format(__operator.shape) \
+                + "states. Has shape {}, ".format(tmp_operator.shape) \
                 + "but should be {}.".format(self._shape)
 
         expectations_list = []
 
         for state in self._states:
-            expectations_list.append(np.trace(__operator @ state))
+            expectations_list.append(np.trace(tmp_operator @ state))
 
         times = np.array(self._times)
         if real:
@@ -235,7 +228,7 @@ class DynamicsWithField(BaseDynamics):
         """
         if len(self) == 0:
             return None, None
-        return np.array(copy(self._times), dtype=NpDtypeReal), np.array(copy(self._fields),
+        return np.array(self._times, dtype=NpDtypeReal), np.array(self._fields,
                 dtype=NpDtype)
 
     def add(
