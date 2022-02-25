@@ -26,145 +26,6 @@ from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype
 import oqupy.operators as opr
 
-def _check_hamiltonian(hamiltonian) -> ndarray:
-    """Input checking for a single Hamiltonian. """
-    try:
-        tmp_hamiltonian = np.array(hamiltonian, dtype=NpDtype)
-        tmp_hamiltonian.setflags(write=False)
-    except Exception as e:
-        raise AssertionError("Coupling operator must be numpy array") from e
-    assert len(tmp_hamiltonian.shape) == 2, \
-        "Coupling operator is not a matrix."
-    assert tmp_hamiltonian.shape[0] == \
-        tmp_hamiltonian.shape[1], \
-        "Coupling operator is not a square matrix."
-    return tmp_hamiltonian
-
-def _check_tdependent_hamiltonian(hamiltonian) -> Callable[[float],
-        ndarray]:
-    """Input checking for a time-dependent Hamiltonian. """
-    try:
-        tmp_hamiltonian = np.vectorize(hamiltonian)
-        _check_hamiltonian(tmp_hamiltonian(1.0))
-    except Exception as e:
-        raise AssertionError(
-            "Time dependent Hamiltonian must be vectorizable callable.") \
-                from e
-    return tmp_hamiltonian
-
-def _check_tfielddependent_hamiltonian(hamiltonian) -> Callable[[float,
-    complex], ndarray]:
-    try:
-        tmp_hamiltonian = np.vectorize(hamiltonian)
-        _check_hamiltonian(tmp_hamiltonian(1.0, 1.0+1.0j))
-    except Exception as e:
-       raise AssertionError(
-           "Time and field dependent Hamiltonian must be vectorizable callable.") \
-               from e
-    return tmp_hamiltonian
-
-def _check_dissipator_lists(gammas, lindblad_operators) -> Tuple[List, List]:
-    """Check gammas and lindblad operators are lists of equal length."""
-    if gammas is None:
-        gammas = []
-    if lindblad_operators is None:
-        lindblad_operators = []
-    assert isinstance(gammas, list), \
-        "Argument `gammas` must be a list)]."
-    assert isinstance(lindblad_operators, list), \
-        "Argument `lindblad_operators` must be a list."
-    assert len(gammas) == len(lindblad_operators), \
-        "Lists `gammas` and `lindblad_operators` must have the same length."
-    return gammas, lindblad_operators
-
-def _check_gammas_lindblad_operators(gammas, lindblad_operators) -> Tuple[
-        List[float], List[ndarray]]:
-    """Input check for time-independent gammas and lindblad_operators"""
-    # firstly check both are lists of the same length
-    _check_dissipator_lists(gammas, lindblad_operators)
-    try:
-        tmp_gammas = []
-        for gamma in gammas:
-            tmp_gammas.append(float(gamma))
-    except Exception as e:
-        raise AssertionError("All elements of `gammas` must be floats.") \
-            from e
-    try:
-        tmp_lindblad_operators = []
-        for lindblad_operator in lindblad_operators:
-            tmp_lindblad_operators.append(
-                np.array(lindblad_operator, dtype=NpDtype))
-    except Exception as e:
-        raise AssertionError(
-            "All elements of `lindblad_operators` must be numpy arrays.") \
-                from e
-    return tmp_gammas, tmp_lindblad_operators
-
-def _check_tdependent_gammas_lindblad_operators(
-        gammas, 
-        lindblad_operators) -> Tuple[List[Callable[[float], float]],
-                List[Callable[[float], ndarray]]]:
-    """Input check for time-dependent gammas and lindblad_operators"""
-    # firstly check both are lists of the same length
-    gammas, lindblad_operators = _check_dissipator_lists(
-            gammas,
-            lindblad_operators)
-    try:
-        tmp_gammas = []
-        for gamma in gammas:
-            float(gamma(1.0))
-            tmp_gamma = np.vectorize(gamma)
-            tmp_gammas.append(tmp_gamma)
-    except Exception as e:
-        raise AssertionError(
-            "All elements of `gammas` must be vectorizable " \
-             + "callables returning floats.") from e
-    try:
-        tmp_lindblad_operators = []
-        for lindblad_operator in lindblad_operators:
-            tmp_lindblad_operator = np.vectorize(lindblad_operator)
-            np.array(tmp_lindblad_operator(1.0))
-            tmp_lindblad_operators.append(tmp_lindblad_operator)
-    except Exception as e:
-        raise AssertionError(
-            "All elements of `lindblad_operators` must be vectorizable " \
-            + "callables returning numpy arrays.") from e
-    return tmp_gammas, tmp_lindblad_operators
-
-def _check_field_eom(dim, field_eom):
-    """Input check a field equation of motion"""
-    test_matrix = _create_density_matrix(dim)
-    test_field = 1.0+1.0j
-    test_time = 1.0
-    try:
-        value = field_eom(test_time, test_matrix, test_field)
-        complex(value)
-    except Exception as e:
-        raise AssertionError("Field equation of motion must "\
-                "take a time, (dim,dim) matrix and field value "\
-                "and return a (complex) scalar.") from e
-    return field_eom
-
-def _liouvillian(hamiltonian, gammas, lindblad_operators):
-    """Lindbladian for a specific Hamiltonian, gammas and lindblad_operators.
-    """
-    liouvillian = -1j * opr.commutator(hamiltonian)
-    for gamma, op in zip(gammas, lindblad_operators):
-        op_dagger = op.conjugate().T
-        liouvillian += gamma * (opr.left_right_super(op, op_dagger) \
-                                - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
-    return liouvillian
-
-def _create_density_matrix(dim, seed=1):
-    r"""Create a repeatable (dim,dim) matrix that represents
-    a valid density matrix :math:`rho`"""
-    rng = np.random.default_rng(seed)
-    a = rng.random((dim, dim)) + 1j*rng.random((dim,dim))
-    b = np.matmul(a, a.conj().T)
-    rho = b / b.trace()
-    return rho
-
-
 class BaseSystem(BaseAPIClass):
     """Base class for systems. """
     def __init__(
@@ -225,8 +86,9 @@ class System(BaseSystem):
         self._hamiltonian = _check_hamiltonian(hamiltonian)
         tmp_dimension = self._hamiltonian.shape[0]
         # input check gammas and lindblad_operators
-        self._gammas, self._lindblad_operators = _check_gammas_lindblad_operators(
-                gammas, lindblad_operators)
+        self._gammas, self._lindblad_operators = \
+                _check_gammas_lindblad_operators(gammas,
+                        lindblad_operators)
         super().__init__(tmp_dimension, name, description)
 
     @lru_cache(4)
@@ -365,27 +227,29 @@ class TimeDependentSystem(BaseSystem):
 
 class TimeDependentSystemWithField(BaseSystem):
     r"""
-    Represents an explicitly time dependent system (without any coupling to a
-    non-Markovian bath) with a coherent field (a complex scalar) :math:`\langle a \rangle`
-    that evolves according to a specified equation of motion :math:`\partial_t\langle a \rangle`.
+    Represents an explicitly time dependent system (without any coupling
+    to a non-Markovian bath) with a coherent field (a complex scalar)
+    :math:`\langle a \rangle` that evolves according to a specified
+    equation of motion :math:`\partial_t\langle a \rangle`.
 
-    It is possible to include (also explicitly
-    time dependent) Lindblad terms in the master equation.
-    The equations of motion for a system density matrix (without any coupling
-    to a non-Markovian bath) is then:
+    It is possible to include (also explicitly time dependent) Lindblad
+    terms in the master equation.  The equations of motion for a system
+    density matrix (without any coupling to a non-Markovian bath) is
+    then:
 
     .. math::
 
-        \frac{d}{dt}\rho(t) = &-i [\hat{H}(t, \langle a \rangle), \rho(t)] \\
-            &+ \sum_n^N \gamma_n(t) \left(
-                \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
-                - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
-                - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t) \right)
+    \frac{d}{dt}\rho(t)=&-i[\hat{H}(t,\langle a\rangle),\rho(t)]\\
+        &+ \sum_n^N \gamma_n(t) \left(
+         \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
+         - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
+         - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t)\right)
 
-    with the  `hamiltionian` :math:`\hat{H}(t, \langle a \rangle)` depending on both
-    time :math:`t` and `field` :math:`\langle a \rangle` (in general), the  time
-    dependent rates `gammas` :math:`\gamma_n(t)` and the time dependent
-    `linblad_operators` :math:`\hat{A}_n(t)`.
+    with the  `hamiltionian` :math:`\hat{H}(t, \langle a \rangle)`
+    depending on both time :math:`t` and `field` :math:`\langle
+    a \rangle` (in general), the  time dependent rates `gammas`
+    :math:`\gamma_n(t)` and the time dependent `linblad_operators`
+    :math:`\hat{A}_n(t)`.
 
     Parameters
     ----------
@@ -393,10 +257,10 @@ class TimeDependentSystemWithField(BaseSystem):
         System-only Hamiltonian :math:`\hat{H}(t, \langle a \rangle)`
         where :math:`\langle a \rangle` is the field at time :math:`t`.
     field_eom: callable
-        Field equation of motion :math:`\partial_t \langle a \rangle(t, \rho,
-        \langle a \rangle)`
-        where :math:`\rho` and :math:`\langle a \rangle` are the system density
-        matrix (a square matrix) and field at time :math:`t`.
+        Field equation of motion :math:`\partial_t
+        \langle a \rangle(t, \rho, \langle a \rangle)`
+        where :math:`\rho` and :math:`\langle a \rangle` are the system
+        density matrix (a square matrix) and field at time :math:`t`.
     gammas: list(callable)
         The rates :math:`\gamma_n(t)`.
     lindblad_operators: list(callable)
@@ -422,15 +286,11 @@ class TimeDependentSystemWithField(BaseSystem):
         tmp_dimension = self._hamiltonian(1.0, 1.0+1.0j).shape[0]
         # input check for field equation of motion
         tmp_field_eom = _check_field_eom(tmp_dimension, field_eom)
-        # instance method with same functionality but takes a flattened array
-        self._field_eom = lambda t, state, field: tmp_field_eom(
-                t,
-                state.reshape(self._dimension, self._dimension),
-                field)
-        # input check gammas and lindblad_operators 
+        self._field_eom = tmp_field_eom
+        # input check gammas and lindblad_operators
         self._gammas, self._lindblad_operators = \
              _check_tdependent_gammas_lindblad_operators(
-                     gammas, 
+                     gammas,
                      lindblad_operators)
 
         super().__init__(tmp_dimension, name, description)
@@ -446,9 +306,11 @@ class TimeDependentSystemWithField(BaseSystem):
     def _linearised_field(self, t0: float, t: float, state: ndarray,
             field: complex) -> complex:
         r"""
-        Return the value of the field a time `(t-t0)` given the value at `t0` 
+        Return the value of the field a time `(t-t0)` given the value at `t0`
         in a linear approximation using the field equation of motion.
         """
+        # field_eom expects a square matrix
+        state = state.reshape((self._dimension, self._dimension))
         return field + self._field_eom(t0, state, field) * (t-t0)
 
     def liouvillian(self,
@@ -472,13 +334,13 @@ class TimeDependentSystemWithField(BaseSystem):
 
         Parameters
         ----------
-        t0: float 
+        t0: float
             Start time of the current step
-        t: float 
+        t: float
             Current time :math:`t`
-        state: ndarray 
+        state: ndarray
             Flattened system density matrix (vector) at time :math:`t`
-        field: complex 
+        field: complex
             Field value at time :math:`t` obtained from the
             linearisation of the field at :math:`t` using the field
             equation of motion.
@@ -488,6 +350,24 @@ class TimeDependentSystemWithField(BaseSystem):
         liouvillian : ndarray
             Liouvillian :math:`\mathcal{L}(t)` at time :math:`t`.
         """
+        try:
+            t0 = float(t0)
+        except Exception as e:
+            raise AssertionError("Argument t0 must be float") from e
+        try:
+            t = float(t)
+        except Exception as e:
+            raise AssertionError("Argument t must be float") from e
+        assert t >= t0, "Argument t must exceed t0"
+        try:
+            field = complex(field)
+        except Exception as e:
+            raise AssertionError("Argument field must be complex") from e
+        assert isinstance(state, ndarray), "Argument state must be ndarray"
+        assert state.size ==  self._dimension**2, "State size must match "\
+                "Hilbert space dimension {}".format(self._dimension**2)
+        # flatten if given as a square matrix
+        state = state.reshape((self._dimension**2,))
         hamiltonian = self._linearised_hamiltonian(t0, t, state, field)
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
@@ -788,4 +668,141 @@ class SystemChain(BaseAPIClass):
 
         return nn_full_liouvillians
 
+def _check_hamiltonian(hamiltonian) -> ndarray:
+    """Input checking for a single Hamiltonian. """
+    try:
+        tmp_hamiltonian = np.array(hamiltonian, dtype=NpDtype)
+        tmp_hamiltonian.setflags(write=False)
+    except Exception as e:
+        raise AssertionError("Coupling operator must be numpy array") from e
+    assert len(tmp_hamiltonian.shape) == 2, \
+        "Coupling operator is not a matrix."
+    assert tmp_hamiltonian.shape[0] == \
+        tmp_hamiltonian.shape[1], \
+        "Coupling operator is not a square matrix."
+    return tmp_hamiltonian
 
+def _check_tdependent_hamiltonian(hamiltonian) -> Callable[[float],
+        ndarray]:
+    """Input checking for a time-dependent Hamiltonian. """
+    try:
+        tmp_hamiltonian = np.vectorize(hamiltonian)
+        _check_hamiltonian(tmp_hamiltonian(1.0))
+    except Exception as e:
+        raise AssertionError(
+            "Time dependent Hamiltonian must be vectorizable callable.") \
+                from e
+    return tmp_hamiltonian
+
+def _check_tfielddependent_hamiltonian(hamiltonian) -> Callable[[float,
+    complex], ndarray]:
+    try:
+        tmp_hamiltonian = np.vectorize(hamiltonian)
+        _check_hamiltonian(tmp_hamiltonian(1.0, 1.0+1.0j))
+    except Exception as e:
+        raise AssertionError(
+                "Time and field dependent Hamiltonian must be vectorizable "\
+                        "callable.") from e
+    return tmp_hamiltonian
+
+def _check_dissipator_lists(gammas, lindblad_operators) -> Tuple[List, List]:
+    """Check gammas and lindblad operators are lists of equal length."""
+    if gammas is None:
+        gammas = []
+    if lindblad_operators is None:
+        lindblad_operators = []
+    assert isinstance(gammas, list), \
+        "Argument `gammas` must be a list)]."
+    assert isinstance(lindblad_operators, list), \
+        "Argument `lindblad_operators` must be a list."
+    assert len(gammas) == len(lindblad_operators), \
+        "Lists `gammas` and `lindblad_operators` must have the same length."
+    return gammas, lindblad_operators
+
+def _check_gammas_lindblad_operators(gammas, lindblad_operators) -> Tuple[
+        List[float], List[ndarray]]:
+    """Input check for time-independent gammas and lindblad_operators"""
+    # firstly check both are lists of the same length
+    gammas, lindblad_operators = _check_dissipator_lists(gammas,
+            lindblad_operators)
+    try:
+        tmp_gammas = []
+        for gamma in gammas:
+            tmp_gammas.append(float(gamma))
+    except Exception as e:
+        raise AssertionError("All elements of `gammas` must be floats.") \
+            from e
+    try:
+        tmp_lindblad_operators = []
+        for lindblad_operator in lindblad_operators:
+            tmp_lindblad_operators.append(
+                np.array(lindblad_operator, dtype=NpDtype))
+    except Exception as e:
+        raise AssertionError(
+            "All elements of `lindblad_operators` must be numpy arrays.") \
+                from e
+    return tmp_gammas, tmp_lindblad_operators
+
+def _check_tdependent_gammas_lindblad_operators(
+        gammas,
+        lindblad_operators) -> Tuple[List[Callable[[float], float]],
+                List[Callable[[float], ndarray]]]:
+    """Input check for time-dependent gammas and lindblad_operators"""
+    # firstly check both are lists of the same length
+    gammas, lindblad_operators = _check_dissipator_lists(
+            gammas,
+            lindblad_operators)
+    try:
+        tmp_gammas = []
+        for gamma in gammas:
+            float(gamma(1.0))
+            tmp_gamma = np.vectorize(gamma)
+            tmp_gammas.append(tmp_gamma)
+    except Exception as e:
+        raise AssertionError(
+            "All elements of `gammas` must be vectorizable " \
+             + "callables returning floats.") from e
+    try:
+        tmp_lindblad_operators = []
+        for lindblad_operator in lindblad_operators:
+            tmp_lindblad_operator = np.vectorize(lindblad_operator)
+            np.array(tmp_lindblad_operator(1.0))
+            tmp_lindblad_operators.append(tmp_lindblad_operator)
+    except Exception as e:
+        raise AssertionError(
+            "All elements of `lindblad_operators` must be vectorizable " \
+            + "callables returning numpy arrays.") from e
+    return tmp_gammas, tmp_lindblad_operators
+
+def _check_field_eom(dim, field_eom):
+    """Input check a field equation of motion"""
+    test_matrix = _create_density_matrix(dim)
+    test_field = 1.0+1.0j
+    test_time = 1.0
+    try:
+        value = field_eom(test_time, test_matrix, test_field)
+        complex(value)
+    except Exception as e:
+        raise AssertionError("Field equation of motion must "\
+                "take a time, (dim,dim) matrix and field value "\
+                "and return a (complex) scalar.") from e
+    return field_eom
+
+def _liouvillian(hamiltonian, gammas, lindblad_operators):
+    """Lindbladian for a specific Hamiltonian, gammas and lindblad_operators.
+    """
+    liouvillian = -1j * opr.commutator(hamiltonian)
+    for gamma, op in zip(gammas, lindblad_operators):
+        op_dagger = op.conjugate().T
+        liouvillian += gamma * (opr.left_right_super(op, op_dagger) \
+                                - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
+    return liouvillian
+
+def _create_density_matrix(dim, seed=1):
+    r"""Create a repeatable (dim,dim) matrix that represents
+    a valid density matrix :math:`rho`"""
+    rng = np.random.default_rng(seed)
+    a = rng.random((dim, dim)) + 1j*rng.random((dim,dim))
+    b = np.matmul(a, a.conj().T)
+    rho = b / b.trace()
+    return rho
