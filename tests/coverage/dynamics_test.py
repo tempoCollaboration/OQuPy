@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.dynamics module.
 import pytest
 import numpy as np
 
-from oqupy.dynamics import Dynamics, DynamicsWithField
+from oqupy.dynamics import BaseDynamics, Dynamics, DynamicsWithField
 
 
 times = [0.0, 0.1]
@@ -28,6 +28,16 @@ other_time = 0.05
 other_state = np.array([[0.99, -0.01j], [0.01j, 0.01]])
 other_field = 1e2j
 
+def test_base_dynamics():
+    dyn_A = BaseDynamics()
+    str(dyn_A)
+    len(dyn_A)
+    assert type(dyn_A.times) == np.ndarray
+    assert type(dyn_A.states) == np.ndarray
+    assert dyn_A.shape is None
+    t, expec = dyn_A.expectations()
+    assert t is None
+    assert expec is None
 
 def test_dynamics():
     dyn_A = Dynamics()
@@ -88,7 +98,10 @@ def test_dynamics_with_field():
     assert len(dyn_B) == len(times)
     np.testing.assert_almost_equal(fields, dyn_B.fields)
     dyn_B.add(other_time, other_state, other_field)
+    combined_fields = [fields[0], other_field, fields[1]]
     # bad input
+    with pytest.raises(AssertionError):
+        DynamicsWithField(times, states)
     with pytest.raises(AssertionError):
         DynamicsWithField(times, states, 0.1)
     with pytest.raises(AssertionError):
@@ -102,5 +115,6 @@ def test_dynamics_with_field():
     t, alpha = dyn_B.field_expectations()
     np.testing.assert_almost_equal(t, dyn_B.times)
     np.testing.assert_almost_equal(alpha, dyn_B.fields)
+    np.testing.assert_almost_equal(alpha, combined_fields)
     with pytest.raises(TypeError):
         dyn_B.field_expectations("bla")
