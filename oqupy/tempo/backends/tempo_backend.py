@@ -348,7 +348,8 @@ class TempoWithFieldBackend(BaseTempoBackend):
             initial_field: ndarray,
             influence: Callable[[int], ndarray],
             unitary_transform: ndarray,
-            propagators: Callable[[int, ndarray, complex], Tuple[ndarray, ndarray]],
+            propagators: Callable[[int, ndarray, complex],
+                Tuple[ndarray, ndarray]],
             compute_field: Callable[[float, ndarray, complex], complex],
             sum_north: ndarray,
             sum_west: ndarray,
@@ -396,4 +397,3 @@ class TempoWithFieldBackend(BaseTempoBackend):
         self._step = next_step
 
         return self._step, copy(self._state), self._field
-

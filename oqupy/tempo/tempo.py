@@ -27,7 +27,7 @@ time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
 """
 
 import sys
-from typing import Callable, Dict, Optional, Text, Tuple
+from typing import Callable, Dict, Optional, Text, Tuple, Union
 import warnings
 from copy import copy
 
@@ -44,7 +44,8 @@ from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.correlations import BaseCorrelations
 from oqupy.dynamics import Dynamics, DynamicsWithField
 from oqupy.operators import commutator, acommutator
-from oqupy.system import BaseSystem, TimeDependentSystemWithField
+from oqupy.system import BaseSystem, System, TimeDependentSystem,\
+    TimeDependentSystemWithField
 from oqupy.tempo.backends.tempo_backend import TempoBackend
 from oqupy.tempo.backends.tempo_backend import TempoWithFieldBackend
 from oqupy.util import get_progress
@@ -282,14 +283,14 @@ class BaseTempo(BaseAPIClass):
         """Return the time that corresponds to the time step `step`. """
         return self._start_time + float(step)*self._parameters.dt
 
-    def _get_end_step_num_step(self, 
+    def _get_num_step(self,
             start_step: int,
             end_time: float) -> Tuple[int, int]:
-        """Return the final step and number of steps required from 
-        start_step to reach end_time"""
+        """Return the number of steps required from start_step to reach
+        end_time"""
         end_step = int((end_time - self._start_time)/self._parameters.dt)
         num_step = max(0, end_step - start_step)
-        return end_step, num_step
+        return num_step
 
     @property
     def dimension(self) -> ndarray:
@@ -303,7 +304,7 @@ class Tempo(BaseTempo):
 
     Parameters
     ----------
-    system: BaseSystem
+    system: System or TimeDependentSystem
         The system.
     bath: Bath
         The Bath (includes the coupling operator to the system).
@@ -323,7 +324,7 @@ class Tempo(BaseTempo):
     """
     def __init__(
             self,
-            system: BaseSystem,
+            system: Union[System, TimeDependentSystem],
             bath: Bath,
             parameters: TempoParameters,
             initial_state: ndarray,
@@ -338,7 +339,7 @@ class Tempo(BaseTempo):
         self._system = system
 
         super().__init__(
-                bath,               
+                bath,
                 parameters,
                 initial_state,
                 start_time,
@@ -387,9 +388,13 @@ class Tempo(BaseTempo):
         """Create the system propagators (first and second half) for the time
         step `step`. """
         dt = self._parameters.dt
-        t = self._time(step)
-        first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0)
-        second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+        if isinstance(self._system, TimeDependentSystem):
+            t = self._time(step)
+            first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0)
+            second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+        else:
+            first_step = expm(self._system.liouvillian()*dt/2.0)
+            second_step = expm(self._system.liouvillian()*dt/2.0)
         return first_step, second_step
 
     def compute(
@@ -423,7 +428,7 @@ class Tempo(BaseTempo):
             self._dynamics.add(self._time(step), state.reshape(dim, dim))
 
         start_step = self._backend_instance.step
-        end_step, num_step = self._get_end_step_num_step(start_step, end_time)
+        num_step = self._get_num_step(start_step, end_time)
 
         progress = get_progress(progress_type)
         with progress(num_step) as prog_bar:
@@ -462,11 +467,11 @@ class TempoWithField(BaseTempo):
     subdiv_limit: int (default = config.SUBDIV_LIMIT)
         The maximum number of subdivisions used during the adaptive
         algorithm when integrating the system Liouvillian. If None
-        then the Liouvillian is not integrated but sampled twice to 
-        to construct the system propagators at each timestep. 
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
     epsrel: float (default = config.INTEGRATE_EPSREL)
-        The relative error tolerance for the adaptive algorithm 
-        when integrating the system Liouvillian.        
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -477,7 +482,7 @@ class TempoWithField(BaseTempo):
     """
     def __init__(
             self,
-            system: TimeDependentSystemWithField, 
+            system: TimeDependentSystemWithField,
             bath: Bath,
             parameters: TempoParameters,
             initial_state: ndarray,
@@ -495,7 +500,7 @@ class TempoWithField(BaseTempo):
         self._system = system
 
         super().__init__(
-                bath,               
+                bath,
                 parameters,
                 initial_state,
                 start_time,
@@ -555,7 +560,7 @@ class TempoWithField(BaseTempo):
                 config=self._backend_config)
 
     def _init_dynamics(self):
-        """Create a DynamicsWithField object with metadata from the 
+        """Create a DynamicsWithField object with metadata from the
         TempoWithField object. """
         name = None
         description = "computed from '{}' TempoWithField".format(self.name)
@@ -579,7 +584,7 @@ class TempoWithField(BaseTempo):
                     self._system.liouvillian(
                         t0, t0+dt*3.0/4.0, state, field)*dt/2.0)
             return first_step, second_step
-        # ADAPTIVE 
+        # ADAPTIVE
         liouvillian = lambda t: self._system.liouvillian(t0, t, state, field)
         first_step = expm(integrate.quad_vec(f=liouvillian,
                                              a=t0,
@@ -593,14 +598,18 @@ class TempoWithField(BaseTempo):
                                              limit=self.subdiv_limit)[0])
         return first_step, second_step
 
-    def _compute_field(self, step:int, state: ndarray, field: complex,  next_state: Optional[ndarray] = None):
+    def _compute_field(self, step:int, state: ndarray, field: complex,
+            next_state: Optional[ndarray] = None):
         r"""Compute the field value for the time step `step`. """
         dt = self._parameters.dt
         t = self._time(step)
-        rk1 = self._system._field_eom(t, state, field)
+        field_eom = self._system.field_eom
+        state = state.reshape((self._dimension, self._dimension))
+        rk1 = field_eom(t, state, field)
         if next_state is None:
             return rk1 * dt
-        rk2 = self._system._field_eom(t + dt, next_state, field + rk1 * dt)
+        next_state = next_state.reshape((self._dimension, self._dimension))
+        rk2 = field_eom(t + dt, next_state, field + rk1 * dt)
         return field + dt * (rk1 + rk2) / 2
 
     def compute(
@@ -623,7 +632,7 @@ class TempoWithField(BaseTempo):
         Returns
         -------
         dynamics: DynamicsWithFields
-            The instance of DynamicsWithField associated with the 
+            The instance of DynamicsWithField associated with the
             TempoWithField object.
         """
 
@@ -636,20 +645,21 @@ class TempoWithField(BaseTempo):
             self._dynamics.add(self._time(step), state.reshape(dim, dim), field)
 
         start_step = self._backend_instance.step
-        end_step, num_step = self._get_end_step_num_step(start_step, end_time)
+        num_step = self._get_num_step(start_step, end_time)
 
         progress = get_progress(progress_type)
         with progress(num_step) as prog_bar:
             while self._time(self._backend_instance.step) < tmp_end_time:
                 step, state, field = self._backend_instance.compute_step()
-                self._dynamics.add(self._time(step), state.reshape(dim, dim), field)
+                self._dynamics.add(self._time(step), state.reshape(dim, dim),
+                        field)
                 prog_bar.update(self._backend_instance.step - start_step)
             prog_bar.update(self._backend_instance.step - start_step)
 
         return self._dynamics
 
 def _check_time(end_time):
-    """input check on end time of a tempo computation""" 
+    """input check on end time of a tempo computation"""
     try:
         tmp_end_time = float(end_time)
     except Exception as e:
@@ -916,4 +926,3 @@ def tempo_compute(
                   description)
     tempo.compute(end_time, progress_type=progress_type)
     return tempo.get_dynamics()
-
