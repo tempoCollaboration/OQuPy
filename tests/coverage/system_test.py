@@ -18,10 +18,9 @@ Tests for the time_evovling_mpo.system module.
 import pytest
 import numpy as np
 
-from oqupy.system import System
-from oqupy.system import TimeDependentSystem, TimeDependentSystemWithField
+from oqupy.system import BaseSystem, System, TimeDependentSystem,\
+        TimeDependentSystemWithField
 from oqupy import operators
-from oqupy.system import BaseSystem
 
 # -----------------------------------------------------------------------------
 # -- test-examples ------------------------------------------------------------
@@ -65,11 +64,12 @@ liouvillianD = np.array([[-2.4+0.j,  0. +0.j,  0. +0.j,  2.4+0.j],
                          [ 2.4+0.j,  0. +0.j,  0. +0.j, -2.4+0.j]])
 
 # -- field example --
-hamiltonianD = lambda t: t*operators.sigma("z")
 hamiltonianFieldGood = lambda t, field: t*operators.sigma("z") + field
-hamiltonianFieldBad = hamiltonianD
+hamiltonianFieldBad = lambda t: t*operators.sigma("z")
+hamiltonianFieldBad2 = lambda t, state: np.flatten(operators.sigma("z"))
 fieldEomGood = lambda t, state, field: t*field + state.trace()
 fieldEomBad = lambda t, state: 5*t
+fieldEomBad2 = lambda t, state: t*state
 timeField = 2.0
 dtField = 0.2
 fieldField = 1.0j
@@ -85,11 +85,10 @@ liouvillianField = np.array(
 
 def test_base_system():
     dimension = 3
-    sys = BaseSystem(dimension)
+    name = 'Test base'
+    sys = BaseSystem(dimension, name)
     assert sys.dimension == 3
-
-    with pytest.raises(NotImplementedError):
-        sys.liouvillian()
+    str(sys)
 
 def test_system_A():
     sys = System(hamiltonianA)
@@ -154,7 +153,7 @@ def test_time_dependent_system_D():
             lindblad_operatorsD,
             name="bla",
             description="blub")
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         sys.liouvillian()
 
     str(sys)
@@ -199,26 +198,44 @@ def test_time_dependent_system_bad_input():
                 lambda t: t*operators.sigma("z")])
 
 def test_time_dependent_system_with_field():
-    # construction
+    # good construction
     sysField = TimeDependentSystemWithField(hamiltonianFieldGood,
             fieldEomGood,
             name="with field")
     liouvillian = sysField.liouvillian(timeField,
             timeField+dtField, stateField, fieldField)
     np.testing.assert_almost_equal(liouvillian, liouvillianField)
-    with pytest.raises(ValueError):
-        sysField.liouvillian(1.0)
-    assert callable(sysField.field_eom)
-    # bad input
+    # Liouvillian calling
+    with pytest.raises(TypeError):
+        sysField.liouvillian()
+    with pytest.raises(TypeError):
+        sysField.liouvillian(0.5)
+    with pytest.raises(TypeError):
+        sysField.liouvillian(0.5, 1.0, stateField)
     with pytest.raises(AssertionError):
-        TimeDependentSystemWithField(
-                lambda t: t*operators.sigma("z"),
-                0.1)
+        sysField.liouvillian(1j, 1.0, stateField, fieldField)
+    with pytest.raises(AssertionError):
+        sysField.liouvillian(2.0, 1.0, stateField, fieldField)
+    with pytest.raises(AssertionError):
+        sysField.liouvillian(0.5, 1.0, stateField[0],
+                fieldField)
+    with pytest.raises(AssertionError):
+        sysField.liouvillian(0.5, 1.0, stateField, "field")
+    assert callable(sysField.field_eom)
+    # bad construction
     with pytest.raises(AssertionError):
         TimeDependentSystemWithField(
                 hamiltonianFieldBad,
                 fieldEomGood)
     with pytest.raises(AssertionError):
         TimeDependentSystemWithField(
+                hamiltonianFieldBad2,
+                fieldEomGood)
+    with pytest.raises(AssertionError):
+        TimeDependentSystemWithField(
                 hamiltonianFieldGood,
                 fieldEomBad)
+    with pytest.raises(AssertionError):
+        TimeDependentSystemWithField(
+                hamiltonianFieldGood,
+                fieldEomBad2)
