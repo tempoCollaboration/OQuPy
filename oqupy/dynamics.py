@@ -295,7 +295,7 @@ def _parse_time(time) -> float:
         raise AssertionError("Argument `time` must be float.") from e
     return tmp_time
 
-def _parse_state(state, previous_shape) -> Tuple[ndarray, Tuple[int]]:  
+def _parse_state(state, previous_shape) -> Tuple[ndarray, Tuple[int]]:
     try:
         tmp_state = np.array(state, dtype=NpDtype)
     except Exception as e:
