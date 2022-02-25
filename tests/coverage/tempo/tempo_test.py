@@ -142,6 +142,22 @@ def test_guess_tempo_parameters():
                                              end_time=15.0,
                                              tolerance=1.0e-12)
 
+def test_tempo_time_dependent():
+    # Tempo class must be able to handle TimeDependentSystem as well
+    system = tempo.TimeDependentSystem(lambda t: t * 0.5 * tempo.operators.sigma("z"))
+    correlations = tempo.PowerLawSD(alpha=0.2,
+                                    zeta=2,
+                                    cutoff=1.0,
+                                    cutoff_type='exponential')
+    bath = tempo.Bath(0.1 * tempo.operators.sigma("x"), correlations)
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-2))
+    tempo_A= tempo.Tempo(system=system,
+                        bath=bath,
+                        parameters=tempo_parameters,
+                        initial_state=tempo.operators.spin_dm("down"),
+                        start_time=0.5)
+    dyn_A = tempo_A.compute(0.6)
+
 def test_tempo_compute():
     start_time = -0.3
     end_time = 0.84
