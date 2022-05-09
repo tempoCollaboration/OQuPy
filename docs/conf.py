@@ -71,7 +71,7 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 html_favicon = 'graphics/icon.ico'
-html_logo = 'graphics/logo-transparent.svg'
+html_logo = 'graphics/logo-transparent.png'
 html_theme_options = {
     'logo_only': True,
     'display_version': True,

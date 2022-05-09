@@ -26,7 +26,7 @@ systems [3-5]. This includes methods to compute ...
 
 Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
-![OQuPy - overview](docs/graphics/overview.svg)
+![OQuPy - overview](docs/graphics/overview.png)
 
 - **[1]** Strathearn et al., [New J. Phys. 19(9), p.093009](http://dx.doi.org/10.1088/1367-2630/aa8744) (2017).
 - **[2]** Strathearn et al., [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3)
