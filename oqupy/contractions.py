@@ -135,13 +135,17 @@ def compute_dynamics(
 
     # -- compute dynamics --
 
-    def propagators(step: int):
-        """Create the system propagators (first and second half) for the
-        time step `step`. """
-        t = tmp_start_time + step * dt
-        first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
-        second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
-        return first_step, second_step
+    if isinstance(system, System):
+        first_step = expm(system.liouvillian()*dt/2.0)
+        second_step = expm(system.liouvillian()*dt/2.0)
+        def propagators(step: int):
+            return first_step, second_step
+    elif isinstance(system, TimeDependentSystem):
+        def propagators(step: int):
+            t = tmp_start_time + step * dt
+            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
+            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+            return first_step, second_step
 
     def controls(step: int):
         return tmp_control.get_controls(
