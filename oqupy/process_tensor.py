@@ -23,7 +23,7 @@ framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 
 import os
 import tempfile
-from typing import Optional, Text
+from typing import Optional, Text, Union
 
 import numpy as np
 from numpy import ndarray
@@ -94,6 +94,11 @@ class BaseProcessTensor(BaseAPIClass):
     def transform_in(self):
         """ToDo. """
         return self._transform_in
+
+    @property
+    def max_step(self) -> Union[int, float]:
+        """ToDo"""
+        return len(self)
 
     @property
     def transform_out(self):
@@ -181,17 +186,22 @@ class TrivialProcessTensor(BaseProcessTensor):
     """
     def __init__(
             self,
+            hilbert_space_dimension: Optional[int] = 1,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """ToDo. """
         super().__init__(
-            hilbert_space_dimension=1,
+            hilbert_space_dimension=hilbert_space_dimension,
             name=name,
             description=description)
 
     def __len__(self) -> int:
         """Length of process tensor. """
         return 0
+
+    @property
+    def max_step(self) -> Union[int, float]:
+        return float('inf')
 
     def get_initial_tensor(self) -> ndarray:
         """ToDo. """

@@ -38,7 +38,8 @@ Indices = Union[int, slice, List[Union[int, slice]]]
 
 def compute_dynamics(
         system: BaseSystem,
-        process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
+        process_tensor: Optional[Union[List[BaseProcessTensor],
+                                       BaseProcessTensor]] = None,
         initial_state: Optional[ndarray] = None,
         control: Optional[Control] = None,
         start_time: Optional[float] = 0.0,
@@ -75,6 +76,10 @@ def compute_dynamics(
 
     check_isinstance(
         system, (System, TimeDependentSystem), "system")
+    hs_dim = system.dimension
+
+    if process_tensor is None:
+        process_tensor = []
     check_isinstance(
         process_tensor, (BaseProcessTensor, list), "process_tensor")
 
@@ -83,55 +88,57 @@ def compute_dynamics(
     elif isinstance(process_tensor, list):
         process_tensors = process_tensor
 
+    if control is None:
+        control = Control(hs_dim)
+    check_isinstance(control, Control, "control")
+
+    start_time = check_convert(start_time, float, "start_time")
+
+    if initial_state is None:
+        raise ValueError("An initial state must be specified.")
+    check_isinstance(initial_state, ndarray, "initial_state")
+    check_true(
+        initial_state.shape == (hs_dim, hs_dim),
+        "Initial sate must be a square matrix of " \
+            + f"dimension {hs_dim}x{hs_dim}.")
+
+    max_steps = []
     for pt in process_tensors:
         check_isinstance(
            pt, BaseProcessTensor, "pt",
            "One of the elements in `process_tensor` is not of type " \
                + "`{BaseProcessTensor.__name__}`.")
-
-    if len(process_tensors) > 1:
-        if initial_state is None:
-            raise ValueError("For multiple environments an initial state " \
-                + "must be specified.")
-
-    hs_dim = system.dimension
-    for pt in process_tensors:
+        if pt.get_initial_tensor() is not None:
+            raise NotImplementedError()
         check_true(
             hs_dim == pt.hilbert_space_dimension,
-            "All process tensor must have the same hilbert space dimension.")
+            "All process tensor must have the same hilbert space dimension " \
+                + "as the system.")
+        if pt.dt is not None:
+            if dt is None:
+                dt = pt.dt
+            else:
+                check_true(
+                    pt.dt == dt,
+                    "All process tensors must have the same timestep length.")
+        max_steps.append(pt.max_step)
+    max_step = np.min(max_steps+[np.inf])
 
-    lens = [len(pt) for pt in process_tensors]
-    check_true(
-        len(set(lens)) == 1,
-        "All process tensors must be of the same length.")
-
-    if control is not None:
-        check_isinstance(control, Control, "control")
-        tmp_control = control
-    else:
-        tmp_control = Control(hs_dim)
-
-    dts = [pt.dt for pt in process_tensors]
-    check_true(
-        len(set(dts)) == 1,
-        "All process tensors must be calculated with same timestep.")
-    dt = dts[0]
     if dt is None:
-        raise ValueError("Process tensor has no timestep, "\
-            + "please specify time step 'dt'.")
-
-    tmp_start_time = check_convert(start_time, float, "start_time")
-
-    if initial_state is not None:
-        check_true(
-            initial_state.shape == (hs_dim, hs_dim),
-            "Initial sate must be a square matrix of "\
-                + f"dimension {hs_dim}x{hs_dim}.")
+        raise ValueError(
+            "No timestep length has been specified. Please set `dt`.")
 
     if num_steps is not None:
-        tmp_num_steps = check_convert(num_steps, int, "num_steps")
+        num_steps = check_convert(num_steps, int, "num_steps")
+        check_true(
+            num_steps <= max_step,
+            "Variable `num_steps` is larger than the shortest process tensor!")
     else:
-        tmp_num_steps = None
+        check_true(
+            max_step < np.inf,
+            "Variable `num_steps` must be specified because all process " \
+                + "tensors involved are infinite.")
+        num_steps = int(max_step)
 
     # -- compute dynamics --
 
@@ -142,57 +149,40 @@ def compute_dynamics(
             return first_step, second_step
     elif isinstance(system, TimeDependentSystem):
         def propagators(step: int):
-            t = tmp_start_time + step * dt
+            t = start_time + step * dt
             first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
             second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
             return first_step, second_step
 
     def controls(step: int):
-        return tmp_control.get_controls(
+        return control.get_controls(
             step,
             dt=dt,
-            start_time=tmp_start_time)
+            start_time=start_time)
 
 
-    states = _compute_dynamics(process_tensors=process_tensors,
+    states = _compute_dynamics(hs_dim=hs_dim,
+                               process_tensors=process_tensors,
                                propagators=propagators,
                                controls=controls,
                                initial_state=initial_state,
-                               num_steps=tmp_num_steps,
+                               num_steps=num_steps,
                                record_all=record_all)
     if record_all:
-        times = tmp_start_time + np.arange(len(states))*dt
+        times = start_time + np.arange(len(states))*dt
     else:
-        times = [tmp_start_time + len(states)*dt]
+        times = [start_time + len(states)*dt]
 
     return Dynamics(times=list(times),states=states)
 
 
-def _build_cap(
-        process_tensors: List[BaseProcessTensor],
-        step: int):
-    """
-    Builds caps for multiple process tensors at a given timestep.
-
-    Parameters
-    ----------
-    process_tensors: List[BaseProcessTensor]
-        List of process tensor objects.
-    step: int
-        Step at which to build caps.
-
-    Returns
-    -------
-    cap_nodes: List[tensornetwork.Node]
-        List of caps for each process tensor at the chosen step.
-
-    """
-    cap_nodes = []
+def _get_caps(process_tensors: List[BaseProcessTensor], step: int):
+    """ToDo """
+    caps = []
     for i in range(len(process_tensors)):
         try:
             cap = process_tensors[i].get_cap_tensor(step)
-            cap_node = tn.Node(cap)
-            cap_nodes.append(cap_node)
+            caps.append(cap)
         except Exception as e:
             raise ValueError("There are either no cap tensors in "\
                     +f"process tensor {i} or process tensor {i} is "\
@@ -200,155 +190,107 @@ def _build_cap(
         if cap is None:
             raise ValueError(f"Process tensor {i} has no cap tensor "\
                 +f"for step {step}.")
-    return cap_nodes
+    return caps
 
-def _build_mpo_node(
-        process_tensors: List[BaseProcessTensor],
-        step: int):
-    """
-    Contracts MPO for multiple process tensors at a given timestep into a
-    single tensor.
+def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
+    """ToDo """
+    pt_mpos = []
+    for i in range(len(process_tensors)):
+        pt_mpo = process_tensors[i].get_mpo_tensor(step)
+        pt_mpos.append(pt_mpo)
+    return pt_mpos
 
-    Parameters
-    ----------
-    process_tensors: List[BaseProcessTensor]
-        List of process tensor objects.
-    step: int
-        Step at which to build MPO.
+def _apply_system_superoperator(current_node, current_edges, sup_op):
+    """ToDo """
+    sup_op_node = tn.Node(sup_op.T)
+    current_edges[-1] ^ sup_op_node[0]
+    new_sys_edge = sup_op_node[1]
+    current_node = current_node @ sup_op_node
+    current_edges[-1] = new_sys_edge
+    return current_node, current_edges
 
-    Returns
-    -------
-    mpo_node: tensornetwork.Node
-        Single tensor built from MPO for each process tensor at the chosen
-        step.
+def _apply_caps(current_node, current_edges, caps):
+    """ToDo """
+    node_dict, edge_dict = tn.copy([current_node])
+    for current_edge, cap in zip(current_edges[:-1], caps):
+        cap_node = tn.Node(cap)
+        edge_dict[current_edge] ^ cap_node[0]
+        node_dict[current_node] = node_dict[current_node] @ cap_node
+    state_node = node_dict[current_node]
+    return state_node.get_tensor()
 
-    """
-    try:
-        mpo = process_tensors[0].get_mpo_tensor(step)
-    except Exception as e:
-        raise ValueError("Process tensor 0 is not long enough") from e
-    if mpo is None:
-        raise ValueError("Process tensor 0 has no mpo tensor "\
-            +f"for step {step}.")
-    mpo_node = tn.Node(mpo)
-    for i in range(1,len(process_tensors)):
-        try:
-            dummy_mpo = process_tensors[i].get_mpo_tensor(step)
-        except Exception as e:
-            raise ValueError(f"Process tensor {i} is not long enough")\
-                from e
-        if dummy_mpo is None:
-            raise ValueError(f"Process tensor {i} has no mpo tensor "\
-                +f"for step {step}.")
-
-        dummy_mpo_node = tn.Node(dummy_mpo)
-        mpo_node[-1] ^ dummy_mpo_node[2]
-        mpo_node = mpo_node @ dummy_mpo_node
-    return mpo_node
+def _apply_pt_mpos(current_node, current_edges, pt_mpos):
+    """ToDo """
+    for i, pt_mpo in enumerate(pt_mpos):
+        if pt_mpo is None:
+            continue
+        pt_mpo_node = tn.Node(pt_mpo)
+        new_bond_edge = pt_mpo_node[1]
+        new_sys_edge = pt_mpo_node[3]
+        current_edges[i] ^ pt_mpo_node[0]
+        current_edges[-1] ^ pt_mpo_node[2]
+        current_node = current_node @ pt_mpo_node
+        current_edges[i] = new_bond_edge
+        current_edges[-1] = new_sys_edge
+    return current_node, current_edges
 
 def _compute_dynamics(
+        hs_dim: int,
         process_tensors: List[BaseProcessTensor],
         propagators: Callable[[int], Tuple[ndarray, ndarray]],
         controls: Callable[[int], Tuple[ndarray, ndarray]],
-        initial_state: Optional[ndarray] = None,
-        num_steps: Optional[int] = None,
-        record_all: Optional[bool] = True) -> List[ndarray]:
+        initial_state: ndarray,
+        num_steps: int,
+        record_all: bool) -> List[ndarray]:
     """ToDo """
     num_envs = len(process_tensors)
-    hs_dim = process_tensors[0].hilbert_space_dimension
 
+    # Initial state including the bond legs to the environments with:
+    #   edges 0, 1, .., num_envs-1    are the bond legs of the environments
+    #   edge  -1                      is the state leg
+    initial_ndarray = initial_state.reshape(hs_dim**2)
+    initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+    current_node = tn.Node(initial_ndarray)
+    current_edges = current_node[:]
 
-    initial_tensor = process_tensors[0].get_initial_tensor()
-    assert (initial_state is None) ^ (initial_tensor is None), \
-        "Initial state must be either (exclusively) encoded in the " \
-        + "process tensor or given as an argument."
-    if (initial_tensor is None) or (num_envs > 1):
-        initial_tensor = util.add_singleton(
-            initial_state.reshape(hs_dim**2), 0)
-
-    dummy_init = util.add_singleton(identity(hs_dim**2), 0)
-    current = tn.Node(initial_tensor)
-
-    for i in range(num_envs-1):
-        dummy = tn.Node(dummy_init)
-        current[-1] ^ dummy[1]
-        current = current @ dummy
-
-    current_bond_legs = current[:-1]
-    current_state_leg = current[-1]
     states = []
-    if num_steps is None:
-        tmp_num_steps = len(process_tensors[0])
-    else:
-        tmp_num_steps = num_steps
-
-    for step in range(tmp_num_steps+1):
+    for step in range(num_steps+1):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
         if pre_measurement_control is not None:
-            pre_node = tn.Node(pre_measurement_control.T)
-            current_state_leg ^ pre_node[0]
-            current_state_leg = pre_node[1]
-            current = current @ pre_node
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, pre_measurement_control)
 
-        if step == tmp_num_steps:
+        if step == num_steps:
             break
 
         # -- extract current state --
         if record_all:
-            cap_nodes = _build_cap(process_tensors, step)
-            node_dict, edge_dict = tn.copy([current])
-            for i in range(num_envs):
-                edge_dict[current_bond_legs[i]] ^ cap_nodes[i][0]
-                node_dict[current] = node_dict[current] @ cap_nodes[i]
-            state_node = node_dict[current]
-            state = state_node.get_tensor().reshape(hs_dim, hs_dim)
+            caps = _get_caps(process_tensors, step)
+            state_tensor = _apply_caps(current_node, current_edges, caps)
+            state = state_tensor.reshape(hs_dim, hs_dim)
             states.append(state)
 
         # -- apply post measurement control --
         if post_measurement_control is not None:
-            post_node = tn.Node(post_measurement_control.T)
-            current_state_leg ^ post_node[0]
-            current_state_leg = post_node[1]
-            current = current @ post_node
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, post_measurement_control)
 
         # -- propagate one time step --
-        mpo_node = _build_mpo_node(process_tensors, step)
-        mpo_bond_legs = [mpo_node[0]]
-        mpo_bond_legs += [mpo_node[i*2+1] for i in range(1, num_envs)]
-
         first_half_prop, second_half_prop = propagators(step)
-        first_half_prop_node = tn.Node(first_half_prop.T)
-        second_half_prop_node = tn.Node(second_half_prop.T)
+        pt_mpos = _get_pt_mpos(process_tensors, step)
 
-        lams = [process_tensors[i].get_lam_tensor(step) \
-                for i in range(num_envs)]
-
-        for i in range(num_envs):
-            current_bond_legs[i] ^ mpo_bond_legs[i]
-        current_state_leg ^ first_half_prop_node[0]
-        first_half_prop_node[1] ^ mpo_node[2]
-        mpo_node[-1] ^ second_half_prop_node[0]
-        current_bond_legs[0] = mpo_node[1]
-        for i in range(1,num_envs):
-            current_bond_legs[i] = mpo_node[2*i+2]
-        current_state_leg = second_half_prop_node[1]
-        current = current \
-            @ first_half_prop_node @ mpo_node @ second_half_prop_node
-        for i,lam in enumerate(lams):
-            if lam is not None:
-                lam_node = tn.Node(lam)
-                current_bond_legs[i] ^ lam_node[0]
-                current_bond_legs[i] = lam_node[1]
-                current @ lam_node
+        current_node, current_edges = _apply_system_superoperator(
+            current_node, current_edges, first_half_prop)
+        current_node, current_edges = _apply_pt_mpos(
+            current_node, current_edges, pt_mpos)
+        current_node, current_edges = _apply_system_superoperator(
+            current_node, current_edges, second_half_prop)
 
     # -- extract last state --
-    cap_nodes = _build_cap(process_tensors, tmp_num_steps)
-    for i in range(num_envs):
-        current_bond_legs[i] ^ cap_nodes[i][0]
-        current = current @ cap_nodes[i]
-    final_state_node = current
-    final_state = final_state_node.get_tensor().reshape(hs_dim, hs_dim)
+    caps = _get_caps(process_tensors, step)
+    state_tensor = _apply_caps(current_node, current_edges, caps)
+    final_state = state_tensor.reshape(hs_dim, hs_dim)
     states.append(final_state)
 
     return states
@@ -603,6 +545,85 @@ def _parse_times(times, max_step, dt, start_time):
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # -- partly copied code -------------------------------------------------------
+
+def _build_cap(
+        process_tensors: List[BaseProcessTensor],
+        step: int):
+    """
+    Builds caps for multiple process tensors at a given timestep.
+
+    Parameters
+    ----------
+    process_tensors: List[BaseProcessTensor]
+        List of process tensor objects.
+    step: int
+        Step at which to build caps.
+
+    Returns
+    -------
+    cap_nodes: List[tensornetwork.Node]
+        List of caps for each process tensor at the chosen step.
+
+    """
+    cap_nodes = []
+    for i in range(len(process_tensors)):
+        try:
+            cap = process_tensors[i].get_cap_tensor(step)
+            cap_node = tn.Node(cap)
+            cap_nodes.append(cap_node)
+        except Exception as e:
+            raise ValueError("There are either no cap tensors in "\
+                    +f"process tensor {i} or process tensor {i} is "\
+                    +"not long enough") from e
+        if cap is None:
+            raise ValueError(f"Process tensor {i} has no cap tensor "\
+                +f"for step {step}.")
+    return cap_nodes
+
+def _build_mpo_node(
+        process_tensors: List[BaseProcessTensor],
+        step: int):
+    """
+    Contracts MPO for multiple process tensors at a given timestep into a
+    single tensor.
+
+    Parameters
+    ----------
+    process_tensors: List[BaseProcessTensor]
+        List of process tensor objects.
+    step: int
+        Step at which to build MPO.
+
+    Returns
+    -------
+    mpo_node: tensornetwork.Node
+        Single tensor built from MPO for each process tensor at the chosen
+        step.
+
+    """
+    try:
+        mpo = process_tensors[0].get_mpo_tensor(step)
+    except Exception as e:
+        raise ValueError("Process tensor 0 is not long enough") from e
+    if mpo is None:
+        raise ValueError("Process tensor 0 has no mpo tensor "\
+            +f"for step {step}.")
+    mpo_node = tn.Node(mpo)
+    for i in range(1,len(process_tensors)):
+        try:
+            dummy_mpo = process_tensors[i].get_mpo_tensor(step)
+        except Exception as e:
+            raise ValueError(f"Process tensor {i} is not long enough")\
+                from e
+        if dummy_mpo is None:
+            raise ValueError(f"Process tensor {i} has no mpo tensor "\
+                +f"for step {step}.")
+
+        dummy_mpo_node = tn.Node(dummy_mpo)
+        mpo_node[-1] ^ dummy_mpo_node[2]
+        mpo_node = mpo_node @ dummy_mpo_node
+    return mpo_node
+
 
 def compute_dynamics_with_field(
         system: BaseSystem,
