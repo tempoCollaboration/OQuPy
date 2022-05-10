@@ -28,8 +28,9 @@ from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
 from oqupy.dynamics import Dynamics, DynamicsWithField
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import BaseSystem
+from oqupy.system import BaseSystem, System, TimeDependentSystem
 from oqupy.operators import identity, left_super, right_super
+from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
 
 
@@ -71,59 +72,64 @@ def compute_dynamics(
         (accounting for the interaction with the environment).
     """
     # -- input parsing --
-    assert isinstance(system, BaseSystem), \
-        "Parameter `system` is not of type `oqupy.BaseSystem`."
 
-    if not isinstance(process_tensor, List):
+    check_isinstance(
+        system, (System, TimeDependentSystem), "system")
+    check_isinstance(
+        process_tensor, (BaseProcessTensor, list), "process_tensor")
+
+    if isinstance(process_tensor, BaseProcessTensor):
         process_tensors = [process_tensor]
-    else:
+    elif isinstance(process_tensor, list):
         process_tensors = process_tensor
 
     for pt in process_tensors:
-        assert isinstance(pt, BaseProcessTensor), \
-            "Parameter `process_tensor` is neither a process tensor nor a " \
-                + "list of process tensors. "
+        check_isinstance(
+           pt, BaseProcessTensor, "pt",
+           "One of the elements in `process_tensor` is not of type " \
+               + "`{BaseProcessTensor.__name__}`.")
 
     if len(process_tensors) > 1:
-        assert (initial_state is not None), \
-        "For multiple environments an initial state must be specified."
+        if initial_state is None:
+            raise ValueError("For multiple environments an initial state " \
+                + "must be specified.")
 
     hs_dim = system.dimension
     for pt in process_tensors:
-        assert hs_dim == pt.hilbert_space_dimension
+        check_true(
+            hs_dim == pt.hilbert_space_dimension,
+            "All process tensor must have the same hilbert space dimension.")
 
     lens = [len(pt) for pt in process_tensors]
-    assert len(set(lens)) == 1, \
-        "All process tensors must be of the same length."
+    check_true(
+        len(set(lens)) == 1,
+        "All process tensors must be of the same length.")
 
     if control is not None:
-        assert isinstance(control, Control), \
-            "Parameter `control` is not of type `oqupy.Control`."
+        check_isinstance(control, Control, "control")
         tmp_control = control
     else:
         tmp_control = Control(hs_dim)
 
     dts = [pt.dt for pt in process_tensors]
-    assert len(set(dts)) == 1, \
-        "All process tensors must be calculated with same timestep."
+    check_true(
+        len(set(dts)) == 1,
+        "All process tensors must be calculated with same timestep.")
     dt = dts[0]
     if dt is None:
         raise ValueError("Process tensor has no timestep, "\
             + "please specify time step 'dt'.")
 
-    try:
-        tmp_start_time = float(start_time)
-    except Exception as e:
-        raise AssertionError("Start time must be a float.") from e
+    tmp_start_time = check_convert(start_time, float, "start_time")
 
     if initial_state is not None:
-        assert initial_state.shape == (hs_dim, hs_dim)
+        check_true(
+            initial_state.shape == (hs_dim, hs_dim),
+            "Initial sate must be a square matrix of "\
+                + f"dimension {hs_dim}x{hs_dim}.")
 
     if num_steps is not None:
-        try:
-            tmp_num_steps = int(num_steps)
-        except Exception as e:
-            raise AssertionError("Number of steps must be an integer.") from e
+        tmp_num_steps = check_convert(num_steps, int, "num_steps")
     else:
         tmp_num_steps = None
 
@@ -138,8 +144,6 @@ def compute_dynamics(
         return first_step, second_step
 
     def controls(step: int):
-        """Create the system (pre and post measurement) for the time step
-        `step`. """
         return tmp_control.get_controls(
             step,
             dt=dt,
@@ -697,8 +701,14 @@ def compute_dynamics_with_field(
         #print(t, field, state)
         # SAMPLE
         if subdiv_limit < 2:
-            first_step = expm(system.liouvillian(t, t+__dt/4.0, state, field)*__dt/2.0) ###
-            second_step = expm(system.liouvillian(t, t+__dt*3.0/4.0, state, field)*__dt/2.0) ###
+            first_step = expm(system.liouvillian(t,
+                                                 t+__dt/4.0,
+                                                 state,
+                                                 field)*__dt/2.0) ###
+            second_step = expm(system.liouvillian(t,
+                                                  t+__dt*3.0/4.0,
+                                                  state,
+                                                  field)*__dt/2.0) ###
             return first_step, second_step
         # ADAPTIVE - note quad_vec ignores limit=n for n less than 10
         liouvillian = lambda tau: system.liouvillian(t, tau, state, field)
@@ -732,14 +742,15 @@ def compute_dynamics_with_field(
             start_time=__start_time)
 
 
-    states, fields = _compute_dynamics_with_field(process_tensors=process_tensors, ###
-                                          propagators=propagators,
-                                          compute_field=compute_field, ###
-                                          controls=controls,
-                                          initial_field=initial_field, ###
-                                          initial_state=initial_state,
-                                          num_steps=__num_steps,
-                                          record_all=record_all)
+    states, fields = _compute_dynamics_with_field(
+        process_tensors=process_tensors, ###
+        propagators=propagators,
+        compute_field=compute_field, ###
+        controls=controls,
+        initial_field=initial_field, ###
+        initial_state=initial_state,
+        num_steps=__num_steps,
+        record_all=record_all)
     if record_all:
         times = __start_time + np.arange(len(states))*__dt
     else:

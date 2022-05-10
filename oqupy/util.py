@@ -17,7 +17,7 @@ Module for utilities.
 
 import sys
 import copy as cp
-from typing import List, Optional, Text
+from typing import Any, List, Optional, Text
 from threading import Timer
 from time import time
 from datetime import timedelta
@@ -92,6 +92,48 @@ def is_diagonal_matrix(tensor: ndarray):
     assert i == j
     test = tensor.reshape(-1)[:-1].reshape(i-1, j+1)
     return ~np.any(test[:, 1:])
+
+# -- input parsing -----------------------------------------------------------
+
+def check_convert(
+        variable: Any,
+        conv_type: Any,
+        name: Text = None,
+        msg: Text = None):
+    """Attempt to convert variable into a specific type. """
+    try:
+        converted_variable = conv_type(variable)
+    except Exception as e:
+        name_str = f"`{name}`" if name is not None else ""
+        msg_str = msg if msg is not None else ""
+        err_str = f"Variable `{name_str}` must be type `{conv_type.__name__}`."
+        raise TypeError(err_str + msg_str) from e
+    return converted_variable
+
+def check_true(
+        expr: bool,
+        msg: Text = None):
+    """Check that an specific expression is true. """
+    if not expr:
+        msg_str = msg if msg is not None else ""
+        raise ValueError(msg_str)
+
+def check_isinstance(
+        variable: Any,
+        types: Any,
+        name: Text = None,
+        msg: Text = None):
+    """Check that a variable is an instance of one of the given types. """
+    if not isinstance(types, tuple):
+        types_list = (types, )
+    else:
+        types_list = types
+    if not isinstance(variable, types_list):
+        name_str = f"`{name}`" if name is not None else ""
+        types_str = " or ".join([f"`{type.__name__}`" for type in types_list])
+        msg_str = msg if msg is not None else ""
+        raise TypeError(f"Variable {name_str} is not of the type "
+                        + f"{types_str}. {msg_str}")
 
 # -- process bar --------------------------------------------------------------
 
