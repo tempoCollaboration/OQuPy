@@ -57,6 +57,10 @@ pt2 = oqupy.pt_tempo_compute(bath2,
 
 
 def test_multi_env_dynamics():
-    dyns = oqupy.compute_dynamics(system, [pt,pt],initial_state=initial_state)
-    dyns2 = oqupy.compute_dynamics(system, [pt2],initial_state=initial_state)
+    dyns = oqupy.compute_dynamics(system,
+                                  process_tensor=[pt,pt],
+                                  initial_state=initial_state)
+    dyns2 = oqupy.compute_dynamics(system,
+                                   process_tensor=[pt2],
+                                   initial_state=initial_state)
     np.testing.assert_almost_equal(dyns.states,dyns2.states,decimal=5)
