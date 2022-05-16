@@ -181,20 +181,30 @@ def _compute_dynamics_all(
             second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
             return first_step, second_step
     elif isinstance(system, TimeDependentSystemWithField):
-        def propagators(step: int, state: ndarray, field: complex):
-            t = start_time + step * dt
-            liouvillian = lambda tau: system.liouvillian(t, tau, state, field)
-            first_step = expm(integrate.quad_vec(liouvillian,
-                                                 a=t,
-                                                 b=t+dt/2.0,
-                                                 epsrel=epsrel,
-                                                 limit=subdiv_limit)[0])
-            second_step = expm(integrate.quad_vec(liouvillian,
-                                                  a=t+dt/2.0,
-                                                  b=t+dt,
-                                                  epsrel=epsrel,
-                                                  limit=subdiv_limit)[0])
+        if subdiv_limit is None:
+            def propagators(step: int, state: ndarray, field: complex):
+                t = start_time + step * dt
+            first_step = expm(system.liouvillian(t+dt/4.0, state,
+                field)*dt/2.0)
+            second_step = expm(system.liouvillian(t+dt*3.0/4.0, state,
+                field)*dt/2.0)
             return first_step, second_step
+        else:
+            def propagators(step: int, state: ndarray, field: complex):
+                t = start_time + step * dt
+                liouvillian = lambda tau: system.liouvillian(t, tau, state,
+                        field)
+                first_step = expm(integrate.quad_vec(liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
 
     # -- prepare compute field --
     if with_field:
