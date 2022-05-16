@@ -218,7 +218,6 @@ def _compute_dynamics_all(
     states = []
     if with_field:
         fields = []
-        field = initial_field
 
     for step in range(num_steps+1):
         # -- apply pre measurement control --
@@ -236,8 +235,11 @@ def _compute_dynamics_all(
             state_tensor = _apply_caps(current_node, current_edges, caps)
             state = state_tensor.reshape(hs_dim, hs_dim)
         if with_field:
+            if step == 0:
+                field = initial_field
+            else:
+                field = compute_field(step, previous_state, field, state)
             previous_state = state
-            field = compute_field(step, previous_state, field, state)
         if record_all:
             states.append(state)
             if with_field:
