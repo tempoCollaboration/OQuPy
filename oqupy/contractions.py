@@ -157,7 +157,7 @@ def _compute_dynamics_all(
         record_all: bool,
         epsrel: float,
         subdiv_limit: int) -> Union[Dynamics,DynamicsWithField]:
-    """Compute system and (optionally) field dynamics accounting for the 
+    """Compute system and (optionally) field dynamics accounting for the
     interaction with the environment using the process tensor."""
 
     # -- input parsing --
@@ -169,42 +169,7 @@ def _compute_dynamics_all(
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
-    if isinstance(system, System):
-        first_step = expm(system.liouvillian()*dt/2.0)
-        second_step = expm(system.liouvillian()*dt/2.0)
-        def propagators(step: int):
-            return first_step, second_step
-    elif isinstance(system, TimeDependentSystem):
-        def propagators(step: int):
-            t = start_time + step * dt
-            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
-            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
-            return first_step, second_step
-    elif isinstance(system, TimeDependentSystemWithField):
-        if subdiv_limit is None:
-            def propagators(step: int, state: ndarray, field: complex):
-                t = start_time + step * dt
-                first_step = expm(system.liouvillian(t, t+dt/4.0, state,
-                    field)*dt/2.0)
-                second_step = expm(system.liouvillian(t, t+dt*3.0/4.0, state,
-                    field)*dt/2.0)
-                return first_step, second_step
-        else:
-            def propagators(step: int, state: ndarray, field: complex):
-                t = start_time + step * dt
-                liouvillian = lambda tau: system.liouvillian(t, tau, state,
-                        field)
-                first_step = expm(integrate.quad_vec(liouvillian,
-                                                     a=t,
-                                                     b=t+dt/2.0,
-                                                     epsrel=epsrel,
-                                                     limit=subdiv_limit)[0])
-                second_step = expm(integrate.quad_vec(liouvillian,
-                                                      a=t+dt/2.0,
-                                                      b=t+dt,
-                                                      epsrel=epsrel,
-                                                      limit=subdiv_limit)[0])
-                return first_step, second_step
+    propagators = _get_propagators(system, dt, start_time, epsrel, subdiv_limit)
 
     # -- prepare compute field --
     if with_field:
@@ -302,6 +267,50 @@ def _compute_dynamics_all(
         return DynamicsWithField(times=list(times),states=states, fields=fields)
 
     return Dynamics(times=list(times),states=states)
+
+def _get_propagators(
+        system, dt, start_time, epsrel, subdiv_limit):
+    """Prepare propagators according to system type and subdiv_limit"""
+    if isinstance(system, System):
+        first_step = expm(system.liouvillian()*dt/2.0)
+        second_step = expm(system.liouvillian()*dt/2.0)
+        def propagators(step: int):
+            return first_step, second_step
+    elif isinstance(system, TimeDependentSystem):
+        def propagators(step: int):
+            t = start_time + step * dt
+            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
+            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+            return first_step, second_step
+    elif isinstance(system, TimeDependentSystemWithField):
+        if subdiv_limit is None:
+            def propagators(step: int, state: ndarray, field: complex):
+                t = start_time + step * dt
+                first_step = expm(system.liouvillian(t, t+dt/4.0, state,
+                    field)*dt/2.0)
+                second_step = expm(system.liouvillian(t, t+dt*3.0/4.0, state,
+                    field)*dt/2.0)
+                return first_step, second_step
+        else:
+            def propagators(step: int, state: ndarray, field: complex):
+                t = start_time + step * dt
+                liouvillian = lambda tau: system.liouvillian(t, tau, state,
+                        field)
+                first_step = expm(integrate.quad_vec(liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
+    else:
+        raise NotImplementedError("System type {} unknown".format(
+            system.__name__))
+    return propagators
 
 
 def _compute_dynamics_input_parse(
