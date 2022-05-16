@@ -174,6 +174,7 @@ def test_compute_dynamics_with_field():
                 np.eye(2),
                 dt = 0.2,
                 )
+    with pytest.raises(TypeError):
         tempo.compute_dynamics_with_field(
             system,
             None,
@@ -181,12 +182,13 @@ def test_compute_dynamics_with_field():
             dt = 0.2,
             )
     # Wrong system type
-    tempo.compute_dynamics_with_field(
-            tempo.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
-            initial_field,
-            np.array([[0.5,-0.51j],[0,-.25]]),
-            dt = 0.2,
-            num_steps = num_steps,
-            start_time = start_time
-            )
+    with pytest.raises(TypeError):
+        tempo.compute_dynamics_with_field(
+                tempo.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
+                initial_field,
+                np.array([[0.5,-0.51j],[0,-.25]]),
+                dt = 0.2,
+                num_steps = num_steps,
+                start_time = start_time
+                )
     
