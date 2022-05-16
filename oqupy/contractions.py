@@ -184,11 +184,11 @@ def _compute_dynamics_all(
         if subdiv_limit is None:
             def propagators(step: int, state: ndarray, field: complex):
                 t = start_time + step * dt
-            first_step = expm(system.liouvillian(t+dt/4.0, state,
-                field)*dt/2.0)
-            second_step = expm(system.liouvillian(t+dt*3.0/4.0, state,
-                field)*dt/2.0)
-            return first_step, second_step
+                first_step = expm(system.liouvillian(t, t+dt/4.0, state,
+                    field)*dt/2.0)
+                second_step = expm(system.liouvillian(t, t+dt*3.0/4.0, state,
+                    field)*dt/2.0)
+                return first_step, second_step
         else:
             def propagators(step: int, state: ndarray, field: complex):
                 t = start_time + step * dt
