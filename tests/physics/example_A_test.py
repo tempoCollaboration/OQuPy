@@ -75,7 +75,7 @@ def test_tempo_backend_A():
         tempo_params_A,
         initial_state_A,
         start_time=0.0)
-    tempo_A.compute(end_time=1.0)
+    tempo_A.compute(end_time=t_end_A)
     dyn_A = tempo_A.get_dynamics()
     np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
 
@@ -87,7 +87,7 @@ def test_tensor_network_pt_tempo_backend_A():
     pt = oqupy.pt_tempo_compute(
         bath_A,
         start_time=0.0,
-        end_time=1.0,
+        end_time=t_end_A,
         parameters=tempo_params_A)
 
     dyn = oqupy.compute_dynamics(
