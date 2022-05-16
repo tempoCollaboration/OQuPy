@@ -33,6 +33,11 @@ class :class:`oqupy.system.BaseSystem`
     Encodes a time dependent system Hamiltonian and possibly some additional
     time dependent Markovian decay.
 
+  class :class:`oqupy.system.TimeDependentSystemWithField`
+    Encodes a time dependent system Hamiltonian (and possibly some additional
+    time dependent Markovian decay) that couples to a classical field which
+    in turn evolves according to a prescribed Heisenberg equation of motion.
+
 class :class:`oqupy.system.SystemChain`
   Encodes a 1D chain of systems and possibly some additional Markovian decay.
 
@@ -78,12 +83,23 @@ TEMPO
 class :class:`oqupy.tempo.TempoParameters`
   Stores a set of parameters for a TEMPO computation.
 
-class :class:`oqupy.tempo.Tempo`
-  Class to facilitate a TEMPO computation.
+class :class:`oqupy.system.BaseTempo`
+  Abstract class for all TEMPO computations.
 
-  method :meth:`oqupy.tempo.Tempo.compute`
-    Method that carries out a TEMPO computation and creates an
-    :class:`oqupy.dynamics.Dynamics` object.
+  class :class:`oqupy.tempo.Tempo`
+    Class to facilitate a TEMPO computation.
+    
+    method :meth:`oqupy.tempo.Tempo.compute`
+      Method that carries out a TEMPO computation and creates a
+      :class:`oqupy.dynamics.Dynamics` object.
+
+  class :class:`oqupy.tempo.TempoWithField`
+    Class to facilitate a TEMPO computation with concurrent evolution of
+    a classical field.
+    
+    method :meth:`oqupy.tempo.TempoWithField.compute`
+      Method that carries out a TEMPO computation while evolving a classical
+      field, and creates a :class:`oqupy.dynamics.DynamicsWithField` object.
 
 function :func:`oqupy.tempo.guess_tempo_parameters`
   Function that chooses an appropriate set of parameters for a particular
@@ -107,7 +123,13 @@ Process Tensor Applications
 
 function :func:`oqupy.contractions.compute_dynamics`
   Compute a :class:`oqupy.dynamics.Dynamics` object for given
-  :class:`oqupy.system.BaseSystem` and
+  :class:`oqupy.system.System` :class:`oqupy.system.TimeDependentSystem` and
+  :class:`oqupy.control.Control` and
+  :class:`oqupy.process_tensor.BaseProcessTensor` objects.
+
+function :func:`oqupy.contractions.compute_dynamics_with_field`
+  Compute a :class:`oqupy.dynamics.DynamicsWithField` object for given
+  :class:`oqupy.system.TimeDependentSystemWithField` and
   :class:`oqupy.control.Control` and
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 
@@ -151,14 +173,18 @@ class :class:`oqupy.dynamics.Dynamics`
   Object that encodes the discretized evolution of the reduced density matrix
   of a system.
 
+class :class:`oqupy.dynamics.DynamicsWithField`
+  Object that encodes the discretized evolution of the reduced density matrix
+  of a system together with that of a classical field.
+
 class :class:`oqupy.process_tensor.BaseProcessTensor`
   Object that encodes a so called process tensor (which captures all possible
   Markovian and non-Markovian interactions between some system and an
   environment).
 
 
-Utillities
-----------
+Utilities
+---------
 
 module :mod:`oqupy.operators`
   Supplies several commonly used operators, such as the Pauli matrices and spin
