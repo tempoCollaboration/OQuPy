@@ -658,6 +658,11 @@ class TempoWithField(BaseTempo):
 
         return self._dynamics
 
+    def get_dynamics(self) -> DynamicsWithField:
+        """Returns DynamicsWithField instance associated with the Tempo object.
+        """
+        return self._dynamics
+
 def _check_time(end_time):
     """input check on end time of a tempo computation"""
     try:
