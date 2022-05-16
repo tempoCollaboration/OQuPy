@@ -123,7 +123,8 @@ Process Tensor Applications
 
 function :func:`oqupy.contractions.compute_dynamics`
   Compute a :class:`oqupy.dynamics.Dynamics` object for given
-  :class:`oqupy.system.System` :class:`oqupy.system.TimeDependentSystem` and
+  :class:`oqupy.system.System` or
+  :class:`oqupy.system.TimeDependentSystem` and
   :class:`oqupy.control.Control` and
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 

@@ -40,6 +40,10 @@ For a complete list of *all* code contributors see
 `the contributors list <https://github.com/tempoCollaboration/TimeEvolvingMPO/graphs/contributors>`_
 on GitHub.
 
+**Version ?.?.0**
+  - `Piper Fowler-Wright <https://github.com/piperfw>`_: Open quantum systems
+    with mean-field evolution [FowlerWright2021]
+
 **Version 0.2.0**
   - `Gerald E. Fux <https://github.com/gefux>`_: Chains of open quantum systems [Fux2022].
   - `Dominic Gribben <https://github.com/djgribben>`_: Bath dynamics extension [Gribben2021a].
