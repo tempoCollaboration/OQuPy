@@ -239,11 +239,11 @@ class TimeDependentSystemWithField(BaseSystem):
 
     .. math::
 
-    \frac{d}{dt}\rho(t)=&-i[\hat{H}(t,\langle a\rangle),\rho(t)]\\
-        &+ \sum_n^N \gamma_n(t) \left(
-         \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
-         - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
-         - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t)\right)
+        \frac{d}{dt}\rho(t) = &-i [\hat{H}(t, \langle a \rangle), \rho(t)] \\
+            &+ \sum_n^N \gamma_n(t) \left(
+                \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
+                - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
+                - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t) \right)
 
     with the  `hamiltionian` :math:`\hat{H}(t, \langle a \rangle)`
     depending on both time :math:`t` and `field` :math:`\langle
