@@ -615,7 +615,7 @@ class TempoWithField(BaseTempo):
     def compute(
             self,
             end_time: float,
-            progress_type: Text = None) -> Dynamics:
+            progress_type: Text = None) -> DynamicsWithField:
         """
         Propagate (or continue to propagate) the TEMPO tensor network and
         coherent field to time `end_time`.
