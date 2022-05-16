@@ -119,3 +119,74 @@ def test_tempo_compute():
         pt_A = tempo.pt_tempo_compute(bath=bath,
                                       start_time=start_time,
                                       end_time=end_time)
+
+def test_compute_dynamics_with_field():
+    start_time = 1
+    num_steps = 3
+    initial_field = 0.5j
+    
+    system = tempo.TimeDependentSystemWithField(
+    			lambda t, field: 1j * 0.2 * tempo.operators.sigma("y") * field,
+    			lambda t, state, field: -1j*field -0.1j * np.matmul(
+    			tempo.operators.sigma("y"), state).trace().real)
+    correlations = tempo.PowerLawSD(alpha=3,
+    							zeta=1,
+    							cutoff=1.0,
+    							cutoff_type='gaussian',
+    							temperature=0.0)
+    bath = tempo.Bath(0.5 * tempo.operators.sigma("x"), correlations)
+    tempo_parameters = tempo.TempoParameters(dt=0.2, dkmax=20, epsrel=10**(-5))
+    
+    dynamics = tempo.compute_dynamics_with_field(
+            system,
+            initial_field,
+            np.array([[0.5,-0.51j],[0,-.25]]),
+            dt = 0.2,
+            num_steps = num_steps,
+            start_time = start_time
+            )
+    
+    assert isinstance(dynamics, tempo.dynamics.DynamicsWithField) # check correct type of dynamics returned
+    assert len(dynamics.times) == 1 + num_steps # initial time plus num_steps steps 
+    assert np.isclose(np.min(dynamics.times), start_time)  # check start_time used correctly
+    assert type(dynamics.fields[1]) == tempo.config.NpDtype # check complex type
+    assert np.isclose(dynamics.fields[0], initial_field) # check initial field recorded correctly 
+    assert len(dynamics.fields) == len(dynamics.times) # check for OBOE in number of fields
+    
+    # Test subdiv_limit == None
+    dynamics2 = tempo.compute_dynamics_with_field(
+            system,
+            initial_field,
+            np.array([[0.5,-0.51j],[0,-.25]]),
+            dt = 0.2,
+            num_steps = num_steps,
+            start_time = start_time,
+            subdiv_limit = None
+            )
+    # Sampling should give same result up to numerical error
+    assert np.isclose(dynamics.fields[-1], dynamics2.fields[-1])
+    
+    # input checks
+    # No initial field / wrong type
+    with pytest.raises(TypeError):
+        tempo.compute_dynamics_with_field(
+                system,
+                np.eye(2),
+                dt = 0.2,
+                )
+        tempo.compute_dynamics_with_field(
+            system,
+            None,
+            np.eye(2),
+            dt = 0.2,
+            )
+    # Wrong system type
+    tempo.compute_dynamics_with_field(
+            tempo.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
+            initial_field,
+            np.array([[0.5,-0.51j],[0,-.25]]),
+            dt = 0.2,
+            num_steps = num_steps,
+            start_time = start_time
+            )
+    
