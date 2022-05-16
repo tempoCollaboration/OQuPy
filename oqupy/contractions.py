@@ -97,14 +97,16 @@ def compute_dynamics_with_field(
         epsrel: Optional[float] = INTEGRATE_EPSREL,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> DynamicsWithField:
     """
-    Compute the system dynamics for a given system Hamiltonian.
+    Compute the system and field dynamics for a given system Hamiltonian and
+    field equation of motion.
 
     Parameters
     ----------
-    system: ToDo
-        ToDo
+    system: TimeDependentSystemWithField
+        Object containing the system Hamiltonian and field equation of
+        motion.
     initial_field: complex
-        ToDo
+        Initial field value.
     initial_state: ndarray
         Initial system state.
     dt: float
@@ -119,15 +121,21 @@ def compute_dynamics_with_field(
         Optional control operations.
     record_all: bool
         If `false` function only computes the final state.
-    epsrel: ToDo
-        ToDo
-    subdiv_limit: ToDo
-        ToDo
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating the system Liouvillian. If None
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
+    epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
 
     Returns
     -------
     dynamics_with_field: DynamicsWithField
-        ToDo
+        The system and field dynamics for the given system Hamiltonian and
+        field equation of motion (accounting for the interaction with the
+        environment).
     """
     initial_field = check_convert(initial_field, complex, "initial_field")
     dynamics_with_field = _compute_dynamics_all(
@@ -149,7 +157,8 @@ def _compute_dynamics_all(
         record_all: bool,
         epsrel: float,
         subdiv_limit: int) -> Union[Dynamics,DynamicsWithField]:
-    """ToDo. """
+    """Compute system and (optionally) field dynamics accounting for the 
+    interaction with the environment using the process tensor."""
 
     # -- input parsing --
     parsed_parameters = _compute_dynamics_input_parse(
