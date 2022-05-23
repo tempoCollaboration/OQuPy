@@ -20,7 +20,7 @@ systems [3-5]. This includes methods to compute ...
 - the dynamics of a strongly coupled bosonic environment [6].
 - the dynamics of a quantum system coupled to multiple non-Markovian environments [7].
 - the dynamics of a chain of non-Markovian open quantum systems [8].
-
+- the dynamics of an open many-body system with one-to-all light-matter coupling [9].
 
 Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
@@ -35,6 +35,7 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 - **[6]** Gribben et al., [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
 - **[7]** Gribben et al., [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
 - **[8]** Fux et al., [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
+- **[9]** Fowler-Wright at al., [arXiv:2112.09003](http://arxiv.org/abs/2112.09003) (2021).
 
 -------------------------------------------------------------------------------
 

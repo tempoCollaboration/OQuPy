@@ -53,7 +53,7 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 - **[8]** Fux et al.,
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_ (2022).
 - **[9]** Fowler-Wright at al.,
-  `arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`_ (2021)
+  `arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`_ (2021).
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/tempoCollaboration/TimeEvolvingMPO/master?filepath=tutorials%2Ftutorial_01_quickstart.ipynb

@@ -33,6 +33,9 @@ Major code contributions &dagger;:
 
 &dagger; ... For a complete list of *all* code contributors see [Contributors](https://github.com/tempoCollaboration/TimeEvolvingMPO/graphs/contributors).
 
+**Version 0.3.0**
+- [Piper Fowler-Wright](https://github.com/piperfw): Open quantum systems with mean-field evolution [FowlerWright2021]
+
 **Version 0.2.0**
 - [Gerald E. Fux](https://github.com/gefux): Chains of open quantum systems [Fux2022].
 - [Dominic Gribben](https://github.com/djgribben): Bath dynamics extension [Gribben2021a].
