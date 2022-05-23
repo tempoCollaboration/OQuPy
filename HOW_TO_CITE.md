@@ -16,7 +16,7 @@ Please consider citing
 - Bath dynamics: **[Gribben2020a]**
 - Multiple environments: **[Gribben2020b]**
 - Chains (PT-TEBD): **[Fux2022]**
-
+- Mean-Field TEMPO: **[FowlerWright2021]**
 
 BibTeX
 ------
