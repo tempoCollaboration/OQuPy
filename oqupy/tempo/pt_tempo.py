@@ -238,7 +238,8 @@ class PtTempo(BaseAPIClass):
             self._backend_instance.initialize()
 
         progress = get_progress(progress_type)
-        with progress(self._backend_instance.num_steps) as prog_bar:
+        title = "--> PT-TEMPO computation:"
+        with progress(self._backend_instance.num_steps, title) as prog_bar:
             while self._backend_instance.compute_step():
                 prog_bar.update(self._backend_instance.step)
             prog_bar.update(self._backend_instance.step)

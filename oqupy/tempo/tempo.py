@@ -428,15 +428,16 @@ class Tempo(BaseTempo):
             self._dynamics.add(self._time(step), state.reshape(dim, dim))
 
         start_step = self._backend_instance.step
-        num_step = self._get_num_step(start_step, end_time)
+        num_step = self._get_num_step(start_step, tmp_end_time)
 
         progress = get_progress(progress_type)
-        with progress(num_step) as prog_bar:
-            while self._time(self._backend_instance.step) < tmp_end_time:
+        title = "--> TEMPO computation:"
+        with progress(num_step, title) as prog_bar:
+            for i in range(num_step):
+                prog_bar.update(i)
                 step, state = self._backend_instance.compute_step()
                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
-                prog_bar.update(self._backend_instance.step - start_step)
-            prog_bar.update(self._backend_instance.step - start_step)
+            prog_bar.update(num_step)
 
         return self._dynamics
 
@@ -645,16 +646,18 @@ class TempoWithField(BaseTempo):
             self._dynamics.add(self._time(step), state.reshape(dim, dim), field)
 
         start_step = self._backend_instance.step
-        num_step = self._get_num_step(start_step, end_time)
+        num_step = self._get_num_step(start_step, tmp_end_time)
 
         progress = get_progress(progress_type)
-        with progress(num_step) as prog_bar:
-            while self._time(self._backend_instance.step) < tmp_end_time:
+        title = "--> TEMPO-with-field computation:"
+
+        with progress(num_step, title) as prog_bar:
+            for i in range(num_step):
+                prog_bar.update(i)
                 step, state, field = self._backend_instance.compute_step()
-                self._dynamics.add(self._time(step), state.reshape(dim, dim),
-                        field)
-                prog_bar.update(self._backend_instance.step - start_step)
-            prog_bar.update(self._backend_instance.step - start_step)
+                self._dynamics.add(
+                    self._time(step), state.reshape(dim, dim), field)
+            prog_bar.update(num_step)
 
         return self._dynamics
 
