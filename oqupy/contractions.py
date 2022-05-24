@@ -48,7 +48,8 @@ def compute_dynamics(
         process_tensor: Optional[Union[List[BaseProcessTensor],
                                        BaseProcessTensor]] = None,
         control: Optional[Control] = None,
-        record_all: Optional[bool] = True) -> Dynamics:
+        record_all: Optional[bool] = True,
+        progress_type: Optional[Text] = None) -> Dynamics:
     """
     Compute the system dynamics for a given system Hamiltonian.
 
@@ -70,6 +71,10 @@ def compute_dynamics(
         Optional control operations.
     record_all: bool
         If `false` function only computes the final state.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``silent``, ``simple``, ``bar``}. If `None` then
+        the default progress type is used.
 
     Returns
     -------
@@ -79,7 +84,8 @@ def compute_dynamics(
     """
     dynamics = _compute_dynamics_all(
         False, system, None, initial_state, dt, num_steps, start_time,
-        process_tensor, control, record_all, epsrel=None, subdiv_limit=None)
+        process_tensor, control, record_all, epsrel=None, subdiv_limit=None,
+        progress_type=progress_type)
     return dynamics
 
 
@@ -95,7 +101,8 @@ def compute_dynamics_with_field(
         control: Optional[Control] = None,
         record_all: Optional[bool] = True,
         epsrel: Optional[float] = INTEGRATE_EPSREL,
-        subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> DynamicsWithField:
+        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+        progress_type: Optional[Text] = None) -> DynamicsWithField:
     """
     Compute the system and field dynamics for a given system Hamiltonian and
     field equation of motion.
@@ -129,6 +136,10 @@ def compute_dynamics_with_field(
     epsrel: float (default = config.INTEGRATE_EPSREL)
         The relative error tolerance for the adaptive algorithm
         when integrating the system Liouvillian.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``silent``, ``simple``, ``bar``}. If `None` then
+        the default progress type is used.
 
     Returns
     -------
@@ -140,7 +151,8 @@ def compute_dynamics_with_field(
     initial_field = check_convert(initial_field, complex, "initial_field")
     dynamics_with_field = _compute_dynamics_all(
         True, system, initial_field, initial_state, dt, num_steps, start_time,
-        process_tensor, control, record_all, epsrel, subdiv_limit)
+        process_tensor, control, record_all, epsrel, subdiv_limit,
+        progress_type=progress_type)
     return dynamics_with_field
 
 
@@ -156,7 +168,8 @@ def _compute_dynamics_all(
         control: Control,
         record_all: bool,
         epsrel: float,
-        subdiv_limit: int) -> Union[Dynamics,DynamicsWithField]:
+        subdiv_limit: int,
+        progress_type: Text) -> Union[Dynamics, DynamicsWithField]:
     """Compute system and (optionally) field dynamics accounting for the
     interaction with the environment using the process tensor."""
 
@@ -203,6 +216,13 @@ def _compute_dynamics_all(
     if with_field:
         fields = []
 
+    if with_field:
+        title = "--> Compute dynamics with field:"
+    else:
+        title = "--> Compute dynamics:"
+    prog_bar = get_progress(progress_type)(num_steps, title)
+    prog_bar.enter()
+
     for step in range(num_steps+1):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
@@ -228,6 +248,8 @@ def _compute_dynamics_all(
             states.append(state)
             if with_field:
                 fields.append(field)
+
+        prog_bar.update(step)
 
         # -- apply post measurement control --
         if post_measurement_control is not None:
@@ -256,6 +278,9 @@ def _compute_dynamics_all(
     if with_field:
         final_field = compute_field(step, previous_state, field, final_state)
         fields.append(final_field)
+
+    prog_bar.update(num_steps)
+    prog_bar.exit()
 
     # -- create dynamics object --
     if record_all:
@@ -564,7 +589,8 @@ def compute_correlations(
 
     progress = get_progress(progress_type)
     num_steps = len(schedule)
-    with progress(num_steps) as prog_bar:
+    title = "--> Compute correlations:"
+    with progress(num_steps, title) as prog_bar:
         prog_bar.update(0)
         for i, (indices_a, indices_b, anti_time_ordered) in enumerate(schedule):
             if anti_time_ordered:
@@ -625,7 +651,8 @@ def _compute_ordered_correlations(
         start_time=start_time,
         initial_state=initial_state,
         dt=dt,
-        num_steps=max_step)
+        num_steps=max_step,
+        progress_type='silent')
     _, corr = dynamics.expectations(last_operator)
     ret_correlations = corr[last_times]
     return ret_correlations
