@@ -68,7 +68,7 @@ def test_tempo():
     tempo_sys_A.compute(end_time=end_time2, progress_type="silent")
     tempo_sys_A.compute(end_time=end_time3, progress_type="simple")
     dyn_A = tempo_sys_A.get_dynamics()
-    assert len(dyn_A.times) == 13
+    assert len(dyn_A.times) == 12
 
 def test_tempo_bad_input():
     start_time = -0.3
@@ -142,6 +142,22 @@ def test_guess_tempo_parameters():
                                              end_time=15.0,
                                              tolerance=1.0e-12)
 
+def test_tempo_time_dependent():
+    # Tempo class must be able to handle TimeDependentSystem as well
+    system = tempo.TimeDependentSystem(lambda t: t * 0.5 * tempo.operators.sigma("z"))
+    correlations = tempo.PowerLawSD(alpha=0.2,
+                                    zeta=2,
+                                    cutoff=1.0,
+                                    cutoff_type='exponential')
+    bath = tempo.Bath(0.1 * tempo.operators.sigma("x"), correlations)
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-2))
+    tempo_A= tempo.Tempo(system=system,
+                        bath=bath,
+                        parameters=tempo_parameters,
+                        initial_state=tempo.operators.spin_dm("down"),
+                        start_time=0.5)
+    dyn_A = tempo_A.compute(0.6)
+
 def test_tempo_compute():
     start_time = -0.3
     end_time = 0.84
@@ -180,3 +196,45 @@ def test_tempo_dynamics_reference():
     t_2, sz_2 = dynamics_2.expectations(tempo.operators.sigma("z"))
     assert dynamics_1 == dynamics_2
     assert len(t_2) > len(t_1)
+
+def test_tempo_with_field():
+	system = tempo.TimeDependentSystemWithField(
+				lambda t, field: 0.2 * tempo.operators.sigma("x") * np.abs(field),
+				lambda t, state, field: -0.1*field -0.1j * np.matmul(
+				tempo.operators.sigma("x"), state).trace().real)
+	correlations = tempo.PowerLawSD(alpha=0.1,
+								zeta=1,
+								cutoff=5.0,
+								cutoff_type='gaussian',
+								temperature=0.1)
+	bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
+	tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-7))
+	tempo_sys = tempo.TempoWithField(system=system,
+						bath=bath,
+						initial_state=tempo.operators.spin_dm("z-"),
+						initial_field=1.0+1.0j,
+						start_time=0.0,
+						parameters=tempo_parameters)
+	dynamics = tempo_sys.compute(end_time=0.5, progress_type="silent")
+	assert tempo_sys.dimension == 2
+	assert isinstance(dynamics, tempo.dynamics.DynamicsWithField)
+	assert len(dynamics.times == 6)
+	# bad input
+	with pytest.raises(AssertionError):
+		# wrong system type
+		wrong_system = tempo.TimeDependentSystem(
+			lambda t: 0.2 * tempo.operators.sigma("x")
+			)
+		tempo.TempoWithField(system=wrong_system,
+						bath=bath,
+						initial_state=tempo.operators.spin_dm("z-"),
+						initial_field=1.0+1.0j,
+						start_time=0.0,
+						parameters=tempo_parameters)
+	with pytest.raises(TypeError):
+		# no initial field
+		tempo.TempoWithField(system=system,
+						bath=bath,
+						initial_state=tempo.operators.spin_dm("z-"),
+						start_time=0.0,
+						parameters=tempo_parameters)

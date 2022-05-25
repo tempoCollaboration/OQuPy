@@ -39,6 +39,10 @@ The code in this project is based on ideas from the following publications:
   *Exact dynamics of non-additive environments in non-Markovian open quantum
   systems*,
   `arXiv:2109.08442 <http://arxiv.org/abs/2109.08442>`_ (2021).
+- **[FowlerWright2021]**
+  Fowler-Wright et al.,
+  *Efficient many-body non-Markovian dynamics of organic polaritons*,
+  `arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`_ (2021)
 - **[Fux2022]** Fux et al.,
   *Thermalization of a spin chain strongly coupled to its environment*,
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_ (2022).
@@ -49,6 +53,16 @@ BibTeX
 ------
 
 .. code-block:: bibtex
+
+  @article{FowlerWright2021,
+    title = {Efficient many-body non-Markovian dynamics of organic polaritons},
+    author = {Fowler-Wright, Piper and Lovett, Brendon W. and Keeling, Jonathan},
+    archivePrefix = {arXiv},
+    arxivId = {2112.09003},
+    eprint = {2112.09003},
+    url = {http://arxiv.org/abs/2112.09003},
+    year = {2021}
+  }
 
   @article{Fux2021,
     title = {Efficient Exploration of Hamiltonian Parameter Space for Optimal Control of Non-Markovian Open Quantum Systems},
@@ -65,9 +79,39 @@ BibTeX
     url = {https://link.aps.org/doi/10.1103/PhysRevLett.126.200401}
   }
 
+  @article{Fux2022,
+    title = {{Thermalization of a spin chain strongly coupled to its environment}},
+    author = {Fux, Gerald E. and Kilda, Dainius and Lovett, Brendon W. and Keeling, Jonathan},
+    archivePrefix = {arXiv},
+    arxivId = {2201.05529},
+    eprint = {2201.05529},
+    url = {http://arxiv.org/abs/2201.05529},
+    year = {2022}
+  }
+
+  @article{Gribben2021a,
+    title = {{Exact dynamics of non-additive environments in non-Markovian open quantum systems}},
+    author = {Gribben, Dominic and Rouse, Dominic M. and Iles-Smith, Jake and Strathearn, Aidan and Maguire, Henry and Kirton, Peter and Nazir, Ahsan and Gauger, Erik M. and Lovett, Brendon W.},
+    archivePrefix = {arXiv},
+    arxivId = {2109.08442},
+    eprint = {2109.08442},
+    url = {http://arxiv.org/abs/2109.08442},
+    year = {2021}
+  }
+
+  @article{Gribben2021b,
+    title = {{Using the Environment to Understand non-Markovian Open Quantum Systems}},
+    author = {Gribben, Dominic and Strathearn, Aidan and Fux, Gerald E. and Kirton, Peter and Lovett, Brendon W.},
+    archivePrefix = {arXiv},
+    arxivId = {2106.04212},
+    eprint = {2106.04212},
+    url = {http://arxiv.org/abs/2106.04212},
+    year = {2021}
+  }
+
   @article{Jorgensen2019,
     title = {Exploiting the Causal Tensor Network Structure of Quantum
-             Processes to Efficiently Simulate Non-Markovian Path Integrals},
+            Processes to Efficiently Simulate Non-Markovian Path Integrals},
     author = {J\o{}rgensen, Mathias R. and Pollock, Felix A.},
     journal = {Phys. Rev. Lett.},
     volume = {123},
@@ -79,6 +123,16 @@ BibTeX
     publisher = {American Physical Society},
     doi = {10.1103/PhysRevLett.123.240602},
     url = {https://link.aps.org/doi/10.1103/PhysRevLett.123.240602}
+  }
+
+  @misc{OQuPy,
+    author={{The TEMPO collaboration}},
+    title={{OQuPy: A Python 3 package to efficiently compute
+            non-Markovian open quantum systems.}},
+    year=2020,
+    publisher={GitHub},
+    doi={10.5281/zenodo.4428316}
+    url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
   }
 
   @article{Pollock2018,
@@ -93,24 +147,24 @@ BibTeX
     title = {{Non-Markovian quantum processes: Complete framework and
               efficient characterization}},
     url = {https://link.aps.org/doi/10.1103/PhysRevA.97.012127
-           http://arxiv.org/abs/1512.00589
-           http://dx.doi.org/10.1103/PhysRevA.97.012127},
+          http://arxiv.org/abs/1512.00589
+          http://dx.doi.org/10.1103/PhysRevA.97.012127},
     volume = {97},
     year = {2018}
   }
 
   @article{Strathearn_2017,
-  	doi = {10.1088/1367-2630/aa8744},
-  	url = {https://doi.org/10.1088/1367-2630/aa8744},
-  	year = 2017,
-  	month = {sep},
-  	publisher = {{IOP} Publishing},
-  	volume = {19},
-  	number = {9},
-  	pages = {093009},
-  	author = {A Strathearn and B W Lovett and P Kirton},
-  	title = {Efficient real-time path integrals for non-Markovian spin-boson models},
-  	journal = {New Journal of Physics},
+    doi = {10.1088/1367-2630/aa8744},
+    url = {https://doi.org/10.1088/1367-2630/aa8744},
+    year = 2017,
+    month = {sep},
+    publisher = {{IOP} Publishing},
+    volume = {19},
+    number = {9},
+    pages = {093009},
+    author = {A Strathearn and B W Lovett and P Kirton},
+    title = {Efficient real-time path integrals for non-Markovian spin-boson models},
+    journal = {New Journal of Physics},
   }
 
   @article{Strathearn2018,
@@ -140,14 +194,4 @@ BibTeX
     title = {{Modelling Non-Markovian Quantum Systems Using Tensor Networks}},
     url = {http://link.springer.com/10.1007/978-3-030-54975-6},
     year = {2020}
-  }
-
-  @misc{OQuPy,
-    author={{The TEMPO collaboration}},
-    title={{OQuPy: A Python 3 package to efficiently compute
-            non-Markovian open quantum systems.}},
-    year=2020,
-    publisher={GitHub},
-    doi={10.5281/zenodo.4428316}
-    url={https://github.com/tempoCollaboration/OQuPy}
   }

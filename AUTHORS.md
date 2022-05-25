@@ -6,6 +6,9 @@ This open source project has been started by [Gerald E. Fux](https://github.com/
 Major code contributions
 ------------------------
 
+**Version 0.3.0**
+- [Piper Fowler-Wright](https://github.com/piperfw): Open quantum systems with mean-field evolution [FowlerWright2021]
+
 **Version 0.2.0**
 - [Gerald E. Fux](https://github.com/gefux): Chains of open quantum systems [Fux2022].
 - Dainius Kilda: Precursor code for chains of open quantum systems [Fux2022].
@@ -48,4 +51,3 @@ Acknowledgements
 **Project maintainers:**
 - [Gerald E. Fux](https://github.com/gefux) (<gf52@st-andrews.ac.uk>)
 - [Peter Kirton](https://github.com/peterkirton) (<peter.kirton@strath.ac.uk>)
-

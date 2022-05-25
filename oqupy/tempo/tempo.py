@@ -27,23 +27,27 @@ time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
 """
 
 import sys
-from typing import Callable, Dict, Optional, Text
+from typing import Callable, Dict, Optional, Text, Tuple, Union
 import warnings
 from copy import copy
 
 import numpy as np
 from numpy import ndarray
 from scipy.linalg import expm
-from oqupy.correlations import BaseCorrelations
+from scipy import integrate
 
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
+from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
-from oqupy.dynamics import Dynamics
-from oqupy.system import BaseSystem
-from oqupy.tempo.backends.tempo_backend import TempoBackend
+from oqupy.correlations import BaseCorrelations
+from oqupy.dynamics import Dynamics, DynamicsWithField
 from oqupy.operators import commutator, acommutator
+from oqupy.system import BaseSystem, System, TimeDependentSystem,\
+    TimeDependentSystemWithField
+from oqupy.tempo.backends.tempo_backend import TempoBackend
+from oqupy.tempo.backends.tempo_backend import TempoWithFieldBackend
 from oqupy.util import get_progress
 
 
@@ -183,15 +187,12 @@ class TempoParameters(BaseAPIClass):
     def add_correlation_time(self) -> None:
         self._add_correlation_time = None
 
-class Tempo(BaseAPIClass):
+class BaseTempo(BaseAPIClass):
     """
-    Class representing the entire TEMPO tensornetwork as introduced in
-    [Strathearn2018].
+    Base class for all TEMPO objects.
 
     Parameters
     ----------
-    system: BaseSystem
-        The system.
     bath: Bath
         The Bath (includes the coupling operator to the system).
     parameters: TempoParameters
@@ -200,9 +201,6 @@ class Tempo(BaseAPIClass):
         The initial density matrix of the system.
     start_time: float
         The start time.
-    backend: str (default = None)
-        The name of the backend to use for the computation. If
-        `backend` is ``None`` then the default backend is used.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -213,7 +211,6 @@ class Tempo(BaseAPIClass):
     """
     def __init__(
             self,
-            system: BaseSystem,
             bath: Bath,
             parameters: TempoParameters,
             initial_state: ndarray,
@@ -221,11 +218,7 @@ class Tempo(BaseAPIClass):
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
-        """Create a Tempo object. """
-
-        assert isinstance(system, BaseSystem), \
-            "Argument 'system' must be an instance of BaseSystem."
-        self._system = system
+        """Create a BaseTempo object. """
 
         assert isinstance(bath, Bath), \
             "Argument 'bath' must be an instance of Bath."
@@ -261,12 +254,10 @@ class Tempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        assert self._bath.dimension == self._dimension and \
-            self._system.dimension == self._dimension, \
+        assert self._bath.dimension == self._dimension, \
             "Hilbertspace dimensions are unequal: " \
-            + "system ({}), ".format(self._system.dimension) \
             + "initial state ({}), ".format(self._dimension) \
-            + "and bath coupling ({}), ".format(self._bath.dimension)
+            + "and bath coupling ({}).".format(self._bath.dimension)
 
         super().__init__(name, description)
 
@@ -278,10 +269,94 @@ class Tempo(BaseAPIClass):
         self._dynamics = None
         self._backend_instance = None
 
-        self._init_tempo_backend()
+    def _influence(self, dk: int) -> ndarray:
+        """Create the influence functional matrix for a time step distance
+        of dk. """
+        return influence_matrix(
+            dk,
+            parameters=self._parameters,
+            correlations=self._correlations,
+            coupling_acomm=self._coupling_acomm,
+            coupling_comm=self._coupling_comm)
 
-    def _init_tempo_backend(self):
-        """Create and initialize the tempo backend. """
+    def _time(self, step: int) -> float:
+        """Return the time that corresponds to the time step `step`. """
+        return self._start_time + float(step)*self._parameters.dt
+
+    def _get_num_step(self,
+            start_step: int,
+            end_time: float) -> Tuple[int, int]:
+        """Return the number of steps required from start_step to reach
+        end_time"""
+        end_step = int((end_time - self._start_time)/self._parameters.dt)
+        num_step = max(0, end_step - start_step)
+        return num_step
+
+    @property
+    def dimension(self) -> ndarray:
+        """Hilbert space dimension. """
+        return copy(self._dimension)
+
+class Tempo(BaseTempo):
+    """
+    Class representing the entire TEMPO tensornetwork as introduced in
+    [Strathearn2018].
+
+    Parameters
+    ----------
+    system: System or TimeDependentSystem
+        The system.
+    bath: Bath
+        The Bath (includes the coupling operator to the system).
+    parameters: TempoParameters
+        The parameters for the TEMPO computation.
+    initial_state: ndarray
+        The initial density matrix of the system.
+    start_time: float
+        The start time.
+    backend_config: dict (default = None)
+        The configuration of the backend. If `backend_config` is
+        ``None`` then the default backend configuration is used.
+    name: str (default = None)
+        An optional name for the tempo object.
+    description: str (default = None)
+        An optional description of the tempo object.
+    """
+    def __init__(
+            self,
+            system: Union[System, TimeDependentSystem],
+            bath: Bath,
+            parameters: TempoParameters,
+            initial_state: ndarray,
+            start_time: float,
+            backend_config: Optional[Dict] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a Tempo object. """
+
+        assert isinstance(system, BaseSystem), \
+            "Argument 'system' must be an instance of BaseSystem."
+        self._system = system
+
+        super().__init__(
+                bath,
+                parameters,
+                initial_state,
+                start_time,
+                backend_config,
+                name,
+                description)
+
+        assert self._system.dimension == self._dimension, \
+            "Hilbertspace dimensions are unequal: " \
+            + "system ({}), ".format(self._system.dimension) \
+            + "initial state ({}), ".format(self._dimension) \
+            + "and bath coupling ({}), ".format(self._bath.dimension)
+
+        self._prepare_backend()
+
+    def _prepare_backend(self):
+        """Create and initialize the TEMPO backend. """
         dim = self._dimension
         initial_state = self._initial_state.reshape(dim**2)
         influence = self._influence
@@ -309,33 +384,18 @@ class Tempo(BaseAPIClass):
         self._dynamics = Dynamics(name=name,
                                   description=description)
 
-    def _influence(self, dk: int):
-        """Create the influence functional matrix for a time step distance
-        of dk. """
-        return influence_matrix(
-            dk,
-            parameters=self._parameters,
-            correlations=self._correlations,
-            coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm)
-
     def _propagators(self, step: int):
         """Create the system propagators (first and second half) for the time
         step `step`. """
         dt = self._parameters.dt
-        t = self._time(step)
-        first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0)
-        second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+        if isinstance(self._system, TimeDependentSystem):
+            t = self._time(step)
+            first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0)
+            second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+        else:
+            first_step = expm(self._system.liouvillian()*dt/2.0)
+            second_step = expm(self._system.liouvillian()*dt/2.0)
         return first_step, second_step
-
-    def _time(self, step: int):
-        """Return the time that corresponds to the time step `step`. """
-        return self._start_time + float(step)*self._parameters.dt
-
-    @property
-    def dimension(self) -> ndarray:
-        """Hilbert space dimension. """
-        return copy(self._dimension)
 
     def compute(
             self,
@@ -359,10 +419,7 @@ class Tempo(BaseAPIClass):
         dynamics: Dynamics
             The instance of Dynamics associated with the TEMPO object.
         """
-        try:
-            tmp_end_time = float(end_time)
-        except Exception as e:
-            raise AssertionError("End time must be a float.") from e
+        tmp_end_time = _check_time(end_time)
 
         dim = self._dimension
         if self._backend_instance.step is None:
@@ -371,16 +428,16 @@ class Tempo(BaseAPIClass):
             self._dynamics.add(self._time(step), state.reshape(dim, dim))
 
         start_step = self._backend_instance.step
-        end_step = int((end_time - self._start_time)/self._parameters.dt)
-        num_step = max(0, end_step - start_step)
+        num_step = self._get_num_step(start_step, tmp_end_time)
 
         progress = get_progress(progress_type)
-        with progress(num_step) as prog_bar:
-            while self._time(self._backend_instance.step) < tmp_end_time:
+        title = "--> TEMPO computation:"
+        with progress(num_step, title) as prog_bar:
+            for i in range(num_step):
+                prog_bar.update(i)
                 step, state = self._backend_instance.compute_step()
                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
-                prog_bar.update(self._backend_instance.step - start_step)
-            prog_bar.update(self._backend_instance.step - start_step)
+            prog_bar.update(num_step)
 
         return self._dynamics
 
@@ -388,6 +445,234 @@ class Tempo(BaseAPIClass):
         """Returns the instance of Dynamics associated with the Tempo object.
         """
         return self._dynamics
+
+class TempoWithField(BaseTempo):
+    r"""
+    Class representing the TEMPO tensornetwork with coherent field
+    evolution as introduced in [FowlerWright2021].
+
+    Parameters
+    ----------
+    system: TimeDependentSystemWithField
+        The (time-dependent) system with a coherent field.
+    bath: Bath
+        The Bath (includes the coupling operator to the system).
+    parameters: TempoParameters
+        The parameters for the TEMPO computation.
+    initial_state: ndarray
+        The initial density matrix of the system.
+    initial_field: complex
+        The initial field value.
+    start_time: float
+        The start time.
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating the system Liouvillian. If None
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
+    epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
+    backend_config: dict (default = None)
+        The configuration of the backend. If `backend_config` is
+        ``None`` then the default backend configuration is used.
+    name: str (default = None)
+        An optional name for the tempo object.
+    description: str (default = None)
+        An optional description of the tempo object.
+    """
+    def __init__(
+            self,
+            system: TimeDependentSystemWithField,
+            bath: Bath,
+            parameters: TempoParameters,
+            initial_state: ndarray,
+            initial_field: complex,
+            start_time: float,
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            epsrel: Optional[float] = INTEGRATE_EPSREL,
+            backend_config: Optional[Dict] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a TempoWithField object. """
+        assert isinstance(system, TimeDependentSystemWithField), \
+            "Argument 'system' must be an instance of " \
+            "TimeDependentSystemWithField."
+        self._system = system
+
+        super().__init__(
+                bath,
+                parameters,
+                initial_state,
+                start_time,
+                backend_config,
+                name,
+                description)
+
+        try:
+            tmp_field = complex(initial_field)
+        except Exception as e:
+            raise AssertionError("Argument `initial_field` must be "\
+                    " complex.") from e
+        self._initial_field = tmp_field
+
+        try:
+            tmp_epsrel = float(epsrel)
+        except Exception as e:
+            raise AssertionError("Argument `epsrel` must be float.") from e
+        self.epsrel = tmp_epsrel
+
+        if subdiv_limit is not None:
+            try:
+                tmp_subdiv_limit = int(subdiv_limit)
+            except Exception as e:
+                raise AssertionError("Argument `subdiv_limit` must be "\
+                        "int.") from e
+        else:
+            tmp_subdiv_limit = None
+        self.subdiv_limit = tmp_subdiv_limit
+
+        self._prepare_backend()
+
+    def _prepare_backend(self):
+        """Create and initialize the TempoWithField backend. """
+        dim = self._dimension
+        initial_state = self._initial_state.reshape(dim**2)
+        initial_field = self._initial_field
+        influence = self._influence
+        unitary_transform = self._bath.unitary_transform
+        propagators = self._propagators
+        compute_field = self._compute_field
+        sum_north = np.array([1.0]*(dim**2))
+        sum_west = np.array([1.0]*(dim**2))
+        dkmax = self._parameters.dkmax
+        epsrel = self._parameters.epsrel
+        self._backend_instance = TempoWithFieldBackend(
+                initial_state,
+                initial_field,
+                influence,
+                unitary_transform,
+                propagators,
+                compute_field,
+                sum_north,
+                sum_west,
+                dkmax,
+                epsrel,
+                config=self._backend_config)
+
+    def _init_dynamics(self):
+        """Create a DynamicsWithField object with metadata from the
+        TempoWithField object. """
+        name = None
+        description = "computed from '{}' TempoWithField".format(self.name)
+        self._dynamics = DynamicsWithField(name=name,
+                                  description=description)
+
+    def _propagators(self, step: int, state: ndarray, field: complex):
+        """Create the system propagators (first and second half) for the time
+        step `step`.
+
+        Samples system Liouvillian if `self.subdiv_limit` is None,
+        otherwise integrates this operator numerically."""
+        dt = self._parameters.dt
+        t0 = self._time(step)
+        # SAMPLE
+        if self.subdiv_limit is None:
+            first_step = expm(
+                    self._system.liouvillian(
+                        t0, t0+dt/4.0, state, field)*dt/2.0)
+            second_step = expm(
+                    self._system.liouvillian(
+                        t0, t0+dt*3.0/4.0, state, field)*dt/2.0)
+            return first_step, second_step
+        # ADAPTIVE
+        liouvillian = lambda t: self._system.liouvillian(t0, t, state, field)
+        first_step = expm(integrate.quad_vec(f=liouvillian,
+                                             a=t0,
+                                             b=t0+dt/2.0,
+                                             epsrel=self.epsrel,
+                                             limit=self.subdiv_limit)[0])
+        second_step = expm(integrate.quad_vec(f=liouvillian,
+                                             a=t0+dt/2.0,
+                                             b=t0+dt,
+                                             epsrel=self.epsrel,
+                                             limit=self.subdiv_limit)[0])
+        return first_step, second_step
+
+    def _compute_field(self, step:int, state: ndarray, field: complex,
+            next_state: Optional[ndarray] = None):
+        r"""Compute the field value for the time step `step`. """
+        dt = self._parameters.dt
+        t = self._time(step)
+        field_eom = self._system.field_eom
+        state = state.reshape((self._dimension, self._dimension))
+        rk1 = field_eom(t, state, field)
+        if next_state is None:
+            return rk1 * dt
+        next_state = next_state.reshape((self._dimension, self._dimension))
+        rk2 = field_eom(t + dt, next_state, field + rk1 * dt)
+        return field + dt * (rk1 + rk2) / 2
+
+    def compute(
+            self,
+            end_time: float,
+            progress_type: Text = None) -> DynamicsWithField:
+        """
+        Propagate (or continue to propagate) the TEMPO tensor network and
+        coherent field to time `end_time`.
+
+        Parameters
+        ----------
+        end_time: float
+            The time to which the TEMPO should be computed.
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``'silent'``, ``'simple'``, ``'bar'``}. If `None` then
+            the default progress type is used.
+
+        Returns
+        -------
+        dynamics: DynamicsWithFields
+            The instance of DynamicsWithField associated with the
+            TempoWithField object.
+        """
+
+        tmp_end_time = _check_time(end_time)
+
+        dim = self._dimension
+        if self._backend_instance.step is None:
+            step, state, field = self._backend_instance.initialize()
+            self._init_dynamics()
+            self._dynamics.add(self._time(step), state.reshape(dim, dim), field)
+
+        start_step = self._backend_instance.step
+        num_step = self._get_num_step(start_step, tmp_end_time)
+
+        progress = get_progress(progress_type)
+        title = "--> TEMPO-with-field computation:"
+
+        with progress(num_step, title) as prog_bar:
+            for i in range(num_step):
+                prog_bar.update(i)
+                step, state, field = self._backend_instance.compute_step()
+                self._dynamics.add(
+                    self._time(step), state.reshape(dim, dim), field)
+            prog_bar.update(num_step)
+
+        return self._dynamics
+
+    def get_dynamics(self) -> DynamicsWithField:
+        """Returns DynamicsWithField instance associated with the Tempo object.
+        """
+        return self._dynamics
+
+def _check_time(end_time):
+    """input check on end time of a tempo computation"""
+    try:
+        tmp_end_time = float(end_time)
+    except Exception as e:
+        raise AssertionError("End time must be a float.") from e
+    return tmp_end_time
 
 def influence_matrix(
         dk: int,

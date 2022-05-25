@@ -17,7 +17,7 @@ Module for utilities.
 
 import sys
 import copy as cp
-from typing import List, Optional, Text
+from typing import Any, List, Optional, Text
 from threading import Timer
 from time import time
 from datetime import timedelta
@@ -93,6 +93,48 @@ def is_diagonal_matrix(tensor: ndarray):
     test = tensor.reshape(-1)[:-1].reshape(i-1, j+1)
     return ~np.any(test[:, 1:])
 
+# -- input parsing -----------------------------------------------------------
+
+def check_convert(
+        variable: Any,
+        conv_type: Any,
+        name: Text = None,
+        msg: Text = None):
+    """Attempt to convert variable into a specific type. """
+    try:
+        converted_variable = conv_type(variable)
+    except Exception as e:
+        name_str = f"`{name}`" if name is not None else ""
+        msg_str = msg if msg is not None else ""
+        err_str = f"Variable `{name_str}` must be type `{conv_type.__name__}`."
+        raise TypeError(err_str + msg_str) from e
+    return converted_variable
+
+def check_true(
+        expr: bool,
+        msg: Text = None):
+    """Check that an specific expression is true. """
+    if not expr:
+        msg_str = msg if msg is not None else ""
+        raise ValueError(msg_str)
+
+def check_isinstance(
+        variable: Any,
+        types: Any,
+        name: Text = None,
+        msg: Text = None):
+    """Check that a variable is an instance of one of the given types. """
+    if not isinstance(types, tuple):
+        types_list = (types, )
+    else:
+        types_list = types
+    if not isinstance(variable, types_list):
+        name_str = f"`{name}`" if name is not None else ""
+        types_str = " or ".join([f"`{type.__name__}`" for type in types_list])
+        msg_str = msg if msg is not None else ""
+        raise TypeError(f"Variable {name_str} is not of the type "
+                        + f"{types_str}. {msg_str}")
+
 # -- process bar --------------------------------------------------------------
 
 class BaseProgress:
@@ -100,10 +142,18 @@ class BaseProgress:
 
     def __enter__(self):
         """Contextmanager enter. """
-        raise NotImplementedError()
+        return self.enter()
 
     def __exit__(self, exception_type, exception_value, traceback):
         """Contextmanager exit. """
+        self.exit()
+
+    def enter(self):
+        """Context enter."""
+        raise NotImplementedError()
+
+    def exit(self):
+        """Context exit. """
         raise NotImplementedError()
 
     def update(self, step=None):
@@ -113,17 +163,18 @@ class BaseProgress:
 
 class ProgressSilent(BaseProgress):
     """Class NOT to display the computation progress. """
-    def __init__(self, max_value):
+    def __init__(self, max_value, title = None):
         """Create a ProgressSilent object. """
         self.max_value = max_value
+        self.title = title
         self.step = None
 
-    def __enter__(self):
-        """Contextmanager enter. """
+    def enter(self):
+        """Context enter. """
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
-        """Contextmanager exit. """
+    def exit(self):
+        """Context exit. """
         pass
 
     def update(self, step=None):
@@ -133,21 +184,25 @@ class ProgressSilent(BaseProgress):
 
 class ProgressSimple(BaseProgress):
     """Class to display the computation progress step by step. """
-    def __init__(self, max_value):
+    def __init__(self, max_value, title = None):
         """Create a ProgressSimple object. """
         self.max_value = max_value
+        self.title = title
         self.step = None
+        self._file = sys.stdout
         self._start_time = None
         self._previouse_time = None
 
-    def __enter__(self):
-        """Contextmanager enter. """
+    def enter(self):
+        """Context enter. """
+        if self.title is not None:
+            print(self.title, flush=True)
         self._start_time = time()
         self._previouse_time = time()
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
-        """Contextmanager exit. """
+    def exit(self):
+        """Context exit. """
         current_time = time()
         total_t = current_time - self._start_time
         print("Total elapsed time:  {:9.1f}s".format(total_t), flush=True)
@@ -167,17 +222,20 @@ PROGRESS_BAR_LENGTH = 40
 
 class ProgressBar(BaseProgress):
     """Class to display the computation progress with a nice progress bar. """
-    def __init__(self, max_value):
+    def __init__(self, max_value, title = None):
         """Create a ProgressBar object. """
         self._timer = None
         self._start_time = time()
         self._file = sys.stdout
-        self._max_value = max_value
+        self.max_value = max_value
+        self.title = title
         self._length = PROGRESS_BAR_LENGTH
         self._step = None
 
-    def __enter__(self):
-        """Contextmanager enter. """
+    def enter(self):
+        """Context enter. """
+        if self.title is not None:
+            print(self.title, file=self._file, flush=True)
         self._timer = Timer(1.0, self._print_status)
         self._timer.start()
         return self
@@ -188,7 +246,7 @@ class ProgressBar(BaseProgress):
         else:
             step = self._step
         try:
-            frac = float(step)/float(self._max_value)
+            frac = float(step)/float(self.max_value)
         except ZeroDivisionError:
             frac = 1.0
         delta_t = time() - self._start_time
@@ -197,15 +255,15 @@ class ProgressBar(BaseProgress):
         bar_string = "\r{:5.1f}% {:4d} of {:4d} [{}{}] {}"
         bar_string = bar_string.format(frac*100,
                                        step,
-                                       self._max_value,
+                                       self.max_value,
                                        "#" * done_int,
                                        "-" * (self._length - done_int),
                                        time_string)
         self._file.write(bar_string)
         self._file.flush()
 
-    def __exit__(self, exception_type, exception_value, traceback):
-        """Contextmanager exit. """
+    def exit(self):
+        """Context exit. """
         self._timer.cancel()
         self._print_status()
         delta_t = time() - self._start_time

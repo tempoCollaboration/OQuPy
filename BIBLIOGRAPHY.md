@@ -12,6 +12,7 @@ The code in this project is based on ideas from the following publications:
 - **[Fux2020]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
 - **[Gribben2021a]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*, [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
 - **[Gribben2021b]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
+- **[FowlerWright2021]** Fowler-Wright et al., *Efficient many-body non-Markovian dynamics of organic polaritons*, [arXiv:2112.09003](http://arxiv.org/abs/2112.09003) (2021)
 - **[Fux2022]** Fux et al., *Thermalization of a spin chain strongly coupled to its environment*, [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
 
 
@@ -20,6 +21,16 @@ BibTeX:
 
 
 ```
+@article{FowlerWright2021,
+  title = {Efficient many-body non-Markovian dynamics of organic polaritons},
+  author = {Fowler-Wright, Piper and Lovett, Brendon W. and Keeling, Jonathan},
+  archivePrefix = {arXiv},
+  arxivId = {2112.09003},
+  eprint = {2112.09003},
+  url = {http://arxiv.org/abs/2112.09003},
+  year = {2021}
+}
+
 @article{Fux2021,
   title = {Efficient Exploration of Hamiltonian Parameter Space for Optimal Control of Non-Markovian Open Quantum Systems},
   author = {Fux, Gerald E. and Butler, Eoin P. and Eastham, Paul R. and Lovett, Brendon W. and Keeling, Jonathan},
@@ -81,6 +92,16 @@ BibTeX:
   url = {https://link.aps.org/doi/10.1103/PhysRevLett.123.240602}
 }
 
+@misc{OQuPy,
+  author={{The TEMPO collaboration}},
+  title={{OQuPy: A Python 3 package to efficiently compute
+          non-Markovian open quantum systems.}},
+  year=2020,
+  publisher={GitHub},
+  doi={10.5281/zenodo.4428316}
+  url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
+}
+
 @article{Pollock2018,
   author = {Pollock, Felix A. and Rodr{\'{i}}guez-Rosario, C{\'{e}}sar and
             Frauenheim, Thomas and Paternostro, Mauro and Modi, Kavan},
@@ -140,16 +161,6 @@ BibTeX:
   title = {{Modelling Non-Markovian Quantum Systems Using Tensor Networks}},
   url = {http://link.springer.com/10.1007/978-3-030-54975-6},
   year = {2020}
-}
-
-@misc{OQuPy,
-  author={{The TEMPO collaboration}},
-  title={{OQuPy: A Python 3 package to efficiently compute
-          non-Markovian open quantum systems.}},
-  year=2020,
-  publisher={GitHub},
-  doi={10.5281/zenodo.4428316}
-  url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
 }
 
 ```

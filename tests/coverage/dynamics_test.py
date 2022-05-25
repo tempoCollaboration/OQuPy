@@ -18,14 +18,26 @@ Tests for the time_evovling_mpo.dynamics module.
 import pytest
 import numpy as np
 
-from oqupy.dynamics import Dynamics
+from oqupy.dynamics import BaseDynamics, Dynamics, DynamicsWithField
 
 
 times = [0.0, 0.1]
 states = [np.array([[1, 0], [0, 0]]), np.array([[0.9, -0.1j], [0.1j, 0.1]])]
+fields = [0.0, -1.0+1.0j]
 other_time = 0.05
 other_state = np.array([[0.99, -0.01j], [0.01j, 0.01]])
+other_field = 1e2j
 
+def test_base_dynamics():
+    dyn_A = BaseDynamics()
+    str(dyn_A)
+    len(dyn_A)
+    assert type(dyn_A.times) == np.ndarray
+    assert type(dyn_A.states) == np.ndarray
+    assert dyn_A.shape is None
+    t, expec = dyn_A.expectations()
+    assert t is None
+    assert expec is None
 
 def test_dynamics():
     dyn_A = Dynamics()
@@ -76,3 +88,33 @@ def test_dynamics_expectations():
     np.testing.assert_almost_equal(lower, [0, -0.1j])
     with pytest.raises(AssertionError):
         dyn.expectations("bla")
+
+def test_dynamics_with_field():
+    # construction and .add()
+    dyn_A = DynamicsWithField()
+    str(dyn_A)
+    assert len(dyn_A) == 0
+    dyn_B = DynamicsWithField(times, states, fields)
+    assert len(dyn_B) == len(times)
+    np.testing.assert_almost_equal(fields, dyn_B.fields)
+    dyn_B.add(other_time, other_state, other_field)
+    combined_fields = [fields[0], other_field, fields[1]]
+    # bad input
+    with pytest.raises(AssertionError):
+        DynamicsWithField(times, states)
+    with pytest.raises(AssertionError):
+        DynamicsWithField(times, states, 0.1)
+    with pytest.raises(AssertionError):
+        DynamicsWithField(times, states, [other_field])
+    with pytest.raises(AssertionError):
+        dyn_B.add("bla", other_state, other_field)
+    # expectations
+    t, alpha = dyn_A.field_expectations()
+    assert t is None
+    assert alpha is None
+    t, alpha = dyn_B.field_expectations()
+    np.testing.assert_almost_equal(t, dyn_B.times)
+    np.testing.assert_almost_equal(alpha, dyn_B.fields)
+    np.testing.assert_almost_equal(alpha, combined_fields)
+    with pytest.raises(TypeError):
+        dyn_B.field_expectations("bla")
