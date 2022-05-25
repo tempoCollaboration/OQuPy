@@ -68,7 +68,7 @@ def test_tempo():
     tempo_sys_A.compute(end_time=end_time2, progress_type="silent")
     tempo_sys_A.compute(end_time=end_time3, progress_type="simple")
     dyn_A = tempo_sys_A.get_dynamics()
-    assert len(dyn_A.times) == 13
+    assert len(dyn_A.times) == 12
 
 def test_tempo_bad_input():
     start_time = -0.3
