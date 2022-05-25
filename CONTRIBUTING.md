@@ -203,6 +203,8 @@ and you can pick a specific test to run with:
 ```bash
 $ tox -e py36 say_hi_test.py
 ```
+Here `say_hi_test.py` is the path of the test file *relative to the tests
+directory.*
 
 #### 7.3 test pylint only
 This checks the code [code style](https://www.python.org/dev/peps/pep-0008/)

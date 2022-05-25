@@ -15,53 +15,66 @@
 Module for various applications involving contractions of the process tensor.
 """
 
-from typing import Callable, List, Optional, Text, Tuple, Union
+from typing import List, Optional, Text, Tuple, Union
 
 import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 from scipy.linalg import expm
+from scipy import integrate
 
-from oqupy import util
-from oqupy.config import NpDtype
+from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
-from oqupy.dynamics import Dynamics
+from oqupy.dynamics import Dynamics, DynamicsWithField
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import BaseSystem
-from oqupy.operators import identity, left_super, right_super
+from oqupy.system import BaseSystem, System, TimeDependentSystem
+from oqupy.system import TimeDependentSystemWithField
+from oqupy.operators import left_super, right_super
+from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
 
 
 Indices = Union[int, slice, List[Union[int, slice]]]
 
+
+# -- compute dynamics ---------------------------------------------------------
+
 def compute_dynamics(
-        system: BaseSystem,
-        process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor],
+        system: Union[System, TimeDependentSystem],
         initial_state: Optional[ndarray] = None,
-        control: Optional[Control] = None,
-        start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         num_steps: Optional[int] = None,
-        record_all: Optional[bool] = True) -> Dynamics:
+        start_time: Optional[float] = 0.0,
+        process_tensor: Optional[Union[List[BaseProcessTensor],
+                                       BaseProcessTensor]] = None,
+        control: Optional[Control] = None,
+        record_all: Optional[bool] = True,
+        progress_type: Optional[Text] = None) -> Dynamics:
     """
     Compute the system dynamics for a given system Hamiltonian.
 
     Parameters
     ----------
-    system: BaseSystem
+    system: Union[System, TimeDependentSystem]
         Object containing the system Hamiltonian information.
-    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
-        A process tensor object or list of process tensor objects.
     initial_state: ndarray
         Initial system state.
-    control: Control
-        Optional control operations.
-    start_time: float
-        Optional start time offset.
+    dt: float
+        Length of a single time step.
     num_steps: int
         Optional number of time steps to be computed.
+    start_time: float
+        Optional start time offset.
+    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
+        Optional process tensor object or list of process tensor objects.
+    control: Control
+        Optional control operations.
     record_all: bool
-        If `false` function also computes the final state.
+        If `false` function only computes the final state.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``silent``, ``simple``, ``bar``}. If `None` then
+        the default progress type is used.
 
     Returns
     -------
@@ -69,121 +82,347 @@ def compute_dynamics(
         The system dynamics for the given system Hamiltonian
         (accounting for the interaction with the environment).
     """
-    # -- input parsing --
-    assert isinstance(system, BaseSystem), \
-        "Parameter `system` is not of type `oqupy.BaseSystem`."
-
-    if not isinstance(process_tensor, List):
-        process_tensors = [process_tensor]
-    else:
-        process_tensors = process_tensor
-
-    for pt in process_tensors:
-        assert isinstance(pt, BaseProcessTensor), \
-            "Parameter `process_tensor` is neither a process tensor nor a " \
-                + "list of process tensors. "
-
-    if len(process_tensors) > 1:
-        assert (initial_state is not None), \
-        "For multiple environments an initial state must be specified."
-
-    hs_dim = system.dimension
-    for pt in process_tensors:
-        assert hs_dim == pt.hilbert_space_dimension
-
-    lens = [len(pt) for pt in process_tensors]
-    assert len(set(lens)) == 1, \
-        "All process tensors must be of the same length."
-
-    if control is not None:
-        assert isinstance(control, Control), \
-            "Parameter `control` is not of type `oqupy.Control`."
-        tmp_control = control
-    else:
-        tmp_control = Control(hs_dim)
-
-    dts = [pt.dt for pt in process_tensors]
-    assert len(set(dts)) == 1, \
-        "All process tensors must be calculated with same timestep."
-    dt = dts[0]
-    if dt is None:
-        raise ValueError("Process tensor has no timestep, "\
-            + "please specify time step 'dt'.")
-
-    try:
-        tmp_start_time = float(start_time)
-    except Exception as e:
-        raise AssertionError("Start time must be a float.") from e
-
-    if initial_state is not None:
-        assert initial_state.shape == (hs_dim, hs_dim)
-
-    if num_steps is not None:
-        try:
-            tmp_num_steps = int(num_steps)
-        except Exception as e:
-            raise AssertionError("Number of steps must be an integer.") from e
-    else:
-        tmp_num_steps = None
-
-    # -- compute dynamics --
-
-    def propagators(step: int):
-        """Create the system propagators (first and second half) for the
-        time step `step`. """
-        t = tmp_start_time + step * dt
-        first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
-        second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
-        return first_step, second_step
-
-    def controls(step: int):
-        """Create the system (pre and post measurement) for the time step
-        `step`. """
-        return tmp_control.get_controls(
-            step,
-            dt=dt,
-            start_time=tmp_start_time)
+    dynamics = _compute_dynamics_all(
+        False, system, None, initial_state, dt, num_steps, start_time,
+        process_tensor, control, record_all, epsrel=None, subdiv_limit=None,
+        progress_type=progress_type)
+    return dynamics
 
 
-    states = _compute_dynamics(process_tensors=process_tensors,
-                               propagators=propagators,
-                               controls=controls,
-                               initial_state=initial_state,
-                               num_steps=tmp_num_steps,
-                               record_all=record_all)
-    if record_all:
-        times = tmp_start_time + np.arange(len(states))*dt
-    else:
-        times = [tmp_start_time + len(states)*dt]
-
-    return Dynamics(times=list(times),states=states)
-
-
-def _build_cap(
-        process_tensors: List[BaseProcessTensor],
-        step: int):
+def compute_dynamics_with_field(
+        system: TimeDependentSystemWithField,
+        initial_field: complex,
+        initial_state: Optional[ndarray] = None,
+        dt: Optional[float] = None,
+        num_steps: Optional[int] = None,
+        start_time: Optional[float] = 0.0,
+        process_tensor: Optional[Union[List[BaseProcessTensor],
+                                       BaseProcessTensor]] = None,
+        control: Optional[Control] = None,
+        record_all: Optional[bool] = True,
+        epsrel: Optional[float] = INTEGRATE_EPSREL,
+        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+        progress_type: Optional[Text] = None) -> DynamicsWithField:
     """
-    Builds caps for multiple process tensors at a given timestep.
+    Compute the system and field dynamics for a given system Hamiltonian and
+    field equation of motion.
 
     Parameters
     ----------
-    process_tensors: List[BaseProcessTensor]
-        List of process tensor objects.
-    step: int
-        Step at which to build caps.
+    system: TimeDependentSystemWithField
+        Object containing the system Hamiltonian and field equation of
+        motion.
+    initial_field: complex
+        Initial field value.
+    initial_state: ndarray
+        Initial system state.
+    dt: float
+        Length of a single time step.
+    start_time: float
+        Optional start time offset.
+    num_steps: int
+        Optional number of time steps to be computed.
+    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
+        Optional process tensor object or list of process tensor objects.
+    control: Control
+        Optional control operations.
+    record_all: bool
+        If `false` function only computes the final state.
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating the system Liouvillian. If None
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
+    epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``silent``, ``simple``, ``bar``}. If `None` then
+        the default progress type is used.
 
     Returns
     -------
-    cap_nodes: List[tensornetwork.Node]
-        List of caps for each process tensor at the chosen step.
-
+    dynamics_with_field: DynamicsWithField
+        The system and field dynamics for the given system Hamiltonian and
+        field equation of motion (accounting for the interaction with the
+        environment).
     """
-    cap_nodes = []
+    initial_field = check_convert(initial_field, complex, "initial_field")
+    dynamics_with_field = _compute_dynamics_all(
+        True, system, initial_field, initial_state, dt, num_steps, start_time,
+        process_tensor, control, record_all, epsrel, subdiv_limit,
+        progress_type=progress_type)
+    return dynamics_with_field
+
+
+def _compute_dynamics_all(
+        with_field: bool,
+        system: BaseSystem,
+        initial_field: float,
+        initial_state: ndarray,
+        dt: float,
+        num_steps: int,
+        start_time: float,
+        process_tensor: Union[List[BaseProcessTensor], BaseProcessTensor],
+        control: Control,
+        record_all: bool,
+        epsrel: float,
+        subdiv_limit: int,
+        progress_type: Text) -> Union[Dynamics, DynamicsWithField]:
+    """Compute system and (optionally) field dynamics accounting for the
+    interaction with the environment using the process tensor."""
+
+    # -- input parsing --
+    parsed_parameters = _compute_dynamics_input_parse(
+        with_field, system, initial_state, dt, num_steps, start_time,
+        process_tensor, control, record_all)
+    system, initial_state, dt, num_steps, start_time, \
+        process_tensors, control, record_all, hs_dim = parsed_parameters
+    num_envs = len(process_tensors)
+
+    # -- prepare propagators --
+    propagators = _get_propagators(system, dt, start_time, epsrel, subdiv_limit)
+
+    # -- prepare compute field --
+    if with_field:
+        def compute_field(step:int, state: ndarray, field: complex,
+                next_state: Optional[ndarray] = None):
+            t = start_time + step * dt
+            rk1 = system.field_eom(t, state, field)
+            if next_state is None:
+                return rk1 * dt
+            rk2 = system.field_eom(t + dt, next_state, field + rk1 * dt)
+            return field + dt * (rk1 + rk2) / 2
+
+    # -- prepare controls --
+    def controls(step: int):
+        return control.get_controls(
+            step,
+            dt=dt,
+            start_time=start_time)
+
+    # -- initialize computation --
+    #
+    #  Initial state including the bond legs to the environments with:
+    #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
+    #    edge  -1                      is the state leg
+    initial_ndarray = initial_state.reshape(hs_dim**2)
+    initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+    current_node = tn.Node(initial_ndarray)
+    current_edges = current_node[:]
+
+    states = []
+    if with_field:
+        fields = []
+
+    if with_field:
+        title = "--> Compute dynamics with field:"
+    else:
+        title = "--> Compute dynamics:"
+    prog_bar = get_progress(progress_type)(num_steps, title)
+    prog_bar.enter()
+
+    for step in range(num_steps+1):
+        # -- apply pre measurement control --
+        pre_measurement_control, post_measurement_control = controls(step)
+        if pre_measurement_control is not None:
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, pre_measurement_control)
+
+        if step == num_steps:
+            break
+
+        # -- extract current state -- update field --
+        if record_all or with_field:
+            caps = _get_caps(process_tensors, step)
+            state_tensor = _apply_caps(current_node, current_edges, caps)
+            state = state_tensor.reshape(hs_dim, hs_dim)
+        if with_field:
+            if step == 0:
+                field = initial_field
+            else:
+                field = compute_field(step, previous_state, field, state)
+            previous_state = state
+        if record_all:
+            states.append(state)
+            if with_field:
+                fields.append(field)
+
+        prog_bar.update(step)
+
+        # -- apply post measurement control --
+        if post_measurement_control is not None:
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, post_measurement_control)
+
+        # -- propagate one time step --
+        if with_field:
+            first_half_prop, second_half_prop = propagators(step, state, field)
+        else:
+            first_half_prop, second_half_prop = propagators(step)
+        pt_mpos = _get_pt_mpos(process_tensors, step)
+
+        current_node, current_edges = _apply_system_superoperator(
+            current_node, current_edges, first_half_prop)
+        current_node, current_edges = _apply_pt_mpos(
+            current_node, current_edges, pt_mpos)
+        current_node, current_edges = _apply_system_superoperator(
+            current_node, current_edges, second_half_prop)
+
+    # -- extract last state --
+    caps = _get_caps(process_tensors, step)
+    state_tensor = _apply_caps(current_node, current_edges, caps)
+    final_state = state_tensor.reshape(hs_dim, hs_dim)
+    states.append(final_state)
+    if with_field:
+        final_field = compute_field(step, previous_state, field, final_state)
+        fields.append(final_field)
+
+    prog_bar.update(num_steps)
+    prog_bar.exit()
+
+    # -- create dynamics object --
+    if record_all:
+        times = start_time + np.arange(len(states))*dt
+    else:
+        times = [start_time + len(states)*dt]
+
+    if with_field:
+        return DynamicsWithField(times=list(times),states=states, fields=fields)
+
+    return Dynamics(times=list(times),states=states)
+
+def _get_propagators(
+        system, dt, start_time, epsrel, subdiv_limit):
+    """Prepare propagators according to system type and subdiv_limit"""
+    if isinstance(system, System):
+        first_step = expm(system.liouvillian()*dt/2.0)
+        second_step = expm(system.liouvillian()*dt/2.0)
+        def propagators(step: int):
+            return first_step, second_step
+    elif isinstance(system, TimeDependentSystem):
+        def propagators(step: int):
+            t = start_time + step * dt
+            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
+            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+            return first_step, second_step
+    elif isinstance(system, TimeDependentSystemWithField):
+        if subdiv_limit is None:
+            def propagators(step: int, state: ndarray, field: complex):
+                t = start_time + step * dt
+                first_step = expm(system.liouvillian(t, t+dt/4.0, state,
+                    field)*dt/2.0)
+                second_step = expm(system.liouvillian(t, t+dt*3.0/4.0, state,
+                    field)*dt/2.0)
+                return first_step, second_step
+        else:
+            def propagators(step: int, state: ndarray, field: complex):
+                t = start_time + step * dt
+                liouvillian = lambda tau: system.liouvillian(t, tau, state,
+                        field)
+                first_step = expm(integrate.quad_vec(liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
+    else:
+        raise NotImplementedError("System type {} unknown".format(
+            system.__name__))
+    return propagators
+
+
+def _compute_dynamics_input_parse(
+        with_field, system, initial_state, dt, num_steps, start_time,
+        process_tensor, control, record_all) -> tuple:
+    if with_field:
+        check_isinstance(
+            system, TimeDependentSystemWithField, "system")
+    else:
+        check_isinstance(
+            system, (System, TimeDependentSystem), "system")
+    hs_dim = system.dimension
+
+    if process_tensor is None:
+        process_tensor = []
+    check_isinstance(
+        process_tensor, (BaseProcessTensor, list), "process_tensor")
+
+    if isinstance(process_tensor, BaseProcessTensor):
+        process_tensors = [process_tensor]
+    elif isinstance(process_tensor, list):
+        process_tensors = process_tensor
+
+    if control is None:
+        control = Control(hs_dim)
+    check_isinstance(control, Control, "control")
+
+    start_time = check_convert(start_time, float, "start_time")
+
+    if initial_state is None:
+        raise ValueError("An initial state must be specified.")
+    check_isinstance(initial_state, ndarray, "initial_state")
+    check_true(
+        initial_state.shape == (hs_dim, hs_dim),
+        "Initial sate must be a square matrix of " \
+            + f"dimension {hs_dim}x{hs_dim}.")
+
+    max_steps = []
+    for pt in process_tensors:
+        check_isinstance(
+           pt, BaseProcessTensor, "pt",
+           "One of the elements in `process_tensor` is not of type " \
+               + "`{BaseProcessTensor.__name__}`.")
+        if pt.get_initial_tensor() is not None:
+            raise NotImplementedError()
+        check_true(
+            hs_dim == pt.hilbert_space_dimension,
+            "All process tensor must have the same hilbert space dimension " \
+                + "as the system.")
+        if pt.dt is not None:
+            if dt is None:
+                dt = pt.dt
+            else:
+                check_true(
+                    pt.dt == dt,
+                    "All process tensors must have the same timestep length.")
+        max_steps.append(pt.max_step)
+    max_step = np.min(max_steps+[np.inf])
+
+    if dt is None:
+        raise ValueError(
+            "No timestep length has been specified. Please set `dt`.")
+
+    if num_steps is not None:
+        num_steps = check_convert(num_steps, int, "num_steps")
+        check_true(
+            num_steps <= max_step,
+            "Variable `num_steps` is larger than the shortest process tensor!")
+    else:
+        check_true(
+            max_step < np.inf,
+            "Variable `num_steps` must be specified because all process " \
+                + "tensors involved are infinite.")
+        num_steps = int(max_step)
+
+    parameters = (system, initial_state, dt, num_steps, start_time, \
+                  process_tensors, control, record_all, hs_dim)
+    return parameters
+
+
+def _get_caps(process_tensors: List[BaseProcessTensor], step: int):
+    """ToDo """
+    caps = []
     for i in range(len(process_tensors)):
         try:
             cap = process_tensors[i].get_cap_tensor(step)
-            cap_node = tn.Node(cap)
-            cap_nodes.append(cap_node)
+            caps.append(cap)
         except Exception as e:
             raise ValueError("There are either no cap tensors in "\
                     +f"process tensor {i} or process tensor {i} is "\
@@ -191,159 +430,57 @@ def _build_cap(
         if cap is None:
             raise ValueError(f"Process tensor {i} has no cap tensor "\
                 +f"for step {step}.")
-    return cap_nodes
+    return caps
 
-def _build_mpo_node(
-        process_tensors: List[BaseProcessTensor],
-        step: int):
-    """
-    Contracts MPO for multiple process tensors at a given timestep into a
-    single tensor.
 
-    Parameters
-    ----------
-    process_tensors: List[BaseProcessTensor]
-        List of process tensor objects.
-    step: int
-        Step at which to build MPO.
-
-    Returns
-    -------
-    mpo_node: tensornetwork.Node
-        Single tensor built from MPO for each process tensor at the chosen
-        step.
-
-    """
-    try:
-        mpo = process_tensors[0].get_mpo_tensor(step)
-    except Exception as e:
-        raise ValueError("Process tensor 0 is not long enough") from e
-    if mpo is None:
-        raise ValueError("Process tensor 0 has no mpo tensor "\
-            +f"for step {step}.")
-    mpo_node = tn.Node(mpo)
-    for i in range(1,len(process_tensors)):
-        try:
-            dummy_mpo = process_tensors[i].get_mpo_tensor(step)
-        except Exception as e:
-            raise ValueError(f"Process tensor {i} is not long enough")\
-                from e
-        if dummy_mpo is None:
-            raise ValueError(f"Process tensor {i} has no mpo tensor "\
-                +f"for step {step}.")
-
-        dummy_mpo_node = tn.Node(dummy_mpo)
-        mpo_node[-1] ^ dummy_mpo_node[2]
-        mpo_node = mpo_node @ dummy_mpo_node
-    return mpo_node
-
-def _compute_dynamics(
-        process_tensors: List[BaseProcessTensor],
-        propagators: Callable[[int], Tuple[ndarray, ndarray]],
-        controls: Callable[[int], Tuple[ndarray, ndarray]],
-        initial_state: Optional[ndarray] = None,
-        num_steps: Optional[int] = None,
-        record_all: Optional[bool] = True) -> List[ndarray]:
+def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
     """ToDo """
-    num_envs = len(process_tensors)
-    hs_dim = process_tensors[0].hilbert_space_dimension
+    pt_mpos = []
+    for i in range(len(process_tensors)):
+        pt_mpo = process_tensors[i].get_mpo_tensor(step)
+        pt_mpos.append(pt_mpo)
+    return pt_mpos
 
 
-    initial_tensor = process_tensors[0].get_initial_tensor()
-    assert (initial_state is None) ^ (initial_tensor is None), \
-        "Initial state must be either (exclusively) encoded in the " \
-        + "process tensor or given as an argument."
-    if (initial_tensor is None) or (num_envs > 1):
-        initial_tensor = util.add_singleton(
-            initial_state.reshape(hs_dim**2), 0)
+def _apply_system_superoperator(current_node, current_edges, sup_op):
+    """ToDo """
+    sup_op_node = tn.Node(sup_op.T)
+    current_edges[-1] ^ sup_op_node[0]
+    new_sys_edge = sup_op_node[1]
+    current_node = current_node @ sup_op_node
+    current_edges[-1] = new_sys_edge
+    return current_node, current_edges
 
-    dummy_init = util.add_singleton(identity(hs_dim**2), 0)
-    current = tn.Node(initial_tensor)
 
-    for i in range(num_envs-1):
-        dummy = tn.Node(dummy_init)
-        current[-1] ^ dummy[1]
-        current = current @ dummy
+def _apply_caps(current_node, current_edges, caps):
+    """ToDo """
+    node_dict, edge_dict = tn.copy([current_node])
+    for current_edge, cap in zip(current_edges[:-1], caps):
+        cap_node = tn.Node(cap)
+        edge_dict[current_edge] ^ cap_node[0]
+        node_dict[current_node] = node_dict[current_node] @ cap_node
+    state_node = node_dict[current_node]
+    return state_node.get_tensor()
 
-    current_bond_legs = current[:-1]
-    current_state_leg = current[-1]
-    states = []
-    if num_steps is None:
-        tmp_num_steps = len(process_tensors[0])
-    else:
-        tmp_num_steps = num_steps
 
-    for step in range(tmp_num_steps+1):
-        # -- apply pre measurement control --
-        pre_measurement_control, post_measurement_control = controls(step)
-        if pre_measurement_control is not None:
-            pre_node = tn.Node(pre_measurement_control.T)
-            current_state_leg ^ pre_node[0]
-            current_state_leg = pre_node[1]
-            current = current @ pre_node
+def _apply_pt_mpos(current_node, current_edges, pt_mpos):
+    """ToDo """
+    for i, pt_mpo in enumerate(pt_mpos):
+        if pt_mpo is None:
+            continue
+        pt_mpo_node = tn.Node(pt_mpo)
+        new_bond_edge = pt_mpo_node[1]
+        new_sys_edge = pt_mpo_node[3]
+        current_edges[i] ^ pt_mpo_node[0]
+        current_edges[-1] ^ pt_mpo_node[2]
+        current_node = current_node @ pt_mpo_node
+        current_edges[i] = new_bond_edge
+        current_edges[-1] = new_sys_edge
+    return current_node, current_edges
 
-        if step == tmp_num_steps:
-            break
 
-        # -- extract current state --
-        if record_all:
-            cap_nodes = _build_cap(process_tensors, step)
-            node_dict, edge_dict = tn.copy([current])
-            for i in range(num_envs):
-                edge_dict[current_bond_legs[i]] ^ cap_nodes[i][0]
-                node_dict[current] = node_dict[current] @ cap_nodes[i]
-            state_node = node_dict[current]
-            state = state_node.get_tensor().reshape(hs_dim, hs_dim)
-            states.append(state)
 
-        # -- apply post measurement control --
-        if post_measurement_control is not None:
-            post_node = tn.Node(post_measurement_control.T)
-            current_state_leg ^ post_node[0]
-            current_state_leg = post_node[1]
-            current = current @ post_node
-
-        # -- propagate one time step --
-        mpo_node = _build_mpo_node(process_tensors, step)
-        mpo_bond_legs = [mpo_node[0]]
-        mpo_bond_legs += [mpo_node[i*2+1] for i in range(1, num_envs)]
-
-        first_half_prop, second_half_prop = propagators(step)
-        first_half_prop_node = tn.Node(first_half_prop.T)
-        second_half_prop_node = tn.Node(second_half_prop.T)
-
-        lams = [process_tensors[i].get_lam_tensor(step) \
-                for i in range(num_envs)]
-
-        for i in range(num_envs):
-            current_bond_legs[i] ^ mpo_bond_legs[i]
-        current_state_leg ^ first_half_prop_node[0]
-        first_half_prop_node[1] ^ mpo_node[2]
-        mpo_node[-1] ^ second_half_prop_node[0]
-        current_bond_legs[0] = mpo_node[1]
-        for i in range(1,num_envs):
-            current_bond_legs[i] = mpo_node[2*i+2]
-        current_state_leg = second_half_prop_node[1]
-        current = current \
-            @ first_half_prop_node @ mpo_node @ second_half_prop_node
-        for i,lam in enumerate(lams):
-            if lam is not None:
-                lam_node = tn.Node(lam)
-                current_bond_legs[i] ^ lam_node[0]
-                current_bond_legs[i] = lam_node[1]
-                current @ lam_node
-
-    # -- extract last state --
-    cap_nodes = _build_cap(process_tensors, tmp_num_steps)
-    for i in range(num_envs):
-        current_bond_legs[i] ^ cap_nodes[i][0]
-        current = current @ cap_nodes[i]
-    final_state_node = current
-    final_state = final_state_node.get_tensor().reshape(hs_dim, hs_dim)
-    states.append(final_state)
-
-    return states
-
+# -- compute correlations -----------------------------------------------------
 
 def compute_correlations(
         system: BaseSystem,
@@ -452,7 +589,8 @@ def compute_correlations(
 
     progress = get_progress(progress_type)
     num_steps = len(schedule)
-    with progress(num_steps) as prog_bar:
+    title = "--> Compute correlations:"
+    with progress(num_steps, title) as prog_bar:
         prog_bar.update(0)
         for i, (indices_a, indices_b, anti_time_ordered) in enumerate(schedule):
             if anti_time_ordered:
@@ -513,7 +651,8 @@ def _compute_ordered_correlations(
         start_time=start_time,
         initial_state=initial_state,
         dt=dt,
-        num_steps=max_step)
+        num_steps=max_step,
+        progress_type='silent')
     _, corr = dynamics.expectations(last_operator)
     ret_correlations = corr[last_times]
     return ret_correlations

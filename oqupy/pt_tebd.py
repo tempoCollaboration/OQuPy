@@ -398,7 +398,8 @@ class PtTebd(BaseAPIClass):
         num_step = max(0, end_step - start_step)
 
         progress = get_progress(progress_type)
-        with progress(num_step) as prog_bar:
+        title = "--> PT-TEBD computation:"
+        with progress(num_step, title) as prog_bar:
             while self.step < tmp_end_step:
                 self.compute_step()
                 prog_bar.update(self.step - start_step)
