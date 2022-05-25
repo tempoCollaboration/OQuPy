@@ -63,8 +63,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             initial_state: Optional[ndarray] = None,
             system_correlations: Optional[ndarray] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None
-            ) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a TwoTimeBathCorrelations object."""
         self._system = system
         self._bath = bath
@@ -102,8 +101,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
 
     def generate_system_correlations(
             self,
-            final_time: float
-            ) -> None:
+            final_time: float,
+            progress_type: Optional[Text] = None) -> None:
         r"""
         Function to generate all ordered system correlations up to a given time
         using the process tensor.
@@ -113,6 +112,10 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         final_time: float
             The latest time appearing in the generated system correlation
             functions.
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``silent``, ``simple``, ``bar``}. If `None` then
+            the default progress type is used.
         """
         dt = self._process_tensor.dt
         corr_mat_dim = int(np.round(final_time/dt))
@@ -132,7 +135,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                                      self._process_tensor,
                                      coup_op, coup_op,
                                      times_a, times_b,
-                                     initial_state = self.initial_state)
+                                     initial_state = self.initial_state,
+                                     progress_type=progress_type)
 
             self._system_correlations = np.pad(self._system_correlations,
                                                ((0, dim_diff), (0, 0)),
@@ -146,8 +150,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             self,
             freq: float,
             dw: Optional[float] = 1.0,
-            change_only: Optional[bool] = False
-            ) -> Tuple[ndarray, ndarray]:
+            change_only: Optional[bool] = False,
+            progress_type: Optional[Text] = None) -> Tuple[ndarray, ndarray]:
         r"""
         Function to calculate the change in bath occupation in a particular
         bandwidth.
@@ -161,6 +165,10 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             a *density* by setting the frequency band `dw=1.0`.
         change_only: bool
             Option to include the initial occupation (density) in the result.
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``silent``, ``simple``, ``bar``}. If `None` then
+            the default progress type is used.
 
         Returns
         -------
@@ -177,7 +185,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         if freq == 0:
             return tlist, np.ones(len(tlist),
                                   dtype=NpDtype) * (np.nan + 1.0j*np.nan)
-        self.generate_system_correlations(last_time)
+        self.generate_system_correlations(last_time, progress_type)
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
         _sys_correlations = np.nan_to_num(_sys_correlations)
@@ -195,16 +203,17 @@ class TwoTimeBathCorrelations(BaseAPIClass):
                 / (1 - np.exp(-freq/self._temp))
         return tlist, bath_occupation
 
-    def correlation(self,
-                    freq_1: float,
-                    time_1: float,
-                    freq_2: Optional[float] = None,
-                    time_2: Optional[float] = None,
-                    dw: Optional[tuple] = (1.0, 1.0),
-                    dagg: Optional[tuple] = (1, 0),
-                    interaction_picture: Optional[bool] = False,
-                    change_only: Optional[bool] = False
-                    ) -> complex:
+    def correlation(
+            self,
+            freq_1: float,
+            time_1: float,
+            freq_2: Optional[float] = None,
+            time_2: Optional[float] = None,
+            dw: Optional[tuple] = (1.0, 1.0),
+            dagg: Optional[tuple] = (1, 0),
+            interaction_picture: Optional[bool] = False,
+            change_only: Optional[bool] = False,
+            progress_type: Optional[Text] = None) -> complex:
         r"""
         Function to calculate two-time correlation function between two
         frequency bands of a bath.
@@ -246,6 +255,10 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             picture.
         change_only: bool
             Option to include the initial occupation in the result.
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``silent``, ``simple``, ``bar``}. If `None` then
+            the default progress type is used.
 
         Returns
         -------
@@ -258,7 +271,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             time_2 = time_1
         if freq_2 is None:
             freq_2 = freq_1
-        self.generate_system_correlations(time_2)
+        self.generate_system_correlations(time_2, progress_type)
         corr_mat_dim = int(np.round(time_2/dt))
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
