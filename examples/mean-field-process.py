@@ -60,9 +60,11 @@ dynamics = oqupy.compute_dynamics_with_field(
     control=control,
     start_time=0.0,
     initial_state=initial_state)
-with np.printoptions(precision=4):
-    for i,t in enumerate(dynamics._times):
-        print('t = {:.1f}\nField {:.8g}\nState\n{}'.format(t, dynamics._fields[i], dynamics._states[i]))
+
+print(f"The the final time t = {dynamics.times[-1]:.1f} " \
+      + "the field is {dynamics.fields[-1]:.8g} and the state is:")
+print(dynamics.states[-1])
+
 
 t, s_x = dynamics.expectations(oqupy.operators.sigma("x")/2, real=True)
 t, s_z = dynamics.expectations(oqupy.operators.sigma("z")/2, real=True)
@@ -74,6 +76,5 @@ axes[1].set_xlabel('t')
 axes[0].set_ylabel('<Sz>')
 axes[1].set_ylabel('n')
 plt.tight_layout()
-#plt.savefig('out.png', bbox_inches='tight')
-stacked_data = np.array([t, dynamics._fields, dynamics._states], dtype=object)
-#np.save('oqupy.npy', stacked_data)
+
+plt.show()
