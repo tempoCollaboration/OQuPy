@@ -20,7 +20,7 @@ from typing import Callable, Dict
 import numpy as np
 from numpy import ndarray
 
-from oqupy.tempo.backends import node_array as na
+from oqupy.backends import node_array as na
 from oqupy.config import NpDtype
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy import util

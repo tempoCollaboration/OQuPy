@@ -123,10 +123,10 @@ oqupy.system
     :members:
 
 
-oqupy.tempo.pt_tempo
---------------------
+oqupy.pt_tempo
+--------------
 
-.. automodule:: oqupy.tempo.pt_tempo
+.. automodule:: oqupy.pt_tempo
     :show-inheritance:
     :members:
 
@@ -134,7 +134,7 @@ oqupy.tempo.pt_tempo
 oqupy.tempo
 -----------
 
-.. automodule:: oqupy.tempo.tempo
+.. automodule:: oqupy.tempo
     :show-inheritance:
     :members:
 

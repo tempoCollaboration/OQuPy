@@ -24,7 +24,9 @@ __all__ = [
     'ChainControl',
     'CustomCorrelations',
     'CustomSD',
+    'compute_correlations',
     'compute_dynamics',
+    'compute_dynamics_with_field',
     'Control',
     'Dynamics',
     'FileProcessTensor',
@@ -36,15 +38,18 @@ __all__ = [
     'operators',
     'PowerLawSD',
     'PtTebd',
+    'PtTebdParameters',
     'PtTempo',
     'pt_tempo_compute',
     'SimpleProcessTensor',
     'System',
     'SystemChain',
     'Tempo',
+    'TempoWithField',
     'tempo_compute',
     'TempoParameters',
     'TimeDependentSystem',
+    'TimeDependentSystemWithField',
     'TrivialProcessTensor',
     'TwoTimeBathCorrelations',
     ]
@@ -72,11 +77,11 @@ from oqupy.dynamics import DynamicsWithField
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
 
-import oqupy.helpers
+from oqupy import helpers
 
 from oqupy.mps_mpo import AugmentedMPS
 
-import oqupy.operators
+from oqupy import operators
 
 from oqupy.process_tensor import import_process_tensor
 from oqupy.process_tensor import TrivialProcessTensor
@@ -91,11 +96,11 @@ from oqupy.system import SystemChain
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
 
-from oqupy.tempo.pt_tempo import PtTempo
-from oqupy.tempo.pt_tempo import pt_tempo_compute
+from oqupy.pt_tempo import PtTempo
+from oqupy.pt_tempo import pt_tempo_compute
 
-from oqupy.tempo.tempo import Tempo
-from oqupy.tempo.tempo import TempoParameters
-from oqupy.tempo.tempo import TempoWithField
-from oqupy.tempo.tempo import guess_tempo_parameters
-from oqupy.tempo.tempo import tempo_compute
+from oqupy.tempo import Tempo
+from oqupy.tempo import TempoParameters
+from oqupy.tempo import TempoWithField
+from oqupy.tempo import guess_tempo_parameters
+from oqupy.tempo import tempo_compute

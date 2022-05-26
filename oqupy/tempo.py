@@ -46,8 +46,8 @@ from oqupy.dynamics import Dynamics, DynamicsWithField
 from oqupy.operators import commutator, acommutator
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField
-from oqupy.tempo.backends.tempo_backend import TempoBackend
-from oqupy.tempo.backends.tempo_backend import TempoWithFieldBackend
+from oqupy.backends.tempo_backend import TempoBackend
+from oqupy.backends.tempo_backend import TempoWithFieldBackend
 from oqupy.util import get_progress
 
 

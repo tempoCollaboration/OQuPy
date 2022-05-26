@@ -22,7 +22,7 @@ from numpy import ndarray, moveaxis, dot
 
 from oqupy import operators
 from oqupy.config import TEMPO_BACKEND_CONFIG
-from oqupy.tempo.backends import node_array as na
+from oqupy.backends import node_array as na
 from oqupy.util import create_delta
 
 class BaseTempoBackend:

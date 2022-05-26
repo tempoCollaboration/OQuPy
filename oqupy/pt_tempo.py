@@ -50,10 +50,10 @@ from oqupy.config import PT_TEMPO_BACKEND_CONFIG
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
 from oqupy.process_tensor import FileProcessTensor
-from oqupy.tempo.backends.pt_tempo_backend import PtTempoBackend
-from oqupy.tempo.tempo import TempoParameters
-from oqupy.tempo.tempo import guess_tempo_parameters
-from oqupy.tempo.tempo import influence_matrix
+from oqupy.backends.pt_tempo_backend import PtTempoBackend
+from oqupy.tempo import TempoParameters
+from oqupy.tempo import guess_tempo_parameters
+from oqupy.tempo import influence_matrix
 from oqupy.operators import commutator, acommutator
 from oqupy.operators import left_right_super
 from oqupy.util import get_progress
