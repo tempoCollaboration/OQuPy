@@ -6,28 +6,29 @@ dynamics of a time dependent quantum system and how to employ the
 process tensor TEMPO method. We illustrate this by applying TEMPO and
 PT-TEMPO to a quantum dot driven by a time dependent laser pulse.
 
-.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fpt_tempo.ipynb
-
-You can follow this tutorial using any of these options:
-
-- launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/pt_tempo.ipynb>`,
-- read through it and code along below.
-
--------------------------------------------------------------------------------
-
 **Contents:**
 
 -  Example - Quantum dot driven by a laser pulse
 
-    - 1. Hamiltonian for driven quantum dot with bosonic environment
-    - 2. Laser pulse / time dependent system
-    - 3. Create time dependent system object
-    - 4. TEMPO computation
-    - 5. Using PT-TEMPO to explore many different laser pulses
+   -  
 
--------------------------------------------------------------------------------
+      1. Hamiltonian for driven quantum dot with bosonic environment
+
+   -  
+
+      2. Laser pulse / time dependent system
+
+   -  
+
+      3. Create time dependent system object
+
+   -  
+
+      4. TEMPO computation
+
+   -  
+
+      5. Using PT-TEMPO to explore many different laser pulses
 
 First, let’s import OQuPy and some other packages we are going to use
 
@@ -51,7 +52,7 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.2-dev'
+    '0.2.0'
 
 
 
@@ -159,7 +160,7 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f5315c6e710>
+    <matplotlib.legend.Legend at 0x7f66320062e8>
 
 
 
@@ -205,8 +206,9 @@ parameters):
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:01
-    Elapsed time: 1.4s
+    --> TEMPO computation:
+    100.0%   50 of   50 [########################################] 00:00:02
+    Elapsed time: 2.1s
 
 
 and extract the expectation values
@@ -229,7 +231,7 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f530c8b5f28>
+    <matplotlib.legend.Legend at 0x7f6630de8e10>
 
 
 
@@ -261,8 +263,9 @@ with many different system Hamiltonians at relatively little cost.
 
 .. parsed-literal::
 
-    100.0%   50 of   50 [########################################] 00:00:01
-    Elapsed time: 1.3s
+    --> PT-TEMPO computation:
+    100.0%   50 of   50 [########################################] 00:00:00
+    Elapsed time: 1.0s
 
 
 Given we want to calculate :math:`\langle\sigma_{xy}\rangle(t)` for 5
@@ -297,7 +300,8 @@ laser pulse
             process_tensor=process_tensor,
             system=system,
             initial_state=initial_state,
-            start_time=-2.0)
+            start_time=-2.0,
+            progress_type="silent")
         t, s_x = dynamics.expectations(sigma_x, real=True)
         _, s_y = dynamics.expectations(sigma_y, real=True)
         s_xy = np.sqrt(s_x**2 + s_y**2)
@@ -328,7 +332,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f530c7e8588>
+    <matplotlib.legend.Legend at 0x7f6630bc1400>
 
 
 

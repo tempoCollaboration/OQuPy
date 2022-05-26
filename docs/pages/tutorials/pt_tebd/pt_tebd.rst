@@ -11,26 +11,17 @@ is explained in detail in [Fux2022].
 *Thermalization of a spin chain strongly coupled to its environment*,
 arXiv:2201.05529 (2022).
 
-.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fpt_tebd.ipynb
-
-You can follow this tutorial using any of these options:
-
-- launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/pt_tebd.ipynb>`,
-- read through it and code along below.
-
-
--------------------------------------------------------------------------------
-
 **Contents:**
 
 -  Example - Heisenberg spin chain
 
-   - 1. Closed Heisenberg spin chain
-   - 2. Open Heisenberg spin chain
+   -  
 
--------------------------------------------------------------------------------
+      1. Closed Heisenberg spin chain
+
+   -  
+
+      2. Open Heisenberg spin chain
 
 First, let’s import OQuPy and some other packages we are going to use
 
@@ -54,7 +45,7 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.2-dev'
+    '0.2.0'
 
 
 
@@ -178,8 +169,9 @@ time steps.
 .. parsed-literal::
 
     PT-TEBD computation (closed spin chain):
+    --> PT-TEBD computation:
     100.0%   20 of   20 [########################################] 00:00:01
-    Elapsed time: 1.3s
+    Elapsed time: 1.1s
 
 
 The computation returns a results dictionary which in addition to the
@@ -216,7 +208,7 @@ We can use the dynamics results to then compute the evolution of the
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f659c0bc048>
+    <matplotlib.legend.Legend at 0x7ff82d915cc0>
 
 
 
@@ -286,6 +278,7 @@ computation (see Tutorial 02 - Time dependence and PT-TEMPO).
 .. parsed-literal::
 
     Process tensor (PT) computation:
+    --> PT-TEMPO computation:
     100.0%   20 of   20 [########################################] 00:00:00
     Elapsed time: 0.5s
 
@@ -324,8 +317,9 @@ keep them free by setting them to ``None``.
 .. parsed-literal::
 
     PT-TEBD computation (open spin chain):
-    100.0%   20 of   20 [########################################] 00:00:06
-    Elapsed time: 6.5s
+    --> PT-TEBD computation:
+    100.0%   20 of   20 [########################################] 00:00:04
+    Elapsed time: 4.2s
 
 
 .. code:: ipython3
@@ -341,7 +335,7 @@ keep them free by setting them to ``None``.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f659b02f128>
+    <matplotlib.legend.Legend at 0x7ff82d7730b8>
 
 
 

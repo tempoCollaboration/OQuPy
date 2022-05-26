@@ -2,30 +2,7 @@ Environment Dynamics
 ====================
 
 An example on how to compute the dynamics of a gaussian bosonic
-environment using the OquPy package.
-
-.. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
- :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fbath_dynamics.ipynb
-
-You can follow this tutorial using any of these options:
-
-- launch binder |binder-tutorial| (runs in browser),
-- download the :download:`jupyter file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/bath_dynamics.ipynb>`,
-- read through it and code along below.
-
--------------------------------------------------------------------------------
-
-**Contents:**
-
-- Example - Heat transfer in a biased spin-boson model
-
-    - 1. Hamiltonian - Biased spin-boson model
-    - 2. Building the process tensor
-    - 3. Bath dynamics
-    - 4. Recreating Figure 2
-
--------------------------------------------------------------------------------
-
+environment using the OQuPy package.
 
 First let’s import the necessary packages
 
@@ -132,8 +109,9 @@ qualitative result is not really changed though.
 
 .. parsed-literal::
 
+    --> PT-TEMPO computation:
     100.0%  100 of  100 [########################################] 00:00:03
-    Elapsed time: 3.0s
+    Elapsed time: 3.1s
 
 
 Now as we saw previously the process tensor can readily be used to
@@ -142,7 +120,10 @@ matrix elements evolve.
 
 .. code:: ipython3
 
-    dyns = oqupy.contractions.compute_dynamics(system, pt, initial_state = initial_state)
+    dyns = oqupy.contractions.compute_dynamics(
+        system=system,
+        initial_state=initial_state,
+        process_tensor=pt)
     times, states = dyns.times, dyns.states
     plt.plot(times, states[:,0,0].real, label=r'$\rho_{00}$')
     plt.plot(times, states[:,0,1].real, label=r'$\Re[\rho_{01}]$')
@@ -152,16 +133,23 @@ matrix elements evolve.
     plt.legend()
 
 
+.. parsed-literal::
+
+    --> Compute dynamics:
+    100.0%  100 of  100 [########################################] 00:00:00
+    Elapsed time: 0.3s
+
+
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f1f4e7af6d8>
+    <matplotlib.legend.Legend at 0x7f99f5208240>
 
 
 
 
-.. image:: output_9_1.png
+.. image:: output_9_2.png
 
 
 Already the process tensor tells us everything we could want to know
@@ -244,8 +232,9 @@ frequency, in this case let’s look at ``w = Omega`` and a bandwidth of
 
 .. parsed-literal::
 
-    100.0%  100 of  100 [########################################] 00:00:25
-    Elapsed time: 26.0s
+    --> Compute correlations:
+    100.0%  100 of  100 [########################################] 00:00:15
+    Elapsed time: 15.6s
 
 
 
