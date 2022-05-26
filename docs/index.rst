@@ -84,6 +84,7 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
    pages/tutorials/pt_tempo/pt_tempo
    pages/tutorials/bath_dynamics/bath_dynamics
    pages/tutorials/pt_tebd/pt_tebd
+   pages/tutorials/mf_tempo/mf_tempo
 
 .. toctree::
    :maxdepth: 1

@@ -1,6 +1,7 @@
 All Modules
 ===========
 
+
 oqupy.base_api
 --------------
 
@@ -130,8 +131,8 @@ oqupy.tempo.pt_tempo
     :members:
 
 
-oqupy.tempo.tempo
------------------
+oqupy.tempo
+-----------
 
 .. automodule:: oqupy.tempo.tempo
     :show-inheritance:
