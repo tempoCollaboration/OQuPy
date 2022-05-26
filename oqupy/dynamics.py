@@ -84,9 +84,13 @@ class BaseDynamics(BaseAPIClass):
         r"""
         Return the time evolution of the expectation value of specific
         operator. The expectation for :math:`t` is
+
         .. math::
+
             \langle \hat{O}(t) \rangle = \mathrm{Tr}\{ \hat{O} \rho(t) \}
+
         with `operator` :math:`\hat{O}`.
+
         Parameters
         ----------
         operator: ndarray (default = None)

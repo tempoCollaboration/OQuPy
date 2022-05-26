@@ -95,13 +95,16 @@ class System(BaseSystem):
     def liouvillian(self) -> ndarray:
         r"""
         Returns the Liouvillian super-operator :math:`\mathcal{L}` with
+
         .. math::
+
             \mathcal{L}\rho = -i [\hat{H}, \rho]
                 + \sum_n^N \gamma_n \left(
                     \hat{A}_n \rho \hat{A}_n^\dagger
                     - \frac{1}{2} \hat{A}_n^\dagger \hat{A}_n \rho
                     - \frac{1}{2} \rho \hat{A}_n^\dagger \hat{A}_n
                   \right) .
+
         Returns
         -------
         liouvillian : ndarray

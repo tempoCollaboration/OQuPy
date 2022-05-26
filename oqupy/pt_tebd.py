@@ -140,6 +140,10 @@ class PtTebd(BaseAPIClass):
     """
     Process tensor time evolving block decimation (PT-TEBD).
 
+    Backend configuration `backend_config` may have the following options:
+
+        * 'parallel' : 'multiprocess' / 'multithread'
+
     Parameters
     ----------
     initial_augmented_mps: AugmentedMPS
@@ -162,10 +166,6 @@ class PtTebd(BaseAPIClass):
         Optional list of single sites or multiple site dynamics to be recorded.
     backend_config: dict
         Optional backend configuration dictionary.
-
-    Backend configuration `backend_config` may have the following options:
-
-    * 'parallel' : 'multiprocess' / 'multithread'
 
     """
     def __init__(
