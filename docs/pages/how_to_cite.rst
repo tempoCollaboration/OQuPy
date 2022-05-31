@@ -14,8 +14,8 @@ Please consider citing
 
 - TEMPO algorithm: **[Strathearn2018]**, **[Strathearn2019]**
 - Process tensor approach: **[Pollock2018]**, **[Jorgensen2019]**, **[Fux2021]**
-- Bath dynamics: **[Gribben2020a]**
-- Multiple environments: **[Gribben2020b]**
+- Bath dynamics: **[Gribben2021]**
+- Multiple environments: **[Gribben2022]**
 - Chains (PT-TEBD): **[Fux2022]**
 - Mean-Field TEMPO: **[FowlerWright2021]**
 

@@ -12,8 +12,8 @@ Major code contributions
 **Version 0.2.0**
 - [Gerald E. Fux](https://github.com/gefux): Chains of open quantum systems [Fux2022].
 - Dainius Kilda: Precursor code for chains of open quantum systems [Fux2022].
-- [Dominic Gribben](https://github.com/djgribben): Bath dynamics extension [Gribben2021a].
-- [Dominic Gribben](https://github.com/djgribben): Multiple environments extension [Gribben2021b].
+- [Dominic Gribben](https://github.com/djgribben): Bath dynamics extension [Gribben2021].
+- [Dominic Gribben](https://github.com/djgribben): Multiple environments extension [Gribben2022].
 
 **Version 0.1.2 (TimeEvolvingMPO)**
 - [Gerald E. Fux](https://github.com/gefux): Improved memory cut-off [Strathearn2017].

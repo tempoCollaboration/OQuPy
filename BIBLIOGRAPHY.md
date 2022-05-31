@@ -10,8 +10,8 @@ The code in this project is based on ideas from the following publications:
 - **[Jorgensen2019]** Jørgensen and Pollock, *Exploiting the causal tensor network structure of quantum processes to efficiently simulate non-Markovian path integrals*, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
 - **[Strathearn2019]** Strathearn, *Modelling Non-Markovian Quantum Systems Using Tensor Networks*, [Springer Theses](http://link.springer.com/10.1007/978-3-030-54975-6) (2020).
 - **[Fux2020]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
-- **[Gribben2021a]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*, [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
-- **[Gribben2021b]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
+- **[Gribben2021]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*,  [arXiv:20106.0412](http://arxiv.org/abs/2106.04212) (2021).
+- **[Gribben2022]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [PRX Quantum 3, 10321](https://link.aps.org/doi/10.1103/PRXQuantum.3.010321) (2021).
 - **[FowlerWright2021]** Fowler-Wright et al., *Efficient many-body non-Markovian dynamics of organic polaritons*, [arXiv:2112.09003](http://arxiv.org/abs/2112.09003) (2021)
 - **[Fux2022]** Fux et al., *Thermalization of a spin chain strongly coupled to its environment*, [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
 
@@ -56,17 +56,7 @@ BibTeX:
   year = {2022}
 }
 
-@article{Gribben2021a,
-  title = {{Exact dynamics of non-additive environments in non-Markovian open quantum systems}},
-  author = {Gribben, Dominic and Rouse, Dominic M. and Iles-Smith, Jake and Strathearn, Aidan and Maguire, Henry and Kirton, Peter and Nazir, Ahsan and Gauger, Erik M. and Lovett, Brendon W.},
-  archivePrefix = {arXiv},
-  arxivId = {2109.08442},
-  eprint = {2109.08442},
-  url = {http://arxiv.org/abs/2109.08442},
-  year = {2021}
-}
-
-@article{Gribben2021b,
+@article{Gribben2021,
   title = {{Using the Environment to Understand non-Markovian Open Quantum Systems}},
   author = {Gribben, Dominic and Strathearn, Aidan and Fux, Gerald E. and Kirton, Peter and Lovett, Brendon W.},
   archivePrefix = {arXiv},
@@ -74,6 +64,21 @@ BibTeX:
   eprint = {2106.04212},
   url = {http://arxiv.org/abs/2106.04212},
   year = {2021}
+}
+
+@article{Gribben2022,
+  title = {Exact Dynamics of Nonadditive Environments in Non-Markovian Open Quantum Systems},
+  author = {Gribben, Dominic and Rouse, Dominic M. and Iles-Smith, Jake and Strathearn, Aidan and Maguire, Henry and Kirton, Peter and Nazir, Ahsan and Gauger, Erik M. and Lovett, Brendon W.},
+  journal = {PRX Quantum},
+  volume = {3},
+  issue = {1},
+  pages = {010321},
+  numpages = {18},
+  year = {2022},
+  month = {Feb},
+  publisher = {American Physical Society},
+  doi = {10.1103/PRXQuantum.3.010321},
+  url = {https://link.aps.org/doi/10.1103/PRXQuantum.3.010321}
 }
 
 @article{Jorgensen2019,

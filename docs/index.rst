@@ -49,7 +49,8 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
   `arXiv:2106.04212 <http://arxiv.org/abs/2106.04212>`_
   (2021).
 - **[7]** Gribben et al.,
-  `arXiv:2109.08442 <http://arxiv.org/abs/2109.08442>`_ (2021).
+  `PRX Quantum 3, 10321 <https://link.aps.org/doi/10.1103/PRXQuantum.3.010321>`_
+  (2022).
 - **[8]** Fux et al.,
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_ (2022).
 - **[9]** Fowler-Wright at al.,

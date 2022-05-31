@@ -34,8 +34,8 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 - **[3]** Pollock et al., [Phys. Rev. A 97, 012127](http://dx.doi.org/10.1103/PhysRevA.97.012127) (2018).
 - **[4]** Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
 - **[5]** Fux et al., [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
-- **[6]** Gribben et al., [arXiv:2106.04212](http://arxiv.org/abs/2106.04212) (2021).
-- **[7]** Gribben et al., [arXiv:2109.08442](http://arxiv.org/abs/2109.08442) (2021).
+- **[6]** Gribben et al., [arXiv:20106.0412](http://arxiv.org/abs/2106.04212) (2021).
+- **[7]** Gribben et al., [PRX Quantum 3, 10321](https://link.aps.org/doi/10.1103/PRXQuantum.3.010321) (2022).
 - **[8]** Fux et al., [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
 - **[9]** Fowler-Wright at al., [arXiv:2112.09003](http://arxiv.org/abs/2112.09003) (2021).
 
