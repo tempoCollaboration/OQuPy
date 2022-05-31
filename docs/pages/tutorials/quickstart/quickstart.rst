@@ -6,6 +6,14 @@ dynamics of a quantum system that is possibly strongly coupled to a
 structured environment. We illustrate this by applying the TEMPO method
 to the strongly coupled spin boson model.
 
+-  `launch
+   binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fquickstart.ipynb>`__
+   (runs in browser),
+-  `download the jupyter
+   file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/quickstart.ipynb>`__,
+   or
+-  read through the text below and code along.
+
 **Contents:**
 
 -  Example - The spin boson model
@@ -44,7 +52,7 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.2.0'
+    '0.3.0'
 
 
 
@@ -104,15 +112,15 @@ the job - just to have an idea where we are going:
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  150 of  150 [########################################] 00:00:14
-    Elapsed time: 14.9s
+    100.0%  150 of  150 [########################################] 00:00:13
+    Elapsed time: 13.6s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fc3246da940>
+    <matplotlib.legend.Legend at 0x7fbcc2bf1978>
 
 
 
@@ -222,7 +230,7 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    ../oqupy/tempo/tempo.py:833: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo.py:833: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -230,8 +238,8 @@ to :math:`t=5\,\Omega^{-1}`
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%   80 of   80 [########################################] 00:00:07
-    Elapsed time: 7.3s
+    100.0%   80 of   80 [########################################] 00:00:06
+    Elapsed time: 6.8s
 
 
 and plot the result:
@@ -249,7 +257,7 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fc32434e518>
+    <matplotlib.legend.Legend at 0x7fbcc3c4c9e8>
 
 
 
@@ -307,7 +315,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    ../oqupy/tempo/tempo.py:833: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo.py:833: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -419,14 +427,14 @@ We can start by computing the dynamics up to time
 
     --> TEMPO computation:
     100.0%   50 of   50 [########################################] 00:00:03
-    Elapsed time: 3.4s
+    Elapsed time: 3.1s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7fc3242e9470>
+    <oqupy.dynamics.Dynamics at 0x7fbcc276be10>
 
 
 
@@ -445,7 +453,7 @@ then get and plot the dynamics of expecatation values,
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fc3247aa048>
+    <matplotlib.legend.Legend at 0x7fbcc28d8ac8>
 
 
 
@@ -463,15 +471,15 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  100 of  100 [########################################] 00:00:12
-    Elapsed time: 12.8s
+    100.0%  100 of  100 [########################################] 00:00:13
+    Elapsed time: 13.9s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7fc3242e9470>
+    <oqupy.dynamics.Dynamics at 0x7fbcc276be10>
 
 
 
@@ -490,7 +498,7 @@ and then again get and plot the dynamics of expecatation values.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fc3243a8dd8>
+    <matplotlib.legend.Legend at 0x7fbcc26939b0>
 
 
 

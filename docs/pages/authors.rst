@@ -1,9 +1,7 @@
 Authors & Acknowledgements
 ==========================
 
-This open source project has been started by
-`Gerald E. Fux <https://github.com/gefux>`_ in 2020 as a member of the
-`TEMPO collaboration <https://github.com/tempoCollaboration>`_.
+Lead developer since 2020 (start of the project): `Gerald E. Fux <https://github.com/gefux>`_
 
 
 Major code contributions

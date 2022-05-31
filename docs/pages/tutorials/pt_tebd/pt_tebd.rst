@@ -11,6 +11,14 @@ is explained in detail in [Fux2022].
 *Thermalization of a spin chain strongly coupled to its environment*,
 arXiv:2201.05529 (2022).
 
+-  `launch
+   binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fpt_tebd.ipynb>`__
+   (runs in browser),
+-  `download the jupyter
+   file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/pt_tebd.ipynb>`__,
+   or
+-  read through the text below and code along.
+
 **Contents:**
 
 -  Example - Heisenberg spin chain
@@ -45,7 +53,7 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.2.0'
+    '0.3.0'
 
 
 
@@ -208,7 +216,7 @@ We can use the dynamics results to then compute the evolution of the
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff82d915cc0>
+    <matplotlib.legend.Legend at 0x7f672e2d7588>
 
 
 
@@ -280,7 +288,7 @@ computation (see Tutorial 02 - Time dependence and PT-TEMPO).
     Process tensor (PT) computation:
     --> PT-TEMPO computation:
     100.0%   20 of   20 [########################################] 00:00:00
-    Elapsed time: 0.5s
+    Elapsed time: 0.6s
 
 
 To see the effect of the environment clearly we start in a fully mixed
@@ -319,7 +327,7 @@ keep them free by setting them to ``None``.
     PT-TEBD computation (open spin chain):
     --> PT-TEBD computation:
     100.0%   20 of   20 [########################################] 00:00:04
-    Elapsed time: 4.2s
+    Elapsed time: 4.3s
 
 
 .. code:: ipython3
@@ -335,7 +343,7 @@ keep them free by setting them to ``None``.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff82d7730b8>
+    <matplotlib.legend.Legend at 0x7f671cf195f8>
 
 
 

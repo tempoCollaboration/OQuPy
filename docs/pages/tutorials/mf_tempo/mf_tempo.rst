@@ -6,6 +6,14 @@ to compute the dynamics of a many-body system of the type introduced in
 [FowlerWright2021]
 (`arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`__).
 
+-  `launch
+   binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fmf_tempo.ipynb>`__
+   (runs in browser),
+-  `download the jupyter
+   file <https://raw.githubusercontent.com/tempoCollaboration/OQuPy/main/tutorials/mf_tempo.ipynb>`__,
+   or
+-  read through the text below and code along.
+
 **Contents:**
 
 1. Background and introduction
@@ -29,7 +37,7 @@ We firstly import OQuPy and other useful packages:
     import matplotlib.pyplot as plt
 
 Check the current OQuPy version; mean-field functionality was introduced
-in version **0.3.0**
+in version **0.3.0**.
 
 .. code:: ipython3
 
@@ -40,7 +48,7 @@ in version **0.3.0**
 
 .. parsed-literal::
 
-    '0.2.0'
+    '0.3.0'
 
 
 
@@ -324,8 +332,8 @@ is used to compute the dynamics for an ordinary ``System`` or
 .. parsed-literal::
 
     --> TEMPO-with-field computation:
-    100.0%   93 of   93 [########################################] 00:00:18
-    Elapsed time: 18.7s
+    100.0%   93 of   93 [########################################] 00:00:17
+    Elapsed time: 17.9s
 
 
 ``TempoWithField.compute`` returns a ``DynamicsWithField`` object
@@ -355,12 +363,12 @@ producing the first part of a single line of **Fig. 2a.**:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f920a714208>
+    <matplotlib.legend.Legend at 0x7f4ca4982ba8>
 
 
 
 
-.. image:: output_32_1.png
+.. image:: output_33_1.png
 
 
 If you have the time you can calculate the dynamics to
@@ -399,7 +407,7 @@ bath via
 
     --> PT-TEMPO computation:
     100.0%   93 of   93 [########################################] 00:00:06
-    Elapsed time: 6.3s
+    Elapsed time: 6.1s
 
 
 Refer the Time Dependence and PT-TEMPO tutorial for further discussion
@@ -451,17 +459,17 @@ using the process tensor calculated above:
 .. parsed-literal::
 
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.0s
+    100.0%   93 of   93 [########################################] 00:00:13
+    Elapsed time: 13.8s
+    --> Compute dynamics with field:
+    100.0%   93 of   93 [########################################] 00:00:13
+    Elapsed time: 13.7s
     --> Compute dynamics with field:
     100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.8s
+    Elapsed time: 14.4s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.5s
-    --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.1s
+    100.0%   93 of   93 [########################################] 00:00:13
+    Elapsed time: 13.8s
 
 
 Finally, plotting the results:
@@ -482,11 +490,11 @@ Finally, plotting the results:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f920a5ee438>
+    <matplotlib.legend.Legend at 0x7f4ca48cab38>
 
 
 
 
-.. image:: output_41_1.png
+.. image:: output_42_1.png
 
 
