@@ -22,13 +22,14 @@ from numpy import ndarray
 import tensornetwork as tn
 from scipy.linalg import expm
 from scipy import integrate
+from oqupy.system import SuperTimeDependentSystem
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
-from oqupy.dynamics import Dynamics, DynamicsWithField
+from oqupy.dynamics import Dynamics, DynamicsWithField, SuperSystemDynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem, System, TimeDependentSystem
-from oqupy.system import TimeDependentSystemWithField
+from oqupy.system import TimeDependentSystemWithField, SuperTimeDependentSystemWithField
 from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
@@ -149,11 +150,175 @@ def compute_dynamics_with_field(
         environment).
     """
     initial_field = check_convert(initial_field, complex, "initial_field")
+    
     dynamics_with_field = _compute_dynamics_all(
         True, system, initial_field, initial_state, dt, num_steps, start_time,
         process_tensor, control, record_all, epsrel, subdiv_limit,
         progress_type=progress_type)
     return dynamics_with_field
+
+
+def compute_dynamics_multiple_systems(
+        system: SuperTimeDependentSystem,
+        initial_state_list: Optional[List[ndarray]] = None,
+        dt: Optional[float] = None,
+        num_steps: Optional[int] = None,
+        start_time: Optional[float] = 0.0,
+        process_tensor_list: Optional[Union[Union[List[List[BaseProcessTensor]], List[BaseProcessTensor]], 
+                                    Union[List[BaseProcessTensor], BaseProcessTensor]]]
+                                     = None,
+        control_list: Optional[List[Control]] = None,
+        record_all: Optional[bool] = True,
+        epsrel: Optional[float] = INTEGRATE_EPSREL,
+        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+        progress_type: Optional[Text] = None) -> SuperSystemDynamics:
+    """
+    Compute the system and field dynamics for a given super-system.
+
+    Parameters
+    ----------
+    system: SuperTimeDependentSystemWithField
+        Object containing the system Hamiltonians and field equation of
+        motion.
+    initial_field: complex
+        Initial field value.
+    initial_state_list: ndarray
+        List of initial system states.
+    dt: float
+        Length of a single time step.
+    start_time: float
+        Optional start time offset.
+    num_steps: int
+        Optional number of time steps to be computed.
+    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
+        Optional process tensor object or list of process tensor objects.
+    control_list: List[Control]
+        Optional list of control operations.
+    record_all: bool
+        If `false` function only computes the final state.
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating the system Liouvillian. If None
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
+    epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``silent``, ``simple``, ``bar``}. If `None` then
+        the default progress type is used.
+
+    Returns
+    -------
+    dynamics_with_field: SuperSystemsDynamics
+        The system and field dynamics for all given systems and the
+        field equation of motion (accounting for the interaction with the
+        environment).
+    """
+
+    if initial_state_list is None:
+        initial_state_list = [None for system in system.system_list]
+
+    if control_list is None:
+        control_list = [None for system in system.system_list]
+    
+    if process_tensor_list is None:
+        process_tensor_list = [None for system in system.system_list]
+    elif isinstance(process_tensor_list, BaseProcessTensor):
+        process_tensor_list = [process_tensor_list for system in system.system_list]
+    elif isinstance(process_tensor_list, list) and isinstance(process_tensor_list[0], BaseProcessTensor) \
+                    and len(process_tensor_list) == 1:
+        process_tensor_list = [process_tensor_list for system in system.system_list]
+
+    dynamics_with_field = _compute_dynamics_all_multiple_systems(
+        False, system, None, initial_state_list, dt, num_steps, start_time,
+        process_tensor_list, control_list, record_all, epsrel, subdiv_limit,
+        progress_type=progress_type)
+    return dynamics_with_field
+
+def compute_dynamics_with_field_multiple_systems(
+        system: SuperTimeDependentSystemWithField,
+        initial_field: complex,
+        initial_state_list: Optional[List[ndarray]] = None,
+        dt: Optional[float] = None,
+        num_steps: Optional[int] = None,
+        start_time: Optional[float] = 0.0,
+        process_tensor_list: Optional[Union[Union[List[List[BaseProcessTensor]], List[BaseProcessTensor]], 
+                                    Union[List[BaseProcessTensor], BaseProcessTensor]]]
+                                     = None,
+        control_list: Optional[List[Control]] = None,
+        record_all: Optional[bool] = True,
+        epsrel: Optional[float] = INTEGRATE_EPSREL,
+        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+        progress_type: Optional[Text] = None) -> SuperSystemDynamics:
+    """
+    Compute the system and field dynamics for a given super-system and
+    field equation of motion.
+
+    Parameters
+    ----------
+    system: SuperTimeDependentSystemWithField
+        Object containing the system Hamiltonians and field equation of
+        motion.
+    initial_field: complex
+        Initial field value.
+    initial_state_list: ndarray
+        List of initial system states.
+    dt: float
+        Length of a single time step.
+    start_time: float
+        Optional start time offset.
+    num_steps: int
+        Optional number of time steps to be computed.
+    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
+        Optional process tensor object or list of process tensor objects.
+    control_list: List[Control]
+        Optional list of control operations.
+    record_all: bool
+        If `false` function only computes the final state.
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating the system Liouvillian. If None
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
+    epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``silent``, ``simple``, ``bar``}. If `None` then
+        the default progress type is used.
+
+    Returns
+    -------
+    dynamics_with_field: SuperSystemDynamics
+        The system and field dynamics for all given systems and the
+        field equation of motion (accounting for the interaction with the
+        environment).
+    """
+    initial_field = check_convert(initial_field, complex, "initial_field")
+    
+    if initial_state_list is None:
+        initial_state_list = [None for system in system.system_list]
+
+    if control_list is None:
+        control_list = [None for system in system.system_list]
+    
+    if process_tensor_list is None:
+        process_tensor_list = [None for system in system.system_list]
+    elif isinstance(process_tensor_list, BaseProcessTensor):
+        process_tensor_list = [process_tensor_list for system in system.system_list]
+    elif isinstance(process_tensor_list, list) and isinstance(process_tensor_list[0], BaseProcessTensor) \
+                    and len(process_tensor_list) == 1:
+        process_tensor_list = [process_tensor_list for system in system.system_list]
+
+    dynamics_with_field = _compute_dynamics_all_multiple_systems(
+        True, system, initial_field, initial_state_list, dt, num_steps, start_time,
+        process_tensor_list, control_list, record_all, epsrel, subdiv_limit,
+        progress_type=progress_type)
+    return dynamics_with_field
+
 
 
 def _compute_dynamics_all(
@@ -226,6 +391,7 @@ def _compute_dynamics_all(
     for step in range(num_steps+1):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
+
         if pre_measurement_control is not None:
             current_node, current_edges = _apply_system_superoperator(
                 current_node, current_edges, pre_measurement_control)
@@ -292,6 +458,212 @@ def _compute_dynamics_all(
         return DynamicsWithField(times=list(times),states=states, fields=fields)
 
     return Dynamics(times=list(times),states=states)
+
+def _compute_dynamics_all_multiple_systems(
+        with_field: bool,
+        super_system: SuperTimeDependentSystemWithField, 
+        initial_field: float,
+        initial_state_list: ndarray,
+        dt: float,
+        num_steps: int,
+        start_time: float,
+        process_tensor_list: Union[List[List[BaseProcessTensor]], List[BaseProcessTensor]],
+        control_list: List[Control],
+        record_all: bool,
+        epsrel: float,
+        subdiv_limit: int,
+        progress_type: Text) -> Union[Dynamics, DynamicsWithField]:
+    """Compute super-system and (optionally) field dynamics accounting for the
+    interaction with the environment using the process tensor."""
+
+    # -- input parsing -- 
+    # check that lengths of listst provided are consistent
+    if len(super_system.system_list) != len(initial_state_list) != len(control_list):
+        raise ValueError(f"The lengths of the list of systems ({len(super_system.system_list)}),",
+                         f"the list of states ({len(initial_state_list)})",
+                         f"and the list of controls ({len(control_list)}) are inconsistent.")
+
+    # list of tuples in the order: system, initial_state, dt, num_steps, start_time, process_tensors, control, record_all, hs_dim
+    parsed_parameters_tuple_list =  [_compute_dynamics_input_parse(with_field, system, initial_state, dt, num_steps, start_time,
+                                     process_tensor, control, record_all)
+                                     for system, initial_state, process_tensor, control
+                                     in zip(super_system.system_list, initial_state_list, process_tensor_list, control_list)]
+
+    # parameter names returned by _compute_dynamics_input_parse()
+    parsed_parameter_names = ["system", "initial_state", "dt", "num_steps", "start_time", 
+                              "process_tensors", "control", "record_all", "hs_dim"] 
+
+    # create dictionary for parsed parameters with each key being a parameter corresponding to a relevant list as its value
+    parsed_parameters_dict = {}
+    for i, parsed_parameter_name in enumerate(parsed_parameter_names):
+        parsed_parameters_dict[parsed_parameter_name] = []
+        for parsed_parameter_tuple in parsed_parameters_tuple_list:
+            parsed_parameters_dict[parsed_parameter_name].append(parsed_parameter_tuple[i])
+
+    num_steps = parsed_parameters_dict["num_steps"][0]
+    dt = parsed_parameters_dict["dt"][0]
+    record_all = parsed_parameters_dict["record_all"][0]
+    num_envs_list = [len(process_tensors) for process_tensors in parsed_parameters_dict["process_tensors"]]
+
+    # -- prepare propagators for each system --
+    propagators_list = [_get_propagators(system, dt, start_time, epsrel, subdiv_limit) 
+                        for system in parsed_parameters_dict["system"]]
+
+ 
+    # -- prepare compute field --
+        
+    if with_field:
+        def compute_field(step:int, state_list: ndarray, field: complex, # make change to make list of states
+                next_state_list: Optional[ndarray] = None):
+            t = start_time + step * dt
+            rk1 = super_system.field_eom(t, state_list, field)
+            if next_state_list is None:
+                return rk1 * dt
+            rk2 = super_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
+            return field + dt * (rk1 + rk2) / 2
+
+    # -- prepare controls --
+    def prepare_controls(step: int, control:Control):
+        return control.get_controls(
+            step,
+            dt=dt,
+            start_time=start_time)
+    
+
+    # -- initialize computation --
+    #
+    #  Initial state including the bond legs to the environments with:
+    #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
+    #    edge  -1                      is the state leg
+
+    nodes_and_edges_list = [] # list of tuples (current_nodes, current_edges) 
+
+    for initial_state, hs_dim, num_envs in zip(parsed_parameters_dict["initial_state"], parsed_parameters_dict["hs_dim"],
+                                                num_envs_list):
+        initial_ndarray = initial_state.reshape(hs_dim**2) 
+        initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+        current_node = tn.Node(initial_ndarray)
+        current_edges = current_node[:]
+        
+        nodes_and_edges_list.append((current_node, current_edges))
+
+    # initialize list to store system states at each time step
+    system_states_list = []
+    if with_field:
+        field_list = [] # initialize list to store field at each time step
+        title = "--> Compute dynamics with field:"
+
+    else:
+        title = "--> Compute dynamics:"
+    prog_bar = get_progress(progress_type)(num_steps, title)
+    prog_bar.enter()
+
+    for step in range(num_steps+1):
+
+        # -- apply pre measurement control --
+        controls_tuple_list = [prepare_controls(step, control) for control in parsed_parameters_dict["control"]]
+        
+        for (current_node, current_edges), (pre_measurement_control, post_measurement_control) in \
+            zip(nodes_and_edges_list, controls_tuple_list):
+            if pre_measurement_control is not None:
+                current_node, current_edges = _apply_system_superoperator(current_node, current_edges, pre_measurement_control)
+        
+        if step == num_steps:
+            break
+
+        # -- extract current states -- update field --
+        if record_all or with_field:
+            caps_list = [_get_caps(process_tensors, step) for process_tensors in parsed_parameters_dict["process_tensors"]]
+
+            state_tensor_list = [_apply_caps(current_node, current_edges, caps)
+                                 for (current_node, current_edges), caps 
+                                 in zip(nodes_and_edges_list, caps_list)]
+
+            state_list = [state_tensor.reshape(hs_dim, hs_dim) for state_tensor, hs_dim
+                          in zip(state_tensor_list, parsed_parameters_dict["hs_dim"])]
+            
+            
+        if with_field:
+            if step == 0:
+                field = initial_field
+            else:
+                field = compute_field(step, previous_state_list, field, state_list)
+            previous_state_list = state_list
+        if record_all:
+            system_states_list.append(state_list)                                                  
+            if with_field: 
+                field_list.append(field)
+
+        prog_bar.update(step)
+
+        # -- apply post measurement control --
+
+        for (current_node, current_edges), (pre_measurement_control, post_measurement_control) in \
+            zip(nodes_and_edges_list, controls_tuple_list):
+            if post_measurement_control is not None:
+                current_node, current_edges = _apply_system_superoperator(current_node, current_edges, post_measurement_control)
+
+        """nodes_and_edges_list = [_apply_system_superoperator(current_node, current_edges, post_measurement_control)
+                                    for (current_node, current_edges), (pre_measurement_control, post_measurement_control)
+                                    in zip(nodes_and_edges_list, controls_tuple_list)
+                                    if post_measurement_control is not None]"""
+
+        # -- propagate one time step --
+        if with_field:
+            propagator_tuples_list = [propagators(step, state, field) for propagators, state in zip(propagators_list, state_list)]
+
+        else:
+            propagator_tuples_list = [propagators(step) for propagators in propagators_list]
+
+            
+        pt_mpos_list = [_get_pt_mpos(process_tensors, step) for process_tensors in parsed_parameters_dict["process_tensors"]]
+        
+
+        # first half propagator
+        nodes_and_edges_list = [_apply_system_superoperator(current_node, current_edges, first_half_prop)
+                                for (current_node, current_edges), (first_half_prop, second_half_prop)
+                                in zip(nodes_and_edges_list, propagator_tuples_list)]
+
+        # PT-MPO
+        nodes_and_edges_list = [_apply_pt_mpos(current_node, current_edges, pt_mpos)
+                                for (current_node, current_edges), pt_mpos
+                                in zip(nodes_and_edges_list, pt_mpos_list)]
+
+        # second half propagator
+        nodes_and_edges_list = [_apply_system_superoperator(current_node, current_edges, second_half_prop)
+                                for (current_node, current_edges), (first_half_prop, second_half_prop)
+                                in zip(nodes_and_edges_list, propagator_tuples_list)]
+    
+    # -- extract last states --
+    caps_list = [_get_caps(process_tensors, step) for process_tensors in parsed_parameters_dict["process_tensors"]]
+
+    state_tensor_list = [_apply_caps(current_node, current_edges, caps)
+                         for (current_node, current_edges), caps 
+                         in zip(nodes_and_edges_list, caps_list)]
+
+    final_state_list = [state_tensor.reshape(hs_dim, hs_dim) for state_tensor, hs_dim
+                        in zip(state_tensor_list, parsed_parameters_dict["hs_dim"])]
+    
+    system_states_list.append(final_state_list)
+
+    if with_field:
+        final_field = compute_field(step, previous_state_list, field, final_state_list)
+        field_list.append(final_field)
+
+    prog_bar.update(num_steps)
+    prog_bar.exit()
+
+    # -- create dynamics object -- 
+
+    if record_all:
+        times = start_time + np.arange(len(system_states_list))*dt
+    else:
+        times = [start_time + len(system_states_list)*dt]
+        
+    if with_field:
+        return SuperSystemDynamics(times=list(times), system_states_list=system_states_list, fields=field_list)
+
+    return SuperSystemDynamics(times=list(times), system_states_list=system_states_list, fields=None)
 
 def _get_propagators(
         system, dt, start_time, epsrel, subdiv_limit):

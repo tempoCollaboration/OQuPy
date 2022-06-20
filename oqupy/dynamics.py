@@ -262,6 +262,38 @@ class DynamicsWithField(BaseDynamics):
         if self._shape is None:
             self._shape = tmp_shape
 
+class SuperSystemDynamics(BaseAPIClass):
+    """Class containing informatioin on the dynamics of a super-systems 
+    (i.e. a collection of multiple systems).
+    """
+
+    def __init__(self, times, system_states_list, name=None, description=None, fields=None):
+        super().__init__(name, description)
+        self.times = times
+        self.system_states_list = system_states_list  # list of lists, with each sublist containing all states at a given time step
+        self.fields = fields                          # list of field values at all time steps (if calculation is done with a field
+        
+        
+    def _get_system_dynamics(self):
+        """Returns list of Dynamics objects for each system in order of system states provided
+        """
+        with_field = (self.fields != None)
+        dynamics_list = []                            # initialize list of Dynamics objects
+        num_systems = len(self.system_states_list[0]) # number of systems
+        for i in range(num_systems):
+            
+            states = [system_states[i] for system_states in self.system_states_list]
+            if with_field:
+                dynamics_list.append(DynamicsWithField(times=self.times, states=states, fields=self.fields))
+            else:
+                dynamics_list.append(Dynamics(times=self.times, states=states))
+        
+        return dynamics_list
+
+    @property
+    def dynamics_list(self):
+        return self._get_system_dynamics()
+
 def _parse_times_states(times, states) -> Tuple[List[float],
         List[ndarray]] :
     """Check times and states are None or lists of the same length"""

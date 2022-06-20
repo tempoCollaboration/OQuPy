@@ -42,6 +42,7 @@ __all__ = [
     'PtTempo',
     'pt_tempo_compute',
     'SimpleProcessTensor',
+    'SuperTimeDependentSystemWithField'
     'System',
     'SystemChain',
     'Tempo',
@@ -95,6 +96,8 @@ from oqupy.system import System
 from oqupy.system import SystemChain
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
+from oqupy.system import SuperTimeDependentSystem
+from oqupy.system import SuperTimeDependentSystemWithField
 
 from oqupy.pt_tempo import PtTempo
 from oqupy.pt_tempo import pt_tempo_compute

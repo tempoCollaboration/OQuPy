@@ -396,6 +396,45 @@ class TimeDependentSystemWithField(BaseSystem):
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
 
+class SuperTimeDependentSystem(BaseAPIClass):
+    """Represents a super-system of TimeDependentSystem objects.
+    """
+    def __init__(self,
+        system_list: List[TimeDependentSystem],
+        name: Optional[Text] = None, 
+        description: Optional[Text] = None) -> None:
+
+        super().__init__(name, description)
+        self.system_list = system_list
+
+
+
+class SuperTimeDependentSystemWithField(SuperTimeDependentSystem):
+    """Represents a super-system of TimeDependentSystemsWithField objects.
+    """
+    
+    def __init__(self, 
+                system_list: List[TimeDependentSystem], 
+                field_eom: Callable[[float, List[ndarray], complex], complex],
+                name: Optional[Text] = None, 
+                description: Optional[Text] = None) -> None:
+
+        # TODO: Think about checking for potential overflow error for very large numbers (see Notes in https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
+
+        # Add array of all dimensions
+        # tmp_dimension = np.sum(np.array([system.hamiltonian.shape[0] for system in system_list])) # get value from product of dimensions of all systems
+        
+        # input check for field equation of motion
+        # tmp_field_eom = _check_super_field_eom(tmp_dimension, field_eom) # TODO: Make _check_super_field_eom() function
+
+        def _check_super_field_eom(tmp_dimension, field_eom):
+            # TODO: Finish writing function
+            pass 
+
+        self.field_eom = field_eom
+        super().__init__(system_list, name, description)
+
+
 class SystemChain(BaseAPIClass):
     """
     Represents a 1D chain of systems with nearest neighbor interactions.

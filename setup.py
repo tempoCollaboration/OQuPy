@@ -56,7 +56,7 @@ setup(
                 'quantum-physics',
                 'quantum-information',
                 'open-quantum-systems'],
-    packages=['oqupy'],
+    packages=find_packages(exclude=['tests']),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3.6",
