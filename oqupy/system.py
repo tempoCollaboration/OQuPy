@@ -397,7 +397,12 @@ class TimeDependentSystemWithField(BaseSystem):
         return copy(self._lindblad_operators)
 
 class SuperTimeDependentSystem(BaseAPIClass):
-    """Represents a super-system of TimeDependentSystem objects.
+    """Represents a super-system of `TimeDependentSystem` objects.
+
+    Parameters
+    ----------
+    hamiltonian: callable
+        System-only Hamiltonian :math:`\hat{H}(t)`.
     """
     def __init__(self,
         system_list: List[TimeDependentSystem],
@@ -407,10 +412,19 @@ class SuperTimeDependentSystem(BaseAPIClass):
         super().__init__(name, description)
         self.system_list = system_list
 
-
-
 class SuperTimeDependentSystemWithField(SuperTimeDependentSystem):
-    """Represents a super-system of TimeDependentSystemsWithField objects.
+    """Represents a super-system of `TimeDependentSystemsWithField` objects.
+
+    Parameters
+    ----------
+    hamiltonian: callable
+        System-only Hamiltonian :math:`\hat{H}(t, \langle a \rangle)`
+        where :math:`\langle a \rangle` is the field at time :math:`t`.
+    field_eom: callable
+        Field equation of motion :math:`\partial_t
+        \langle a \rangle(t, [\rho], \langle a \rangle)`
+        where :math:`[\rho]` and :math:`\langle a \rangle` are the list of (sqquare) system
+        density matrices and the field at time :math:`t` respectively.
     """
     
     def __init__(self, 
@@ -419,21 +433,17 @@ class SuperTimeDependentSystemWithField(SuperTimeDependentSystem):
                 name: Optional[Text] = None, 
                 description: Optional[Text] = None) -> None:
 
-        # TODO: Think about checking for potential overflow error for very large numbers (see Notes in https://numpy.org/doc/stable/reference/generated/numpy.prod.html)
-
-        # Add array of all dimensions
-        # tmp_dimension = np.sum(np.array([system.hamiltonian.shape[0] for system in system_list])) # get value from product of dimensions of all systems
-        
-        # input check for field equation of motion
-        # tmp_field_eom = _check_super_field_eom(tmp_dimension, field_eom) # TODO: Make _check_super_field_eom() function
-
-        def _check_super_field_eom(tmp_dimension, field_eom):
-            # TODO: Finish writing function
-            pass 
-
-        self.field_eom = field_eom
         super().__init__(system_list, name, description)
 
+        # input check for field equation of motion
+        tmp_dimension_list = [system.hamiltonian(1.0, 1.0+1.0j).shape[0] for system in self.system_list]
+        tmp_field_eom = _check_super_field_eom(tmp_dimension_list, field_eom)
+        self._field_eom = tmp_field_eom
+
+    @property
+    def field_eom(self) -> Callable[[float, List[float], ndarray, complex], complex]:
+        """The field equation of motion. """
+        return copy(self._field_eom)
 
 class SystemChain(BaseAPIClass):
     """
@@ -827,6 +837,20 @@ def _check_field_eom(dim, field_eom):
     except Exception as e:
         raise AssertionError("Field equation of motion must "\
                 "take a time, (dim,dim) matrix and field value "\
+                "and return a (complex) scalar.") from e
+    return field_eom
+
+def _check_super_field_eom(dim_list, field_eom):
+    """Input check a field equation of motion for a super-system"""
+    test_matrix_list = [_create_density_matrix(dim) for dim in dim_list]
+    test_field = 1.0+1.0j
+    test_time = 1.0
+    try:
+        value = field_eom(test_time, test_matrix_list, test_field)
+        complex(value)
+    except Exception as e:
+        raise AssertionError("Field equation of motion must "\
+                "take a time, a list of (dim,dim) matrices and a field value "\
                 "and return a (complex) scalar.") from e
     return field_eom
 
