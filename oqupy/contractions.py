@@ -211,12 +211,13 @@ def compute_dynamics_multiple_systems(
 
     Returns
     -------
-    dynamics_with_field: SuperSystemsDynamics
+    dynamics_with_field: SuperSystemDynamics
         The system and field dynamics for all given systems and the
         field equation of motion (accounting for the interaction with the
         environment).
     """
 
+    # initialize objects as lists where necessary
     if initial_state_list is None:
         initial_state_list = [None for system in system.system_list]
 
@@ -231,6 +232,7 @@ def compute_dynamics_multiple_systems(
                     and len(process_tensor_list) == 1:
         process_tensor_list = [process_tensor_list for system in system.system_list]
 
+    # compute dynamics
     dynamics_with_field = _compute_dynamics_all_multiple_systems(
         False, system, None, initial_state_list, dt, num_steps, start_time,
         process_tensor_list, control_list, record_all, epsrel, subdiv_limit,
@@ -297,6 +299,8 @@ def compute_dynamics_with_field_multiple_systems(
         field equation of motion (accounting for the interaction with the
         environment).
     """
+
+    # initialize objects as lists where necessary
     initial_field = check_convert(initial_field, complex, "initial_field")
     
     if initial_state_list is None:
@@ -313,13 +317,12 @@ def compute_dynamics_with_field_multiple_systems(
                     and len(process_tensor_list) == 1:
         process_tensor_list = [process_tensor_list for system in system.system_list]
 
+    # compute dynamics with field
     dynamics_with_field = _compute_dynamics_all_multiple_systems(
         True, system, initial_field, initial_state_list, dt, num_steps, start_time,
         process_tensor_list, control_list, record_all, epsrel, subdiv_limit,
         progress_type=progress_type)
     return dynamics_with_field
-
-
 
 def _compute_dynamics_all(
         with_field: bool,
@@ -474,7 +477,7 @@ def _compute_dynamics_all_multiple_systems(
         subdiv_limit: int,
         progress_type: Text) -> Union[Dynamics, DynamicsWithField]:
     """Compute super-system and (optionally) field dynamics accounting for the
-    interaction with the environment using the process tensor."""
+    interaction with the environment using the process tensor(s)."""
 
     # -- input parsing -- 
     # check that lengths of listst provided are consistent
@@ -513,12 +516,14 @@ def _compute_dynamics_all_multiple_systems(
     # -- prepare compute field --
         
     if with_field:
-        def compute_field(step:int, state_list: ndarray, field: complex, # make change to make list of states
+        def compute_field(step:int, state_list: ndarray, field: complex,
                 next_state_list: Optional[ndarray] = None):
             t = start_time + step * dt
+            #  perform first order Runge-Kutta calculation
             rk1 = super_system.field_eom(t, state_list, field)
             if next_state_list is None:
                 return rk1 * dt
+            #  perform second order Runge-Kutta calculation
             rk2 = super_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
             return field + dt * (rk1 + rk2) / 2
 
@@ -602,11 +607,6 @@ def _compute_dynamics_all_multiple_systems(
             zip(nodes_and_edges_list, controls_tuple_list):
             if post_measurement_control is not None:
                 current_node, current_edges = _apply_system_superoperator(current_node, current_edges, post_measurement_control)
-
-        """nodes_and_edges_list = [_apply_system_superoperator(current_node, current_edges, post_measurement_control)
-                                    for (current_node, current_edges), (pre_measurement_control, post_measurement_control)
-                                    in zip(nodes_and_edges_list, controls_tuple_list)
-                                    if post_measurement_control is not None]"""
 
         # -- propagate one time step --
         if with_field:

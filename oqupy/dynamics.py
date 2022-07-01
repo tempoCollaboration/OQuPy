@@ -263,7 +263,7 @@ class DynamicsWithField(BaseDynamics):
             self._shape = tmp_shape
 
 class SuperSystemDynamics(BaseAPIClass):
-    """Class containing informatioin on the dynamics of a super-systems 
+    """Class containing informatioin on the dynamics of a super-system 
     (i.e. a collection of multiple systems).
     """
 
@@ -271,7 +271,7 @@ class SuperSystemDynamics(BaseAPIClass):
         super().__init__(name, description)
         self.times = times
         self.system_states_list = system_states_list  # list of lists, with each sublist containing all states at a given time step
-        self.fields = fields                          # list of field values at all time steps (if calculation is done with a field
+        self.fields = fields                          # list of field values at all time steps (if calculation is done with a field)
         
         
     def _get_system_dynamics(self):
