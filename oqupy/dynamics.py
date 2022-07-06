@@ -186,18 +186,18 @@ class DynamicsWithField(BaseDynamics):
     Represents a specific time evolution of a density matrix together
     with a coherent field.
 
-    Parameters
+    parameters
     ----------
-    times: List[float] (default = None)
-        A list of points in time.
-    states: List[ndarray] (default = None)
-        A list of states at the times `times`.
-    fields: List[complex] (default = None)
-        A list of fields at the times `times`.
+    times: list[float] (default = none)
+        a list of points in time.
+    states: list[ndarray] (default = none)
+        a list of states at the times `times`.
+    fields: list[complex] (default = none)
+        a list of fields at the times `times`.
     name: str
-        An optional name for the dynamics.
+        an optional name for the dynamics.
     description: str
-        An optional description of the dynamics.
+        an optional description of the dynamics.
     """
     def __init__(
             self,
@@ -263,31 +263,55 @@ class DynamicsWithField(BaseDynamics):
             self._shape = tmp_shape
 
 class SuperSystemDynamics(BaseAPIClass):
-    """Class containing informatioin on the dynamics of a super-system 
-    (i.e. a collection of multiple systems).
     """
+    Represents a time evolution of one or more system density matrices
+    and a coherent field comprising a SuperTimeDependentSystemWithField.
 
-    def __init__(self, times, system_states_list, name=None, description=None, fields=None):
+    parameters
+    ----------
+    times: list[float] (default = none)
+        a list of points in time.
+    system_states_list: list[list[ndarray]]
+        a list of lists, with the ith sublist contain the states of the
+        ith subsystem at the times `times`.
+    fields: list[complex] (default = none)
+        a list of fields at the times `times`.
+    name: str
+        an optional name for the dynamics.
+    description: str
+        an optional description of the dynamics.
+    """
+    def __init__(self,
+                times,
+                system_states_list, # Can this default to None?
+                name=None,
+                description=None,
+                fields=None):
         super().__init__(name, description)
         self.times = times
-        self.system_states_list = system_states_list  # list of lists, with each sublist containing all states at a given time step
+        self.system_states_list = system_states_list
         self.fields = fields                          # list of field values at all time steps (if calculation is done with a field)
+        # can the calculation be done without a field??
         
         
     def _get_system_dynamics(self):
-        """Returns list of Dynamics objects for each system in order of system states provided
+        """Returns list of Dynamics(WithField) objects for each system in order
+        of system states provided.
         """
-        with_field = (self.fields != None)
+        # perhaps we want to get rid of DynamicsWithField class; SuperSystemDynamics object should return
+        # fields or Dynamics of individual systems, returning dynamics of individual systems with fields
+        # seems redundant
+        with_field = (self.fields != None) # see note above - not sure
+        # we allow for the possibility of super system evolution without
+        # a field any more
         dynamics_list = []                            # initialize list of Dynamics objects
         num_systems = len(self.system_states_list[0]) # number of systems
         for i in range(num_systems):
-            
             states = [system_states[i] for system_states in self.system_states_list]
             if with_field:
                 dynamics_list.append(DynamicsWithField(times=self.times, states=states, fields=self.fields))
             else:
                 dynamics_list.append(Dynamics(times=self.times, states=states))
-        
         return dynamics_list
 
     @property
