@@ -53,7 +53,7 @@ process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                         end_time=end_time,
                                         parameters=pt_tempo_parameters)
 control = None #oqupy.Control(2)
-dynamics = oqupy.compute_dynamics_with_field(
+dynamics = oqupy.compute_dynamics_single_system_with_field(
     system=system,
     process_tensor=process_tensor,
 	initial_field=initial_field,

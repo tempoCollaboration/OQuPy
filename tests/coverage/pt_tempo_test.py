@@ -137,7 +137,7 @@ def test_compute_dynamics_with_field():
     bath = tempo.Bath(0.5 * tempo.operators.sigma("x"), correlations)
     tempo_parameters = tempo.TempoParameters(dt=0.2, dkmax=20, epsrel=10**(-5))
     
-    dynamics = tempo.compute_dynamics_with_field(
+    dynamics = tempo.compute_dynamics_single_system_with_field(
             system,
             initial_field,
             np.array([[0.5,-0.51j],[0,-.25]]),
@@ -154,7 +154,7 @@ def test_compute_dynamics_with_field():
     assert len(dynamics.fields) == len(dynamics.times) # check for OBOE in number of fields
     
     # Test subdiv_limit == None
-    dynamics2 = tempo.compute_dynamics_with_field(
+    dynamics2 = tempo.compute_dynamics_single_system_with_field(
             system,
             initial_field,
             np.array([[0.5,-0.51j],[0,-.25]]),
@@ -169,13 +169,13 @@ def test_compute_dynamics_with_field():
     # input checks
     # No initial field / wrong type
     with pytest.raises(TypeError):
-        tempo.compute_dynamics_with_field(
+        tempo.compute_dynamics_single_system_with_field(
                 system,
                 np.eye(2),
                 dt = 0.2,
                 )
     with pytest.raises(TypeError):
-        tempo.compute_dynamics_with_field(
+        tempo.compute_dynamics_single_system_with_field(
             system,
             None,
             np.eye(2),
@@ -183,7 +183,7 @@ def test_compute_dynamics_with_field():
             )
     # Wrong system type
     with pytest.raises(TypeError):
-        tempo.compute_dynamics_with_field(
+        tempo.compute_dynamics_single_system_with_field(
                 tempo.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
                 initial_field,
                 np.array([[0.5,-0.51j],[0,-.25]]),

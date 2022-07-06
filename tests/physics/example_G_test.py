@@ -78,7 +78,7 @@ def test_tensor_network_pt_tempo_backend_A():
         end_time=t_end_G,
         parameters=tempo_params_G)
 
-    dyn = oqupy.compute_dynamics_with_field(
+    dyn = oqupy.compute_dynamics_single_system_with_field(
         system=system_G,
         initial_field=initial_field_G,
         process_tensor=pt,

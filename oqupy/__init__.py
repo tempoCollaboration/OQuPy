@@ -26,7 +26,7 @@ __all__ = [
     'CustomSD',
     'compute_correlations',
     'compute_dynamics',
-    'compute_dynamics_with_field',
+    'compute_dynamics_single_system_with_field',
     'Control',
     'Dynamics',
     'FileProcessTensor',
@@ -49,6 +49,7 @@ __all__ = [
     'TempoWithField',
     'tempo_compute',
     'TempoParameters',
+    'TimeDependentSubsystem'
     'TimeDependentSystem',
     'TimeDependentSystemWithField',
     'TrivialProcessTensor',
@@ -63,7 +64,7 @@ from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
 from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
-from oqupy.contractions import compute_dynamics_with_field
+from oqupy.contractions import compute_dynamics_single_system_with_field
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
@@ -94,9 +95,9 @@ from oqupy.pt_tebd import PtTebdParameters
 
 from oqupy.system import System
 from oqupy.system import SystemChain
+from oqupy.system import TimeDependentSubsystemWithField
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
-from oqupy.system import SuperTimeDependentSystem
 from oqupy.system import SuperTimeDependentSystemWithField
 
 from oqupy.pt_tempo import PtTempo

@@ -173,7 +173,7 @@ control_sm.add_single(float(ts), op.left_super(sigma_m))
 control_sp.add_single(float(ts), op.left_super(sigma_p))
 
 # Two sets of dynamics, one for each two-time correlator
-dynamics_sm = oqupy.compute_dynamics_with_field(
+dynamics_sm = oqupy.compute_dynamics_single_system_with_field(
     system=system,
     process_tensor=process_tensor,
 	initial_field=initial_field,
@@ -189,7 +189,7 @@ first_rotating_frame_freq = rotating_frame_freq
 rotating_frame_freq = None 
 local_times = [0.0]
 local_fields = [initial_field]
-dynamics_sp = oqupy.compute_dynamics_with_field(
+dynamics_sp = oqupy.compute_dynamics_single_system_with_field(
     system=system,
     process_tensor=process_tensor,
 	initial_field=initial_field,
