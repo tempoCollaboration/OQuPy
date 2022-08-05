@@ -197,7 +197,7 @@ def cross_left_right_super(
         operator_2_l: ndarray,
         operator_2_r: ndarray) -> ndarray:
     """
-    Construct anit-commutator of cross term (acting on two Hilbert spaces).
+    Contruct map from rho to [(op1l x op2l) rho (op1r x op2r)].
     """
     op1l_op1r = np.kron(operator_1_l, operator_1_r.T)
     op2l_op2r = np.kron(operator_2_l, operator_2_r.T)
