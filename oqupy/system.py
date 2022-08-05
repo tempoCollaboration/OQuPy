@@ -525,11 +525,12 @@ class SystemChain(BaseAPIClass):
         gamma: float
             Optional multiplicative factor :math:`\gamma`.
         """
-        op = lindblad_operator
+        op = np.array(lindblad_operator, dtype=NpDtype)
         op_dagger = op.conjugate().T
         self._site_liouvillians[site] += \
-            gamma * (opr.left_right_super(op, op_dagger)
-                      - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
+            gamma * (opr.left_right_super(op, op_dagger) \
+                      - 0.5 * opr.acommutator(np.dot(op_dagger, op))).T
+
 
     def add_nn_hamiltonian(
             self,
