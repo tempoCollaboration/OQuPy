@@ -467,7 +467,8 @@ class SystemChain(BaseAPIClass):
         self._nn_liouvillians = []
         for hs_dim_l, hs_dim_r in zip(self._hs_dims[:-1], self._hs_dims[1:]):
             self._nn_liouvillians.append(
-                np.zeros((hs_dim_l**4, hs_dim_r**4), dtype=NpDtype))
+                np.zeros((hs_dim_l**2 * hs_dim_r**2, hs_dim_l**2 * hs_dim_r**2),
+                dtype=NpDtype))
 
         super().__init__(name, description)
 
