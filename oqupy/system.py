@@ -535,7 +535,7 @@ class SystemChain(BaseAPIClass):
         liouvillian: ndarray
             Liouvillian acting on the single site.
         """
-        raise NotImplementedError()
+        self._site_liouvillians[site] += np.array(liouvillian, dtype=NpDtype)
 
     def add_site_dissipation(
             self,
@@ -568,7 +568,7 @@ class SystemChain(BaseAPIClass):
         op_dagger = op.conjugate().T
         self._site_liouvillians[site] += \
             gamma * (opr.left_right_super(op, op_dagger) \
-                      - 0.5 * opr.acommutator(np.dot(op_dagger, op))).T
+                      - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
 
 
     def add_nn_hamiltonian(
@@ -625,7 +625,7 @@ class SystemChain(BaseAPIClass):
         liouvillian_l_r: ndarray
             Liouvillian acting on sites :math:`n` and :math:`n+1`.
         """
-        self._nn_liouvillians[site] += liouvillian_l_r
+        self._nn_liouvillians[site] += np.array(liouvillian_l_r, dtype=NpDtype)
 
     def add_nn_dissipation(
             self,
