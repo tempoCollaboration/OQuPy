@@ -198,14 +198,13 @@ def compute_nn_gate(
     nn_gate: NnGate
         Nearest neighbor gate.
     """
-    # exponentiate and transpose such that
-    # axis 0 is the input and axis 1 is the output leg of the propagator.
-    propagator = linalg.expm(dt*liouvillian).T
+    # exponentiate the liouvillian to become a propagator
+    propagator = linalg.expm(dt*liouvillian)
     # split leg 0 and leg 1 each into left and right.
-    propagator.shape = [hs_dim_l**2,
-                        hs_dim_r**2,
-                        hs_dim_l**2,
-                        hs_dim_r**2]
+    propagator.shape = [hs_dim_l**2, # left output
+                        hs_dim_r**2, # right output
+                        hs_dim_l**2, # left input
+                        hs_dim_r**2] # right input
     temp = np.swapaxes(propagator, 1, 2)
     temp = temp.reshape([hs_dim_l**2 * hs_dim_l**2,
                             hs_dim_r**2 * hs_dim_r**2])
@@ -217,7 +216,9 @@ def compute_nn_gate(
     sqrt_s = np.sqrt(s)
     u_sqrt_s = u * sqrt_s
     sqrt_s_vh =(sqrt_s * vh.T).T
+    # left tensor with legs: left output, left input, bond
     tensor_l = u_sqrt_s.reshape(hs_dim_l**2, hs_dim_l**2, chi)
+    # right tensor with legs: bond, right output, right input
     tensor_r = sqrt_s_vh.reshape(chi, hs_dim_r**2, hs_dim_r**2)
 
     return NnGate(site=site, tensors=(tensor_l, tensor_r))
