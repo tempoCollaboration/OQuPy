@@ -42,14 +42,13 @@ __all__ = [
     'PtTempo',
     'pt_tempo_compute',
     'SimpleProcessTensor',
-    'SuperTimeDependentSystemWithField'
+    'MeanFieldSystem'
     'System',
     'SystemChain',
     'Tempo',
     'TempoWithField',
     'tempo_compute',
     'TempoParameters',
-    'TimeDependentSubsystem'
     'TimeDependentSystem',
     'TimeDependentSystemWithField',
     'TrivialProcessTensor',
@@ -64,7 +63,7 @@ from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
 from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
-from oqupy.contractions import compute_dynamics_single_system_with_field
+from oqupy.contractions import compute_dynamics_with_field
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
@@ -74,7 +73,7 @@ from oqupy.correlations import CustomSD
 from oqupy.correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
-from oqupy.dynamics import DynamicsWithField
+from oqupy.dynamics import MeanFieldSystemDynamics
 
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
@@ -95,10 +94,9 @@ from oqupy.pt_tebd import PtTebdParameters
 
 from oqupy.system import System
 from oqupy.system import SystemChain
-from oqupy.system import TimeDependentSubsystemWithField
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
-from oqupy.system import SuperTimeDependentSystemWithField
+from oqupy.system import MeanFieldSystem
 
 from oqupy.pt_tempo import PtTempo
 from oqupy.pt_tempo import pt_tempo_compute

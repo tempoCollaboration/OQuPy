@@ -15,8 +15,8 @@
 Module for tempo and mean-field tempo backend.
 """
 
-from typing import Callable, Dict, Optional, Tuple
-from copy import copy
+from typing import Callable, Dict, List, Optional, Tuple
+from copy import copy, deepcopy
 
 from numpy import ndarray, moveaxis, dot
 
@@ -127,7 +127,7 @@ class BaseTempoBackend:
         Takes a step in the TEMPO tensor network computation.
 
         For example, for at step 4, we start with:
-
+        t, current_state_list, current_field)
             A ... self._mps
             B ... self._mpo
             w ... self._sum_west
@@ -306,63 +306,71 @@ class TempoBackend(BaseTempoBackend):
         return self._step, copy(self._state)
 
 
-class TempoWithFieldBackend(BaseTempoBackend):
+class TempoWithFieldBackend():
     """
-    backend for tensor network tempo with coherent field evolution.
-    Note the only difference from TensorNetworkTempoBackend in the
-    signature is the addition of the initial_field and compute_field
-    parameters, and the change of the propagator signature.
+    backend for one or more tensor network tempo with coherent field evolution.
+    This creates a list of BaseBackend objects, one for each (sub)system in
+    a super-system, which will be invoked at each timesteps to propagate the
+    systems concurrently. In addition, at each timestep a coherent field is 
+    evolved according to the state of each system and field value at that time.
 
     Parameters
     ----------
-    initial_state: ndarray
-        The initial density matrix (as a vector).
+    initial_state_list: List[ndarray]
+        List of initial density matrices (as vectors), one for each system.
     initial_field: complex
         The initial field value.
-    influence: callable(int) -> ndarray
-        Callable that takes an integer `step` and returns the influence super
-        operator of that `step`.
-    unitary_transform: ndarray
-        Unitary that transforms the coupling operator into a diagonal form.
-    propagators: callable(int, ndarray, complex) -> ndarray, ndarray
-        Callable that takes an integer `step`, an ndarray `state` and a complex
+    influence_list: List[callable(int) -> ndarray]
+        Callables that takes an integer `step` and returns the influence super
+        operator of that `step`, one for each system.
+    unitary_transform_list: List[ndarray]
+        Unitaries transforms the coupling operator into a diagonal form, one 
+        for each system (i.e. the bath associated with each system).
+    propagators_list: List[callable(int, ndarray, complex) -> ndarray, ndarray]
+        Callables that takes an integer `step`, an ndarray `state` and a complex
         `field` and returns the first and second half of the system propagator
-        of that `step`.
-    compute_field: callable(int, ndarray, complex,  ndarray) -> complex
+        of that `step`. One for each system.
+    compute_field: callable(int, List[ndarray], complex, List[ndarray]) -> complex
         Callable that takes an integer `step`, a complex `field` (the current
-        value of the field) and two ndarrays for (respectively) the current and
-        next density matrix as vectors, and returns the next field value.
-    sum_north: ndarray
-        The summing vector for the north legs.
-    sum_west: ndarray
-        The summing vector for the west legs.
+        value of the field) and two lists of ndarrays for (respectively) the current
+        and (optional) next density matrix of each system, and returns the next field
+        value.
+    sum_north_list: List[ndarray]
+        The summing vector for the north legs of each system's tensor network.
+    sum_west_list: List[ndarray]
+        The summing vector for the west legs of each system's tensor network.
     dkmax: int
         Number of influences to include. If ``dkmax == -1`` then all influences
-        are included.
+        are included. Applies to all systems.
     epsrel: float
-        Maximal relative SVD truncation error.
+        Maximal relative SVD truncation error. Applies to all systems.
     """
     def __init__(
             self,
-            initial_state: ndarray,
-            initial_field: ndarray,
-            influence: Callable[[int], ndarray],
-            unitary_transform: ndarray,
-            propagators: Callable[[int, ndarray, complex],
-                Tuple[ndarray, ndarray]],
-            compute_field: Callable[[float, ndarray, complex], complex],
-            sum_north: ndarray,
-            sum_west: ndarray,
+            initial_state_list: List[ndarray],
+            initial_field: complex,
+            influence_list: List[Callable[[int], ndarray]],
+            unitary_transform_list: List[ndarray],
+            propagators_list: List[Callable[[int, ndarray, complex],
+                Tuple[ndarray, ndarray]]],
+            compute_field: Callable[[float, List[ndarray], complex], complex],
+            compute_field_derivative: 
+                Callable[[float, List[ndarray], complex], complex],
+            sum_north_list: List[ndarray],
+            sum_west_list: List[ndarray],
             dkmax: int,
             epsrel: float,
             config: Dict):
-        # Field specific variables
+        """Create a TempoWithFieldBackend object. """
+        self._initial_state_list = initial_state_list
         self._initial_field = initial_field
         self._compute_field = compute_field
+        self._compute_field_derivative = compute_field_derivative
         self._field = initial_field
-        self._propagators = propagators
-        """Create a TempoWithFieldBackend object. """
-        super().__init__(initial_state,
+        self._step = None
+        self._propagators_list = propagators_list
+        # List of BaseTempoBackends use to calculate each system dynamics
+        self._backend_list = [BaseTempoBackend(initial_state,
                          influence,
                          unitary_transform,
                          sum_north,
@@ -370,30 +378,49 @@ class TempoWithFieldBackend(BaseTempoBackend):
                          dkmax,
                          epsrel,
                          config)
+                         for initial_state, influence, unitary_transform,
+                         sum_north, sum_west in zip(initial_state_list,
+                             influence_list, unitary_transform_list,
+                             sum_north_list, sum_west_list)]
+
+    @property
+    def step(self) -> int:
+        """The current step in the TEMPO computation. """
+        return self._step
 
     def initialize(self) -> Tuple[int, ndarray, complex]:
-        """See BaseBackend.initialize() for main docstring."""
         self._step = 0
-        self._initialize_mps_mpo()
-        self._state = self._initial_state
+        for backend in self._backend_list:
+            backend._initialize_mps_mpo()
+        self._state_list = self._initial_state_list
         self._field = self._initial_field
-        return self._step, copy(self._state), self._field
+        return self._step, deepcopy(self._state_list), self._field
 
-    def compute_step(self) -> Tuple[int, ndarray, complex]:
-        """
-        ToDo
-        """
+    def compute_step(self) -> Tuple[int, List[ndarray], complex]:
+        """Calculate the next step of the SuperTimeDependentSystem
+        dynamics"""
         current_step = self._step
         next_step = current_step + 1
-        current_state = copy(self._state)
+        current_state_list = deepcopy(self._state_list)
         current_field = self._field
-        prop_1, prop_2 = self._propagators(current_step, current_state,
-                current_field)
-        next_state = self._compute_system_step(next_step, prop_1, prop_2)
-        next_field = self._compute_field(current_step, current_state,
-                current_field, next_state)
-        self._state = next_state
+        current_field_derivative = self._compute_field_derivative(
+            current_step, current_state_list, current_field)
+        # N.B. propagators use current_field & current_field_derivative
+        # this is how field dependence enters in each system dynamics
+        prop_tuple_list = [propagators(current_step, state,
+            current_field, current_field_derivative) 
+            for propagators, state
+            in zip(self._propagators_list, current_state_list)]
+        # Use tempo tensor network to compute each system state 
+        next_state_list = [backend._compute_system_step(next_step, 
+            *prop_tuple) for backend, prop_tuple 
+            in zip(self._backend_list, prop_tuple_list)]
+        # Use field evolution function to compute next field
+        next_field = self._compute_field(current_step, 
+            current_state_list, current_field, 
+            next_state_list)
+        self._state_list = next_state_list
         self._field = next_field
         self._step = next_step
 
-        return self._step, copy(self._state), self._field
+        return self._step, deepcopy(self._state_list), self._field
