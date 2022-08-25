@@ -180,18 +180,18 @@ class Dynamics(BaseDynamics):
         if self._shape is None:
             self._shape = tmp_shape
 
-
-class DynamicsWithField(BaseDynamics):
+class MeanFieldSystemDynamics(BaseAPIClass):
     """
-    Represents a specific time evolution of a density matrix together
-    with a coherent field.
+    Represents a time evolution of one or more system density matrices
+    and a coherent field comprising a MeanFieldSystem.
 
     parameters
     ----------
     times: list[float] (default = none)
         a list of points in time.
-    states: list[ndarray] (default = none)
-        a list of states at the times `times`.
+    system_states_list: list[list[ndarray]]
+        a list of lists, with the ith sublist a list of states for
+        all system at `times[i]`
     fields: list[complex] (default = none)
         a list of fields at the times `times`.
     name: str
@@ -199,20 +199,73 @@ class DynamicsWithField(BaseDynamics):
     description: str
         an optional description of the dynamics.
     """
-    def __init__(
-            self,
-            times: Optional[List[float]] = None,
-            states: Optional[List[ndarray]] = None,
-            fields: Optional[List[complex]] = None,
-            name: Optional[Text] = None,
-            description: Optional[Text] = None) -> None:
-        """Create a DynamicsWithField object"""
+    def __init__(self,
+                 times: Optional[List[float]] = None,
+                 system_states_list: Optional[List[List[ndarray]]] = None, 
+                 fields: Optional[List[complex]] = None,
+                 name: Optional[Text] = None,
+                 description: Optional[Text] = None) -> None:
+        """Create a SuperSystemDynamics object"""
         super().__init__(name, description)
+        self._times = []
         self._fields = []
-        times, states = _parse_times_states(times, states)
-        times, fields = _parse_times_fields(times, fields)
-        for time, state, field in zip(times, states, fields):
-            self.add(time, state, field)
+        self._system_dynamics = []
+        self._shapes = []
+        # unnecessary as add() parses again 
+        times, tmp_fields = _parse_times_fields(times, fields)
+        # check lengths match only (doesn't check for correct state shapes)
+        times, tmp_states = _parse_times_states(times, system_states_list)
+        for time, states, field in zip(times, tmp_states, tmp_fields):
+            self.add(time, states, field)
+        
+    def add(
+            self,
+            time: float,
+            system_states: List[ndarray],
+            field: complex) -> None:
+        """
+        Append a list of system states and field at a specific time
+        to the evolution.
+
+        Parameters
+        ----------
+        time: float
+            The point in time.
+        system_states: List[ndarray]
+            The state of each (sub)system at the time `time`.
+        field: complex
+            The field at the time `time`.
+        """
+        # Record time in super-system
+        tmp_time = _parse_time(time)
+        index = _find_list_index(self._times, tmp_time)
+        self._times.insert(index, tmp_time)
+        # Record field
+        tmp_field = _parse_field(field)
+        self._fields.insert(index, tmp_field)
+        # create list of Dynamics objects, one for each system
+        if len(self._system_dynamics) == 0:
+            self._system_dynamics = [Dynamics(name="subsystem {}".format(i))
+                                     for i in range(len(system_states))]
+            self._shape_list = [dynamics._shape for dynamics 
+                                in self._system_dynamics]
+        else:
+            assert len(system_states) == len(self._system_dynamics),\
+                "Number of states to add ({}) does not match number of "\
+                "Dynamics objects in "\
+                "MeanFieldSystemDynamics ({})".format(
+                        len(system_states), len(self._system_dynamics))
+        # Record state - state parsing done by Dynamics objects
+        for i, system_dynamics in enumerate(self._system_dynamics):
+            system_dynamics.add(time, system_states[i])
+        
+    def __len__(self) -> int:
+        return len(self._times)
+
+    @property
+    def times(self) -> ndarray:
+        """Times of the dynamics. """
+        return np.array(self._times, dtype=NpDtypeReal)
 
     @property
     def fields(self) -> ndarray:
@@ -232,91 +285,13 @@ class DynamicsWithField(BaseDynamics):
         """
         if len(self) == 0:
             return None, None
-        return np.array(self._times, dtype=NpDtypeReal), np.array(self._fields,
-                dtype=NpDtype)
-
-    def add(
-            self,
-            time: float,
-            state: ndarray,
-            field: complex) -> None:
-        """
-        Append a state and field at a specific time to the time evolution.
-
-        Parameters
-        ----------
-        time: float
-            The point in time.
-        state: ndarray
-            The state at the time `time`.
-        field: complex
-            The field at the time `time`.
-        """
-        tmp_time = _parse_time(time)
-        tmp_state, tmp_shape = _parse_state(state, self._shape)
-        tmp_field = _parse_field(field)
-        index = _find_list_index(self._times, tmp_time)
-        self._times.insert(index, tmp_time)
-        self._states.insert(index, tmp_state)
-        self._fields.insert(index, tmp_field)
-        if self._shape is None:
-            self._shape = tmp_shape
-
-class SuperSystemDynamics(BaseAPIClass):
-    """
-    Represents a time evolution of one or more system density matrices
-    and a coherent field comprising a SuperTimeDependentSystemWithField.
-
-    parameters
-    ----------
-    times: list[float] (default = none)
-        a list of points in time.
-    system_states_list: list[list[ndarray]]
-        a list of lists, with the ith sublist contain the states of the
-        ith subsystem at the times `times`.
-    fields: list[complex] (default = none)
-        a list of fields at the times `times`.
-    name: str
-        an optional name for the dynamics.
-    description: str
-        an optional description of the dynamics.
-    """
-    def __init__(self,
-                times,
-                system_states_list, # Can this default to None?
-                name=None,
-                description=None,
-                fields=None):
-        super().__init__(name, description)
-        self.times = times
-        self.system_states_list = system_states_list
-        self.fields = fields                          # list of field values at all time steps (if calculation is done with a field)
-        # can the calculation be done without a field??
-        
-        
-    def _get_system_dynamics(self):
-        """Returns list of Dynamics(WithField) objects for each system in order
-        of system states provided.
-        """
-        # perhaps we want to get rid of DynamicsWithField class; SuperSystemDynamics object should return
-        # fields or Dynamics of individual systems, returning dynamics of individual systems with fields
-        # seems redundant
-        with_field = (self.fields != None) # see note above - not sure
-        # we allow for the possibility of super system evolution without
-        # a field any more
-        dynamics_list = []                            # initialize list of Dynamics objects
-        num_systems = len(self.system_states_list[0]) # number of systems
-        for i in range(num_systems):
-            states = [system_states[i] for system_states in self.system_states_list]
-            if with_field:
-                dynamics_list.append(DynamicsWithField(times=self.times, states=states, fields=self.fields))
-            else:
-                dynamics_list.append(Dynamics(times=self.times, states=states))
-        return dynamics_list
+        return np.array(self._times, dtype=NpDtypeReal),\
+                np.array(self._fields, dtype=NpDtype)
 
     @property
-    def dynamics_list(self):
-        return self._get_system_dynamics()
+    def subsystem_dynamics(self):
+        """Dynamics object for each system"""
+        return self._system_dynamics
 
 def _parse_times_states(times, states) -> Tuple[List[float],
         List[ndarray]] :
