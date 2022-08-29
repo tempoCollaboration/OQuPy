@@ -231,8 +231,27 @@ class TimeDependentSystem(BaseSystem):
 
 class TimeDependentSystemWithField(BaseSystem):
     r"""
-    Represents an explicitly time dependent subsystem (without any coupling
-    to a non-Markovian bath).
+    Represents a system with dependent on time and an auxiliary field
+    (complex scalar). Forms one component of a `MeanFieldSystem`.
+
+    It is possible to include time (but not field) dependent Lindblad
+    terms in the master equation. The equations of motion for the system
+    density matrix (without any coupling to a non-Markovian bath) is
+    then:
+
+    .. math::
+
+        \frac{d}{dt}\rho(t) = &-i [\hat{H}(t, \langle a \rangle), \rho(t)] \\
+            &+ \sum_n^N \gamma_n(t) \left(
+                \hat{A}_n(t) \rho(t) \hat{A}_n(t)^\dagger
+                - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho(t)
+                - \frac{1}{2} \rho(t) \hat{A}_n^\dagger(t) \hat{A}_n(t) \right)
+
+    with the  `hamiltionian` :math:`\hat{H}(t, \langle a \rangle)`
+    depending on both time :math:`t` and `field` :math:`\langle
+    a \rangle`, the  time dependent rates `gammas`
+    :math:`\gamma_n(t)` and the time dependent `linblad_operators`
+    :math:`\hat{A}_n(t)`.
 
     Parameters
     ----------
@@ -278,7 +297,8 @@ class TimeDependentSystemWithField(BaseSystem):
         Return value of the system Hamiltonian at time `t` using a linearisation
         of the field coupled to the subsystem from its value at time `t0`.
         """
-        return self._hamiltonian(t, self._linearised_field(t0, t, field, field_derivative))
+        return self._hamiltonian(t, 
+                self._linearised_field(t0, t, field, field_derivative))
 
     def _linearised_field(self, t0: float, t: float,
             field: complex, 
@@ -299,7 +319,8 @@ class TimeDependentSystemWithField(BaseSystem):
 
         .. math::
 
-            \mathcal{L}(t)\rho = -i [\hat{H}(t, \langle a \rangle), \rho]
+            \mathcal{L}(t, \langle a \rangle)\rho 
+            = -i [\hat{H}(t, \langle a \rangle), \rho]
                 + \sum_n^N \gamma_n \left(
                     \hat{A}_n(t) \rho \hat{A}_n^\dagger(t)
                     - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho
@@ -311,9 +332,9 @@ class TimeDependentSystemWithField(BaseSystem):
         Parameters
         ----------
         t0: float
-            Start time of the current step
+            Start time of the current step.
         t: float
-            Current time :math:`t`
+            Current time :math:`t`.
         field: complex
             Field value at time :math:`t` obtained from the
             linearisation of the field at :math:`t` using the field
@@ -324,7 +345,9 @@ class TimeDependentSystemWithField(BaseSystem):
         Returns
         -------
         liouvillian : ndarray
-            Liouvillian :math:`\mathcal{L}(t)` at time :math:`t`.
+            Liouvillian :math:`\mathcal{L}(t, \langle a \rangle)` at time
+            :math:`t` using a linearisation of the field `\langle a \rangle`
+            from its value at `t0` to time `t`.
         """
         try:
             t0 = float(t0)
@@ -334,12 +357,15 @@ class TimeDependentSystemWithField(BaseSystem):
             t = float(t)
         except Exception as e:
             raise AssertionError("Argument t must be float") from e
-        assert t >= t0, "Argument t must exceed t0"
+        assert t >= t0, "Argument t must equal or exceed t0"
         try:
             field = complex(field)
         except Exception as e:
-            raise AssertionError("Argument field must be complex") from e
-        assert isinstance(field_derivative, complex), "Time derivative of field must be a complex value"
+            raise AssertionError("Arguments field must be complex") from e
+        try:
+            field_derivative = complex(field_derivative)
+        except Exception as e:
+            raise AssertionError("Arguments field_derivative must be complex") from e
         hamiltonian = self._linearised_hamiltonian(t0, t, field, field_derivative)
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
@@ -360,24 +386,28 @@ class TimeDependentSystemWithField(BaseSystem):
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
 
-class MeanFieldSystem(BaseAPIClass):
-    """Represents a collection of `TimeDependentSystemWithField` objects.
+class MeanFieldSystem(BaseAPIClass): 
+    r"""Represents a collection of time dependent systems interacting
+    with a common field. The systems are encoded as
+    `TimeDependentSystemWithField` objects, and the field as a complex
+    scalar :math:`\langle a \rangle` that evolves according to a
+    specified equation of motion :math:`\partial_t\langle a \rangle`.
 
     Parameters
     ----------
     system_list: List[TimeDependentSystemWithField], 
-        List of TimeDependentSystemWithField objects interacting with
-        a common field :math:`\langle a \rangle`
+        List of `TimeDependentSystemWithField` objects interacting with
+        a common field :math:`\langle a \rangle`.
     field_eom: callable
         Field equation of motion :math:`\partial_t
         \langle a \rangle(t, [\rho], \langle a \rangle)`
         where :math:`[\rho]` is a list of square matrices for the state
-        of each Subsystem at time :math`t` and 
+        of each system in `system_list` at time :math:`t` and 
         :math:`\langle a \rangle` the field at time :math:`t`.
     name: str
-        An optional name for the super-system.
+        An optional name for the mean-field system.
     description: str
-        An optional description of the super-system.
+        An optional description of the mean-field system.
     """
     
     def __init__(self, 
@@ -782,11 +812,12 @@ def _check_tdependent_gammas_lindblad_operators(
     return tmp_gammas, tmp_lindblad_operators
 
 def _check_mean_field_system_list(system_list):
-    error_str = "Parameter system_list must be a list of "\
-            "TimedependentSystemWithField objects."
-    assert isinstance(system_list, list), error_str
+    assert isinstance(system_list, list), "Parameter system_list must "\
+            "be a list of TimeDependentSystemWithField objects."
     for obj in system_list:
-        assert isinstance(obj, TimeDependentSystemWithField)
+        assert isinstance(obj, TimeDependentSystemWithField), "Each "\
+                "element of system_list must be a "\
+                "TimeDependentSystemWithField object."
     return system_list
 
 def _check_mean_field_system_eom(dim_list, field_eom):

@@ -306,11 +306,11 @@ class TempoBackend(BaseTempoBackend):
         return self._step, copy(self._state)
 
 
-class TempoWithFieldBackend():
+class MeanFieldTempoBackend():
     """
     backend for one or more tensor network tempo with coherent field evolution.
-    This creates a list of BaseBackend objects, one for each (sub)system in
-    a super-system, which will be invoked at each timesteps to propagate the
+    This creates a list of BaseBackend objects, one for each system in the
+    mean-field system, which will be invoked at each timesteps to propagate the
     systems concurrently. In addition, at each timestep a coherent field is 
     evolved according to the state of each system and field value at that time.
 
@@ -326,15 +326,19 @@ class TempoWithFieldBackend():
     unitary_transform_list: List[ndarray]
         Unitaries transforms the coupling operator into a diagonal form, one 
         for each system (i.e. the bath associated with each system).
-    propagators_list: List[callable(int, ndarray, complex) -> ndarray, ndarray]
-        Callables that takes an integer `step`, an ndarray `state` and a complex
-        `field` and returns the first and second half of the system propagator
-        of that `step`. One for each system.
-    compute_field: callable(int, List[ndarray], complex, List[ndarray]) -> complex
+    propagators_list: List[callable(int, complex, complex) -> ndarray, ndarray]
+        Callables that takes an integer `step`, a complex `field` and a complex
+        `field_derivative` and returns the first and second half of the system 
+        propagator of that `step`. One for each system.
+    compute_field: callable(int, List[ndarray], complex, Optional[List[ndarray]])
+                    -> complex
         Callable that takes an integer `step`, a complex `field` (the current
-        value of the field) and two lists of ndarrays for (respectively) the current
-        and (optional) next density matrix of each system, and returns the next field
-        value.
+        value of the field) and two lists of ndarrays for, respectively, the current
+        and next density matrix of each system, and returns the next field value.
+    compute_field_derivative: callable(int, List[ndarray], complex) -> complex
+        Callable that takes an integer `step`, a complex `field` (the current
+        value of the field) and a list of vectors for the density matrix of each
+        system at `step`, and returns the field derivative at `step`.
     sum_north_list: List[ndarray]
         The summing vector for the north legs of each system's tensor network.
     sum_west_list: List[ndarray]
@@ -351,9 +355,10 @@ class TempoWithFieldBackend():
             initial_field: complex,
             influence_list: List[Callable[[int], ndarray]],
             unitary_transform_list: List[ndarray],
-            propagators_list: List[Callable[[int, ndarray, complex],
+            propagators_list: List[Callable[[int, complex, complex],
                 Tuple[ndarray, ndarray]]],
-            compute_field: Callable[[float, List[ndarray], complex], complex],
+            compute_field: Callable[[float, List[ndarray], complex, 
+                                     Optional[List[ndarray]]], complex],
             compute_field_derivative: 
                 Callable[[float, List[ndarray], complex], complex],
             sum_north_list: List[ndarray],
@@ -361,7 +366,7 @@ class TempoWithFieldBackend():
             dkmax: int,
             epsrel: float,
             config: Dict):
-        """Create a TempoWithFieldBackend object. """
+        """Create a MeanFieldTempoBackend object. """
         self._initial_state_list = initial_state_list
         self._initial_field = initial_field
         self._compute_field = compute_field
@@ -397,7 +402,7 @@ class TempoWithFieldBackend():
         return self._step, deepcopy(self._state_list), self._field
 
     def compute_step(self) -> Tuple[int, List[ndarray], complex]:
-        """Calculate the next step of the SuperTimeDependentSystem
+        """Calculate the next step of the MeanFIeldSystem
         dynamics"""
         current_step = self._step
         next_step = current_step + 1
@@ -407,9 +412,8 @@ class TempoWithFieldBackend():
             current_step, current_state_list, current_field)
         # N.B. propagators use current_field & current_field_derivative
         # this is how field dependence enters in each system dynamics
-        prop_tuple_list = [propagators(current_step, state,
-            current_field, current_field_derivative) 
-            for propagators, state
+        prop_tuple_list = [propagators(current_step, current_field,
+            current_field_derivative) for propagators, state
             in zip(self._propagators_list, current_state_list)]
         # Use tempo tensor network to compute each system state 
         next_state_list = [backend._compute_system_step(next_step, 

@@ -2,7 +2,7 @@
 
 
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0,'.')
 import oqupy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -53,8 +53,7 @@ tempo_parameters = oqupy.TempoParameters(dt=0.2, dkmax=20, epsrel=10**(-4))
 start_time = 0.0
 end_time = 10
 
-# Super-system object used in both methods
-super_system = oqupy.MeanFieldSystem([subsystem_1, subsystem_2], field_eom=field_eom)
+mean_field_system = oqupy.MeanFieldSystem([subsystem_1, subsystem_2], field_eom=field_eom)
 
 # Using process tensor
 process_tensor = oqupy.pt_tempo_compute(bath=bath,
@@ -62,34 +61,38 @@ process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                         end_time=end_time,
                                         parameters=tempo_parameters)
 control_list = [oqupy.Control(subsystem_1.dimension), oqupy.Control(subsystem_2.dimension)]
-super_system_dynamics_process = \
-        contractions.compute_dynamics_with_field(super_system,
+mean_field_dynamics_process = \
+        contractions.compute_dynamics_with_field(mean_field_system,
                 initial_field=initial_field, 
                 initial_state_list=initial_state_list, 
                 start_time=start_time,
                 process_tensor_list = [process_tensor, process_tensor])
 # Using tempo 
 
-tempo_sys = oqupy.TempoWithField(mean_field_system=super_system,
+tempo_sys = oqupy.MeanFieldTempo(mean_field_system=mean_field_system,
                         bath_list=[bath,bath],
                         parameters=tempo_parameters,
                         initial_state_list=initial_state_list,
                         initial_field=initial_field,
                         start_time=0.0)
-super_system_dynamics_tempo = tempo_sys.compute(end_time=end_time)
+mean_field_dynamics_tempo = tempo_sys.compute(end_time=end_time)
 
-fig, axes = plt.subplots(2, figsize=(9,6))
-times_tempo, fields_tempo = super_system_dynamics_tempo.field_expectations()
-times_pt, fields_pt = super_system_dynamics_process.field_expectations()
-axes[0].plot(times_tempo, np.abs(fields_tempo)**2)
-axes[0].plot(times_pt, np.abs(fields_pt)**2, ls='--')
+fig, axes = plt.subplots(2, figsize=(9,6), sharex=True)
+times_tempo, fields_tempo = mean_field_dynamics_tempo.field_expectations()
+times_pt, fields_pt = mean_field_dynamics_process.field_expectations()
+axes[0].plot(times_tempo, np.abs(fields_tempo)**2, label='TEMPO')
+axes[0].plot(times_pt, np.abs(fields_pt)**2, ls='--', label='PT')
+axes[0].set_ylabel('n/N')
+axes[0].legend()
 
-for i, dynamics_tempo in enumerate(super_system_dynamics_tempo.subsystem_dynamics):
+for i, dynamics_tempo in enumerate(mean_field_dynamics_tempo.system_dynamics):
     times_tempo, sz_tempo = dynamics_tempo.expectations(sigma_plus, real=True)
-    dynamics_pt = super_system_dynamics_process.subsystem_dynamics[i]
+    dynamics_pt = mean_field_dynamics_process.system_dynamics[i]
     times_pt, sz_pt = dynamics_pt.expectations(sigma_plus, real=True)
-    axes[1].plot(times_tempo, sz_tempo, '--', label=f'{i} (TEMPO)')
+    axes[1].plot(times_tempo, sz_tempo, label=f'{i} (TEMPO)')
     axes[1].plot(times_pt, sz_pt, '--', label=f'{i} (PT)')
+axes[1].set_ylabel('<Sz>')
+axes[1].set_xlabel('t')
 axes[1].legend(title='System')
-fig.savefig('super-system-with-field.pdf', bbox_inches='tight')
+plt.show()
 

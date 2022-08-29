@@ -46,7 +46,7 @@ __all__ = [
     'System',
     'SystemChain',
     'Tempo',
-    'TempoWithField',
+    'MeanFieldTempo',
     'tempo_compute',
     'TempoParameters',
     'TimeDependentSystem',
@@ -103,6 +103,6 @@ from oqupy.pt_tempo import pt_tempo_compute
 
 from oqupy.tempo import Tempo
 from oqupy.tempo import TempoParameters
-from oqupy.tempo import TempoWithField
+from oqupy.tempo import MeanFieldTempo
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import tempo_compute
