@@ -36,8 +36,8 @@ def field_eom(t, states, field):
     return -(1j*omegac+kappa)*field - 0.5j*Omega*sx_exp_weighted_sum
 
 
-subsystem_1 = oqupy.TimeDependentSubsystemWithField(H_MF_1)
-subsystem_2 = oqupy.TimeDependentSubsystemWithField(H_MF_2)
+subsystem_1 = oqupy.TimeDependentSystemWithField(H_MF_1)
+subsystem_2 = oqupy.TimeDependentSystemWithField(H_MF_2)
 correlations = oqupy.PowerLawSD(alpha=alpha,
                                 zeta=1,
                                 cutoff=nuc,
@@ -54,7 +54,7 @@ start_time = 0.0
 end_time = 10
 
 # Super-system object used in both methods
-super_system = oqupy.SuperTimeDependentSystemWithField([subsystem_1, subsystem_2], field_eom=field_eom)
+super_system = oqupy.MeanFieldSystem([subsystem_1, subsystem_2], field_eom=field_eom)
 
 # Using process tensor
 process_tensor = oqupy.pt_tempo_compute(bath=bath,
@@ -70,7 +70,7 @@ super_system_dynamics_process = \
                 process_tensor_list = [process_tensor, process_tensor])
 # Using tempo 
 
-tempo_sys = oqupy.TempoWithField(super_system=super_system,
+tempo_sys = oqupy.TempoWithField(mean_field_system=super_system,
                         bath_list=[bath,bath],
                         parameters=tempo_parameters,
                         initial_state_list=initial_state_list,

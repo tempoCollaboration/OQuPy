@@ -83,24 +83,6 @@ def compute_dynamics(
         The system dynamics for the given system Hamiltonian
         (accounting for the interaction with the environment).
     """
-    dynamics = _compute_dynamics_all_single_system(
-        system, initial_state, dt, num_steps, start_time,
-        process_tensor, control, record_all, epsrel=None, subdiv_limit=None,
-        progress_type=progress_type)
-    return dynamics
-
-def _compute_dynamics_all_single_system(
-        system: BaseSystem,
-        initial_state: ndarray,
-        dt: float,
-        num_steps: int,
-        start_time: float,
-        process_tensor: Union[List[BaseProcessTensor], BaseProcessTensor],
-        control: Control,
-        record_all: bool,
-        epsrel: float,
-        subdiv_limit: int,
-        progress_type: Text) -> Dynamics:
     """Compute system and (optionally) field dynamics accounting for the
     interaction with the environment using the process tensor."""
 
@@ -113,6 +95,8 @@ def _compute_dynamics_all_single_system(
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
+    epsrel = None # adaptive propagators not implemented for non-mean-field TEMPO
+    subdiv_limit = None
     propagators = _get_propagators(system, dt, start_time, epsrel, subdiv_limit)
 
     # -- prepare controls --
@@ -191,15 +175,14 @@ def _compute_dynamics_all_single_system(
     return Dynamics(times=list(times),states=states)
 
 def compute_dynamics_with_field(
-        super_system: MeanFieldSystem,
+        mean_field_system: MeanFieldSystem,
         initial_field: complex,
         initial_state_list: Optional[List[ndarray]] = None,
         dt: Optional[float] = None,
         num_steps: Optional[int] = None,
         start_time: Optional[float] = 0.0,
-        process_tensor_list: Optional[Union[Union[List[List[BaseProcessTensor]], List[BaseProcessTensor]], 
-                                    Union[List[BaseProcessTensor], BaseProcessTensor]]]
-                                     = None,
+        process_tensor_list: Optional[List[
+            Union[BaseProcessTensor, List[BaseProcessTensor]] ]] = None,
         control_list: Optional[List[Control]] = None,
         record_all: Optional[bool] = True,
         epsrel: Optional[float] = INTEGRATE_EPSREL,
@@ -211,7 +194,7 @@ def compute_dynamics_with_field(
 
     Parameters
     ----------
-    super_system: MeanFieldSystem
+    mean_field_system: MeanFieldSystem
         Object containing the system Hamiltonians and field equation of
         motion.
     initial_field: complex
@@ -224,7 +207,7 @@ def compute_dynamics_with_field(
         Optional start time offset.
     num_steps: int
         Optional number of time steps to be computed.
-    process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
+    process_tensor: List[Union[List[BaseProcessTensor],BaseProcessTensor]]
         Optional process tensor object or list of process tensor objects.
     control_list: List[Control]
         Optional list of control operations.
@@ -257,33 +240,33 @@ def compute_dynamics_with_field(
     initial_field = check_convert(initial_field, complex, "initial_field")
     
     if initial_state_list is None:
-        initial_state_list = [None for system in super_system.system_list]
+        initial_state_list = [None for system in mean_field_system.system_list]
 
     if control_list is None:
-        control_list = [None for system in super_system.system_list]
+        control_list = [None for system in mean_field_system.system_list]
     
     if process_tensor_list is None:
-        process_tensor_list = [None for system in super_system.system_list]
+        process_tensor_list = [None for system in mean_field_system.system_list]
 
-    elif isinstance(process_tensor_list, BaseProcessTensor):
-        process_tensor_list = [process_tensor_list for system in super_system.system_list]
-
-    elif isinstance(process_tensor_list, list) and isinstance(process_tensor_list[0], BaseProcessTensor) \
-                    and len(process_tensor_list) == 1:
-        process_tensor_list = [process_tensor_list for system in super_system.system_list]
 
     # -- input parsing -- 
     # check that lengths of lists provided are consistent
-    if len(super_system.system_list) != len(initial_state_list) != len(control_list):
-        raise ValueError(f"The lengths of the list of systems ({len(super_system.system_list)}),",
+    if len(mean_field_system.system_list) != len(initial_state_list) != len(control_list):
+        raise ValueError(f"The lengths of the list of systems ({len(mean_field_system.system_list)}),",
                          f"the list of states ({len(initial_state_list)})",
                          f"and the list of controls ({len(control_list)}) are inconsistent.")
+
+    assert isinstance(process_tensor_list, list), "process_tensor_list must be a "\
+            " (possibly nested) list of BaseProcessTensor objects."
+    assert len(process_tensor_list) == len(mean_field_system.system_list), \
+            "The length of process_tensor_list must match the number of "\
+            "TimeDependentSystemWithField objects in mean_field_system."
 
     # list of tuples in the order: system, initial_state, dt, num_steps, start_time, process_tensors, control, record_all, hs_dim
     parsed_parameters_tuple_list =  [_compute_dynamics_input_parse(True, system, initial_state, dt, num_steps, start_time,
                                      process_tensor, control, record_all)
                                      for system, initial_state, process_tensor, control
-                                     in zip(super_system.system_list, initial_state_list, process_tensor_list, control_list)]
+                                     in zip(mean_field_system.system_list, initial_state_list, process_tensor_list, control_list)]
 
     # parameter names returned by _compute_dynamics_input_parse()
     parsed_parameter_names = ["system", "initial_state", "dt", "num_steps", "start_time", 
@@ -310,11 +293,11 @@ def compute_dynamics_with_field(
             field: complex, next_state_list: Optional[List[ndarray]] = None):
 
         #  perform first order Runge-Kutta calculation
-        rk1 = super_system.field_eom(t, state_list, field)
+        rk1 = mean_field_system.field_eom(t, state_list, field)
         if next_state_list is None:
             return rk1 * dt
         #  perform second order Runge-Kutta calculation
-        rk2 = super_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
+        rk2 = mean_field_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
         return field + dt * (rk1 + rk2) / 2
 
     # -- prepare controls --
@@ -392,7 +375,7 @@ def compute_dynamics_with_field(
                 current_node, current_edges = _apply_system_superoperator(current_node, current_edges, post_measurement_control)
 
         # -- propagate one time step --
-        propagator_tuples_list = [propagators(step, state_list, field, super_system.field_eom(t, state_list, field)) 
+        propagator_tuples_list = [propagators(step, state_list, field, mean_field_system.field_eom(t, state_list, field)) 
                                 for propagators in propagators_list]
             
         pt_mpos_list = [_get_pt_mpos(process_tensors, step) for process_tensors in parsed_parameters_dict["process_tensors"]]
