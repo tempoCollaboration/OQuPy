@@ -15,7 +15,7 @@
 Module on physical information of the system.
 """
 
-from typing import Callable, List, Optional, Text, Tuple
+from typing import Callable, List, Optional, Text, Tuple, Union
 from copy import copy
 from functools import lru_cache
 
@@ -387,12 +387,12 @@ class MeanFieldSystem(BaseAPIClass):
                 description: Optional[Text] = None) -> None:
 
         super().__init__(name, description)
-        self.system_list = system_list
-
+        tmp_system_list = _check_mean_field_system_list(system_list)
+        self.system_list = tmp_system_list
         
         # input check for field equation of motion
         tmp_dimension_list = [system.hamiltonian(1.0, 1.0+1.0j).shape[0] for system in self.system_list]
-        tmp_field_eom = _check_super_field_eom(tmp_dimension_list, field_eom)
+        tmp_field_eom = _check_mean_field_system_eom(tmp_dimension_list, field_eom)
         self._field_eom = tmp_field_eom
 
     @property
@@ -781,22 +781,16 @@ def _check_tdependent_gammas_lindblad_operators(
             + "callables returning numpy arrays.") from e
     return tmp_gammas, tmp_lindblad_operators
 
-def _check_field_eom(dim, field_eom):
-    """Input check a field equation of motion"""
-    test_matrix = _create_density_matrix(dim)
-    test_field = 1.0+1.0j
-    test_time = 1.0
-    try:
-        value = field_eom(test_time, test_matrix, test_field)
-        complex(value)
-    except Exception as e:
-        raise AssertionError("Field equation of motion must "\
-                "take a time, (dim,dim) matrix and field value "\
-                "and return a (complex) scalar.") from e
-    return field_eom
+def _check_mean_field_system_list(system_list):
+    error_str = "Parameter system_list must be a list of "\
+            "TimedependentSystemWithField objects."
+    assert isinstance(system_list, list), error_str
+    for obj in system_list:
+        assert isinstance(obj, TimeDependentSystemWithField)
+    return system_list
 
-def _check_super_field_eom(dim_list, field_eom):
-    """Input check a field equation of motion for a super-system"""
+def _check_mean_field_system_eom(dim_list, field_eom):
+    """Input check a field equation of motion for a mean-field-system"""
     test_matrix_list = [_create_density_matrix(dim) for dim in dim_list]
     test_field = 1.0+1.0j
     test_time = 1.0
@@ -805,8 +799,9 @@ def _check_super_field_eom(dim_list, field_eom):
         complex(value)
     except Exception as e:
         raise AssertionError("Field equation of motion must "\
-                "take a time, a list of (dim,dim) matrices and a field value "\
-                "and return a (complex) scalar.") from e
+                "take a time, a list of matrices with shapes\n "\
+                + str([f"({dim}, {dim})" for dim in dim_list]) \
+                + " and return a complex scalar.") from e
     return field_eom
 
 def _liouvillian(hamiltonian, gammas, lindblad_operators):

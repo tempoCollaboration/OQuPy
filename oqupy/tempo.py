@@ -488,7 +488,7 @@ class TempoWithField(BaseAPIClass):
     """
     def __init__(
             self,
-            super_system: MeanFieldSystem,
+            mean_field_system: MeanFieldSystem,
             bath_list: List[Bath],
             parameters: TempoParameters,
             initial_state_list: List[ndarray],
@@ -500,10 +500,10 @@ class TempoWithField(BaseAPIClass):
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a TempoWithField object. """
-        assert isinstance(super_system, MeanFieldSystem), \
-            "Argument 'super_system' must be an instance of " \
+        assert isinstance(mean_field_system, MeanFieldSystem), \
+            "Argument 'mean_field_system' must be an instance of " \
             "MeanFieldSystem."
-        self._super_system = super_system
+        self._mean_field_system = mean_field_system
 
         if backend_config is None:
             self._backend_config = TEMPO_BACKEND_CONFIG
@@ -517,16 +517,16 @@ class TempoWithField(BaseAPIClass):
 
         super().__init__(name, description)
 
-        if len(super_system.system_list) != len(initial_state_list):
+        if len(mean_field_system.system_list) != len(initial_state_list):
             raise ValueError("The lengths of the list of systems "\
-                    f"({len(super_system.system_list)}) and the list of"\
+                    f"({len(mean_field_system.system_list)}) and the list of"\
                     f"states ({len(initial_state_list)}) are inconsistent.")
 
         # List of tuples, one for each system: (system, initial_state, bath, hs_dim)
         parsed_system_tuple_list = [_tempo_physical_input_parse(
             True, system, initial_state, bath)
             for system, initial_state, bath in zip(
-                super_system.system_list, initial_state_list,
+                mean_field_system.system_list, initial_state_list,
                 bath_list)]
 
         parsed_parameter_names = ["system", "initial_state", "bath", "hs_dim"] 
@@ -685,13 +685,13 @@ class TempoWithField(BaseAPIClass):
         state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(state_list, self._parsed_parameters_dict["hs_dim"])]
 
-        rk1 = self._super_system.field_eom(t, state_list, field)
+        rk1 = self._mean_field_system.field_eom(t, state_list, field)
         if next_state_list is None:
             return rk1 * dt
         next_state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(next_state_list, self._parsed_parameters_dict["hs_dim"])]
         #  perform second order Runge-Kutta calculation
-        rk2 = self._super_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
+        rk2 = self._mean_field_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
         return field + dt * (rk1 + rk2) / 2
 
     def _compute_field_derivative(self, step:int, state_list: List[ndarray],
@@ -699,7 +699,7 @@ class TempoWithField(BaseAPIClass):
         t = self._time(step)
         state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(state_list, self._parsed_parameters_dict["hs_dim"])]
-        return self._super_system.field_eom(t, state_list, field)
+        return self._mean_field_system.field_eom(t, state_list, field)
 
     def compute(
             self,
