@@ -30,8 +30,8 @@ def H_MF_2(t, a):
         0.5 * Omega * (a * sigma_plus + np.conj(a) * sigma_minus)
 
 fractions = [0.5]
-def field_eom(t, states, field):
-    return -(1j*omegac+kappa)*field + np.trace(states[0] * fractions[0])
+def field_eom(t, state_list, field):
+    return -(1j*omegac+kappa)*field + np.trace(state_list[0])
 
 
 subsystem_1 = oqupy.TimeDependentSystemWithField(H_MF_1)
@@ -66,7 +66,7 @@ super_system = oqupy.MeanFieldSystem([subsystem_1], field_eom=field_eom)
 #                process_tensor_list = [process_tensor])
 # Using tempo 
 
-tempo_sys = oqupy.TempoWithField(mean_field_system=super_system,
+tempo_sys = oqupy.MeanFieldTempo(mean_field_system=super_system,
                         bath_list=[bath],
                         parameters=tempo_parameters,
                         initial_state_list=[initial_state_1],

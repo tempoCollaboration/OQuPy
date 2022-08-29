@@ -187,12 +187,12 @@ class MeanFieldSystemDynamics(BaseAPIClass):
 
     parameters
     ----------
-    times: list[float] (default = none)
+    times: list[float] (default = None)
         a list of points in time.
-    system_states_list: list[list[ndarray]]
-        a list of lists, with the ith sublist a list of states for
-        all system at `times[i]`
-    fields: list[complex] (default = none)
+    system_states_list: list[list[ndarray]] (default = None)
+        a list of lists such that the ith sublist is a list of states 
+        for each system at time `times[i]`.
+    fields: list[complex] (default = None)
         a list of fields at the times `times`.
     name: str
         an optional name for the dynamics.
@@ -205,16 +205,17 @@ class MeanFieldSystemDynamics(BaseAPIClass):
                  fields: Optional[List[complex]] = None,
                  name: Optional[Text] = None,
                  description: Optional[Text] = None) -> None:
-        """Create a SuperSystemDynamics object"""
+        """Create a MeanFieldSystemDynamics object"""
         super().__init__(name, description)
         self._times = []
         self._fields = []
         self._system_dynamics = []
         self._shapes = []
-        # unnecessary as add() parses again 
+        # check lengths of passed lists match
         times, tmp_fields = _parse_times_fields(times, fields)
-        # check lengths match only (doesn't check for correct state shapes)
+        # Don't check for correct state shapes yet
         times, tmp_states = _parse_times_states(times, system_states_list)
+        # Add each time, set of states and field (type checking in .add())
         for time, states, field in zip(times, tmp_states, tmp_fields):
             self.add(time, states, field)
         
@@ -232,20 +233,20 @@ class MeanFieldSystemDynamics(BaseAPIClass):
         time: float
             The point in time.
         system_states: List[ndarray]
-            The state of each (sub)system at the time `time`.
+            The state of each system at the time `time`.
         field: complex
             The field at the time `time`.
         """
-        # Record time in super-system
+        # Record time in mean-field system times list
         tmp_time = _parse_time(time)
         index = _find_list_index(self._times, tmp_time)
         self._times.insert(index, tmp_time)
-        # Record field
+        # Record field in mean-field system fields list
         tmp_field = _parse_field(field)
         self._fields.insert(index, tmp_field)
-        # create list of Dynamics objects, one for each system
+        # Create list of Dynamics (one for each system), if not already done
         if len(self._system_dynamics) == 0:
-            self._system_dynamics = [Dynamics(name="subsystem {}".format(i))
+            self._system_dynamics = [Dynamics(name="system {}".format(i))
                                      for i in range(len(system_states))]
             self._shape_list = [dynamics._shape for dynamics 
                                 in self._system_dynamics]
@@ -290,7 +291,7 @@ class MeanFieldSystemDynamics(BaseAPIClass):
 
     @property
     def system_dynamics(self):
-        """Dynamics object for each system"""
+        """Dynamics object for each system. """
         return self._system_dynamics
 
 def _parse_times_states(times, states) -> Tuple[List[float],

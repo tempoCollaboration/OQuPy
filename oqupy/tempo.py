@@ -47,7 +47,7 @@ from oqupy.operators import commutator, acommutator
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField, MeanFieldSystem
 from oqupy.backends.tempo_backend import TempoBackend
-from oqupy.backends.tempo_backend import TempoWithFieldBackend
+from oqupy.backends.tempo_backend import MeanFieldTempoBackend
 from oqupy.util import check_convert, check_isinstance, check_true,\
         get_progress
 
@@ -447,25 +447,26 @@ class Tempo(BaseTempo):
         """
         return self._dynamics
 
-class TempoWithField(BaseAPIClass):
+class MeanFieldTempo(BaseAPIClass):
     r"""
-    Class for the evolution of a collection of one or more (sub)systems
-    within a super-system together with a coherent field coupled to
-    the systems. Based on the TEMPO tensor network with field evolution
-    introduced in [FowlerWright2021].
+    Class for the evolution of a collection of system (types) within a
+    mean-field system together with a coherent field coupled to the systems.
+    Based on the TEMPO tensor network with field evolution introduced in
+    [FowplerWright2021].
 
     Parameters
     ----------
-    system: MeanFieldSystem
-        The collection of (time-dependent) systems with a coherent 
-        field.
+    mean_field_system: MeanFieldSystem
+        The `MeanFieldSystem` representing the collection of time-dependent
+        systems and coherent field.
     bath_list: List[Bath]
-        List of Bath objects, one for each system in the super-system.
+        List of Bath objects, one for each system in the mean-field system.
     parameters: TempoParameters
-        The parameters for the TEMPO computations. These are shared 
-        between (sub)systems.
+        The parameters for the TEMPO computations. These are used by all
+        systems in the mean-field system.
     initial_state_list: List[ndarray]
-        List of initial density matrices, one for each (sub)system.
+        List of initial density matrices, one for each system in the 
+        mean-field system.
     initial_field: complex
         The initial field value.
     start_time: float (default = 0.0)
@@ -475,7 +476,7 @@ class TempoWithField(BaseAPIClass):
         algorithm when integrating each system Liouvillian. If None
         then the Liouvillian is not integrated but sampled twice to
         to construct the system propagators at a timestep.
-    epsrel: float (default = config.INTEGRATE_EPSREL)
+    hhamiltonian_epsrel: float (default = config.INTEGRATE_EPSREL)
         The relative error tolerance for the adaptive algorithm
         when integrating the system Liouvillian.
     backend_config: dict (default = None)
@@ -499,7 +500,7 @@ class TempoWithField(BaseAPIClass):
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
-        """Create a TempoWithField object. """
+        """Create a MeanFieldTempo object. """
         assert isinstance(mean_field_system, MeanFieldSystem), \
             "Argument 'mean_field_system' must be an instance of " \
             "MeanFieldSystem."
@@ -510,17 +511,22 @@ class TempoWithField(BaseAPIClass):
         else:
             self._backend_config = backend_config
             
-        # Parameters for each tempo computation
+        # Parameters used for each tempo computation
         assert isinstance(parameters, TempoParameters), \
             "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
 
         super().__init__(name, description)
 
+        assert isinstance(bath_list, list), "bath_list must be a list of "\
+                " Bath objects"
+        assert isinstance(initial_state_list, list), "initial_state_list "\
+                "must be a list of state matrices"
+
         if len(mean_field_system.system_list) != len(initial_state_list):
             raise ValueError("The lengths of the list of systems "\
                     f"({len(mean_field_system.system_list)}) and the list of"\
-                    f"states ({len(initial_state_list)}) are inconsistent.")
+                    f"states ({len(initial_state_list)}) must match.")
 
         # List of tuples, one for each system: (system, initial_state, bath, hs_dim)
         parsed_system_tuple_list = [_tempo_physical_input_parse(
@@ -533,7 +539,7 @@ class TempoWithField(BaseAPIClass):
         # Dictionary of keys from parsed_parameter_names. The items are
         # a lists of systems (Key = "system") and corresponding lists of
         # values (Key = "initial_state", "bath", "hs_dim"). Considered to be
-        # 'parameters' for the overall (super-system dynamics) computation.
+        # 'parameters' for the overall (mean-field system dynamics) computation.
         self._parsed_parameters_dict = {}
         for i, parsed_parameter_name in enumerate(parsed_parameter_names):
             self._parsed_parameters_dict[parsed_parameter_name] = []
@@ -546,9 +552,10 @@ class TempoWithField(BaseAPIClass):
         self._start_time = check_convert(start_time, float, "start_time")
         # Input checks on these parameters (used when commutating the
         # propagators for each system) are done in the setter functions below.  
+        # naming here to avoid conflict with parameters in self._parameters:w
         self._hamiltonian_epsrel = hamiltonian_epsrel
         self._subdiv_limit = subdiv_limit
-        # Prepare the TempoWithField backend
+        # Prepare the MeanFieldTempo backend
         self._prepare_backend()
 
     # These properties should move to TempoParameters when adaptive propagator
@@ -587,7 +594,7 @@ class TempoWithField(BaseAPIClass):
        self._subdiv_limit = tmp_subdiv_limit
 
     def _prepare_backend(self):
-        """Create and initialize the TempoWithField backend. """
+        """Create and initialize the MeanFieldTempo backend. """
         initial_state_list = \
                 self._parsed_parameters_dict["initial_state"]
         initial_field = self._initial_field
@@ -606,7 +613,7 @@ class TempoWithField(BaseAPIClass):
         # N.B. For now all baths constrained to have same memory length
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
-        self._backend_instance = TempoWithFieldBackend(
+        self._backend_instance = MeanFieldTempoBackend(
                 initial_state_list,
                 initial_field,
                 influence_list,
@@ -622,17 +629,18 @@ class TempoWithField(BaseAPIClass):
 
     def _init_dynamics(self):
         """Create a MeanFieldSystemDynamics object with metadata from the
-        TempoWithField object. """
+        MeanFieldTempo object. """
         name = None
-        description = "computed from '{}' TempoWithField".format(self.name)
+        description = "computed from '{}' MeanFieldTempo".format(self.name)
         self._dynamics = MeanFieldSystemDynamics(name=name,
                                   description=description)
 
     def _get_propagators(self, system):
-        """Prepare propagator functions for a system according to subdiv_limit""" 
+        """Prepare propagator functions for a system according to subdiv_limit.
+        """ 
         # SAMPLE
         if self._subdiv_limit is None:
-            def propagators(step: int, state: ndarray, field: complex, 
+            def propagators(step: int, field: complex, 
                     field_derivative: complex):
                 dt = self._parameters.dt
                 t = self._time(step)
@@ -643,7 +651,7 @@ class TempoWithField(BaseAPIClass):
                 return first_step, second_step
         # ADAPTIVE
         else:
-            def propagators(step: int, state: ndarray, field:complex,
+            def propagators(step: int, field:complex,
                     field_derivative: complex):
                 dt = self._parameters.dt
                 t = self._time(step)
@@ -678,13 +686,15 @@ class TempoWithField(BaseAPIClass):
 
     def _compute_field(self, step:int, state_list: List[ndarray],
             field: complex, next_state_list: Optional[List[ndarray]] = None):
-        r"""Compute the field value for the time step `step`. """
+        r"""Compute the field value for the time step `step`. Uses 2nd
+        order Runge-Kutta if next_state_list is provided. """
         dt = self._parameters.dt
         t = self._time(step)
         
         state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(state_list, self._parsed_parameters_dict["hs_dim"])]
 
+        # could equally call self._compute_field_derivative 
         rk1 = self._mean_field_system.field_eom(t, state_list, field)
         if next_state_list is None:
             return rk1 * dt
@@ -696,6 +706,7 @@ class TempoWithField(BaseAPIClass):
 
     def _compute_field_derivative(self, step:int, state_list: List[ndarray],
                                   field:complex):
+        r"""Compute the field derivative for the time step `step`. """
         t = self._time(step)
         state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(state_list, self._parsed_parameters_dict["hs_dim"])]
@@ -706,8 +717,8 @@ class TempoWithField(BaseAPIClass):
             end_time: float,
             progress_type: Text = None) -> MeanFieldSystemDynamics:
         """
-        Propagate (or continue to propagate) the TEMPO tensor network and
-        coherent field to time `end_time`.
+        Propagate (or continue to propagate) the TEMPO tensor networks for
+        each system and coherent field to time `end_time`.
 
         Parameters
         ----------
@@ -721,8 +732,9 @@ class TempoWithField(BaseAPIClass):
         Returns
         -------
         dynamics: MeanFieldSystemDynamics
-            The instance of MeanFieldSystemDynamics
-            associated with the TempoWithField object.
+            The instance of `MeanFieldSystemDynamics` describing each system 
+            dynamics and the field dynamics accounting for the interaction with
+            the environment.
         """
 
         tmp_end_time = _check_time(end_time)
@@ -751,7 +763,8 @@ class TempoWithField(BaseAPIClass):
         return self._dynamics
 
     def get_dynamics(self) -> MeanFieldSystemDynamics:
-        """Returns MeanFieldSystemDynamics instance associated with the Tempo object.
+        """Returns the instance of MeanFieldSystemDynamics associated with the
+        tempo object.
         """
         return self._dynamics
 
@@ -987,6 +1000,7 @@ def tempo_compute(
         description: Optional[Text] = None) -> Dynamics:
     """
     Shortcut for creating a Tempo object and running the computation.
+    Cannot be used for mean-field Tempo.
 
     Parameters
     ----------
