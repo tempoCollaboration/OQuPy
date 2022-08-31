@@ -15,7 +15,7 @@
 Module on physical information of the system.
 """
 
-from typing import Callable, List, Optional, Text, Tuple, Union
+from typing import Callable, List, Optional, Text, Tuple
 from copy import copy
 from functools import lru_cache
 
@@ -281,7 +281,7 @@ class TimeDependentSystemWithField(BaseSystem):
         # input check for Hamiltonian
         self._hamiltonian = _check_tfielddependent_hamiltonian(hamiltonian)
         tmp_dimension = self._hamiltonian(1.0, 1.0+1.0j).shape[0]
-        
+
         # input check gammas and lindblad_operators
         self._gammas, self._lindblad_operators = \
              _check_tdependent_gammas_lindblad_operators(
@@ -291,21 +291,22 @@ class TimeDependentSystemWithField(BaseSystem):
         super().__init__(tmp_dimension, name, description)
 
     def _linearised_hamiltonian(self, t0: float, t: float,
-            field: complex, 
+            field: complex,
             field_derivative: complex) -> complex:
         r"""
         Return value of the system Hamiltonian at time `t` using a linearisation
         of the field coupled to the subsystem from its value at time `t0`.
         """
-        return self._hamiltonian(t, 
+        return self._hamiltonian(t,
                 self._linearised_field(t0, t, field, field_derivative))
 
-    def _linearised_field(self, t0: float, t: float,
-            field: complex, 
+    @staticmethod
+    def _linearised_field(t0: float, t: float,
+            field: complex,
             field_derivative: complex):
         r"""
-        Return the value of the field a time `(t-t0)` given the value at `t0`
-        in a linear approximation using the value of the time derivative at `t0`.
+        Return the value of the field a time `(t-t0)` given the value at `t0` in
+        a linear approximation using the value of the time derivative at `t0`.
         """
         return field + field_derivative * (t-t0)
 
@@ -319,7 +320,7 @@ class TimeDependentSystemWithField(BaseSystem):
 
         .. math::
 
-            \mathcal{L}(t, \langle a \rangle)\rho 
+            \mathcal{L}(t, \langle a \rangle)\rho
             = -i [\hat{H}(t, \langle a \rangle), \rho]
                 + \sum_n^N \gamma_n \left(
                     \hat{A}_n(t) \rho \hat{A}_n^\dagger(t)
@@ -366,7 +367,8 @@ class TimeDependentSystemWithField(BaseSystem):
             field_derivative = complex(field_derivative)
         except Exception as e:
             raise TypeError("Arguments field_derivative must be complex") from e
-        hamiltonian = self._linearised_hamiltonian(t0, t, field, field_derivative)
+        hamiltonian = self._linearised_hamiltonian(t0, t, field,
+                                                   field_derivative)
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
         return _liouvillian(hamiltonian, gammas, lindblad_operators)
@@ -386,7 +388,7 @@ class TimeDependentSystemWithField(BaseSystem):
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
 
-class MeanFieldSystem(BaseAPIClass): 
+class MeanFieldSystem(BaseAPIClass):
     r"""Represents a collection of time dependent systems interacting
     with a common field. The systems are encoded as
     `TimeDependentSystemWithField` objects, and the field as a complex
@@ -395,34 +397,36 @@ class MeanFieldSystem(BaseAPIClass):
 
     Parameters
     ----------
-    system_list: List[TimeDependentSystemWithField], 
+    system_list: List[TimeDependentSystemWithField],
         List of `TimeDependentSystemWithField` objects interacting with
         a common field :math:`\langle a \rangle`.
     field_eom: callable
         Field equation of motion :math:`\partial_t
         \langle a \rangle(t, [\rho], \langle a \rangle)`
         where :math:`[\rho]` is a list of square matrices for the state
-        of each system in `system_list` at time :math:`t` and 
+        of each system in `system_list` at time :math:`t` and
         :math:`\langle a \rangle` the field at time :math:`t`.
     name: str
         An optional name for the mean-field system.
     description: str
         An optional description of the mean-field system.
     """
-    
-    def __init__(self, 
-                system_list: List[TimeDependentSystemWithField], 
+
+    def __init__(self,
+                system_list: List[TimeDependentSystemWithField],
                 field_eom: Callable[[float, List[ndarray], complex], complex],
-                name: Optional[Text] = None, 
+                name: Optional[Text] = None,
                 description: Optional[Text] = None) -> None:
 
         super().__init__(name, description)
         tmp_system_list = _check_mean_field_system_list(system_list)
         self.system_list = tmp_system_list
-        
+
         # input check for field equation of motion
-        tmp_dimension_list = [system.hamiltonian(1.0, 1.0+1.0j).shape[0] for system in self.system_list]
-        tmp_field_eom = _check_mean_field_system_eom(tmp_dimension_list, field_eom)
+        tmp_dimension_list = [system.hamiltonian(1.0, 1.0+1.0j).shape[0]
+                              for system in self.system_list]
+        tmp_field_eom = _check_mean_field_system_eom(tmp_dimension_list,
+                                                     field_eom)
         self._field_eom = tmp_field_eom
 
     @property

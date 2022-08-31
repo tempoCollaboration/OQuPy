@@ -180,6 +180,11 @@ class Dynamics(BaseDynamics):
         if self._shape is None:
             self._shape = tmp_shape
 
+    @property
+    def shape(self):
+        """The shape of the states. """
+        return np.copy(self._shape)
+
 class MeanFieldDynamics(BaseAPIClass):
     """
     Represents a time evolution of one or more system density matrices
@@ -190,7 +195,7 @@ class MeanFieldDynamics(BaseAPIClass):
     times: list[float] (default = None)
         a list of points in time.
     system_states_list: list[list[ndarray]] (default = None)
-        a list of lists such that the ith sublist is a list of states 
+        a list of lists such that the ith sublist is a list of states
         for each system at time `times[i]`.
     fields: list[complex] (default = None)
         a list of fields at the times `times`.
@@ -201,7 +206,7 @@ class MeanFieldDynamics(BaseAPIClass):
     """
     def __init__(self,
                  times: Optional[List[float]] = None,
-                 system_states_list: Optional[List[List[ndarray]]] = None, 
+                 system_states_list: Optional[List[List[ndarray]]] = None,
                  fields: Optional[List[complex]] = None,
                  name: Optional[Text] = None,
                  description: Optional[Text] = None) -> None:
@@ -218,7 +223,7 @@ class MeanFieldDynamics(BaseAPIClass):
         # Add each time, set of states and field (type checking in .add())
         for time, states, field in zip(times, tmp_states, tmp_fields):
             self.add(time, states, field)
-        
+
     def add(
             self,
             time: float,
@@ -248,7 +253,7 @@ class MeanFieldDynamics(BaseAPIClass):
         if len(self._system_dynamics) == 0:
             self._system_dynamics = [Dynamics(name="system {}".format(i))
                                      for i in range(len(system_states))]
-            self._shape_list = [dynamics._shape for dynamics 
+            self._shape_list = [dynamics.shape for dynamics
                                 in self._system_dynamics]
         else:
             assert len(system_states) == len(self._system_dynamics),\
@@ -259,7 +264,7 @@ class MeanFieldDynamics(BaseAPIClass):
         # Record state - state parsing done by Dynamics objects
         for i, system_dynamics in enumerate(self._system_dynamics):
             system_dynamics.add(time, system_states[i])
-        
+
     def __len__(self) -> int:
         return len(self._times)
 

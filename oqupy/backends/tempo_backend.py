@@ -80,7 +80,7 @@ class BaseTempoBackend:
         """The current step in the TEMPO computation. """
         return self._step
 
-    def _initialize_mps_mpo(self) :
+    def initialize_mps_mpo(self) :
         """ToDo"""
         self._initial_state = copy(self._initial_state).reshape(-1)
 
@@ -122,7 +122,7 @@ class BaseTempoBackend:
                                  name="Thee Time Evolving MPO")
 
 
-    def _compute_system_step(self, current_step, prop_1, prop_2) -> ndarray:
+    def compute_system_step(self, current_step, prop_1, prop_2) -> ndarray:
         """
         Takes a step in the TEMPO tensor network computation.
 
@@ -292,7 +292,7 @@ class TempoBackend(BaseTempoBackend):
         ToDo
         """
         self._step = 0
-        self._initialize_mps_mpo()
+        self.initialize_mps_mpo()
         self._state = self._initial_state
         return self._step, copy(self._state)
 
@@ -302,7 +302,7 @@ class TempoBackend(BaseTempoBackend):
         """
         self._step += 1
         prop_1, prop_2 = self._propagators(self._step-1)
-        self._state = self._compute_system_step(self._step, prop_1, prop_2)
+        self._state = self.compute_system_step(self._step, prop_1, prop_2)
         return self._step, copy(self._state)
 
 
@@ -311,7 +311,7 @@ class MeanFieldTempoBackend():
     backend for one or more tensor network tempo with coherent field evolution.
     This creates a list of BaseBackend objects, one for each system in the
     mean-field system, which will be invoked at each timesteps to propagate the
-    systems concurrently. In addition, at each timestep a coherent field is 
+    systems concurrently. In addition, at each timestep a coherent field is
     evolved according to the state of each system and field value at that time.
 
     Parameters
@@ -324,17 +324,18 @@ class MeanFieldTempoBackend():
         Callables that takes an integer `step` and returns the influence super
         operator of that `step`, one for each system.
     unitary_transform_list: List[ndarray]
-        Unitaries transforms the coupling operator into a diagonal form, one 
+        Unitaries transforms the coupling operator into a diagonal form, one
         for each system (i.e. the bath associated with each system).
     propagators_list: List[callable(int, complex, complex) -> ndarray, ndarray]
         Callables that takes an integer `step`, a complex `field` and a complex
-        `field_derivative` and returns the first and second half of the system 
+        `field_derivative` and returns the first and second half of the system
         propagator of that `step`. One for each system.
-    compute_field: callable(int, List[ndarray], complex, Optional[List[ndarray]])
-                    -> complex
+    compute_field: callable(int, List[ndarray], complex,
+                            Optional[List[ndarray]]) -> complex
         Callable that takes an integer `step`, a complex `field` (the current
-        value of the field) and two lists of ndarrays for, respectively, the current
-        and next density matrix of each system, and returns the next field value.
+        value of the field) and two lists of ndarrays for, respectively, the
+        current and next density matrix of each system, and returns the next
+        field value.
     compute_field_derivative: callable(int, List[ndarray], complex) -> complex
         Callable that takes an integer `step`, a complex `field` (the current
         value of the field) and a list of vectors for the density matrix of each
@@ -357,9 +358,9 @@ class MeanFieldTempoBackend():
             unitary_transform_list: List[ndarray],
             propagators_list: List[Callable[[int, complex, complex],
                 Tuple[ndarray, ndarray]]],
-            compute_field: Callable[[float, List[ndarray], complex, 
+            compute_field: Callable[[float, List[ndarray], complex,
                                      Optional[List[ndarray]]], complex],
-            compute_field_derivative: 
+            compute_field_derivative:
                 Callable[[float, List[ndarray], complex], complex],
             sum_north_list: List[ndarray],
             sum_west_list: List[ndarray],
@@ -372,6 +373,7 @@ class MeanFieldTempoBackend():
         self._compute_field = compute_field
         self._compute_field_derivative = compute_field_derivative
         self._field = initial_field
+        self._state_list = initial_state_list
         self._step = None
         self._propagators_list = propagators_list
         # List of BaseTempoBackends use to calculate each system dynamics
@@ -394,11 +396,10 @@ class MeanFieldTempoBackend():
         return self._step
 
     def initialize(self) -> Tuple[int, ndarray, complex]:
+        """Initialize each TEMPO instance. """
         self._step = 0
         for backend in self._backend_list:
-            backend._initialize_mps_mpo()
-        self._state_list = self._initial_state_list
-        self._field = self._initial_field
+            backend.initialize_mps_mpo()
         return self._step, deepcopy(self._state_list), self._field
 
     def compute_step(self) -> Tuple[int, List[ndarray], complex]:
@@ -415,13 +416,13 @@ class MeanFieldTempoBackend():
         prop_tuple_list = [propagators(current_step, current_field,
             current_field_derivative) for propagators, state
             in zip(self._propagators_list, current_state_list)]
-        # Use tempo tensor network to compute each system state 
-        next_state_list = [backend._compute_system_step(next_step, 
-            *prop_tuple) for backend, prop_tuple 
+        # Use tempo tensor network to compute each system state
+        next_state_list = [backend.compute_system_step(next_step,
+            *prop_tuple) for backend, prop_tuple
             in zip(self._backend_list, prop_tuple_list)]
         # Use field evolution function to compute next field
-        next_field = self._compute_field(current_step, 
-            current_state_list, current_field, 
+        next_field = self._compute_field(current_step,
+            current_state_list, current_field,
             next_state_list)
         self._state_list = next_state_list
         self._field = next_field

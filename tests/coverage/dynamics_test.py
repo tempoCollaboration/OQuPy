@@ -18,7 +18,7 @@ Tests for the time_evovling_mpo.dynamics module.
 import pytest
 import numpy as np
 
-from oqupy.dynamics import BaseDynamics, Dynamics, DynamicsWithField
+from oqupy.dynamics import BaseDynamics, Dynamics, MeanFieldDynamics
 
 
 times = [0.0, 0.1]
@@ -89,25 +89,34 @@ def test_dynamics_expectations():
     with pytest.raises(AssertionError):
         dyn.expectations("bla")
 
-def test_dynamics_with_field():
+def test_mean_field_dynamics():
     # construction and .add()
-    dyn_A = DynamicsWithField()
+    dyn_A = MeanFieldDynamics()
     str(dyn_A)
     assert len(dyn_A) == 0
-    dyn_B = DynamicsWithField(times, states, fields)
+    dyn_B = MeanFieldDynamics(times, 
+                                    [[states[0], states[0]],
+                                     [states[1], states[1]]],
+                                    fields)
     assert len(dyn_B) == len(times)
     np.testing.assert_almost_equal(fields, dyn_B.fields)
-    dyn_B.add(other_time, other_state, other_field)
-    combined_fields = [fields[0], other_field, fields[1]]
+    dyn_B.add(times[-1] + other_time, [other_state, 2*other_state], other_field)
+    assert isinstance(dyn_B.system_dynamics[0], Dynamics)
+    sysB1, sysB2 = dyn_B.system_dynamics
+    np.testing.assert_almost_equal(sysB1.times, dyn_B.times)
+    np.testing.assert_almost_equal(sysB2.times, dyn_B.times)
+    assert len(dyn_B) == len(sysB1)
+    np.testing.assert_almost_equal(sysB1.states[-1], 0.5 * sysB2.states[-1])
+    combined_fields = [fields[0], fields[1], other_field]
     # bad input
     with pytest.raises(AssertionError):
-        DynamicsWithField(times, states)
+        MeanFieldDynamics(times, states, fields)
     with pytest.raises(AssertionError):
-        DynamicsWithField(times, states, 0.1)
+        MeanFieldDynamics(times, [states], 0.1)
     with pytest.raises(AssertionError):
-        DynamicsWithField(times, states, [other_field])
+        MeanFieldDynamics(times, [states], [other_field])
     with pytest.raises(AssertionError):
-        dyn_B.add("bla", other_state, other_field)
+        dyn_B.add("bla", [other_state], other_field)
     # expectations
     t, alpha = dyn_A.field_expectations()
     assert t is None

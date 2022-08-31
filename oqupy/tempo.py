@@ -465,7 +465,7 @@ class MeanFieldTempo(BaseAPIClass):
         The parameters for the TEMPO computations. These are used by all
         systems in the mean-field system.
     initial_state_list: List[ndarray]
-        List of initial density matrices, one for each system in the 
+        List of initial density matrices, one for each system in the
         mean-field system.
     initial_field: complex
         The initial field value.
@@ -505,12 +505,13 @@ class MeanFieldTempo(BaseAPIClass):
             "Argument 'mean_field_system' must be an instance of " \
             "MeanFieldSystem."
         self._mean_field_system = mean_field_system
+        self._dynamics = None
 
         if backend_config is None:
             self._backend_config = TEMPO_BACKEND_CONFIG
         else:
             self._backend_config = backend_config
-            
+
         # Parameters used for each tempo computation
         assert isinstance(parameters, TempoParameters), \
             "Argument 'parameters' must be an instance of TempoParameters."
@@ -530,14 +531,15 @@ class MeanFieldTempo(BaseAPIClass):
                     f"match the number ({len(mean_field_system.system_list)}) "\
                     "of systems in mean_field_system."
 
-        # List of tuples, one for each system: (system, initial_state, bath, hs_dim)
+        # List of tuples, one for each system: (system, initial_state,
+        # bath, hs_dim)
         parsed_system_tuple_list = [_tempo_physical_input_parse(
             True, system, initial_state, bath)
             for system, initial_state, bath in zip(
                 mean_field_system.system_list, initial_state_list,
                 bath_list)]
 
-        parsed_parameter_names = ["system", "initial_state", "bath", "hs_dim"] 
+        parsed_parameter_names = ["system", "initial_state", "bath", "hs_dim"]
         # Dictionary of keys from parsed_parameter_names. The items are
         # a lists of systems (Key = "system") and corresponding lists of
         # values (Key = "initial_state", "bath", "hs_dim"). Considered to be
@@ -548,12 +550,13 @@ class MeanFieldTempo(BaseAPIClass):
             for parsed_parameter_tuple in parsed_system_tuple_list:
                 self._parsed_parameters_dict[parsed_parameter_name].append(
                     parsed_parameter_tuple[i])
-        
+
         # Check initial field can be cast to complex, and start time float
-        self._initial_field = check_convert(initial_field, complex, "initial_field")
+        self._initial_field = check_convert(initial_field, complex,
+                                            "initial_field")
         self._start_time = check_convert(start_time, float, "start_time")
         # Input checks on these parameters (used when commutating the
-        # propagators for each system) are done in the setter functions below.  
+        # propagators for each system) are done in the setter functions below.
         # naming here to avoid conflict with parameters in self._parameters:w
         self._hamiltonian_epsrel = hamiltonian_epsrel
         self._subdiv_limit = subdiv_limit
@@ -561,10 +564,11 @@ class MeanFieldTempo(BaseAPIClass):
         self._prepare_backend()
 
     # These properties should move to TempoParameters when adaptive propagator
-    # construction has been added to Tempo. It doesn't make sense to allow 
+    # construction has been added to Tempo. It doesn't make sense to allow
     # these properties to be changed unless propagator_list is regenerated
     @property
     def hamiltonian_epsrel(self) -> float:
+        """The epsrel used to construct system propagators by integration. """
         return self._hamiltonian_epsrel
 
     @hamiltonian_epsrel.setter
@@ -574,33 +578,35 @@ class MeanFieldTempo(BaseAPIClass):
         except Exception as e:
             raise AssertionError("Argument 'hamiltonian_epsrel' must"\
                     " be float.") from e
-        assert tmp_epsrel > 0.0, \
+        assert tmp_hamiltonian_epsrel > 0.0, \
             "Argument 'hamiltonian_epsrel' must be positive."
         self._hamiltonian_epsrel = tmp_hamiltonian_epsrel
 
     @property
     def subdiv_limit(self) -> Union[float, None]:
+        """The subdiv_limit used to construct system propagators. """
         return self._subdiv_limit
 
     @subdiv_limit.setter
     def subdiv_limit(self, new_subdiv_limit: float) -> None:
-       if new_subdiv_limit is None:
-           self._subdiv_limit = None
-           return
-       try:
-           tmp_subdiv_limit = float(new_subdiv_limit)
-       except Exception as e:
-           raise AssertionError("Argument 'subdiv_limit' must be float.") from e
-       assert subdiv_limit > 0, \
-           "Argument 'subdiv_limit' must be positive."
-       self._subdiv_limit = tmp_subdiv_limit
+        if new_subdiv_limit is None:
+            self._subdiv_limit = None
+            return
+        try:
+            tmp_subdiv_limit = float(new_subdiv_limit)
+        except Exception as e:
+            raise AssertionError("Argument 'subdiv_limit' must be float.")\
+                    from e
+        assert tmp_subdiv_limit > 0, \
+            "Argument 'subdiv_limit' must be positive."
+        self._subdiv_limit = tmp_subdiv_limit
 
     def _prepare_backend(self):
         """Create and initialize the MeanFieldTempo backend. """
         initial_state_list = \
                 self._parsed_parameters_dict["initial_state"]
         initial_field = self._initial_field
-        influence_list = [self._get_influence(bath) 
+        influence_list = [self._get_influence(bath)
                 for bath in self._parsed_parameters_dict["bath"]]
         unitary_transform_list = [bath.unitary_transform
                 for bath in self._parsed_parameters_dict["bath"]]
@@ -639,10 +645,10 @@ class MeanFieldTempo(BaseAPIClass):
 
     def _get_propagators(self, system):
         """Prepare propagator functions for a system according to subdiv_limit.
-        """ 
+        """
         # SAMPLE
         if self._subdiv_limit is None:
-            def propagators(step: int, field: complex, 
+            def propagators(step: int, field: complex,
                     field_derivative: complex):
                 dt = self._parameters.dt
                 t = self._time(step)
@@ -673,15 +679,15 @@ class MeanFieldTempo(BaseAPIClass):
         return propagators
 
     def _get_influence(self, bath) -> Callable[[int], ndarray]:
-        """Create function that calculates the influence functional 
+        """Create function that calculates the influence functional
         matrix for a bath. """
-        coupling_comm = commutator(bath._coupling_operator).diagonal()
-        coupling_acomm = acommutator(bath._coupling_operator).diagonal()
+        coupling_comm = commutator(bath.coupling_operator).diagonal()
+        coupling_acomm = acommutator(bath.coupling_operator).diagonal()
         def influence(dk: int) -> ndarray:
             return influence_matrix(
                 dk,
                 parameters=self._parameters,
-                correlations=bath._correlations,
+                correlations=bath.correlations,
                 coupling_acomm=coupling_acomm,
                 coupling_comm=coupling_comm)
         return influence
@@ -692,18 +698,19 @@ class MeanFieldTempo(BaseAPIClass):
         order Runge-Kutta if next_state_list is provided. """
         dt = self._parameters.dt
         t = self._time(step)
-        
+
         state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(state_list, self._parsed_parameters_dict["hs_dim"])]
 
-        # could equally call self._compute_field_derivative 
+        # could equally call self._compute_field_derivative
         rk1 = self._mean_field_system.field_eom(t, state_list, field)
         if next_state_list is None:
             return rk1 * dt
         next_state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(next_state_list, self._parsed_parameters_dict["hs_dim"])]
         #  perform second order Runge-Kutta calculation
-        rk2 = self._mean_field_system.field_eom(t + dt, next_state_list, field + rk1 * dt)
+        rk2 = self._mean_field_system.field_eom(t + dt, next_state_list,
+                                                field + rk1 * dt)
         return field + dt * (rk1 + rk2) / 2
 
     def _compute_field_derivative(self, step:int, state_list: List[ndarray],
@@ -734,7 +741,7 @@ class MeanFieldTempo(BaseAPIClass):
         Returns
         -------
         dynamics: MeanFieldDynamics
-            The instance of `MeanFieldDynamics` describing each system 
+            The instance of `MeanFieldDynamics` describing each system
             dynamics and the field dynamics accounting for the interaction with
             the environment.
         """
@@ -1068,13 +1075,13 @@ def _tempo_physical_input_parse(
         initial_state.shape == (hs_dim, hs_dim),
         "Initial sate must be a square matrix of " \
             + f"dimension {hs_dim}x{hs_dim}.")
-    
+
     assert isinstance(bath, Bath), \
         "Argument 'bath' must be an instance of Bath."
 
     assert bath.dimension == hs_dim, \
             "Hilbertspace dimensions are unequal: " \
-            + "system ({}), ".format(hs_dimension) \
+            + "system ({}), ".format(hs_dim) \
             + "and bath coupling ({}).".format(bath.dimension)
 
     parameters = (system, initial_state, bath, hs_dim)
