@@ -19,7 +19,7 @@ import pytest
 import numpy as np
 
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
-        TimeDependentSystemWithField
+        TimeDependentSystemWithField, MeanFieldSystem
 from oqupy import operators
 
 # -----------------------------------------------------------------------------
@@ -67,12 +67,13 @@ liouvillianD = np.array([[-2.4+0.j,  0. +0.j,  0. +0.j,  2.4+0.j],
 hamiltonianFieldGood = lambda t, field: t*operators.sigma("z") + field
 hamiltonianFieldBad = lambda t: t*operators.sigma("z")
 hamiltonianFieldBad2 = lambda t, state: np.flatten(operators.sigma("z"))
-fieldEomGood = lambda t, state, field: t*field + state.trace()
-fieldEomBad = lambda t, state: 5*t
-fieldEomBad2 = lambda t, state: t*state
+fieldEomGood = lambda t, states, field: t*field + states[0].trace()
+fieldEomBad = lambda t, states: 5*t
+fieldEomBad2 = lambda t, states, field: t*states
 timeField = 2.0
 dtField = 0.2
 fieldField = 1.0j
+derivativeField = 1+2j
 stateField = np.array([[0.5,0.1j],[-0.1j,0.5]])
 liouvillianField = np.array(
 [[ 0. -0.j,  -1.4+0.2j,  1.4-0.2j,	0. -0.j ],
@@ -200,10 +201,9 @@ def test_time_dependent_system_bad_input():
 def test_time_dependent_system_with_field():
     # good construction
     sysField = TimeDependentSystemWithField(hamiltonianFieldGood,
-            fieldEomGood,
             name="with field")
     liouvillian = sysField.liouvillian(timeField,
-            timeField+dtField, stateField, fieldField)
+            timeField+dtField, fieldField, derivativeField)
     np.testing.assert_almost_equal(liouvillian, liouvillianField)
     # Liouvillian calling
     with pytest.raises(TypeError):
@@ -211,31 +211,43 @@ def test_time_dependent_system_with_field():
     with pytest.raises(TypeError):
         sysField.liouvillian(0.5)
     with pytest.raises(TypeError):
-        sysField.liouvillian(0.5, 1.0, stateField)
+        sysField.liouvillian(0.5, 1.0, stateField, derivativeField)
+    with pytest.raises(TypeError):
+        sysField.liouvillian(1j, 1.0, fieldField, derivativeField)
     with pytest.raises(AssertionError):
-        sysField.liouvillian(1j, 1.0, stateField, fieldField)
-    with pytest.raises(AssertionError):
-        sysField.liouvillian(2.0, 1.0, stateField, fieldField)
-    with pytest.raises(AssertionError):
-        sysField.liouvillian(0.5, 1.0, stateField[0],
-                fieldField)
-    with pytest.raises(AssertionError):
-        sysField.liouvillian(0.5, 1.0, stateField, "field")
-    assert callable(sysField.field_eom)
+        sysField.liouvillian(2.0, 1.0, fieldField, derivativeField)
+    with pytest.raises(TypeError):
+        sysField.liouvillian(1.0, 1.0, "field", derivativeField)
+    with pytest.raises(TypeError):
+        sysField.liouvillian(0.5, 1.0, fieldField, sysField)
     # bad construction
     with pytest.raises(AssertionError):
         TimeDependentSystemWithField(
-                hamiltonianFieldBad,
-                fieldEomGood)
+                hamiltonianFieldBad)
     with pytest.raises(AssertionError):
         TimeDependentSystemWithField(
-                hamiltonianFieldBad2,
-                fieldEomGood)
+                hamiltonianFieldBad2)
+
+def test_mean_field_system():
+    # good construction
+    sysField = TimeDependentSystemWithField(hamiltonianFieldGood,
+            name="with field")
+    meansysField = MeanFieldSystem([sysField],
+                                   fieldEomGood,
+                                   name="mean-field sys")
+    assert callable(meansysField.field_eom)
+    derivative = meansysField.field_eom(timeField, [stateField], fieldField)
+    assert np.isclose(derivative, derivativeField)
+    # bad construction
     with pytest.raises(AssertionError):
-        TimeDependentSystemWithField(
-                hamiltonianFieldGood,
-                fieldEomBad)
+        MeanFieldSystem(sysField, fieldEomGood)
     with pytest.raises(AssertionError):
-        TimeDependentSystemWithField(
-                hamiltonianFieldGood,
-                fieldEomBad2)
+        MeanFieldSystem([sysField], fieldEomBad)
+    with pytest.raises(AssertionError):
+        MeanFieldSystem([sysField], fieldEomBad2)
+    with pytest.raises(AssertionError):
+        MeanFieldSystem(fieldEomGood, [sysField])
+    tsys = TimeDependentSystem(lambda t: t * np.eye(2))
+    with pytest.raises(AssertionError):
+        MeanFieldSystem([tsys], fieldEomGood)
+

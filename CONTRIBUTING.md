@@ -216,9 +216,11 @@ and you can check the style of a specific file with:
 ```bash
 $ tox -e style say_hi.py
 ```
+where `say_hi.py` is the path of the file *relative to the oqupy
+directory and this command should be run from the OQuPy base directory!*
 
 #### 7.4 test sphinx only
-This invoces a sphinx-build to build the HTML documentation
+This invokes a sphinx-build to build the HTML documentation
 ```bash
 $ tox -e docs
 ```

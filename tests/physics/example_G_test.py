@@ -36,8 +36,8 @@ field_G = 0.10602369935009-0.46986388684474406j
 
 h_sys_G = lambda t, field: 0.5 * operators.sigma("z")  \
         + np.real(field) * operators.sigma("x")
-field_eom_G = lambda t, state, field: -(1j + 1) * field \
-        - 0.5j * np.matmul(operators.sigma("x"), state).trace().real
+field_eom_G = lambda t, states, field: -(1j + 1) * field \
+        - 0.5j * np.matmul(operators.sigma("x"), states[0]).trace().real
 
 correlations_G = oqupy.PowerLawSD(alpha=0.1,
                                   zeta=1.0,
@@ -49,8 +49,8 @@ bath_G = oqupy.Bath(0.5 * operators.sigma("z"),
                     correlations_G,
                     name="phonon bath")
 system_G = oqupy.TimeDependentSystemWithField(
-        h_sys_G,
-        field_eom_G)
+        h_sys_G)
+mean_field_system_G = oqupy.MeanFieldSystem([system_G], field_eom_G)
 tempo_params_G = oqupy.TempoParameters(
         dt=0.05,
         dkmax=None,
@@ -59,17 +59,18 @@ tempo_params_G = oqupy.TempoParameters(
 # -----------------------------------------------------------------------------
 
 def test_tempo_backend_G():
-    tempo_G = oqupy.TempoWithField(
-        system_G,
-        bath_G,
+    tempo_G = oqupy.MeanFieldTempo(
+        mean_field_system_G,
+        [bath_G],
         tempo_params_G,
-        initial_state_G,
+        [initial_state_G],
         initial_field_G,
         start_time=0.0)
     tempo_G.compute(end_time=t_end_G)
     dyn_G = tempo_G.get_dynamics()
     np.testing.assert_almost_equal(dyn_G.fields[-1], field_G, decimal=4)
-    np.testing.assert_almost_equal(dyn_G.states[-1], rho_G, decimal=4)
+    np.testing.assert_almost_equal(
+            dyn_G.system_dynamics[0].states[-1], rho_G, decimal=4)
 
 def test_tensor_network_pt_tempo_backend_A():
     pt = oqupy.pt_tempo_compute(
@@ -78,12 +79,13 @@ def test_tensor_network_pt_tempo_backend_A():
         end_time=t_end_G,
         parameters=tempo_params_G)
 
-    dyn = oqupy.compute_dynamics_single_system_with_field(
-        system=system_G,
+    dyn = oqupy.compute_dynamics_with_field(
+        mean_field_system=mean_field_system_G,
         initial_field=initial_field_G,
-        process_tensor=pt,
-        initial_state=initial_state_G)
+        process_tensor_list=[pt],
+        initial_state_list=[initial_state_G])
     np.testing.assert_almost_equal(dyn.fields[-1], field_G, decimal=4)
-    np.testing.assert_almost_equal(dyn.states[-1], rho_G, decimal=4)
+    np.testing.assert_almost_equal(
+            dyn.system_dynamics[0].states[-1], rho_G, decimal=4)
 
 # -----------------------------------------------------------------------------
