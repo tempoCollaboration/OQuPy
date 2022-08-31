@@ -352,20 +352,20 @@ class TimeDependentSystemWithField(BaseSystem):
         try:
             t0 = float(t0)
         except Exception as e:
-            raise AssertionError("Argument t0 must be float") from e
+            raise TypeError("Argument t0 must be float") from e
         try:
             t = float(t)
         except Exception as e:
-            raise AssertionError("Argument t must be float") from e
+            raise TypeError("Argument t must be float") from e
         assert t >= t0, "Argument t must equal or exceed t0"
         try:
             field = complex(field)
         except Exception as e:
-            raise AssertionError("Arguments field must be complex") from e
+            raise TypeError("Arguments field must be complex") from e
         try:
             field_derivative = complex(field_derivative)
         except Exception as e:
-            raise AssertionError("Arguments field_derivative must be complex") from e
+            raise TypeError("Arguments field_derivative must be complex") from e
         hamiltonian = self._linearised_hamiltonian(t0, t, field, field_derivative)
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]

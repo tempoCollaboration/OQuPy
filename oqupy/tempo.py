@@ -42,7 +42,7 @@ from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.correlations import BaseCorrelations
-from oqupy.dynamics import Dynamics, MeanFieldSystemDynamics
+from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.operators import commutator, acommutator
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField, MeanFieldSystem
@@ -476,7 +476,7 @@ class MeanFieldTempo(BaseAPIClass):
         algorithm when integrating each system Liouvillian. If None
         then the Liouvillian is not integrated but sampled twice to
         to construct the system propagators at a timestep.
-    hhamiltonian_epsrel: float (default = config.INTEGRATE_EPSREL)
+    hamiltonian_epsrel: float (default = config.INTEGRATE_EPSREL)
         The relative error tolerance for the adaptive algorithm
         when integrating the system Liouvillian.
     backend_config: dict (default = None)
@@ -523,10 +523,12 @@ class MeanFieldTempo(BaseAPIClass):
         assert isinstance(initial_state_list, list), "initial_state_list "\
                 "must be a list of state matrices"
 
-        if len(mean_field_system.system_list) != len(initial_state_list):
-            raise ValueError("The lengths of the list of systems "\
-                    f"({len(mean_field_system.system_list)}) and the list of"\
-                    f"states ({len(initial_state_list)}) must match.")
+        assert len(mean_field_system.system_list) == len(bath_list) ==\
+                len(initial_state_list),\
+                    f"The lengths of bath_list ({len(bath_list)}) "\
+                    f"and initial_state_list ({len(initial_state_list)}) must "\
+                    f"match the number ({len(mean_field_system.system_list)}) "\
+                    "of systems in mean_field_system."
 
         # List of tuples, one for each system: (system, initial_state, bath, hs_dim)
         parsed_system_tuple_list = [_tempo_physical_input_parse(
@@ -628,11 +630,11 @@ class MeanFieldTempo(BaseAPIClass):
                 config=self._backend_config)
 
     def _init_dynamics(self):
-        """Create a MeanFieldSystemDynamics object with metadata from the
+        """Create a MeanFieldDynamics object with metadata from the
         MeanFieldTempo object. """
         name = None
         description = "computed from '{}' MeanFieldTempo".format(self.name)
-        self._dynamics = MeanFieldSystemDynamics(name=name,
+        self._dynamics = MeanFieldDynamics(name=name,
                                   description=description)
 
     def _get_propagators(self, system):
@@ -715,7 +717,7 @@ class MeanFieldTempo(BaseAPIClass):
     def compute(
             self,
             end_time: float,
-            progress_type: Text = None) -> MeanFieldSystemDynamics:
+            progress_type: Text = None) -> MeanFieldDynamics:
         """
         Propagate (or continue to propagate) the TEMPO tensor networks for
         each system and coherent field to time `end_time`.
@@ -731,8 +733,8 @@ class MeanFieldTempo(BaseAPIClass):
 
         Returns
         -------
-        dynamics: MeanFieldSystemDynamics
-            The instance of `MeanFieldSystemDynamics` describing each system 
+        dynamics: MeanFieldDynamics
+            The instance of `MeanFieldDynamics` describing each system 
             dynamics and the field dynamics accounting for the interaction with
             the environment.
         """
@@ -762,8 +764,8 @@ class MeanFieldTempo(BaseAPIClass):
 
         return self._dynamics
 
-    def get_dynamics(self) -> MeanFieldSystemDynamics:
-        """Returns the instance of MeanFieldSystemDynamics associated with the
+    def get_dynamics(self) -> MeanFieldDynamics:
+        """Returns the instance of MeanFieldDynamics associated with the
         tempo object.
         """
         return self._dynamics

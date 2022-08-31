@@ -73,7 +73,7 @@ from oqupy.correlations import CustomSD
 from oqupy.correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
-from oqupy.dynamics import MeanFieldSystemDynamics
+from oqupy.dynamics import MeanFieldDynamics
 
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning

@@ -26,7 +26,7 @@ from oqupy.system import TimeDependentSystemWithField, TimeDependentSystemWithFi
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
-from oqupy.dynamics import Dynamics, MeanFieldSystemDynamics
+from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem, System, TimeDependentSystem
 from oqupy.system import MeanFieldSystem
@@ -188,7 +188,7 @@ def compute_dynamics_with_field(
         record_all: Optional[bool] = True,
         epsrel: Optional[float] = INTEGRATE_EPSREL,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-        progress_type: Optional[Text] = None) -> MeanFieldSystemDynamics:
+        progress_type: Optional[Text] = None) -> MeanFieldDynamics:
     """
     Compute each system and field dynamics for a MeanFieldSystem 
     (optional) process tensors for each system to account for their 
@@ -232,14 +232,18 @@ def compute_dynamics_with_field(
 
     Returns
     -------
-    dynamics_with_field: MeanFieldSystemDynamics
-        The instance of `MeanFieldSystemDynamics` describing each system 
+    dynamics_with_field: MeanFieldDynamics
+        The instance of `MeanFieldDynamics` describing each system 
         dynamics and the field dynamics accounting for the interaction with
         the environment.
     """
 
     # initialize objects as lists where necessary
     initial_field = check_convert(initial_field, complex, "initial_field")
+
+    assert isinstance(mean_field_system, MeanFieldSystem), \
+            "Argument 'mean_field_system' must be an instance of " \
+            "MeanFieldSystem."
     
     if initial_state_list is None:
         initial_state_list = [None for system in mean_field_system.system_list]
@@ -253,18 +257,20 @@ def compute_dynamics_with_field(
 
     # -- input parsing -- 
     # check that lengths of lists provided are consistent
-    if len(mean_field_system.system_list) != len(initial_state_list) \
-            != len(control_list):
-        raise ValueError(f"The lengths of the list of systems "\
-                f"({len(mean_field_system.system_list)}),",
-                f"the list of states ({len(initial_state_list)})",
-                f"and the list of controls ({len(control_list)}) are inconsistent.")
+    assert len(mean_field_system.system_list) == len(initial_state_list) \
+            == len(control_list),\
+                f"The length of initial_state_list "\
+                f"({len(initial_state_list)}) and control_list "\
+                f"({len(control_list)}) must match the number of "\
+                f"systems ({len(mean_field_system.system_list)}) in "\
+                f"mean_field_system."  
 
     assert isinstance(process_tensor_list, list), "process_tensor_list must be a "\
             " (possibly nested) list of BaseProcessTensor objects."
     assert len(process_tensor_list) == len(mean_field_system.system_list), \
-            "The length of process_tensor_list must match the number of "\
-            "TimeDependentSystemWithField objects in mean_field_system."
+            f"The length of process_tensor_list ({len(process_tensor_list)}) "\
+            "must match the number of systems "\
+            f"({len(mean_field_system.system_list)}) in mean_field_system."
 
     # list of tuples in the order: system, initial_state, dt, num_steps, 
     # start_time, process_tensors, control, record_all, hs_dim
@@ -453,7 +459,7 @@ def compute_dynamics_with_field(
     else:
         times = [start_time + len(system_states_list)*dt]
         
-    return MeanFieldSystemDynamics(
+    return MeanFieldDynamics(
                 times=list(times), system_states_list=system_states_list,
                 fields=field_list)
 

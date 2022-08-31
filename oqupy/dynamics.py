@@ -180,7 +180,7 @@ class Dynamics(BaseDynamics):
         if self._shape is None:
             self._shape = tmp_shape
 
-class MeanFieldSystemDynamics(BaseAPIClass):
+class MeanFieldDynamics(BaseAPIClass):
     """
     Represents a time evolution of one or more system density matrices
     and a coherent field comprising a MeanFieldSystem.
@@ -205,7 +205,7 @@ class MeanFieldSystemDynamics(BaseAPIClass):
                  fields: Optional[List[complex]] = None,
                  name: Optional[Text] = None,
                  description: Optional[Text] = None) -> None:
-        """Create a MeanFieldSystemDynamics object"""
+        """Create a MeanFieldDynamics object"""
         super().__init__(name, description)
         self._times = []
         self._fields = []
@@ -254,7 +254,7 @@ class MeanFieldSystemDynamics(BaseAPIClass):
             assert len(system_states) == len(self._system_dynamics),\
                 "Number of states to add ({}) does not match number of "\
                 "Dynamics objects in "\
-                "MeanFieldSystemDynamics ({})".format(
+                "MeanFieldDynamics ({})".format(
                         len(system_states), len(self._system_dynamics))
         # Record state - state parsing done by Dynamics objects
         for i, system_dynamics in enumerate(self._system_dynamics):
