@@ -191,7 +191,7 @@ def compute_dynamics_with_field(
         progress_type: Optional[Text] = None) -> MeanFieldDynamics:
     """
     Compute each system and field dynamics for a MeanFieldSystem
-    (optional) process tensors for each system to account for their
+    with (optional) process tensors for each system to account for their
     interaction with their environment.
 
     Parameters
@@ -245,19 +245,20 @@ def compute_dynamics_with_field(
             "Argument 'mean_field_system' must be an instance of " \
             "MeanFieldSystem."
 
+    number_of_systems = len(mean_field_system.system_list)
     if initial_state_list is None:
-        initial_state_list = [None for system in mean_field_system.system_list]
+        initial_state_list = [None] * number_of_systems
 
     if control_list is None:
-        control_list = [None for system in mean_field_system.system_list]
+        control_list = [None] * number_of_systems
 
     if process_tensor_list is None:
-        process_tensor_list = [None for system in mean_field_system.system_list]
+        process_tensor_list = [None] * number_of_systems
 
 
     # -- input parsing --
     # check that lengths of lists provided are consistent
-    assert len(mean_field_system.system_list) == len(initial_state_list) \
+    assert number_of_systems == len(initial_state_list) \
             == len(control_list),\
                 f"The length of initial_state_list "\
                 f"({len(initial_state_list)}) and control_list "\
@@ -287,7 +288,7 @@ def compute_dynamics_with_field(
                               "record_all", "hs_dim"]
 
     # create dictionary for parsed parameters with each key being a parameter
-    #corresponding to a relevant list as its value
+    # corresponding to a relevant list as its value
     parsed_parameters_dict = {}
     for i, parsed_parameter_name in enumerate(parsed_parameter_names):
         parsed_parameters_dict[parsed_parameter_name] = []

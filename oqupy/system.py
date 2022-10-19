@@ -231,7 +231,7 @@ class TimeDependentSystem(BaseSystem):
 
 class TimeDependentSystemWithField(BaseSystem):
     r"""
-    Represents a system with dependent on time and an auxiliary field
+    Represents a system which depends on time and an auxiliary field
     (complex scalar). Forms one component of a `MeanFieldSystem`.
 
     It is possible to include time (but not field) dependent Lindblad
@@ -305,8 +305,9 @@ class TimeDependentSystemWithField(BaseSystem):
             field: complex,
             field_derivative: complex):
         r"""
-        Return the value of the field a time `(t-t0)` given the value at `t0` in
-        a linear approximation using the value of the time derivative at `t0`.
+        Return the value of the field at time `(t-t0)` given the value at `t0`
+        in a linear approximation using the value of the time derivative at
+        `t0`.
         """
         return field + field_derivative * (t-t0)
 
@@ -316,7 +317,8 @@ class TimeDependentSystemWithField(BaseSystem):
             field: complex,
             field_derivative: complex) -> ndarray:
         r"""
-        Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` such that
+        Returns the Liouvillian super-operator
+        :math:`\mathcal{L}(t, \langle a \rangle)` such that
 
         .. math::
 
@@ -362,11 +364,11 @@ class TimeDependentSystemWithField(BaseSystem):
         try:
             field = complex(field)
         except Exception as e:
-            raise TypeError("Arguments field must be complex") from e
+            raise TypeError("Argument field must be complex") from e
         try:
             field_derivative = complex(field_derivative)
         except Exception as e:
-            raise TypeError("Arguments field_derivative must be complex") from e
+            raise TypeError("Argument field_derivative must be complex") from e
         hamiltonian = self._linearised_hamiltonian(t0, t, field,
                                                    field_derivative)
         gammas = [gamma(t) for gamma in self._gammas]

@@ -295,7 +295,7 @@ class MeanFieldDynamics(BaseAPIClass):
                 np.array(self._fields, dtype=NpDtype)
 
     @property
-    def system_dynamics(self):
+    def system_dynamics(self) -> List[Dynamics]:
         """Dynamics object for each system. """
         return self._system_dynamics
 
