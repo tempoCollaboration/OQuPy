@@ -82,7 +82,7 @@ def test_tempo_bad_input():
     initial_state = tempo.operators.spin_dm("z+")
 
     tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo_sys_A = tempo.Tempo(system=system,
                                   bath=bath,
                                   parameters=tempo_param_A,
