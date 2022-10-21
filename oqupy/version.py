@@ -15,4 +15,4 @@
 This module just defines what version of OQuPy we are currently looking at.
 """
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
