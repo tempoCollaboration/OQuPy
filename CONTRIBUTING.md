@@ -180,8 +180,8 @@ added to the project, namely:
 
 
 #### 7.1 test all
-You can run all three tests by simply running tox in the directory of your
-local clone:
+You can run all three tests by simply running tox in the OQuPy base directory of 
+your local clone:
 ```bash
 $ tox
 ```
@@ -204,7 +204,8 @@ and you can pick a specific test to run with:
 $ tox -e py36 say_hi_test.py
 ```
 Here `say_hi_test.py` is the path of the test file *relative to the tests
-directory and this command should be run from the OQuPy base directory!*
+directory* and here (and below) the command must again be run from the base
+directory of the repository.
 
 #### 7.3 test pylint only
 This checks the code [code style](https://www.python.org/dev/peps/pep-0008/)
@@ -217,7 +218,7 @@ and you can check the style of a specific file with:
 $ tox -e style say_hi.py
 ```
 where `say_hi.py` is the path of the file *relative to the oqupy
-directory and this command should be run from the OQuPy base directory!*
+directory.*
 
 #### 7.4 test sphinx only
 This invokes a sphinx-build to build the HTML documentation

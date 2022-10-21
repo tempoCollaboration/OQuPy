@@ -33,8 +33,6 @@ from copy import copy
 
 import numpy as np
 from numpy import ndarray
-from scipy.linalg import expm
-from scipy import integrate
 
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
@@ -76,6 +74,14 @@ class TempoParameters(BaseAPIClass):
     add_correlation_time: float
         Additional correlation time to include in the last influence
         functional as explained in [Strathearn2017].
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating a time-dependent Liouvillian. If
+        None then the Liouvillian is not integrated but sampled twice
+        to construct the system propagators at a timestep.
+    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating a time-dependent Liouvillian.
     name: str (default = None)
         An optional name for the tempo parameters object.
     description: str (default = None)
@@ -87,6 +93,8 @@ class TempoParameters(BaseAPIClass):
             dkmax: int,
             epsrel: float,
             add_correlation_time: Optional[float] = None,
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a TempoParameters object."""
@@ -94,6 +102,8 @@ class TempoParameters(BaseAPIClass):
         self.dkmax = dkmax
         self.epsrel = epsrel
         self.add_correlation_time = add_correlation_time
+        self.subdiv_limit = subdiv_limit
+        self.liouvillian_epsrel = liouvillian_epsrel
         super().__init__(name, description)
 
     def __str__(self) -> Text:
@@ -187,6 +197,47 @@ class TempoParameters(BaseAPIClass):
     @add_correlation_time.deleter
     def add_correlation_time(self) -> None:
         self._add_correlation_time = None
+
+    @property
+    def subdiv_limit(self) -> int:
+        """The maximum number of subdivisions used during the adaptive
+        algorithm when integrating a time-dependent Liouvillian."""
+        return self._subdiv_limit
+
+    @subdiv_limit.setter
+    def subdiv_limit(self, new_subdiv_limit: int) -> None:
+        try:
+            if new_subdiv_limit is None:
+                tmp_subdiv_limit = None
+            else:
+                tmp_subdiv_limit = int(new_subdiv_limit)
+        except Exception as e:
+            raise AssertionError("Argument 'subdiv_limit' must be int or "\
+                    "None.") from e
+        assert tmp_subdiv_limit is None or tmp_subdiv_limit > 0, \
+            "Argument 'subdiv_limit' must be bigger than or equal to 0 or None."
+        self._subdiv_limit = tmp_subdiv_limit
+
+    @subdiv_limit.deleter
+    def subdiv_limit(self) -> None:
+        self._subdiv_limit = None
+
+    @property
+    def liouvillian_epsrel(self) -> float:
+        """The relative error tolerance for integrating a time-dependent
+        system Liouvillian. """
+        return self._liouvillian_epsrel
+
+    @liouvillian_epsrel.setter
+    def liouvillian_epsrel(self, new_liouvillian_epsrel: float) -> None:
+        try:
+            tmp_liouvillian_epsrel = float(new_liouvillian_epsrel)
+        except Exception as e:
+            raise AssertionError("Argument 'liouvillian_epsrel' must be "\
+                    "float.") from e
+        assert tmp_liouvillian_epsrel > 0.0, \
+            "Argument 'liouvillian_epsrel' must be bigger than 0."
+        self._liouvillian_epsrel = tmp_liouvillian_epsrel
 
 class BaseTempo(BaseAPIClass):
     """
@@ -362,7 +413,11 @@ class Tempo(BaseTempo):
         initial_state = self._initial_state.reshape(dim**2)
         influence = self._influence
         unitary_transform = self._bath.unitary_transform
-        propagators = self._propagators
+        propagators = self._system.get_propagators(
+                self._parameters.dt,
+                self._start_time,
+                self._parameters.subdiv_limit,
+                self._parameters.liouvillian_epsrel)
         sum_north = np.array([1.0]*(dim**2))
         sum_west = np.array([1.0]*(dim**2))
         dkmax = self._parameters.dkmax
@@ -384,19 +439,6 @@ class Tempo(BaseTempo):
         description = "computed from '{}' tempo".format(self.name)
         self._dynamics = Dynamics(name=name,
                                   description=description)
-
-    def _propagators(self, step: int):
-        """Create the system propagators (first and second half) for the time
-        step `step`. """
-        dt = self._parameters.dt
-        if isinstance(self._system, TimeDependentSystem):
-            t = self._time(step)
-            first_step = expm(self._system.liouvillian(t+dt/4.0)*dt/2.0)
-            second_step = expm(self._system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
-        else:
-            first_step = expm(self._system.liouvillian()*dt/2.0)
-            second_step = expm(self._system.liouvillian()*dt/2.0)
-        return first_step, second_step
 
     def compute(
             self,
@@ -471,14 +513,6 @@ class MeanFieldTempo(BaseAPIClass):
         The initial field value.
     start_time: float (default = 0.0)
         The start time.
-    subdiv_limit: int (default = config.SUBDIV_LIMIT)
-        The maximum number of subdivisions used during the adaptive
-        algorithm when integrating each system Liouvillian. If None
-        then the Liouvillian is not integrated but sampled twice to
-        to construct the system propagators at a timestep.
-    hamiltonian_epsrel: float (default = config.INTEGRATE_EPSREL)
-        The relative error tolerance for the adaptive algorithm
-        when integrating the system Liouvillian.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -495,8 +529,6 @@ class MeanFieldTempo(BaseAPIClass):
             initial_state_list: List[ndarray],
             initial_field: complex,
             start_time: Optional[float] = 0.0,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-            hamiltonian_epsrel: Optional[float] = INTEGRATE_EPSREL,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
@@ -555,51 +587,46 @@ class MeanFieldTempo(BaseAPIClass):
         self._initial_field = check_convert(initial_field, complex,
                                             "initial_field")
         self._start_time = check_convert(start_time, float, "start_time")
-        # Input checks on these parameters (used when commutating the
-        # propagators for each system) are done in the setter functions below.
-        # naming here to avoid conflict with parameters in self._parameters:w
-        self._hamiltonian_epsrel = hamiltonian_epsrel
-        self._subdiv_limit = subdiv_limit
         # Prepare the MeanFieldTempo backend
         self._prepare_backend()
 
     # These properties should move to TempoParameters when adaptive propagator
     # construction has been added to Tempo. It doesn't make sense to allow
     # these properties to be changed unless propagator_list is regenerated
-    @property
-    def hamiltonian_epsrel(self) -> float:
-        """The epsrel used to construct system propagators by integration. """
-        return self._hamiltonian_epsrel
+    #@property
+    #def liouvillian_epsrel(self) -> float:
+    #    """The epsrel used to construct system propagators by integration. """
+    #    return self._liouvillian_epsrel
 
-    @hamiltonian_epsrel.setter
-    def hamiltonian_epsrel(self, new_hamiltonian_epsrel: float) -> None:
-        try:
-            tmp_hamiltonian_epsrel = float(new_hamiltonian_epsrel)
-        except Exception as e:
-            raise AssertionError("Argument 'hamiltonian_epsrel' must"\
-                    " be float.") from e
-        assert tmp_hamiltonian_epsrel > 0.0, \
-            "Argument 'hamiltonian_epsrel' must be positive."
-        self._hamiltonian_epsrel = tmp_hamiltonian_epsrel
+    #@liouvillian_epsrel.setter
+    #def liouvillian_epsrel(self, new_liouvillian_epsrel: float) -> None:
+    #    try:
+    #        tmp_liouvillian_epsrel = float(new_liouvillian_epsrel)
+    #    except Exception as e:
+    #        raise AssertionError("Argument 'liouvillian_epsrel' must"\
+    #                " be float.") from e
+    #    assert tmp_liouvillian_epsrel > 0.0, \
+    #        "Argument 'liouvillian_epsrel' must be positive."
+    #    self._liouvillian_epsrel = tmp_liouvillian_epsrel
 
-    @property
-    def subdiv_limit(self) -> Union[float, None]:
-        """The subdiv_limit used to construct system propagators. """
-        return self._subdiv_limit
+    #@property
+    #def subdiv_limit(self) -> Union[float, None]:
+    #    """The subdiv_limit used to construct system propagators. """
+    #    return self._subdiv_limit
 
-    @subdiv_limit.setter
-    def subdiv_limit(self, new_subdiv_limit: float) -> None:
-        if new_subdiv_limit is None:
-            self._subdiv_limit = None
-            return
-        try:
-            tmp_subdiv_limit = float(new_subdiv_limit)
-        except Exception as e:
-            raise AssertionError("Argument 'subdiv_limit' must be float.")\
-                    from e
-        assert tmp_subdiv_limit > 0, \
-            "Argument 'subdiv_limit' must be positive."
-        self._subdiv_limit = tmp_subdiv_limit
+    #@subdiv_limit.setter
+    #def subdiv_limit(self, new_subdiv_limit: float) -> None:
+    #    if new_subdiv_limit is None:
+    #        self._subdiv_limit = None
+    #        return
+    #    try:
+    #        tmp_subdiv_limit = float(new_subdiv_limit)
+    #    except Exception as e:
+    #        raise AssertionError("Argument 'subdiv_limit' must be float.")\
+    #                from e
+    #    assert tmp_subdiv_limit > 0, \
+    #        "Argument 'subdiv_limit' must be positive."
+    #    self._subdiv_limit = tmp_subdiv_limit
 
     def _prepare_backend(self):
         """Create and initialize the MeanFieldTempo backend. """
@@ -610,7 +637,11 @@ class MeanFieldTempo(BaseAPIClass):
                 for bath in self._parsed_parameters_dict["bath"]]
         unitary_transform_list = [bath.unitary_transform
                 for bath in self._parsed_parameters_dict["bath"]]
-        propagators_list = [self._get_propagators(system)
+        propagators_list = [system.get_propagators(
+                self._parameters.dt,
+                self._start_time,
+                self._parameters.subdiv_limit,
+                self._parameters.liouvillian_epsrel)
             for system in self._parsed_parameters_dict["system"]]
         compute_field = self._compute_field
         compute_field_derivative = self._compute_field_derivative
@@ -643,41 +674,6 @@ class MeanFieldTempo(BaseAPIClass):
         self._dynamics = MeanFieldDynamics(name=name,
                                   description=description)
 
-    def _get_propagators(self, system):
-        """Prepare propagator functions for a system according to subdiv_limit.
-        """
-        # SAMPLE
-        if self._subdiv_limit is None:
-            def propagators(step: int, field: complex,
-                    field_derivative: complex):
-                dt = self._parameters.dt
-                t = self._time(step)
-                first_step = expm(system.liouvillian(t, t+dt/4.0,
-                    field, field_derivative)*dt/2.0)
-                second_step = expm(system.liouvillian(t, t+dt*3.0/4.0,
-                    field, field_derivative)*dt/2.0)
-                return first_step, second_step
-        # ADAPTIVE
-        else:
-            def propagators(step: int, field:complex,
-                    field_derivative: complex):
-                dt = self._parameters.dt
-                t = self._time(step)
-                liouvillian = lambda tau: system.liouvillian(t, tau,
-                        field, field_derivative)
-                first_step = expm(integrate.quad_vec(f=liouvillian,
-                                             a=t,
-                                             b=t+dt/2.0,
-                                             epsrel=self._hamiltonian_epsrel,
-                                             limit=self._subdiv_limit)[0])
-                second_step = expm(integrate.quad_vec(f=liouvillian,
-                                             a=t+dt/2.0,
-                                             b=t+dt,
-                                             epsrel=self._hamiltonian_epsrel,
-                                             limit=self._subdiv_limit)[0])
-                return first_step, second_step
-        return propagators
-
     def _get_influence(self, bath) -> Callable[[int], ndarray]:
         """Create function that calculates the influence functional
         matrix for a bath. """
@@ -693,22 +689,18 @@ class MeanFieldTempo(BaseAPIClass):
         return influence
 
     def _compute_field(self, step:int, state_list: List[ndarray],
-            field: complex, next_state_list: Optional[List[ndarray]] = None):
+            field: complex, next_state_list: List[ndarray]):
         r"""Compute the field value for the time step `step`. Uses 2nd
-        order Runge-Kutta if next_state_list is provided. """
+        order Runge-Kutta. """
         dt = self._parameters.dt
         t = self._time(step)
 
         state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(state_list, self._parsed_parameters_dict["hs_dim"])]
-
-        # could equally call self._compute_field_derivative
-        rk1 = self._mean_field_system.field_eom(t, state_list, field)
-        if next_state_list is None:
-            return rk1 * dt
         next_state_list = [state.reshape((hs_dim, hs_dim)) for state, hs_dim
                 in zip(next_state_list, self._parsed_parameters_dict["hs_dim"])]
-        #  perform second order Runge-Kutta calculation
+
+        rk1 = self._mean_field_system.field_eom(t, state_list, field)
         rk2 = self._mean_field_system.field_eom(t + dt, next_state_list,
                                                 field + rk1 * dt)
         return field + dt * (rk1 + rk2) / 2

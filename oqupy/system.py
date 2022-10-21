@@ -22,6 +22,9 @@ from functools import lru_cache
 import numpy as np
 from numpy import ndarray
 
+from scipy.linalg import expm
+from scipy import integrate
+
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype
 import oqupy.operators as opr
@@ -114,6 +117,16 @@ class System(BaseSystem):
         return _liouvillian(self._hamiltonian,
                             self._gammas,
                             self._lindblad_operators)
+
+    def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system. """
+        first_step = expm(self.liouvillian()*dt/2.0)
+        second_step = expm(self.liouvillian()*dt/2.0)
+        def propagators(step: int):
+            """Create the system propagators (first and second half) for
+            the time step `step`  """
+            return first_step, second_step
+        return propagators
 
     @property
     def hamiltonian(self) -> ndarray:
@@ -213,6 +226,39 @@ class TimeDependentSystem(BaseSystem):
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
         return _liouvillian(hamiltonian, gammas, lindblad_operators)
+
+    def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system according to
+        subdiv_limit. """
+        if subdiv_limit is None:
+            # Sample Liouvillian at dt/4, 3dt/4 to make propagators for first-
+            # and second-half timesteps
+            def propagators(step: int):
+                """Create the system propagators (first and second half) for
+                the time step `step`  """
+                t = start_time + step * dt
+                first_step = expm(self.liouvillian(t+dt/4.0)*dt/2.0)
+                second_step = expm(self.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+                return first_step, second_step
+        else:
+            # Integrate Liouvillian to make propagators for first- and
+            # second-half timesteps
+            def propagators(step: int):
+                """Create the system propagators (first and second half) for
+                the time step `step`  """
+                t = start_time + step * dt
+                first_step = expm(integrate.quad_vec(self.liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(self.liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
+        return propagators
 
     @property
     def hamiltonian(self) -> Callable[[float], ndarray]:
@@ -373,6 +419,41 @@ class TimeDependentSystemWithField(BaseSystem):
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
         return _liouvillian(hamiltonian, gammas, lindblad_operators)
 
+    def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system according to
+        subdiv_limit. """
+        if subdiv_limit is None:
+            # Sample Liouvillian at dt/4, 3dt/4 to make propagators for first-
+            # and second-half timesteps
+            def propagators(step: int, field: complex,
+                            field_derivative: complex):
+                t = start_time + step * dt
+                first_step = expm(self.liouvillian(t, t+dt/4.0,
+                    field, field_derivative)*dt/2.0)
+                second_step = expm(self.liouvillian(t, t+dt*3.0/4.0,
+                    field, field_derivative)*dt/2.0)
+                return first_step, second_step
+        else:
+            # Integrate Liouvillian to make propagators for first- and
+            # second-half timesteps
+            def propagators(step: int, field: complex,
+                            field_derivative: complex):
+                t = start_time + step * dt
+                liouvillian = lambda tau: self.liouvillian(t, tau,
+                        field, field_derivative)
+                first_step = expm(integrate.quad_vec(liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
+        return propagators
+
     @property
     def hamiltonian(self) -> Callable[[float, complex], ndarray]:
         """The system Hamiltonian. """
@@ -420,7 +501,7 @@ class MeanFieldSystem(BaseAPIClass):
 
         super().__init__(name, description)
         tmp_system_list = _check_mean_field_system_list(system_list)
-        self.system_list = tmp_system_list
+        self._system_list = tmp_system_list
 
         # input check for field equation of motion
         tmp_dimension_list = [system.hamiltonian(1.0, 1.0+1.0j).shape[0]
@@ -428,6 +509,11 @@ class MeanFieldSystem(BaseAPIClass):
         tmp_field_eom = _check_mean_field_system_eom(tmp_dimension_list,
                                                      field_eom)
         self._field_eom = tmp_field_eom
+
+    @property
+    def system_list(self) -> List[TimeDependentSystemWithField]:
+        """The list of systems interacting with a common field. """
+        return self._system_list
 
     @property
     def field_eom(self) -> Callable[[float, List[ndarray], complex], complex]:

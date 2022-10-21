@@ -20,8 +20,6 @@ from typing import List, Optional, Text, Tuple, Union
 import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
-from scipy.linalg import expm
-from scipy import integrate
 from oqupy.system import TimeDependentSystemWithField
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
@@ -50,6 +48,8 @@ def compute_dynamics(
                                        BaseProcessTensor]] = None,
         control: Optional[Control] = None,
         record_all: Optional[bool] = True,
+        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+        liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
         progress_type: Optional[Text] = None) -> Dynamics:
     """
     Compute the system dynamics for a given system Hamiltonian, accounting
@@ -74,6 +74,14 @@ def compute_dynamics(
         Optional control operations.
     record_all: bool
         If `false` function only computes the final state.
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating the system Liouvillian. If None
+        then the Liouvillian is not integrated but sampled twice to
+        to construct the system propagators at each timestep.
+    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating the system Liouvillian.
     progress_type: str (default = None)
         The progress report type during the computation. Types are:
         {``silent``, ``simple``, ``bar``}. If `None` then
@@ -95,10 +103,9 @@ def compute_dynamics(
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
-    hamiltonian_epsrel = None # adaptive propagators not implemented
     subdiv_limit = None
-    propagators = _get_propagators(system, dt, start_time, hamiltonian_epsrel,
-                                   subdiv_limit)
+    propagators = system.get_propagators(dt, start_time, subdiv_limit,
+                                       liouvillian_epsrel)
 
     # -- prepare controls --
     def controls(step: int):
@@ -186,8 +193,8 @@ def compute_dynamics_with_field(
         start_time: Optional[float] = 0.0,
         control_list: Optional[List[Control]] = None,
         record_all: Optional[bool] = True,
-        epsrel: Optional[float] = INTEGRATE_EPSREL,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+        liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
         progress_type: Optional[Text] = None) -> MeanFieldDynamics:
     """
     Compute each system and field dynamics for a MeanFieldSystem
@@ -222,7 +229,7 @@ def compute_dynamics_with_field(
         algorithm when integrating the system Liouvillian. If None
         then the Liouvillian is not integrated but sampled twice to
         to construct the system propagators at each timestep.
-    hamiltonian_epsrel: float (default = config.INTEGRATE_EPSREL)
+    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
         The relative error tolerance for the adaptive algorithm
         when integrating the system Liouvillian.
     progress_type: str (default = None)
@@ -302,19 +309,15 @@ def compute_dynamics_with_field(
                      in parsed_parameters_dict["process_tensors"]]
 
     # -- prepare propagators for each system --
-    propagators_list = [_get_propagators(system, dt, start_time, epsrel,
-                                         subdiv_limit)
+    propagators_list = [system.get_propagators(dt, start_time, subdiv_limit,
+                                         liouvillian_epsrel)
                         for system in parsed_parameters_dict["system"]]
 
     # -- prepare compute field --
     def compute_field(t: float, dt: float, state_list: List[ndarray],
-            field: complex, next_state_list: Optional[List[ndarray]] = None):
+            field: complex, next_state_list: List[ndarray]):
 
-        #  perform first order Runge-Kutta calculation
         rk1 = mean_field_system.field_eom(t, state_list, field)
-        if next_state_list is None:
-            return rk1 * dt
-        #  perform second order Runge-Kutta calculation
         rk2 = mean_field_system.field_eom(t + dt, next_state_list,
                                           field + rk1 * dt)
         return field + dt * (rk1 + rk2) / 2
@@ -468,53 +471,6 @@ def compute_dynamics_with_field(
     return MeanFieldDynamics(
                 times=list(times), system_states_list=system_states_list,
                 fields=field_list)
-
-def _get_propagators(
-        system, dt, start_time, epsrel, subdiv_limit):
-    """Prepare propagators according to system type and subdiv_limit"""
-    if isinstance(system, System):
-        first_step = expm(system.liouvillian()*dt/2.0)
-        second_step = expm(system.liouvillian()*dt/2.0)
-        def propagators(step: int):
-            return first_step, second_step
-    elif isinstance(system, TimeDependentSystem):
-        def propagators(step: int):
-            t = start_time + step * dt
-            first_step = expm(system.liouvillian(t+dt/4.0)*dt/2.0)
-            second_step = expm(system.liouvillian(t+dt*3.0/4.0)*dt/2.0)
-            return first_step, second_step
-    elif isinstance(system, TimeDependentSystemWithField):
-        if subdiv_limit is None:
-            def propagators(step: int, field: complex,
-                            field_derivative: complex):
-                t = start_time + step * dt
-                first_step = expm(system.liouvillian(t, t+dt/4.0,
-                    field, field_derivative)*dt/2.0)
-                second_step = expm(system.liouvillian(t, t+dt*3.0/4.0,
-                    field, field_derivative)*dt/2.0)
-                return first_step, second_step
-        else:
-            def propagators(step: int, field: complex,
-                            field_derivative: complex):
-                t = start_time + step * dt
-                liouvillian = lambda tau: system.liouvillian(t, tau,
-                        field, field_derivative)
-                first_step = expm(integrate.quad_vec(liouvillian,
-                                                     a=t,
-                                                     b=t+dt/2.0,
-                                                     epsrel=epsrel,
-                                                     limit=subdiv_limit)[0])
-                second_step = expm(integrate.quad_vec(liouvillian,
-                                                      a=t+dt/2.0,
-                                                      b=t+dt,
-                                                      epsrel=epsrel,
-                                                      limit=subdiv_limit)[0])
-                return first_step, second_step
-    else:
-        raise NotImplementedError("System type {} unknown".format(
-            system.__name__))
-    return propagators
-
 
 def _compute_dynamics_input_parse(
         with_field, system, initial_state, dt, num_steps, start_time,

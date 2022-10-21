@@ -34,9 +34,13 @@ class :class:`oqupy.system.BaseSystem`
     time dependent Markovian decay.
 
   class :class:`oqupy.system.TimeDependentSystemWithField`
-    Encodes a time dependent system Hamiltonian (and possibly some additional
-    time dependent Markovian decay) that couples to a classical field which
-    in turn evolves according to a prescribed Heisenberg equation of motion.
+    Encodes a system Hamiltonian (and possibly some additional time dependent
+    Markovian decay) that depends on both time and the expectation value of
+    a field (a complex scalar) to which the system couples.
+
+class :class:`oqupy.system.MeanFieldSystem`
+  Encodes a collection of time dependent systems that couple to a common
+  field which evolves according to a prescribed equation of motion.
 
 class :class:`oqupy.system.SystemChain`
   Encodes a 1D chain of systems and possibly some additional Markovian decay.
@@ -129,9 +133,9 @@ function :func:`oqupy.contractions.compute_dynamics`
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 
 function :func:`oqupy.contractions.compute_dynamics_with_field`
-  Compute a :class:`oqupy.dynamics.DynamicsWithField` object for given
-  :class:`oqupy.system.TimeDependentSystemWithField` and
-  :class:`oqupy.control.Control` and
+  Compute a :class:`oqupy.dynamics.MeanFieldDynamics` object for given
+  :class:`oqupy.system.MeanFieldSystem` and list of
+  :class:`oqupy.control.Control` objects and list of
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 
 function :func:`oqupy.contractions.compute_correlations`
@@ -174,9 +178,10 @@ class :class:`oqupy.dynamics.Dynamics`
   Object that encodes the discretized evolution of the reduced density matrix
   of a system.
 
-class :class:`oqupy.dynamics.DynamicsWithField`
+class :class:`oqupy.dynamics.MeanFieldDynamics`
   Object that encodes the discretized evolution of the reduced density matrix
-  of a system together with that of a classical field.
+  of one or more time-dependent systems together with that of a classical field
+  coupled to the systems.
 
 class :class:`oqupy.process_tensor.BaseProcessTensor`
   Object that encodes a so called process tensor (which captures all possible
