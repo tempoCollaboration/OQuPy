@@ -36,7 +36,7 @@ from numpy import ndarray
 
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype, MAX_DKMAX, DEFAULT_TOLERANCE
+from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.correlations import BaseCorrelations
@@ -239,117 +239,7 @@ class TempoParameters(BaseAPIClass):
             "Argument 'liouvillian_epsrel' must be bigger than 0."
         self._liouvillian_epsrel = tmp_liouvillian_epsrel
 
-class BaseTempo(BaseAPIClass):
-    """
-    Base class for all TEMPO objects.
-
-    Parameters
-    ----------
-    bath: Bath
-        The Bath (includes the coupling operator to the system).
-    parameters: TempoParameters
-        The parameters for the TEMPO computation.
-    initial_state: ndarray
-        The initial density matrix of the system.
-    start_time: float
-        The start time.
-    backend_config: dict (default = None)
-        The configuration of the backend. If `backend_config` is
-        ``None`` then the default backend configuration is used.
-    name: str (default = None)
-        An optional name for the tempo object.
-    description: str (default = None)
-        An optional description of the tempo object.
-    """
-    def __init__(
-            self,
-            bath: Bath,
-            parameters: TempoParameters,
-            initial_state: ndarray,
-            start_time: float,
-            backend_config: Optional[Dict] = None,
-            name: Optional[Text] = None,
-            description: Optional[Text] = None) -> None:
-        """Create a BaseTempo object. """
-
-        assert isinstance(bath, Bath), \
-            "Argument 'bath' must be an instance of Bath."
-        self._bath = bath
-
-        self._correlations = self._bath.correlations
-
-        assert isinstance(parameters, TempoParameters), \
-            "Argument 'parameters' must be an instance of TempoParameters."
-        self._parameters = parameters
-
-        try:
-            tmp_initial_state = np.array(initial_state, dtype=NpDtype)
-            tmp_initial_state.setflags(write=False)
-        except Exception as e:
-            raise AssertionError("Initial state must be numpy array.") from e
-        assert len(tmp_initial_state.shape) == 2, \
-            "Initial state is not a matrix."
-        assert tmp_initial_state.shape[0] == \
-            tmp_initial_state.shape[1], \
-            "Initial state is not a square matrix."
-        self._initial_state = tmp_initial_state
-        self._dimension = self._initial_state.shape[0]
-
-        try:
-            tmp_start_time = float(start_time)
-        except Exception as e:
-            raise AssertionError("Start time must be a float.") from e
-        self._start_time = tmp_start_time
-
-        if backend_config is None:
-            self._backend_config = TEMPO_BACKEND_CONFIG
-        else:
-            self._backend_config = backend_config
-
-        assert self._bath.dimension == self._dimension, \
-            "Hilbertspace dimensions are unequal: " \
-            + "initial state ({}), ".format(self._dimension) \
-            + "and bath coupling ({}).".format(self._bath.dimension)
-
-        super().__init__(name, description)
-
-        tmp_coupling_comm = commutator(self._bath._coupling_operator)
-        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
-        self._coupling_comm = tmp_coupling_comm.diagonal()
-        self._coupling_acomm = tmp_coupling_acomm.diagonal()
-
-        self._dynamics = None
-        self._backend_instance = None
-
-    def _influence(self, dk: int) -> ndarray:
-        """Create the influence functional matrix for a time step distance
-        of dk. """
-        return influence_matrix(
-            dk,
-            parameters=self._parameters,
-            correlations=self._correlations,
-            coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm)
-
-    def _time(self, step: int) -> float:
-        """Return the time that corresponds to the time step `step`. """
-        return self._start_time + float(step)*self._parameters.dt
-
-    def _get_num_step(self,
-            start_step: int,
-            end_time: float) -> Tuple[int, int]:
-        """Return the number of steps required from start_step to reach
-        end_time"""
-        end_step = int((end_time - self._start_time)/self._parameters.dt)
-        num_step = max(0, end_step - start_step)
-        return num_step
-
-    @property
-    def dimension(self) -> ndarray:
-        """Hilbert space dimension. """
-        return copy(self._dimension)
-
-class Tempo(BaseTempo):
+class Tempo(BaseAPIClass):
     """
     Class representing the entire TEMPO tensornetwork as introduced in
     [Strathearn2018].
@@ -385,27 +275,74 @@ class Tempo(BaseTempo):
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a Tempo object. """
+        super().__init__(name, description)
 
-        assert isinstance(system, BaseSystem), \
-            "Argument 'system' must be an instance of BaseSystem."
-        self._system = system
+        assert isinstance(bath, Bath), \
+            "Argument 'bath' must be an instance of Bath."
+        self._bath = bath
+        self._system, self._initial_state, self._bath, self._dimension = \
+                _tempo_physical_input_parse(False, system, initial_state, bath)
 
-        super().__init__(
-                bath,
-                parameters,
-                initial_state,
-                start_time,
-                backend_config,
-                name,
-                description)
+        self._correlations = self._bath.correlations
+
+        assert isinstance(parameters, TempoParameters), \
+            "Argument 'parameters' must be an instance of TempoParameters."
+        self._parameters = parameters
+
+        try:
+            tmp_start_time = float(start_time)
+        except Exception as e:
+            raise AssertionError("Start time must be a float.") from e
+        self._start_time = tmp_start_time
+
+        if backend_config is None:
+            self._backend_config = TEMPO_BACKEND_CONFIG
+        else:
+            self._backend_config = backend_config
+
+        tmp_coupling_comm = commutator(self._bath._coupling_operator)
+        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
+        self._coupling_comm = tmp_coupling_comm.diagonal()
+        self._coupling_acomm = tmp_coupling_acomm.diagonal()
+
+        self._dynamics = None
+        self._backend_instance = None
 
         assert self._system.dimension == self._dimension, \
-            "Hilbertspace dimensions are unequal: " \
+               "Hilbertspace dimensions are unequal: " \
             + "system ({}), ".format(self._system.dimension) \
             + "initial state ({}), ".format(self._dimension) \
             + "and bath coupling ({}), ".format(self._bath.dimension)
 
         self._prepare_backend()
+
+    def _influence(self, dk: int) -> ndarray:
+        """Create the influence functional matrix for a time step distance
+        of dk. """
+        return influence_matrix(
+            dk,
+            parameters=self._parameters,
+            correlations=self._correlations,
+            coupling_acomm=self._coupling_acomm,
+            coupling_comm=self._coupling_comm)
+
+    def _time(self, step: int) -> float:
+        """Return the time that corresponds to the time step `step`. """
+        return self._start_time + float(step)*self._parameters.dt
+
+    def _get_num_step(self,
+            start_step: int,
+            end_time: float) -> Tuple[int, int]:
+        """Return the number of steps required from start_step to reach
+        end_time"""
+        end_step = int((end_time - self._start_time)/self._parameters.dt)
+        num_step = max(0, end_step - start_step)
+        return num_step
+
+    @property
+    def dimension(self) -> ndarray:
+        """Hilbert space dimension. """
+        return copy(self._dimension)
 
     def _prepare_backend(self):
         """Create and initialize the TEMPO backend. """
@@ -491,8 +428,9 @@ class Tempo(BaseTempo):
 
 class MeanFieldTempo(BaseAPIClass):
     r"""
-    Class for the evolution of a collection of system (types) within a
-    mean-field system together with a coherent field coupled to the systems.
+    Class for the evolution of a collection of system
+    (`TimeDependentSystemWithField`) within a mean-field system
+    (`MeanFieldSystem` ) together with a coherent field coupled to the systems.
     Based on the TEMPO tensor network with field evolution introduced in
     [FowplerWright2021].
 
@@ -590,43 +528,6 @@ class MeanFieldTempo(BaseAPIClass):
         # Prepare the MeanFieldTempo backend
         self._prepare_backend()
 
-    # These properties should move to TempoParameters when adaptive propagator
-    # construction has been added to Tempo. It doesn't make sense to allow
-    # these properties to be changed unless propagator_list is regenerated
-    #@property
-    #def liouvillian_epsrel(self) -> float:
-    #    """The epsrel used to construct system propagators by integration. """
-    #    return self._liouvillian_epsrel
-
-    #@liouvillian_epsrel.setter
-    #def liouvillian_epsrel(self, new_liouvillian_epsrel: float) -> None:
-    #    try:
-    #        tmp_liouvillian_epsrel = float(new_liouvillian_epsrel)
-    #    except Exception as e:
-    #        raise AssertionError("Argument 'liouvillian_epsrel' must"\
-    #                " be float.") from e
-    #    assert tmp_liouvillian_epsrel > 0.0, \
-    #        "Argument 'liouvillian_epsrel' must be positive."
-    #    self._liouvillian_epsrel = tmp_liouvillian_epsrel
-
-    #@property
-    #def subdiv_limit(self) -> Union[float, None]:
-    #    """The subdiv_limit used to construct system propagators. """
-    #    return self._subdiv_limit
-
-    #@subdiv_limit.setter
-    #def subdiv_limit(self, new_subdiv_limit: float) -> None:
-    #    if new_subdiv_limit is None:
-    #        self._subdiv_limit = None
-    #        return
-    #    try:
-    #        tmp_subdiv_limit = float(new_subdiv_limit)
-    #    except Exception as e:
-    #        raise AssertionError("Argument 'subdiv_limit' must be float.")\
-    #                from e
-    #    assert tmp_subdiv_limit > 0, \
-    #        "Argument 'subdiv_limit' must be positive."
-    #    self._subdiv_limit = tmp_subdiv_limit
 
     def _prepare_backend(self):
         """Create and initialize the MeanFieldTempo backend. """
