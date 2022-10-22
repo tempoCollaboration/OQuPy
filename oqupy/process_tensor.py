@@ -533,10 +533,10 @@ class FileProcessTensor(BaseProcessTensor):
 
         # transforms
         transform_in = np.array(self._f["transform_in"])
-        if transform_in == 0.0:
+        if np.allclose(transform_in, np.array([0.0])):
             transform_in = None
         transform_out = np.array(self._f["transform_out"])
-        if transform_out == 0.0:
+        if np.allclose(transform_out, np.array([0.0])):
             transform_out = None
 
         # initial tensor and mpo/cap/lam tensors
