@@ -3,8 +3,7 @@ Mean-Field Dynamics
 
 In this tutorial we discuss to use TEMPO and the process tensor approach
 to compute the dynamics of a many-body system of the type introduced in
-[FowlerWright2022]
-(`arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`__).
+`FowlerWright2022 <%5BPhys.%20Rev.%20Lett.%20129,%20173001%20(2022).%5D(https://doi.org/10.1103/PhysRevLett.129.173001)>`__.
 
 -  `launch
    binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fmf_tempo.ipynb>`__
@@ -48,7 +47,7 @@ in version **0.3.0**.
 
 .. parsed-literal::
 
-    '0.3.0'
+    '0.3.3'
 
 
 
@@ -66,10 +65,9 @@ The following matrices will be useful below:
 ------------------------------
 
 Our goal will be to reproduce a line from **Fig. 2a.** of
-[FowlerWright2022]
-(`arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`__) which shows the
-photon number dynamics for the driven-dissipative system of molecules in
-a single-mode cavity.
+`FowlerWright2022 <%5BPhys.%20Rev.%20Lett.%20129,%20173001%20(2022).%5D(https://doi.org/10.1103/PhysRevLett.129.173001)>`__
+which shows the photon number dynamics for the driven-dissipative system
+of molecules in a single-mode cavity.
 
 Many-body system and environment Hamiltonian
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -125,7 +123,7 @@ relevant to **Fig. 2a.** given in those units are:
 together with the rates
 
 -  :math:`\kappa = 15.2 \frac{1}{\text{ps}}` … field decay
--  :math:`\Gamma_\downarrow = 30.4 \frac{1}{\text{ps}}` … electronic
+-  :math:`\Gamma_\downarrow = 15.2 \frac{1}{\text{ps}}` … electronic
    dissipation
 -  :math:`\Gamma_\uparrow \in (0.2\Gamma_\downarrow, 0.8\Gamma_\downarrow)`
    … electronic pumping
@@ -163,7 +161,7 @@ convenience.
     Omega = 303.9
     
     kappa = 15.2
-    Gamma_down = 30.4
+    Gamma_down = 15.2
     Gamma_up = 0.8 * Gamma_down
 
 System Hamiltonian and field equation of motion after the mean-field reduction
@@ -206,46 +204,58 @@ together with the equation of motion for the field
 
 Therefore in order to calculate the dynamics we need to encode the
 field’s equation of motion in addition to the Hamiltonian for a single
-two level-system :math:`\rho_i` (which we identify as the ‘system’ in
-our TEMPO computation).
-
-In OQuPy, the relevant classes and methods hence all have the
-``WithField`` suffix: ``TimeDependentSystemWithField``,
-``DynamicsWithField``, ``TempoWithField`` (TEMPO) and
-``compute_dynamics_with_field()`` (PT-TEMPO).
+two level-system :math:`\rho_i`. This is done in OQuPy using the
+``MeanFieldSystem`` class.
 
 2. Creating time-dependent system with field and bath objects
 -------------------------------------------------------------
 
-A ``TimedependentSystemWithField`` object requires two physical inputs:
-a Hamiltonian, which is a function of time :math:`t` and field
-:math:`\langle a \rangle` (in that order), and a equation of motion for
-the field, which is a function of time :math:`t`, system state
-:math:`\rho_i` and field :math:`\langle a \rangle`. Positional arguments
-are used for these functions, so the order of arguments matters whilst
-their name does not:**\***
+A ``MeanFieldSystem`` object is initialised with a field equation of
+motion and one or more ``TimeDependentSystemWithField`` which objects in
+turn are characterised by Hamiltonians with both time and field
+depedence. In the present example, we need only one
+``TimeDependentSystemWithField``, for the single molecule Hamiltonian
+:math:`H_{\text{MF}}`, but other problems may require multiple such
+objects e.g. to encode different types of molecules.
+
+| We firstly need to define:
+| - a function ``field_eom(t, state_list, a)`` which takes as arguments
+  time, a *list* of states as square matrices (numpy ndarrays) and a
+  field - a function ``H_MF(t, a)`` which takes a time and a field
+
+Since positional arguments are used in the definition of these
+functions, the order of arguments matter, whereas their names do not. In
+particular, both functions must have a time variable for their first
+argument, even if there happens to be no explicit time-dependence in the
+problem (there is no ‘``SystemWithField``’ class in OQuPy).
 
 .. code:: ipython3
 
     def H_MF(t, a):
         return 0.5 * omega_0 * sigma_z +\
             0.5 * Omega * (a * sigma_plus + np.conj(a) * sigma_minus)
-    def field_eom(t, state, a):
+    def field_eom(t, state_list, a):
+        state = state_list[0]
         expect_val = np.matmul(sigma_minus, state).trace()
         return -(1j * omega_c + kappa) * a - 0.5j * Omega * expect_val
 
-Note :math:`\rho_i` is provided as a :math:`2\times2` matrix, hence to
-compute the expectation :math:`\langle \sigma^- \rangle` we used matrix
-multiplication with :math:`\sigma^-` and took the trace. It’s a good
-idea to test these functions:
+Note that the second argument of ``field_eom`` must be a list, even in
+the case of a single ``TimeDependentSystemWithField`` object (this
+requirement is a feature of most functionality involving the
+``MeanFieldSystem`` class, as we will see below). Thus, in order to
+compute the expectation :math:`\langle \sigma^- \rangle` we took the
+first element of this list - a :math:`2\times2` matrix - before
+multiplying by :math:`\sigma^-` and taking the trace.
+
+It is a good idea to test these functions:
 
 .. code:: ipython3
 
     test_field = 1.0+1.0j
     test_time = 0.01
-    test_state = np.array([[0.0,2j],[-2j,1.0]])
+    test_state_list = [ np.array([[0.0,2j],[-2j,1.0]]) ]
     print('H_eval =', H_MF(test_time, test_field))
-    print('EOM_eval =', field_eom(test_time, test_state, test_field))
+    print('EOM_eval =', field_eom(test_time, test_state_list, test_field))
 
 
 .. parsed-literal::
@@ -255,7 +265,7 @@ idea to test these functions:
     EOM_eval = (258.29999999999995+15.2j)
 
 
-Secondly, we need to specify Lindblad operators for the pumping and
+In, we need to specify Lindblad operators for the pumping and
 dissipation processes:
 
 .. code:: ipython3
@@ -264,19 +274,33 @@ dissipation processes:
     lindblad_operators = [ lambda t: sigma_minus, lambda t: sigma_plus]
 
 Here the rates and Lindblad operators must be callables taking a single
-argument - time - even though in our example there is no time-dependence
-(see **\*** below). The system-field object is then constructed with
+argument - time - again, even though in our example there is no explicit
+time-dependence. The ``TimeDependentSystemWithField`` object is then
+constructed as
 
 .. code:: ipython3
 
     system = oqupy.TimeDependentSystemWithField(
-            H_MF,
-            field_eom,
+            hamiltonian=H_MF,
             gammas=gammas,
             lindblad_operators=lindblad_operators)
 
+and the encompasing ``MeanFieldSystem`` as
+
+.. code:: ipython3
+
+    system_list = [system] # a list of TimeDependentiSystemWithField objects
+    mean_field_system = oqupy.MeanFieldSystem(
+                        system_list=system_list,
+                        field_eom=field_eom)
+
+where we note the single system must be placed in a list,
+``system_list``, before being passed to the ``MeanFieldSystem``
+constructor.
+
 Correlations and a Bath object are created in the same way as in any
-other TEMPO computation (refer to preceding tutorials):
+other TEMPO computation (refer to preceding tutorials), although here we
+will need the Bath in a list:
 
 .. code:: ipython3
 
@@ -286,11 +310,7 @@ other TEMPO computation (refer to preceding tutorials):
                                     cutoff_type='gaussian',
                                     temperature=T)
     bath = oqupy.Bath(0.5 * sigma_z, correlations)
-
-**\*** In particular both functions must have a first argument
-representing time, even if the problem - as here - has no explicit
-time-dependence (for codebase simplicity there is no ``SystemWithField``
-class).
+    bath_list = [bath]
 
 3. TEMPO computation for single dynamics
 ----------------------------------------
@@ -302,6 +322,7 @@ and state used in the Letter:
 
     initial_field = np.sqrt(0.05) # Note n_0 = <a^dagger a>(0) = 0.05
     initial_state = np.array([[0,0],[0,1]]) # spin down
+    initial_state_list = [initial_state] # initial state must be provided in a list
 
 To reduce the computation time we simulate only the first 0.3 ps of the
 dynamics with much rougher convergence parameters compared to the
@@ -313,38 +334,39 @@ letter.
     start_time = 0.0
     end_time = 0.3
 
-The ``oqupy.TempoWithField.compute`` method may then be used to compute
-the dynamics in exactly the same way a call to ``oqupy.Tempo.compute``
-is used to compute the dynamics for an ordinary ``System`` or
-``TimeDependentSystem``:
+The ``oqupy.MeanFieldTempo.compute`` method may then be used to compute
+the dynamics in an analogous way a call to ``oqupy.Tempo.compute`` is
+used to compute the dynamics for an ordinary ``System``:
 
 .. code:: ipython3
 
-    tempo_sys = oqupy.TempoWithField(system=system,
-                                     bath=bath,
-                                     initial_state=initial_state,
+    tempo_sys = oqupy.MeanFieldTempo(mean_field_system=mean_field_system,
+                                     bath_list=[bath],
+                                     initial_state_list=initial_state_list,
                                      initial_field=initial_field,
                                      start_time=start_time,
                                      parameters=tempo_parameters)
-    dynamics_with_field = tempo_sys.compute(end_time=end_time)
+    mean_field_dynamics = tempo_sys.compute(end_time=end_time)
 
 
 .. parsed-literal::
 
     --> TEMPO-with-field computation:
-    100.0%   93 of   93 [########################################] 00:00:17
-    Elapsed time: 17.9s
+    100.0%   93 of   93 [########################################] 00:00:19
+    Elapsed time: 20.0s
 
 
-``TempoWithField.compute`` returns a ``DynamicsWithField`` object
-containing both the state matrices and field values at each timestep, in
-addition to the timesteps themselves:
+``MeanFieldTempo.compute`` returns a ``MeanFieldDynamics`` object
+containing an array of timesteps, the field values at these timesteps,
+and a list of ordinary ``Dynamics`` objects, one for each of
+``TimeDependentSystemWithField`` objects (here only one):
 
 .. code:: ipython3
 
-    times = dynamics_with_field.times
-    states = dynamics_with_field.states
-    fields = dynamics_with_field.fields
+    times = mean_field_dynamics.times
+    fields = mean_field_dynamics.fields
+    system_dynamics = mean_field_dynamics.system_dynamics[0]
+    states = system_dynamics.states
 
 We plot a the square value of the fields i.e. the photon number,
 producing the first part of a single line of **Fig. 2a.**:
@@ -363,17 +385,17 @@ producing the first part of a single line of **Fig. 2a.**:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f4ca4982ba8>
+    <matplotlib.legend.Legend at 0x7f6c669133c8>
 
 
 
 
-.. image:: output_33_1.png
+.. image:: output_34_1.png
 
 
 If you have the time you can calculate the dynamics to
 :math:`t=1.3\,\text{ps}` as in the Letter and check that, even for these
-very rough parameters, the results are reasonable close to being
+very rough parameters, the results are reasonably close to being
 converged with respect to ``dt``, ``dkmax`` and ``epsrel``.
 
 While you could repeat the TEMPO computation for each pump strength
@@ -407,21 +429,21 @@ bath via
 
     --> PT-TEMPO computation:
     100.0%   93 of   93 [########################################] 00:00:06
-    Elapsed time: 6.1s
+    Elapsed time: 6.6s
 
 
 Refer the Time Dependence and PT-TEMPO tutorial for further discussion
 of the process tensor.
 
 To calculate the dynamics for the 4 different pump strengths in **Fig.
-2a.**, we define a separate system with field object for each pump
-strength. Only the ``gammas`` array needs to be modified constructor
-calls:
+2a.**, we define a separate ``MeanFieldSystem`` object for each pump
+strength. Only the ``gammas`` array needs to be modified between sets of
+constructor calls:
 
 .. code:: ipython3
 
     pump_ratios = [0.2, 0.4, 0.6, 0.8]
-    systems = []
+    mean_field_systems = []
     for ratio in pump_ratios:
         Gamma_up = ratio * Gamma_down
         # N.B. a default argument is used to avoid the late-binding closure issue
@@ -429,28 +451,29 @@ calls:
         gammas = [ lambda t: Gamma_down, lambda t, Gamma_up=Gamma_up: Gamma_up]
          # Use the same Hamiltonian, equation of motion and Lindblad operators
         system = oqupy.TimeDependentSystemWithField(H_MF,
-            field_eom,
             gammas=gammas,
             lindblad_operators=lindblad_operators)
-        systems.append(system)
+        mean_field_system = oqupy.MeanFieldSystem(system_list=[system],
+                                                 field_eom=field_eom)
+        mean_field_systems.append(mean_field_system)
 
 We can then use ``compute_dynamics_with_field`` to compute the dynamics
 at each :math:`\Gamma_\uparrow` for the particular initial condition
-using the process tensor calculated above:
+using the process tensor (now in a list) calculated above:
 
 .. code:: ipython3
 
     t_list = []
     n_list = []
-    for i,system in enumerate(systems):
-        dynamics = oqupy.compute_dynamics_with_field(
-            process_tensor=process_tensor,
-            system=system,
-            initial_state=initial_state,
+    for i, mean_field_system in enumerate(mean_field_systems):
+        mean_field_dynamics = oqupy.compute_dynamics_with_field(
+            process_tensor_list=[process_tensor],
+            mean_field_system=mean_field_system,
+            initial_state_list=[initial_state],
             initial_field=initial_field,
             start_time=0.0)
-        t = dynamics.times
-        fields = dynamics.fields
+        t = mean_field_dynamics.times
+        fields = mean_field_dynamics.fields
         n = np.abs(fields)**2
         t_list.append(t)
         n_list.append(n)
@@ -459,17 +482,17 @@ using the process tensor calculated above:
 .. parsed-literal::
 
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:13
-    Elapsed time: 13.8s
-    --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:13
-    Elapsed time: 13.7s
+    100.0%   93 of   93 [########################################] 00:00:15
+    Elapsed time: 15.0s
     --> Compute dynamics with field:
     100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.4s
+    Elapsed time: 14.0s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:13
-    Elapsed time: 13.8s
+    100.0%   93 of   93 [########################################] 00:00:15
+    Elapsed time: 15.8s
+    --> Compute dynamics with field:
+    100.0%   93 of   93 [########################################] 00:00:14
+    Elapsed time: 14.6s
 
 
 Finally, plotting the results:
@@ -490,11 +513,26 @@ Finally, plotting the results:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f4ca48cab38>
+    <matplotlib.legend.Legend at 0x7f6c66697b38>
 
 
 
 
-.. image:: output_42_1.png
+.. image:: output_43_1.png
 
+
+5. Summary
+----------
+
+To summarise the classes and methods for calculating mean-field
+dynamics:
+
+-  A Hamiltonian with time :math:`t` and field :math:`a` dependence is
+   used to construct a ``TimeDependentSystemWithField`` object
+-  One or more ``TimeDependentSystemWithField`` objects and a field
+   equation of motion forms a ``MeanFieldSystem``
+-  ``oqupy.MeanFieldTempo.compute`` or ``.compute_dynamics_with_field``
+   (process tensor) may be used to calculate ``MeanFieldDynamics``
+-  ``MeanFieldDynamics`` comprises one of more system ``Dynamics`` and a
+   set of field values ``fields``.
 
