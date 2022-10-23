@@ -140,3 +140,6 @@ dmypy.json
 
 # Test data exceptions
 !tests/data/test_*
+
+# pdf output from example scripts
+examples/*.pdf

@@ -22,27 +22,40 @@ import oqupy as tempo
 
 def test_tempo_parameters():
     tempo_param = tempo.TempoParameters(
-        0.1, None, 1.0e-5, None, "rough", "bla")
+        0.1, None, 1.0e-5, None, None, 2.0e-5, "rough", "bla")
     str(tempo_param)
     assert tempo_param.dt == 0.1
     assert tempo_param.dkmax == None
     assert tempo_param.epsrel == 1.0e-5
+    assert tempo_param.subdiv_limit == None
+    assert tempo_param.liouvillian_epsrel == 2.0e-5
     tempo_param.dt = 0.05
     tempo_param.dkmax = 42
     tempo_param.epsrel = 1.0e-6
+    tempo_param.subdiv_limit = 256
+    tempo_param.liouvillian_epsrel = 2.0e-6
     assert tempo_param.dt == 0.05
     assert tempo_param.dkmax == 42
     assert tempo_param.epsrel == 1.0e-6
+    assert tempo_param.liouvillian_epsrel == 2.0e-6
     del tempo_param.dkmax
     assert tempo_param.dkmax == None
+    del tempo_param.subdiv_limit
+    assert tempo_param.subdiv_limit == None
 
 def test_tempo_parameters_bad_input():
     with pytest.raises(AssertionError):
-        tempo.TempoParameters("x", 42, 1.0e-5, None, "rough", "bla")
+        tempo.TempoParameters("x", 42, 1.0e-5, None, None, 2.0e-6, "rough", "bla")
     with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, "x", 1.0e-5, None, "rough", "bla")
+        tempo.TempoParameters(0.1, "x", 1.0e-5, None, None, 2.0e-6, "rough", "bla")
     with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, "x", None, "rough", "bla")
+        tempo.TempoParameters(0.1, 42, "x", None, None, 2.0e-6, "rough", "bla")
+    with pytest.raises(AssertionError):
+        tempo.TempoParameters(0.1, 42, 1.0e-05, "x", None, 2.0e-6, "rough", "bla")
+    with pytest.raises(AssertionError):
+        tempo.TempoParameters(0.1, 42, 1.0e-05, None, "x", 2.0e-6, "rough", "bla")
+    with pytest.raises(AssertionError):
+        tempo.TempoParameters(0.1, 42, 1.0e-05, None, None, "x", "rough", "bla")
 
 def test_tempo():
     start_time = -0.3
@@ -82,7 +95,7 @@ def test_tempo_bad_input():
     initial_state = tempo.operators.spin_dm("z+")
 
     tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo_sys_A = tempo.Tempo(system=system,
                                   bath=bath,
                                   parameters=tempo_param_A,
@@ -198,43 +211,87 @@ def test_tempo_dynamics_reference():
     assert len(t_2) > len(t_1)
 
 def test_tempo_with_field():
-	system = tempo.TimeDependentSystemWithField(
-				lambda t, field: 0.2 * tempo.operators.sigma("x") * np.abs(field),
-				lambda t, state, field: -0.1*field -0.1j * np.matmul(
-				tempo.operators.sigma("x"), state).trace().real)
-	correlations = tempo.PowerLawSD(alpha=0.1,
-								zeta=1,
-								cutoff=5.0,
-								cutoff_type='gaussian',
-								temperature=0.1)
-	bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
-	tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-7))
-	tempo_sys = tempo.TempoWithField(system=system,
-						bath=bath,
-						initial_state=tempo.operators.spin_dm("z-"),
-						initial_field=1.0+1.0j,
-						start_time=0.0,
-						parameters=tempo_parameters)
-	dynamics = tempo_sys.compute(end_time=0.5, progress_type="silent")
-	assert tempo_sys.dimension == 2
-	assert isinstance(dynamics, tempo.dynamics.DynamicsWithField)
-	assert len(dynamics.times == 6)
-	# bad input
-	with pytest.raises(AssertionError):
-		# wrong system type
-		wrong_system = tempo.TimeDependentSystem(
-			lambda t: 0.2 * tempo.operators.sigma("x")
-			)
-		tempo.TempoWithField(system=wrong_system,
-						bath=bath,
-						initial_state=tempo.operators.spin_dm("z-"),
-						initial_field=1.0+1.0j,
-						start_time=0.0,
-						parameters=tempo_parameters)
-	with pytest.raises(TypeError):
-		# no initial field
-		tempo.TempoWithField(system=system,
-						bath=bath,
-						initial_state=tempo.operators.spin_dm("z-"),
-						start_time=0.0,
-						parameters=tempo_parameters)
+    system = tempo.TimeDependentSystemWithField(
+            lambda t, field: 0.2 * tempo.operators.sigma("x") * np.abs(field))
+    field_eom = lambda t, states, field: -0.1*field -0.1j * np.matmul(
+            tempo.operators.sigma("x"), states[0]).trace().real
+    mean_field_system = tempo.MeanFieldSystem([system], field_eom)
+    correlations = tempo.PowerLawSD(alpha=0.1,
+                                zeta=1,
+                                cutoff=5.0,
+                                cutoff_type='gaussian',
+                                temperature=0.1)
+    bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-7))
+    tempo_sys = tempo.MeanFieldTempo(mean_field_system=mean_field_system,
+                        bath_list=[bath],
+                        initial_state_list=[tempo.operators.spin_dm("z-")],
+                        initial_field=1.0+1.0j,
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    mean_field_dynamics = tempo_sys.compute(end_time=0.5, progress_type="silent")
+    assert isinstance(mean_field_dynamics, tempo.dynamics.MeanFieldDynamics)
+    assert len(mean_field_dynamics.times == 6)
+    # bad input
+    wrong_system = tempo.TimeDependentSystemWithField(
+            lambda t, a: 0.2 * tempo.operators.sigma("x")
+            )
+    with pytest.raises(AssertionError):
+        # wrong system type
+        tempo.MeanFieldTempo(mean_field_system=wrong_system,
+                        bath_list=[bath],
+                        initial_state_list=[tempo.operators.spin_dm("z-")],
+                        initial_field=1.0+1.0j,
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    with pytest.raises(TypeError):
+        # no initial field
+        tempo.MeanFieldTempo(mean_field_system=[system],
+                        bath_list=[bath],
+                        initial_state_list=[tempo.operators.spin_dm("z-")],
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    with pytest.raises(AssertionError):
+        # forget lists
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system,
+                        bath_list=bath,
+                        initial_state_list=[tempo.operators.spin_dm("z-")],
+                        initial_field=1.0,
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    with pytest.raises(AssertionError):
+        # forget lists
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system,
+                        bath_list=[bath],
+                        initial_state_list=tempo.operators.spin_dm("z-"),
+                        initial_field=1.0,
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    big_initial_state = np.eye(3)
+    with pytest.raises(ValueError):
+        # wrong initial state dimension
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system,
+                        bath_list=[bath],
+                        initial_state_list=[big_initial_state],
+                        initial_field=1.0,
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    mean_field_system2 = tempo.MeanFieldSystem([system, system],
+                                         field_eom)
+    with pytest.raises(AssertionError):
+        # wrong number of baths
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system2,
+                        bath_list=[bath],
+                        initial_state_list=[tempo.operators.sigma('z'),
+                          tempo.operators.sigma('z')],
+                        initial_field=1.0,
+                        start_time=0.0,
+                        parameters=tempo_parameters)
+    with pytest.raises(AssertionError):
+        # wrong number of initial states
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system2,
+                        bath_list=[bath, bath],
+                        initial_state_list=[tempo.operators.sigma('z')],
+                        initial_field=1.0,
+                        start_time=0.0,
+                        parameters=tempo_parameters)

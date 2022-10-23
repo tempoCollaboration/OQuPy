@@ -33,6 +33,9 @@ __all__ = [
     'guess_tempo_parameters',
     'helpers',
     'import_process_tensor',
+    'MeanFieldDynamics',
+    'MeanFieldSystem',
+    'MeanFieldTempo',
     'NumericsError',
     'NumericsWarning',
     'operators',
@@ -45,7 +48,6 @@ __all__ = [
     'System',
     'SystemChain',
     'Tempo',
-    'TempoWithField',
     'tempo_compute',
     'TempoParameters',
     'TimeDependentSystem',
@@ -72,7 +74,7 @@ from oqupy.correlations import CustomSD
 from oqupy.correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
-from oqupy.dynamics import DynamicsWithField
+from oqupy.dynamics import MeanFieldDynamics
 
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
@@ -95,12 +97,13 @@ from oqupy.system import System
 from oqupy.system import SystemChain
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
+from oqupy.system import MeanFieldSystem
 
 from oqupy.pt_tempo import PtTempo
 from oqupy.pt_tempo import pt_tempo_compute
 
 from oqupy.tempo import Tempo
 from oqupy.tempo import TempoParameters
-from oqupy.tempo import TempoWithField
+from oqupy.tempo import MeanFieldTempo
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import tempo_compute

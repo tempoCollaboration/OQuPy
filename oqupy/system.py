@@ -22,6 +22,9 @@ from functools import lru_cache
 import numpy as np
 from numpy import ndarray
 
+from scipy.linalg import expm
+from scipy import integrate
+
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype
 import oqupy.operators as opr
@@ -82,6 +85,7 @@ class System(BaseSystem):
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a System object. """
+
         # input check for Hamiltonian.
         self._hamiltonian = _check_hamiltonian(hamiltonian)
         tmp_dimension = self._hamiltonian.shape[0]
@@ -113,6 +117,16 @@ class System(BaseSystem):
         return _liouvillian(self._hamiltonian,
                             self._gammas,
                             self._lindblad_operators)
+
+    def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system. """
+        first_step = expm(self.liouvillian()*dt/2.0)
+        second_step = expm(self.liouvillian()*dt/2.0)
+        def propagators(step: int):
+            """Create the system propagators (first and second half) for
+            the time step `step`  """
+            return first_step, second_step
+        return propagators
 
     @property
     def hamiltonian(self) -> ndarray:
@@ -213,6 +227,39 @@ class TimeDependentSystem(BaseSystem):
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
         return _liouvillian(hamiltonian, gammas, lindblad_operators)
 
+    def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system according to
+        subdiv_limit. """
+        if subdiv_limit is None:
+            # Sample Liouvillian at dt/4, 3dt/4 to make propagators for first-
+            # and second-half timesteps
+            def propagators(step: int):
+                """Create the system propagators (first and second half) for
+                the time step `step`  """
+                t = start_time + step * dt
+                first_step = expm(self.liouvillian(t+dt/4.0)*dt/2.0)
+                second_step = expm(self.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+                return first_step, second_step
+        else:
+            # Integrate Liouvillian to make propagators for first- and
+            # second-half timesteps
+            def propagators(step: int):
+                """Create the system propagators (first and second half) for
+                the time step `step`  """
+                t = start_time + step * dt
+                first_step = expm(integrate.quad_vec(self.liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(self.liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
+        return propagators
+
     @property
     def hamiltonian(self) -> Callable[[float], ndarray]:
         """The system Hamiltonian. """
@@ -230,13 +277,11 @@ class TimeDependentSystem(BaseSystem):
 
 class TimeDependentSystemWithField(BaseSystem):
     r"""
-    Represents an explicitly time dependent system (without any coupling
-    to a non-Markovian bath) with a coherent field (a complex scalar)
-    :math:`\langle a \rangle` that evolves according to a specified
-    equation of motion :math:`\partial_t\langle a \rangle`.
+    Represents a system which depends on time and an auxiliary field
+    (complex scalar). Forms one component of a `MeanFieldSystem`.
 
-    It is possible to include (also explicitly time dependent) Lindblad
-    terms in the master equation.  The equations of motion for a system
+    It is possible to include time (but not field) dependent Lindblad
+    terms in the master equation. The equations of motion for the system
     density matrix (without any coupling to a non-Markovian bath) is
     then:
 
@@ -250,7 +295,7 @@ class TimeDependentSystemWithField(BaseSystem):
 
     with the  `hamiltionian` :math:`\hat{H}(t, \langle a \rangle)`
     depending on both time :math:`t` and `field` :math:`\langle
-    a \rangle` (in general), the  time dependent rates `gammas`
+    a \rangle`, the  time dependent rates `gammas`
     :math:`\gamma_n(t)` and the time dependent `linblad_operators`
     :math:`\hat{A}_n(t)`.
 
@@ -259,11 +304,6 @@ class TimeDependentSystemWithField(BaseSystem):
     hamiltonian: callable
         System-only Hamiltonian :math:`\hat{H}(t, \langle a \rangle)`
         where :math:`\langle a \rangle` is the field at time :math:`t`.
-    field_eom: callable
-        Field equation of motion :math:`\partial_t
-        \langle a \rangle(t, \rho, \langle a \rangle)`
-        where :math:`\rho` and :math:`\langle a \rangle` are the system
-        density matrix (a square matrix) and field at time :math:`t`.
     gammas: list(callable)
         The rates :math:`\gamma_n(t)`.
     lindblad_operators: list(callable)
@@ -276,7 +316,6 @@ class TimeDependentSystemWithField(BaseSystem):
     def __init__(
             self,
             hamiltonian: Callable[[float, complex], ndarray],
-            field_eom: Callable[[float, ndarray, complex], complex],
             gammas: \
                 Optional[List[Callable[[float], float]]] = None,
             lindblad_operators: \
@@ -284,12 +323,11 @@ class TimeDependentSystemWithField(BaseSystem):
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a TimeDependentSystemWithField object."""
+
         # input check for Hamiltonian
         self._hamiltonian = _check_tfielddependent_hamiltonian(hamiltonian)
         tmp_dimension = self._hamiltonian(1.0, 1.0+1.0j).shape[0]
-        # input check for field equation of motion
-        tmp_field_eom = _check_field_eom(tmp_dimension, field_eom)
-        self._field_eom = tmp_field_eom
+
         # input check gammas and lindblad_operators
         self._gammas, self._lindblad_operators = \
              _check_tdependent_gammas_lindblad_operators(
@@ -298,35 +336,40 @@ class TimeDependentSystemWithField(BaseSystem):
 
         super().__init__(tmp_dimension, name, description)
 
-    def _linearised_hamiltonian(self, t0: float, t: float, state: ndarray,
-            field: complex) -> complex:
+    def _linearised_hamiltonian(self, t0: float, t: float,
+            field: complex,
+            field_derivative: complex) -> complex:
         r"""
         Return value of the system Hamiltonian at time `t` using a linearisation
-        of the field from its value at time `t0`.
+        of the field coupled to the subsystem from its value at time `t0`.
         """
-        return self._hamiltonian(t, self._linearised_field(t0, t, state, field))
+        return self._hamiltonian(t,
+                self._linearised_field(t0, t, field, field_derivative))
 
-    def _linearised_field(self, t0: float, t: float, state: ndarray,
-            field: complex) -> complex:
+    @staticmethod
+    def _linearised_field(t0: float, t: float,
+            field: complex,
+            field_derivative: complex):
         r"""
-        Return the value of the field a time `(t-t0)` given the value at `t0`
-        in a linear approximation using the field equation of motion.
+        Return the value of the field at time `(t-t0)` given the value at `t0`
+        in a linear approximation using the value of the time derivative at
+        `t0`.
         """
-        # field_eom expects a square matrix
-        state = state.reshape((self._dimension, self._dimension))
-        return field + self._field_eom(t0, state, field) * (t-t0)
+        return field + field_derivative * (t-t0)
 
     def liouvillian(self,
             t0: float,
             t: float,
-            state: ndarray,
-            field: complex) -> ndarray:
+            field: complex,
+            field_derivative: complex) -> ndarray:
         r"""
-        Returns the Liouvillian super-operator :math:`\mathcal{L}(t)` such that
+        Returns the Liouvillian super-operator
+        :math:`\mathcal{L}(t, \langle a \rangle)` such that
 
         .. math::
 
-            \mathcal{L}(t)\rho = -i [\hat{H}(t, \langle a \rangle), \rho]
+            \mathcal{L}(t, \langle a \rangle)\rho
+            = -i [\hat{H}(t, \langle a \rangle), \rho]
                 + \sum_n^N \gamma_n \left(
                     \hat{A}_n(t) \rho \hat{A}_n^\dagger(t)
                     - \frac{1}{2} \hat{A}_n^\dagger(t) \hat{A}_n(t) \rho
@@ -338,43 +381,80 @@ class TimeDependentSystemWithField(BaseSystem):
         Parameters
         ----------
         t0: float
-            Start time of the current step
+            Start time of the current step.
         t: float
-            Current time :math:`t`
-        state: ndarray
-            Flattened system density matrix (vector) at time :math:`t`
+            Current time :math:`t`.
         field: complex
             Field value at time :math:`t` obtained from the
             linearisation of the field at :math:`t` using the field
             equation of motion.
+        field_derivative: complex
+            Value of the time derivative of the field at time `t0`
 
         Returns
         -------
         liouvillian : ndarray
-            Liouvillian :math:`\mathcal{L}(t)` at time :math:`t`.
+            Liouvillian :math:`\mathcal{L}(t, \langle a \rangle)` at time
+            :math:`t` using a linearisation of the field `\langle a \rangle`
+            from its value at `t0` to time `t`.
         """
         try:
             t0 = float(t0)
         except Exception as e:
-            raise AssertionError("Argument t0 must be float") from e
+            raise TypeError("Argument t0 must be float") from e
         try:
             t = float(t)
         except Exception as e:
-            raise AssertionError("Argument t must be float") from e
-        assert t >= t0, "Argument t must exceed t0"
+            raise TypeError("Argument t must be float") from e
+        assert t >= t0, "Argument t must equal or exceed t0"
         try:
             field = complex(field)
         except Exception as e:
-            raise AssertionError("Argument field must be complex") from e
-        assert isinstance(state, ndarray), "Argument state must be ndarray"
-        assert state.size ==  self._dimension**2, "State size must match "\
-                "Hilbert space dimension {}".format(self._dimension**2)
-        # flatten if given as a square matrix
-        state = state.reshape((self._dimension**2,))
-        hamiltonian = self._linearised_hamiltonian(t0, t, state, field)
+            raise TypeError("Argument field must be complex") from e
+        try:
+            field_derivative = complex(field_derivative)
+        except Exception as e:
+            raise TypeError("Argument field_derivative must be complex") from e
+        hamiltonian = self._linearised_hamiltonian(t0, t, field,
+                                                   field_derivative)
         gammas = [gamma(t) for gamma in self._gammas]
         lindblad_operators = [l_op(t) for l_op in self._lindblad_operators]
         return _liouvillian(hamiltonian, gammas, lindblad_operators)
+
+    def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system according to
+        subdiv_limit. """
+        if subdiv_limit is None:
+            # Sample Liouvillian at dt/4, 3dt/4 to make propagators for first-
+            # and second-half timesteps
+            def propagators(step: int, field: complex,
+                            field_derivative: complex):
+                t = start_time + step * dt
+                first_step = expm(self.liouvillian(t, t+dt/4.0,
+                    field, field_derivative)*dt/2.0)
+                second_step = expm(self.liouvillian(t, t+dt*3.0/4.0,
+                    field, field_derivative)*dt/2.0)
+                return first_step, second_step
+        else:
+            # Integrate Liouvillian to make propagators for first- and
+            # second-half timesteps
+            def propagators(step: int, field: complex,
+                            field_derivative: complex):
+                t = start_time + step * dt
+                liouvillian = lambda tau: self.liouvillian(t, tau,
+                        field, field_derivative)
+                first_step = expm(integrate.quad_vec(liouvillian,
+                                                     a=t,
+                                                     b=t+dt/2.0,
+                                                     epsrel=epsrel,
+                                                     limit=subdiv_limit)[0])
+                second_step = expm(integrate.quad_vec(liouvillian,
+                                                      a=t+dt/2.0,
+                                                      b=t+dt,
+                                                      epsrel=epsrel,
+                                                      limit=subdiv_limit)[0])
+                return first_step, second_step
+        return propagators
 
     @property
     def hamiltonian(self) -> Callable[[float, complex], ndarray]:
@@ -387,14 +467,60 @@ class TimeDependentSystemWithField(BaseSystem):
         return copy(self._gammas)
 
     @property
-    def field_eom(self) -> Callable[[float, float, ndarray, complex], complex]:
-        """The field equation of motion. """
-        return copy(self._field_eom)
-
-    @property
     def lindblad_operators(self) -> List[Callable[[float], ndarray]]:
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
+
+class MeanFieldSystem(BaseAPIClass):
+    r"""Represents a collection of time dependent systems interacting
+    with a common field. The systems are encoded as
+    `TimeDependentSystemWithField` objects, and the field as a complex
+    scalar :math:`\langle a \rangle` that evolves according to a
+    specified equation of motion :math:`\partial_t\langle a \rangle`.
+
+    Parameters
+    ----------
+    system_list: List[TimeDependentSystemWithField],
+        List of `TimeDependentSystemWithField` objects interacting with
+        a common field :math:`\langle a \rangle`.
+    field_eom: callable
+        Field equation of motion :math:`\partial_t
+        \langle a \rangle(t, [\rho], \langle a \rangle)`
+        where :math:`[\rho]` is a list of square matrices for the state
+        of each system in `system_list` at time :math:`t` and
+        :math:`\langle a \rangle` the field at time :math:`t`.
+    name: str
+        An optional name for the mean-field system.
+    description: str
+        An optional description of the mean-field system.
+    """
+
+    def __init__(self,
+                system_list: List[TimeDependentSystemWithField],
+                field_eom: Callable[[float, List[ndarray], complex], complex],
+                name: Optional[Text] = None,
+                description: Optional[Text] = None) -> None:
+
+        super().__init__(name, description)
+        tmp_system_list = _check_mean_field_system_list(system_list)
+        self._system_list = tmp_system_list
+
+        # input check for field equation of motion
+        tmp_dimension_list = [system.hamiltonian(1.0, 1.0+1.0j).shape[0]
+                              for system in self.system_list]
+        tmp_field_eom = _check_mean_field_system_eom(tmp_dimension_list,
+                                                     field_eom)
+        self._field_eom = tmp_field_eom
+
+    @property
+    def system_list(self) -> List[TimeDependentSystemWithField]:
+        """The list of systems interacting with a common field. """
+        return self._system_list
+
+    @property
+    def field_eom(self) -> Callable[[float, List[ndarray], complex], complex]:
+        """The field equation of motion. """
+        return copy(self._field_eom)
 
 class SystemChain(BaseAPIClass):
     """
@@ -779,18 +905,28 @@ def _check_tdependent_gammas_lindblad_operators(
             + "callables returning numpy arrays.") from e
     return tmp_gammas, tmp_lindblad_operators
 
-def _check_field_eom(dim, field_eom):
-    """Input check a field equation of motion"""
-    test_matrix = _create_density_matrix(dim)
+def _check_mean_field_system_list(system_list):
+    assert isinstance(system_list, list), "Parameter system_list must "\
+            "be a list of TimeDependentSystemWithField objects."
+    for obj in system_list:
+        assert isinstance(obj, TimeDependentSystemWithField), "Each "\
+                "element of system_list must be a "\
+                "TimeDependentSystemWithField object."
+    return system_list
+
+def _check_mean_field_system_eom(dim_list, field_eom):
+    """Input check a field equation of motion for a mean-field-system"""
+    test_matrix_list = [_create_density_matrix(dim) for dim in dim_list]
     test_field = 1.0+1.0j
     test_time = 1.0
     try:
-        value = field_eom(test_time, test_matrix, test_field)
+        value = field_eom(test_time, test_matrix_list, test_field)
         complex(value)
     except Exception as e:
         raise AssertionError("Field equation of motion must "\
-                "take a time, (dim,dim) matrix and field value "\
-                "and return a (complex) scalar.") from e
+                "take a time, a list of matrices with shapes\n "\
+                + str([f"({dim}, {dim})" for dim in dim_list]) \
+                + " and return a complex scalar.") from e
     return field_eom
 
 def _liouvillian(hamiltonian, gammas, lindblad_operators):
