@@ -47,7 +47,7 @@ in version **0.3.0**.
 
 .. parsed-literal::
 
-    '0.3.3'
+    '0.4.0'
 
 
 
