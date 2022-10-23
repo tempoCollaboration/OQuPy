@@ -432,7 +432,7 @@ class MeanFieldTempo(BaseAPIClass):
     (`TimeDependentSystemWithField`) within a mean-field system
     (`MeanFieldSystem` ) together with a coherent field coupled to the systems.
     Based on the TEMPO tensor network with field evolution introduced in
-    [FowplerWright2021].
+    [FowlerWright2022].
 
     Parameters
     ----------
@@ -902,7 +902,7 @@ def tempo_compute(
         description: Optional[Text] = None) -> Dynamics:
     """
     Shortcut for creating a Tempo object and running the computation.
-    Cannot be used for mean-field Tempo.
+    Cannot be used to create MeanFieldTempo objects.
 
     Parameters
     ----------

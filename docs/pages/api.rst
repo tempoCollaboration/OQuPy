@@ -87,23 +87,20 @@ TEMPO
 class :class:`oqupy.tempo.TempoParameters`
   Stores a set of parameters for a TEMPO computation.
 
-class :class:`oqupy.tempo.BaseTempo`
-  Abstract class for all TEMPO computations.
+class :class:`oqupy.tempo.Tempo`
+  Class to facilitate a TEMPO computation.
 
-  class :class:`oqupy.tempo.Tempo`
-    Class to facilitate a TEMPO computation.
+  method :meth:`oqupy.tempo.Tempo.compute`
+    Method that carries out a TEMPO computation and creates a
+    :class:`oqupy.dynamics.Dynamics` object.
 
-    method :meth:`oqupy.tempo.Tempo.compute`
-      Method that carries out a TEMPO computation and creates a
-      :class:`oqupy.dynamics.Dynamics` object.
-
-  class :class:`oqupy.tempo.TempoWithField`
+class :class:`oqupy.tempo.MeanFieldTempo`
     Class to facilitate a TEMPO computation with concurrent evolution of
-    a classical field.
+    a coherent field.
 
-    method :meth:`oqupy.tempo.TempoWithField.compute`
-      Method that carries out a TEMPO computation while evolving a classical
-      field, and creates a :class:`oqupy.dynamics.DynamicsWithField` object.
+    method :meth:`oqupy.tempo.MeanFieldTempo.compute`
+      Method that carries out a TEMPO computation while evolving a coherent
+      field, and creates a :class:`oqupy.dynamics.MeanFieldDyanmics` object.
 
 function :func:`oqupy.tempo.guess_tempo_parameters`
   Function that chooses an appropriate set of parameters for a particular

@@ -12,7 +12,7 @@ The code in this project is based on ideas from the following publications:
 - **[Fux2020]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
 - **[Gribben2021]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*,  [arXiv:20106.0412](http://arxiv.org/abs/2106.04212) (2021).
 - **[Gribben2022]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [PRX Quantum 3, 10321](https://link.aps.org/doi/10.1103/PRXQuantum.3.010321) (2021).
-- **[FowlerWright2021]** Fowler-Wright et al., *Efficient many-body non-Markovian dynamics of organic polaritons*, [arXiv:2112.09003](http://arxiv.org/abs/2112.09003) (2021)
+- **[FowlerWright2022]** Fowler-Wright et al., *Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons*, [Phys. Rev. Lett. 129, 173001](https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
 - **[Fux2022]** Fux et al., *Thermalization of a spin chain strongly coupled to its environment*, [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
 
 
@@ -21,14 +21,19 @@ BibTeX:
 
 
 ```
-@article{FowlerWright2021,
-  title = {Efficient many-body non-Markovian dynamics of organic polaritons},
+@article{FowlerWright2022,
+  title = {Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons},
   author = {Fowler-Wright, Piper and Lovett, Brendon W. and Keeling, Jonathan},
-  archivePrefix = {arXiv},
-  arxivId = {2112.09003},
-  eprint = {2112.09003},
-  url = {http://arxiv.org/abs/2112.09003},
-  year = {2021}
+  journal = {Phys. Rev. Lett.},
+  volume = {129},
+  issue = {17},
+  pages = {173001},
+  numpages = {7},
+  year = {2022},
+  month = {October},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.129.173001},
+  url = {https://doi.org/10.1103/PhysRevLett.129.173001}
 }
 
 @article{Fux2021,

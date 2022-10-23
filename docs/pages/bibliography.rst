@@ -7,7 +7,7 @@ The code in this project is based on ideas from the following publications:
   *Efficient real-time path integrals for non-Markovian spin-boson models*.
   `New J. Phys. 19(9), p.093009 <http://dx.doi.org/10.1088/1367-2630/aa8744>`_
   (2017).
-- **[Strathearn2018]]** Strathearn et al.,
+- **[Strathearn2018]** Strathearn et al.,
   *Efficient non-Markovian quantum dynamics using time-evolving matrix product
   operators*,
   `Nat. Commun. 9, 3322 <https://doi.org/10.1038/s41467-018-05617-3>`_
@@ -38,13 +38,13 @@ The code in this project is based on ideas from the following publications:
 - **[Gribben2022]** Gribben et al.,
   *Exact dynamics of non-additive environments in non-Markovian open quantum
   systems*,
-  `PRX Quantum 3, 10321 <https://link.aps.org/doi/10.1103/PRXQuantum.3.010321>`_`
+  `PRX Quantum 3, 10321 <https://link.aps.org/doi/10.1103/PRXQuantum.3.010321>`_
   (2022).
-- **[FowlerWright2021]**
+- **[FowlerWright2022]**
   Fowler-Wright et al.,
-  *Efficient many-body non-Markovian dynamics of organic polaritons*,
-  `arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`_
-  (2021)
+  *Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons*,
+  `Phys. Rev. Lett. 129, 173001 <https://doi.org/10.1103/PhysRevLett.129.173001>`_
+  (2022).
 - **[Fux2022]** Fux et al.,
   *Thermalization of a spin chain strongly coupled to its environment*,
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_
@@ -57,14 +57,19 @@ BibTeX
 
 .. code-block:: bibtex
 
-  @article{FowlerWright2021,
-    title = {Efficient many-body non-Markovian dynamics of organic polaritons},
+  @article{FowlerWright2022,
+    title = {Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons},
     author = {Fowler-Wright, Piper and Lovett, Brendon W. and Keeling, Jonathan},
-    archivePrefix = {arXiv},
-    arxivId = {2112.09003},
-    eprint = {2112.09003},
-    url = {http://arxiv.org/abs/2112.09003},
-    year = {2021}
+    journal = {Phys. Rev. Lett.},
+    volume = {129},
+    issue = {17},
+    pages = {173001},
+    numpages = {7},
+    year = {2022},
+    month = {October},
+    publisher = {American Physical Society},
+    doi = {10.1103/PhysRevLett.129.173001},
+    url = {https://doi.org/10.1103/PhysRevLett.129.173001}
   }
 
   @article{Fux2021,

@@ -7,8 +7,11 @@ Lead developer since 2020 (start of the project): `Gerald E. Fux <https://github
 Major code contributions
 ------------------------
 
+**Version 0.4.0**
+  - `Joel Beckles <https://github.com/JoelANB>`_ and `Piper Fowler-Wright <https://github.com/piperfw>`_: Extension of mean-field evolution to multiple types of system 
+
 **Version 0.3.0**
-  - `Piper Fowler-Wright <https://github.com/piperfw>`_: Open quantum systems with mean-field evolution [FowlerWright2021]
+  - `Piper Fowler-Wright <https://github.com/piperfw>`_: Open quantum systems with mean-field evolution [FowlerWright2022]
 
 **Version 0.2.0**
   - `Gerald E. Fux <https://github.com/gefux>`_: Chains of open quantum systems [Fux2022].
@@ -49,5 +52,6 @@ Acknowledgements
   - Brendon W. Lovett (*University of St Andrews*) <bwl4@st-andrews.ac.uk>
 
 **Project maintainers:**
+  - `Piper Fowler-Wright <https://github.com/piperfw>`_: (*University of St Andrews*) <pfw1@st-andrews.ac.uk>
   - `Gerald E. Fux <https://github.com/gefux>`_ (*University of St Andrews*) <gf52@st-andrews.ac.uk>
   - `Peter Kirton <https://github.com/peterkirton>`_ (*University of Strathclyde*) <peter.kirton@strath.ac.uk>
