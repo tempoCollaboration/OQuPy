@@ -54,7 +54,8 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 - **[8]** Fux et al.,
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_ (2022).
 - **[9]** Fowler-Wright at al.,
-  `arXiv:2112.09003 <http://arxiv.org/abs/2112.09003>`_ (2021).
+  `Phys. Rev. Lett. 129, 173001 <https://doi.org/10.1103/PhysRevLett.129.173001>`_
+  (2022).
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb
