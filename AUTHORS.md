@@ -7,7 +7,7 @@ Major code contributions
 ------------------------
 
 **Version 0.4.0**
-  - [Joel Beckles](https://github.com/JoelANB) and [Piper Fowler-Wright](https://github.com/piperfw): Extension of mean-field evolution to multiple types of system 
+- [Joel Beckles](https://github.com/JoelANB) and [Piper Fowler-Wright](https://github.com/piperfw): Extension of mean-field evolution to multiple types of system
 
 **Version 0.3.0**
 - [Piper Fowler-Wright](https://github.com/piperfw): Open quantum systems with mean-field evolution [FowlerWright2022]
@@ -54,4 +54,3 @@ Acknowledgements
 **Project maintainers:**
 - [Piper Fowler-Wright](https://github.com/piperfw) (<pfw1@st-andrews.ac.uk>)
 - [Gerald E. Fux](https://github.com/gefux) (<gf52@st-andrews.ac.uk>)
-- [Peter Kirton](https://github.com/peterkirton) (<peter.kirton@strath.ac.uk>)
