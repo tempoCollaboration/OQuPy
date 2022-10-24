@@ -36,7 +36,7 @@ We firstly import OQuPy and other useful packages:
     import matplotlib.pyplot as plt
 
 Check the current OQuPy version; mean-field functionality was introduced
-in version **0.3.0**.
+in version **0.3.0** and revised in its current format in **0.4.0.**
 
 .. code:: ipython3
 
@@ -352,8 +352,8 @@ used to compute the dynamics for an ordinary ``System``:
 .. parsed-literal::
 
     --> TEMPO-with-field computation:
-    100.0%   93 of   93 [########################################] 00:00:19
-    Elapsed time: 20.0s
+    100.0%   93 of   93 [########################################] 00:00:13
+    Elapsed time: 13.3s
 
 
 ``MeanFieldTempo.compute`` returns a ``MeanFieldDynamics`` object
@@ -385,12 +385,12 @@ producing the first part of a single line of **Fig. 2a.**:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f6c669133c8>
+    <matplotlib.legend.Legend at 0x7f848ff957e0>
 
 
 
 
-.. image:: output_34_1.png
+.. image:: mf_tempo_files/mf_tempo_34_1.png
 
 
 If you have the time you can calculate the dynamics to
@@ -428,8 +428,8 @@ bath via
 .. parsed-literal::
 
     --> PT-TEMPO computation:
-    100.0%   93 of   93 [########################################] 00:00:06
-    Elapsed time: 6.6s
+    100.0%   93 of   93 [########################################] 00:00:02
+    Elapsed time: 2.8s
 
 
 Refer the Time Dependence and PT-TEMPO tutorial for further discussion
@@ -482,17 +482,17 @@ using the process tensor (now in a list) calculated above:
 .. parsed-literal::
 
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:15
-    Elapsed time: 15.0s
+    100.0%   93 of   93 [########################################] 00:00:09
+    Elapsed time: 9.6s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.0s
+    100.0%   93 of   93 [########################################] 00:00:09
+    Elapsed time: 9.9s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:15
-    Elapsed time: 15.8s
+    100.0%   93 of   93 [########################################] 00:00:09
+    Elapsed time: 9.9s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:14
-    Elapsed time: 14.6s
+    100.0%   93 of   93 [########################################] 00:00:08
+    Elapsed time: 8.7s
 
 
 Finally, plotting the results:
@@ -513,12 +513,12 @@ Finally, plotting the results:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f6c66697b38>
+    <matplotlib.legend.Legend at 0x7f848f7e88b0>
 
 
 
 
-.. image:: output_43_1.png
+.. image:: mf_tempo_files/mf_tempo_43_1.png
 
 
 5. Summary
@@ -535,4 +535,3 @@ dynamics:
    (process tensor) may be used to calculate ``MeanFieldDynamics``
 -  ``MeanFieldDynamics`` comprises one of more system ``Dynamics`` and a
    set of field values ``fields``.
-

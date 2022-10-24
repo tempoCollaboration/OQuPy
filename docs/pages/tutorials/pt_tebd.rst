@@ -69,7 +69,6 @@ density matrices.
     down_dm = oqupy.operators.spin_dm("z-")
     mixed_dm = oqupy.operators.spin_dm("mixed")
 
-
 --------------
 
 Example - Heisenberg spin chain
@@ -90,8 +89,6 @@ coupling we first consider the closed chain with the Hamiltonian
 
 with :math:`N=5`, :math:`\epsilon=1.0`, :math:`J^x = 1.3`,
 :math:`J^y = 0.7`, and :math:`J^z = 1.2`.
-
-
 
 .. code:: ipython3
 
@@ -179,7 +176,7 @@ time steps.
     PT-TEBD computation (closed spin chain):
     --> PT-TEBD computation:
     100.0%   20 of   20 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.2s
 
 
 The computation returns a results dictionary which in addition to the
@@ -208,7 +205,7 @@ We can use the dynamics results to then compute the evolution of the
         plt.plot(
             *dynamics.expectations(sz, real=True),
             color=f"C{site}", linestyle="solid",
-            label=f"$<s_{site}^z>$")
+            label=f"$\\langle s_{site}^z \\rangle$")
     plt.legend()
 
 
@@ -216,12 +213,12 @@ We can use the dynamics results to then compute the evolution of the
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f672e2d7588>
+    <matplotlib.legend.Legend at 0x7f7b31700f40>
 
 
 
 
-.. image:: output_23_1.png
+.. image:: pt_tebd_files/pt_tebd_22_1.png
 
 
 Yay! We can observe how the excitation travels along the chain.
@@ -288,7 +285,7 @@ computation (see Tutorial 02 - Time dependence and PT-TEMPO).
     Process tensor (PT) computation:
     --> PT-TEMPO computation:
     100.0%   20 of   20 [########################################] 00:00:00
-    Elapsed time: 0.6s
+    Elapsed time: 0.4s
 
 
 To see the effect of the environment clearly we start in a fully mixed
@@ -326,8 +323,8 @@ keep them free by setting them to ``None``.
 
     PT-TEBD computation (open spin chain):
     --> PT-TEBD computation:
-    100.0%   20 of   20 [########################################] 00:00:04
-    Elapsed time: 4.3s
+    100.0%   20 of   20 [########################################] 00:00:02
+    Elapsed time: 2.9s
 
 
 .. code:: ipython3
@@ -335,7 +332,7 @@ keep them free by setting them to ``None``.
     for site, dyn in results_open['dynamics'].items():
         plt.plot(*dyn.expectations(sz, real=True),
                  color=f"C{site}", linestyle="solid",
-                 label=f"$<s_{site}^z>$")
+                 label=f"$\\langle s_{site}^z \\rangle$")
     plt.legend()
 
 
@@ -343,12 +340,12 @@ keep them free by setting them to ``None``.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f671cf195f8>
+    <matplotlib.legend.Legend at 0x7f7b30febca0>
 
 
 
 
-.. image:: output_35_1.png
+.. image:: pt_tebd_files/pt_tebd_34_1.png
 
 
 We can see that the environment starts to hybridize with the first spin

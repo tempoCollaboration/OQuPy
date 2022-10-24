@@ -168,12 +168,12 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f42993e3278>
+    <matplotlib.legend.Legend at 0x7fab3d70bb20>
 
 
 
 
-.. image:: output_16_1.png
+.. image:: pt_tempo_files/pt_tempo_16_1.png
 
 
 3. Create time dependent system object
@@ -216,7 +216,7 @@ parameters):
 
     --> TEMPO computation:
     100.0%   50 of   50 [########################################] 00:00:02
-    Elapsed time: 2.3s
+    Elapsed time: 2.6s
 
 
 and extract the expectation values
@@ -230,7 +230,7 @@ for plotting:
     s_xy = np.sqrt(s_x**2 + s_y**2)
     plt.plot(t, s_xy, label=r'$\Delta = 0.0$')
     plt.xlabel(r'$t\,\Omega$')
-    plt.ylabel(r'$<\sigma_xy>$')
+    plt.ylabel(r'$<\sigma_{xy}>$')
     plt.ylim((0.0,1.0))
     plt.legend(loc=4)
 
@@ -239,12 +239,12 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f42980cb898>
+    <matplotlib.legend.Legend at 0x7fab3ab8f430>
 
 
 
 
-.. image:: output_23_1.png
+.. image:: pt_tempo_files/pt_tempo_23_1.png
 
 
 5. Using PT-TEMPO to explore many different laser pulses
@@ -331,7 +331,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
     for t, s_xy, delta in zip(t_list, s_xy_list, deltas):
         plt.plot(t, s_xy, label=r"$\Delta = $"+f"{delta:0.1f}")
         plt.xlabel(r'$t/$ps')
-        plt.ylabel(r'$<\sigma_xy>$')
+        plt.ylabel(r'$<\sigma_{xy}>$')
     plt.ylim((0.0,1.0))
     plt.legend()
 
@@ -340,11 +340,11 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f42991f66d8>
+    <matplotlib.legend.Legend at 0x7fab3abec4c0>
 
 
 
 
-.. image:: output_31_1.png
+.. image:: pt_tempo_files/pt_tempo_31_1.png
 
 

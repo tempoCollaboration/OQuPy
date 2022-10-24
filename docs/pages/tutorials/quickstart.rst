@@ -105,27 +105,27 @@ the job - just to have an idea where we are going:
     
     plt.plot(t, s_z, label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
-    plt.ylabel(r'$<S_z>$')
+    plt.ylabel(r'$\langle\sigma_z\rangle$')
     plt.legend()
 
 
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  150 of  150 [########################################] 00:00:13
-    Elapsed time: 13.6s
+    100.0%  150 of  150 [########################################] 00:00:08
+    Elapsed time: 8.5s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcc2bf1978>
+    <matplotlib.legend.Legend at 0x7fd9c63c8d90>
 
 
 
 
-.. image:: output_9_2.png
+.. image:: quickstart_files/quickstart_9_2.png
 
 
 1. The model and its parameters
@@ -230,7 +230,7 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    ../oqupy/tempo.py:833: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    /home/pip/documents/saints/phd/tempo/OQuPy/tutorials/../oqupy/tempo.py:850: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -238,8 +238,8 @@ to :math:`t=5\,\Omega^{-1}`
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%   80 of   80 [########################################] 00:00:06
-    Elapsed time: 6.8s
+    100.0%   80 of   80 [########################################] 00:00:04
+    Elapsed time: 4.3s
 
 
 and plot the result:
@@ -249,7 +249,7 @@ and plot the result:
     t_1, z_1 = dynamics_1.expectations(0.5*sigma_z, real=True)
     plt.plot(t_1, z_1, label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
-    plt.ylabel(r'$<S_z>$')
+    plt.ylabel(r'$\langle\sigma_z\rangle$')
     plt.legend()
 
 
@@ -257,12 +257,12 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcc3c4c9e8>
+    <matplotlib.legend.Legend at 0x7fd9c63263e0>
 
 
 
 
-.. image:: output_24_1.png
+.. image:: quickstart_files/quickstart_24_1.png
 
 
 Yay! This looks like the plot in figure 2a [Strathearn2018].
@@ -315,7 +315,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    ../oqupy/tempo.py:833: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    /home/pip/documents/saints/phd/tempo/OQuPy/tutorials/../oqupy/tempo.py:850: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -347,7 +347,7 @@ whether it satisfies the above requirements:
 
 
 
-.. image:: output_31_1.png
+.. image:: quickstart_files/quickstart_31_1.png
 
 
 In this plot you see the real and imaginary part of the environments
@@ -397,7 +397,7 @@ and check again with the helper function:
 
 
 
-.. image:: output_36_1.png
+.. image:: quickstart_files/quickstart_36_1.png
 
 
 We could feed this object into the ``oqupy.tempo_compute()`` function to
@@ -426,15 +426,15 @@ We can start by computing the dynamics up to time
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%   50 of   50 [########################################] 00:00:03
-    Elapsed time: 3.1s
+    100.0%   50 of   50 [########################################] 00:00:01
+    Elapsed time: 1.9s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7fbcc276be10>
+    <oqupy.dynamics.Dynamics at 0x7fd9c53e3760>
 
 
 
@@ -445,7 +445,7 @@ then get and plot the dynamics of expecatation values,
     dynamics_2 = tempo.get_dynamics()
     plt.plot(*dynamics_2.expectations(0.5*sigma_z, real=True), label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
-    plt.ylabel(r'$<S_z>$')
+    plt.ylabel(r'$\langle\sigma_z\rangle$')
     plt.legend()
 
 
@@ -453,12 +453,12 @@ then get and plot the dynamics of expecatation values,
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcc28d8ac8>
+    <matplotlib.legend.Legend at 0x7fd9c4f45ba0>
 
 
 
 
-.. image:: output_42_1.png
+.. image:: quickstart_files/quickstart_42_1.png
 
 
 then continue the computation to :math:`15.0\,\Omega^{-1}`,
@@ -471,15 +471,15 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  100 of  100 [########################################] 00:00:13
-    Elapsed time: 13.9s
+    100.0%  100 of  100 [########################################] 00:00:06
+    Elapsed time: 6.1s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7fbcc276be10>
+    <oqupy.dynamics.Dynamics at 0x7fd9c53e3760>
 
 
 
@@ -490,7 +490,7 @@ and then again get and plot the dynamics of expecatation values.
     dynamics_2 = tempo.get_dynamics()
     plt.plot(*dynamics_2.expectations(0.5*sigma_z, real=True), label=r'$\alpha=0.3$')
     plt.xlabel(r'$t\,\Omega$')
-    plt.ylabel(r'$<S_z>$')
+    plt.ylabel(r'$\langle\sigma_z\rangle$')
     plt.legend()
 
 
@@ -498,12 +498,12 @@ and then again get and plot the dynamics of expecatation values.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fbcc26939b0>
+    <matplotlib.legend.Legend at 0x7fd9c5f05870>
 
 
 
 
-.. image:: output_46_1.png
+.. image:: quickstart_files/quickstart_46_1.png
 
 
 Finally, we note: to validate the accuracy the result **it vital to
@@ -513,5 +513,3 @@ simulation with slightly “better” parameters (smaller ``dt``, larger
 ``dkmax``, smaller ``epsrel``) and to consider the difference of the
 result as an estimate of the upper bound of the accuracy of the
 simulation.
-
---------------

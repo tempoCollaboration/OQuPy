@@ -157,7 +157,7 @@ matrix elements evolve.
 
 
 
-.. image:: output_10_2.png
+.. image:: bath_dynamics_files/bath_dynamics_10_2.png
 
 
 Already the process tensor tells us everything we could want to know
@@ -254,7 +254,7 @@ frequency, in this case let’s look at ``w = Omega`` and a bandwidth of
 
 
 
-.. image:: output_14_2.png
+.. image:: bath_dynamics_files/bath_dynamics_14_2.png
 
 
 …that took quite a while. From the expression for :math:`\Delta Q` is
@@ -287,14 +287,13 @@ see what happens if we want the energy of another mode now, let’s say
 
 
 
-.. image:: output_16_1.png
+.. image:: bath_dynamics_files/bath_dynamics_16_1.png
 
 
 Much quicker! This is because the same set of system correlation
 functions can be used to compute any bath correlation function
 :math:`\langle \alpha_2(t_2)\alpha_1(t_1)\rangle` where
-$:raw-latex:`\alpha`\_2, :raw-latex:`\alpha`\_1
-:raw-latex:`\in `{a_k^:raw-latex:`\dagger`,a_k} $ and
+:math:`\alpha_2, \alpha_1 \in \{a_k^\dagger,a_k\}`  and
 :math:`t_1,t_2 < t_N`. So now we see the logic of having a bath_dynamics
 object, it allows us to conveniently store the calculated system
 correlation functions and re-use them as we like :)
@@ -331,7 +330,7 @@ exchanged over the process so simply look at the final value of
 
 
 
-.. image:: output_18_1.png
+.. image:: bath_dynamics_files/bath_dynamics_18_1.png
 
 
 This is highly oscillatory, perhaps unsurprising from the dynamics we
@@ -366,7 +365,7 @@ we average over the last :math:`n` timesteps where
 
 
 
-.. image:: output_20_1.png
+.. image:: bath_dynamics_files/bath_dynamics_20_1.png
 
 
 Here, as in the paper, we see heat is absorbed by the system from the
@@ -375,4 +374,3 @@ band of the modes in the vicinity of
 as in a Markovian theory the system would sample the environment purely
 at its eigensplitting :math:`\tilde{\Omega}`.
 
---------------
