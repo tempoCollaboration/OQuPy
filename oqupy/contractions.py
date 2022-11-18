@@ -182,9 +182,10 @@ def compute_dynamics(
     return Dynamics(times=list(times),states=states)
 
 
-def compute_dynamics(
+def compute_gradient_and_dynamics(
         system: Union[System, TimeDependentSystem],
         initial_state: Optional[ndarray] = None,
+        target_state: Optional[ndarray] = None,
         dt: Optional[float] = None,
         num_steps: Optional[int] = None,
         start_time: Optional[float] = 0.0,
@@ -196,7 +197,8 @@ def compute_dynamics(
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
         progress_type: Optional[Text] = None) -> Dynamics:
     """
-    Compute the system dynamics for a given system Hamiltonian, accounting
+    Compute some objective function and calculate its gradient w.r.t. 
+    some control parameters, accounting
     (optionally) for interaction with an environment using one or more
     process tensors.
 
@@ -206,6 +208,8 @@ def compute_dynamics(
         Object containing the system Hamiltonian information.
     initial_state: ndarray
         Initial system state.
+    target_state:
+        Some pure target state or derivative w.r.t. an objective functioni
     dt: float
         Length of a single time step.
     num_steps: int
@@ -244,6 +248,10 @@ def compute_dynamics(
         process_tensor, control, record_all)
     system, initial_state, dt, num_steps, start_time, \
         process_tensors, control, record_all, hs_dim = parsed_parameters
+
+    assert target_state is not None, \
+        'target state must be given explicitly'
+    
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
@@ -257,6 +265,10 @@ def compute_dynamics(
             dt=dt,
             start_time=start_time)
 
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~ Forwardpropagation ~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
     # -- initialize computation --
     #
     #  Initial state including the bond legs to the environments with:
@@ -273,6 +285,78 @@ def compute_dynamics(
     prog_bar.enter()
 
     for step in range(num_steps+1):
+        # -- apply pre measurement control --
+        pre_measurement_control, post_measurement_control = controls(step)
+
+        if pre_measurement_control is not None:
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, pre_measurement_control)
+
+        if step == num_steps:
+            break
+
+        # -- extract current state -- update field --
+        if record_all:
+            caps = _get_caps(process_tensors, step)
+            state_tensor = _apply_caps(current_node, current_edges, caps)
+            state = state_tensor.reshape(hs_dim, hs_dim)
+            states.append(state)
+
+        prog_bar.update(step)
+
+        # -- apply post measurement control --
+        if post_measurement_control is not None:
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, post_measurement_control)
+
+        # -- propagate one time step --
+        first_half_prop, second_half_prop = propagators(step)
+        pt_mpos = _get_pt_mpos(process_tensors, step)
+
+        current_node, current_edges = _apply_system_superoperator(
+            current_node, current_edges, first_half_prop)
+        current_node, current_edges = _apply_pt_mpos(
+            current_node, current_edges, pt_mpos)
+        current_node, current_edges = _apply_system_superoperator(
+            current_node, current_edges, second_half_prop)
+
+    # -- extract last state --
+    caps = _get_caps(process_tensors, step)
+    state_tensor = _apply_caps(current_node, current_edges, caps)
+    final_state = state_tensor.reshape(hs_dim, hs_dim)
+    states.append(final_state)
+
+    prog_bar.update(num_steps)
+    prog_bar.exit()
+
+    # -- create dynamics object --
+    if record_all:
+        times = start_time + np.arange(len(states))*dt
+    else:
+        times = [start_time + len(states)*dt]
+
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~ Backpropagation ~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    # -- initialize computation (except backwards) --
+    #
+    #  Initial state including the bond legs to the environments with:
+    #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
+    #    edge  -1                      is the state leg
+    target_ndarray = target_state.reshape(hs_dim**2)
+    target_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+    current_node = tn.Node(target_ndarray)
+    current_edges = current_node[:]
+
+    states = []
+    title = "--> Compute dynamics:"
+    prog_bar = get_progress(progress_type)(num_steps, title)
+    prog_bar.enter()
+
+    for step in reversed(range(num_steps+1)):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
 
