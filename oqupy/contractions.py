@@ -161,6 +161,10 @@ def compute_dynamics(
             current_node, current_edges, first_half_prop)
         current_node, current_edges = _apply_pt_mpos(
             current_node, current_edges, pt_mpos)
+
+
+
+
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, second_half_prop)
 
@@ -197,7 +201,7 @@ def compute_gradient_and_dynamics(
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
         progress_type: Optional[Text] = None) -> Dynamics:
     """
-    Compute some objective function and calculate its gradient w.r.t. 
+    Compute some objective function and calculate its gradient w.r.t.
     some control parameters, accounting
     (optionally) for interaction with an environment using one or more
     process tensors.
@@ -251,7 +255,7 @@ def compute_gradient_and_dynamics(
 
     assert target_state is not None, \
         'target state must be given explicitly'
-    
+
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
@@ -268,7 +272,7 @@ def compute_gradient_and_dynamics(
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~~~~ Forwardpropagation ~~~~
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
+
     # -- initialize computation --
     #
     #  Initial state including the bond legs to the environments with:
@@ -283,6 +287,8 @@ def compute_gradient_and_dynamics(
     title = "--> Compute dynamics:"
     prog_bar = get_progress(progress_type)(num_steps, title)
     prog_bar.enter()
+
+    forwardprop_deriv_list = []
 
     for step in range(num_steps+1):
         # -- apply pre measurement control --
@@ -317,6 +323,11 @@ def compute_gradient_and_dynamics(
             current_node, current_edges, first_half_prop)
         current_node, current_edges = _apply_pt_mpos(
             current_node, current_edges, pt_mpos)
+
+        # appropriate timeslice in diagram is here
+        # store derivative node
+        forwardprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
+
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, second_half_prop)
 
@@ -356,41 +367,50 @@ def compute_gradient_and_dynamics(
     prog_bar = get_progress(progress_type)(num_steps, title)
     prog_bar.enter()
 
+    backprop_deriv_list = [tn.replicate_nodes(current_node)[0]]
+
     for step in reversed(range(num_steps+1)):
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
 
+        if post_measurement_control is not None:
+            current_node, current_edges = _apply_system_superoperator(
+                current_node, current_edges, post_measurement_control) # possibly with a transpose
+
+        if step == 0: # i think this is correct
+            break
+
+        # record_all not necessary for backprop as it's been done in the forwardprop
+
+        # # -- extract current state -- update field --
+        # if record_all:
+        #     caps = _get_caps(process_tensors, step)
+        #     state_tensor = _apply_caps(current_node, current_edges, caps)
+        #     state = state_tensor.reshape(hs_dim, hs_dim)
+        #     states.append(state)
+
+        prog_bar.update(num_steps - step)
+
+        # -- apply post measurement control --
         if pre_measurement_control is not None:
             current_node, current_edges = _apply_system_superoperator(
                 current_node, current_edges, pre_measurement_control)
-
-        if step == num_steps:
-            break
-
-        # -- extract current state -- update field --
-        if record_all:
-            caps = _get_caps(process_tensors, step)
-            state_tensor = _apply_caps(current_node, current_edges, caps)
-            state = state_tensor.reshape(hs_dim, hs_dim)
-            states.append(state)
-
-        prog_bar.update(step)
-
-        # -- apply post measurement control --
-        if post_measurement_control is not None:
-            current_node, current_edges = _apply_system_superoperator(
-                current_node, current_edges, post_measurement_control)
 
         # -- propagate one time step --
         first_half_prop, second_half_prop = propagators(step)
         pt_mpos = _get_pt_mpos(process_tensors, step)
 
         current_node, current_edges = _apply_system_superoperator(
-            current_node, current_edges, first_half_prop)
+            current_node, current_edges, second_half_prop)
         current_node, current_edges = _apply_pt_mpos(
             current_node, current_edges, pt_mpos)
+
+        # appropriate timeslice in diagram is here
+        # store derivative node
+        backprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
+
         current_node, current_edges = _apply_system_superoperator(
-            current_node, current_edges, second_half_prop)
+            current_node, current_edges, first_half_prop)
 
     # -- extract last state --
     caps = _get_caps(process_tensors, step)
@@ -801,6 +821,14 @@ def _get_caps(process_tensors: List[BaseProcessTensor], step: int):
 
 def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
     """ToDo """
+    pt_mpos = []
+    for i in range(len(process_tensors)):
+        pt_mpo = process_tensors[i].get_mpo_tensor(step)
+        pt_mpos.append(pt_mpo)
+    return pt_mpos
+
+def _get_pt_mpos_backprop(process_tensors: List[BaseProcessTensor], step: int):
+    """same as above but swaps the system legs """
     pt_mpos = []
     for i in range(len(process_tensors)):
         pt_mpo = process_tensors[i].get_mpo_tensor(step)
