@@ -398,10 +398,10 @@ def compute_gradient_and_dynamics(
 
         # -- propagate one time step --
         first_half_prop, second_half_prop = propagators(step)
-        pt_mpos = _get_pt_mpos(process_tensors, step)
+        pt_mpos = _get_pt_mpos_backprop(process_tensors, step)
 
         current_node, current_edges = _apply_system_superoperator(
-            current_node, current_edges, second_half_prop)
+            current_node, current_edges, second_half_prop.T)
         current_node, current_edges = _apply_pt_mpos(
             current_node, current_edges, pt_mpos)
 
@@ -410,7 +410,7 @@ def compute_gradient_and_dynamics(
         backprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
 
         current_node, current_edges = _apply_system_superoperator(
-            current_node, current_edges, first_half_prop)
+            current_node, current_edges, first_half_prop.T)
 
     # -- extract last state --
     caps = _get_caps(process_tensors, step)
@@ -832,6 +832,9 @@ def _get_pt_mpos_backprop(process_tensors: List[BaseProcessTensor], step: int):
     pt_mpos = []
     for i in range(len(process_tensors)):
         pt_mpo = process_tensors[i].get_mpo_tensor(step)
+        # now swap axes so the backprop is correct when applying with below functions
+        np.swapaxes(pt_mpo,0,1) # internal bond legs
+        np.swapaxes(pt_mpo,2,3) # system propagator legs
         pt_mpos.append(pt_mpo)
     return pt_mpos
 
