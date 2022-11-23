@@ -299,6 +299,62 @@ class MeanFieldDynamics(BaseAPIClass):
         """Dynamics object for each system. """
         return self._system_dynamics
 
+
+class GradientDymnamics(Dynamics):
+    """
+    Represents a specific time evolution of a density matrix, as well as the gradient
+    w.r.t. some objective function
+
+    Parameters
+    ----------
+    times: List[float] (default = None)
+        A list of points in time.
+    states: List[ndarray] (default = None)
+        A list of states at the times `times`.
+    name: str
+        An optional name for the dynamics.
+    description: str
+        An optional description of the dynamics.
+    """
+    def __init__(
+            self,
+            times: Optional[List[float]] = None,
+            states: Optional[List[ndarray]] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a Dynamics object. """
+        super().__init__(name, description)
+        times, states = _parse_times_states(times, states)
+        for time, state in zip(times, states):
+            self.add(time, state)
+
+    def add(
+            self,
+            time: float,
+            state: ndarray) -> None:
+        """
+        Append a state at a specific time to the time evolution.
+        Parameters
+        ----------
+        time: float
+            The point in time.
+        state: ndarray
+            The state at the time `time`.
+        """
+        tmp_time = _parse_time(time)
+        tmp_state, tmp_shape = _parse_state(state, self._shape)
+        index = _find_list_index(self._times, tmp_time)
+        self._times.insert(index, tmp_time)
+        self._states.insert(index, tmp_state)
+        if self._shape is None:
+            self._shape = tmp_shape
+
+    @property
+    def shape(self):
+        """The shape of the states. """
+        return np.copy(self._shape)
+
+
 def _parse_times_states(times, states) -> Tuple[List[float],
         List[ndarray]] :
     """Check times and states are None or lists of the same length"""

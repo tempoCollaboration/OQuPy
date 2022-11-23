@@ -31,6 +31,7 @@ from oqupy.system import MeanFieldSystem
 from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
+from oqupy.dynamics import GradientDymnamics
 
 
 Indices = Union[int, slice, List[Union[int, slice]]]
@@ -197,6 +198,7 @@ def compute_gradient_and_dynamics(
                                        BaseProcessTensor]] = None,
         control: Optional[Control] = None,
         record_all: Optional[bool] = True,
+        get_forward_and_backprop_list = False,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
         progress_type: Optional[Text] = None) -> Dynamics:
@@ -357,9 +359,14 @@ def compute_gradient_and_dynamics(
     #  Initial state including the bond legs to the environments with:
     #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
     #    edge  -1                      is the state leg
+
+    # not sure if this is correct but to get the final cap,
+    final_cap = _get_caps(process_tensors, num_steps)
+
+
     target_ndarray = target_state.reshape(hs_dim**2)
     target_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
-    current_node = tn.Node(target_ndarray)
+    current_node = tn.Node(np.outer(final_cap,target_ndarray)) # might be a wire crossed or something
     current_edges = current_node[:]
 
     states = []
@@ -368,8 +375,29 @@ def compute_gradient_and_dynamics(
     prog_bar.enter()
 
     backprop_deriv_list = [tn.replicate_nodes(current_node)[0]]
+    combined_deriv_list = []
 
     for step in reversed(range(num_steps+1)):
+        # -- connect forwardprop and backprop legs and delete --
+        # -- now redundent tensor                             --
+
+        forwardprop_tensor = forwardprop_deriv_list[num_steps-step] # possibly -1
+
+        if get_forward_and_backprop_list:
+            backprop_tensor =  backprop_deriv_list[step]
+        else:
+            # if we're not keeping the full list, we can delete the forwardprop tensor to
+            # save memory
+            del forwardprop_deriv_list[num_steps-step]
+            # note now backprop_deriv_list should be unpopulated
+
+
+        for i in range(num_envs):
+            forwardprop_tensor[i] ^ backprop_tensor[i]
+        
+        deriv = forwardprop_tensor @ backprop_tensor
+        combined_deriv_list.append(deriv.tensor)
+
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
 
@@ -407,7 +435,10 @@ def compute_gradient_and_dynamics(
 
         # appropriate timeslice in diagram is here
         # store derivative node
-        backprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
+        if get_forward_and_backprop_list:
+            backprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
+        else:
+            backprop_tensor = tn.replicate_nodes([current_node])[0]
 
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, first_half_prop.T)
@@ -427,7 +458,7 @@ def compute_gradient_and_dynamics(
     else:
         times = [start_time + len(states)*dt]
 
-    return Dynamics(times=list(times),states=states)
+    return GradientDymnamics(times=list(times),states=states)
 
 
 
@@ -828,11 +859,42 @@ def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
     return pt_mpos
 
 def _get_pt_mpos_backprop(process_tensors: List[BaseProcessTensor], step: int):
-    """same as above but swaps the system legs """
+    """same as above but swaps the system legs and internal bond legs
+    before returning MPOs.
+
+       [forwardprop]
+         [1]
+          |       [3]
+          |      /
+    |---------| /
+    |         |/
+    |         |\       propagate
+    |---------| \         ^
+          |      \        |
+          |       [2]
+         [0]
+
+          |
+          |
+         \ /
+          v
+       [backprop]
+         [0]
+          |       [3]
+          |      /
+    |---------| /
+    |         |/
+    |         |\       propagate
+    |---------| \         ^
+          |      \        |
+          |       [2]
+         [1]
+    """
     pt_mpos = []
     for i in range(len(process_tensors)):
         pt_mpo = process_tensors[i].get_mpo_tensor(step)
-        # now swap axes so the backprop is correct when applying with below functions
+        # now swap axes so propagating upwards on the PT diagram propagates
+        # *backwards* in time
         np.swapaxes(pt_mpo,0,1) # internal bond legs
         np.swapaxes(pt_mpo,2,3) # system propagator legs
         pt_mpos.append(pt_mpo)
