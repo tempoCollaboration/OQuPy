@@ -320,39 +320,51 @@ class GradientDymnamics(Dynamics):
             self,
             times: Optional[List[float]] = None,
             states: Optional[List[ndarray]] = None,
+            deriv_list: Optional[List[ndarray]] = None,
+            backprop_deriv_list: Optional[List[ndarray]] = None,
+            forwardprop_deriv_list: Optional[List[ndarray]] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a Dynamics object. """
-        super().__init__(name, description)
-        times, states = _parse_times_states(times, states)
+        super().__init__(times,states,name, description)
+        self._forwardprop_deriv_list = forwardprop_deriv_list
+        self._backprop_deriv_list = backprop_deriv_list
+        self._deriv_list = deriv_list
         for time, state in zip(times, states):
             self.add(time, state)
 
-    def add(
-            self,
-            time: float,
-            state: ndarray) -> None:
-        """
-        Append a state at a specific time to the time evolution.
-        Parameters
-        ----------
-        time: float
-            The point in time.
-        state: ndarray
-            The state at the time `time`.
-        """
-        tmp_time = _parse_time(time)
-        tmp_state, tmp_shape = _parse_state(state, self._shape)
-        index = _find_list_index(self._times, tmp_time)
-        self._times.insert(index, tmp_time)
-        self._states.insert(index, tmp_state)
-        if self._shape is None:
-            self._shape = tmp_shape
+    @property
+    def forwardprop_deriv_list(self):
+        return np.array(self._forwardprop_deriv_list)
 
     @property
-    def shape(self):
-        """The shape of the states. """
-        return np.copy(self._shape)
+    def backprop_deriv_list(self):
+        return np.array(self._backprop_deriv_list)
+
+    @property
+    def deriv_list(self):
+        return np.array(self._deriv_list)
+    # def add(
+    #         self,
+    #         time: float,
+    #         state: ndarray) -> None:
+    #     """
+    #     Append a state at a specific time to the time evolution.
+    #     Parameters
+    #     ----------
+    #     time: float
+    #         The point in time.
+    #     state: ndarray
+    #         The state at the time `time`.
+    #     """
+    #     tmp_time = _parse_time(time)
+    #     tmp_state, tmp_shape = _parse_state(state, self._shape)
+    #     index = _find_list_index(self._times, tmp_time)
+    #     self._times.insert(index, tmp_time)
+    #     self._states.insert(index, tmp_state)
+    #     if self._shape is None:
+    #         self._shape = tmp_shape
+
 
 
 def _parse_times_states(times, states) -> Tuple[List[float],

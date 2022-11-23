@@ -369,18 +369,17 @@ def compute_gradient_and_dynamics(
     current_node = tn.Node(np.outer(final_cap,target_ndarray)) # might be a wire crossed or something
     current_edges = current_node[:]
 
-    states = []
-    title = "--> Compute dynamics:"
-    prog_bar = get_progress(progress_type)(num_steps, title)
-    prog_bar.enter()
+    # i'm just commenting this for now
+    # title = "--> Compute dynamics:"
+    # prog_bar = get_progress(progress_type)(num_steps, title)
+    # prog_bar.enter()
 
     backprop_deriv_list = [tn.replicate_nodes(current_node)[0]]
     combined_deriv_list = []
 
     for step in reversed(range(num_steps+1)):
-        # -- connect forwardprop and backprop legs and delete --
-        # -- now redundent tensor                             --
-
+        # first connect forwardprop and backprop tensors together to sum across internal leg
+        # storing them as a (d_sys^2,d_sys^2) tensor to save memory
         forwardprop_tensor = forwardprop_deriv_list[num_steps-step] # possibly -1
 
         if get_forward_and_backprop_list:
@@ -394,16 +393,18 @@ def compute_gradient_and_dynamics(
 
         for i in range(num_envs):
             forwardprop_tensor[i] ^ backprop_tensor[i]
-        
+
         deriv = forwardprop_tensor @ backprop_tensor
         combined_deriv_list.append(deriv.tensor)
+
+        # -- now the backpropagation part --
 
         # -- apply pre measurement control --
         pre_measurement_control, post_measurement_control = controls(step)
 
         if post_measurement_control is not None:
             current_node, current_edges = _apply_system_superoperator(
-                current_node, current_edges, post_measurement_control) # possibly with a transpose
+                current_node, current_edges, post_measurement_control.T) # possibly with a transpose
 
         if step == 0: # i think this is correct
             break
@@ -417,12 +418,12 @@ def compute_gradient_and_dynamics(
         #     state = state_tensor.reshape(hs_dim, hs_dim)
         #     states.append(state)
 
-        prog_bar.update(num_steps - step)
+        # prog_bar.update(num_steps - step) # commented
 
         # -- apply post measurement control --
         if pre_measurement_control is not None:
             current_node, current_edges = _apply_system_superoperator(
-                current_node, current_edges, pre_measurement_control)
+                current_node, current_edges, pre_measurement_control.T)
 
         # -- propagate one time step --
         first_half_prop, second_half_prop = propagators(step)
@@ -443,14 +444,6 @@ def compute_gradient_and_dynamics(
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, first_half_prop.T)
 
-    # -- extract last state --
-    caps = _get_caps(process_tensors, step)
-    state_tensor = _apply_caps(current_node, current_edges, caps)
-    final_state = state_tensor.reshape(hs_dim, hs_dim)
-    states.append(final_state)
-
-    prog_bar.update(num_steps)
-    prog_bar.exit()
 
     # -- create dynamics object --
     if record_all:
@@ -458,7 +451,16 @@ def compute_gradient_and_dynamics(
     else:
         times = [start_time + len(states)*dt]
 
-    return GradientDymnamics(times=list(times),states=states)
+    if get_forward_and_backprop_list == False:
+        forwardprop_deriv_list = None
+        backprop_deriv_list = None
+
+
+    return GradientDymnamics(times=list(times),
+            states=states,
+            forwardprop_deriv_list=forwardprop_deriv_list,
+            backprop_deriv_list=backprop_deriv_list,
+            deriv_list=combined_deriv_list)
 
 
 
