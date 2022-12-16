@@ -201,7 +201,7 @@ def compute_gradient_and_dynamics(
         get_forward_and_backprop_list = False,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
-        progress_type: Optional[Text] = None) -> Dynamics:
+        progress_type: Optional[Text] = None) -> GradientDymnamics:
     """
     Compute some objective function and calculate its gradient w.r.t.
     some control parameters, accounting
