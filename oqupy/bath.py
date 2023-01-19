@@ -21,8 +21,10 @@ import numpy as np
 from numpy import ndarray
 
 from oqupy.config import NpDtype
+from oqupy.config import DEFAULT_TOLERANCE_DEGENERACY
 from oqupy.correlations import BaseCorrelations
 from oqupy.base_api import BaseAPIClass
+from oqupy.operators import commutator, acommutator
 
 
 class Bath(BaseAPIClass):
@@ -78,6 +80,16 @@ class Bath(BaseAPIClass):
                 self._unitary @ self._coupling_operator \
                 @ self._unitary.conjugate().T)
 
+        # compute the degeneracies in eigen level differences
+        tmp_coupling_comm = commutator(self._coupling_operator)
+        tmp_coupling_acomm = acommutator(self._coupling_operator)
+        coupling_comm = tmp_coupling_comm.diagonal()
+        coupling_acomm = tmp_coupling_acomm.diagonal()
+
+        self._north_degeneracy_map = _row_degeneracy([coupling_comm,
+                                                      coupling_acomm])
+        self._west_degeneracy_map = _row_degeneracy([coupling_comm])
+
         # input check for correlations.
         if not isinstance(correlations, BaseCorrelations):
             raise AssertionError(
@@ -113,3 +125,20 @@ class Bath(BaseAPIClass):
     def correlations(self) -> BaseCorrelations:
         """The correlations of the bath. """
         return copy(self._correlations)
+
+    @property
+    def north_degeneracy_map(self) -> np.ndarray:
+        """The north degeneracy. """
+        return copy(self._north_degeneracy_map)
+
+    @property
+    def west_degeneracy_map(self) -> np.ndarray:
+        """The west degeneracy. """
+        return copy(self._west_degeneracy_map)
+
+
+def _row_degeneracy(matrix):
+    """Finds the row degeneracy of matrix"""
+    mat = np.array(matrix).round(decimals=DEFAULT_TOLERANCE_DEGENERACY)
+    return_map = np.unique(mat.T,return_inverse=True,axis=0)[1]
+    return return_map

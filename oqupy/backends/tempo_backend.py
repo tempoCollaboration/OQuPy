@@ -18,7 +18,8 @@ Module for tempo and mean-field tempo backend.
 from typing import Callable, Dict, List, Optional, Tuple
 from copy import copy, deepcopy
 
-from numpy import ndarray, moveaxis, dot
+from numpy import ndarray, moveaxis, dot, zeros
+from numpy import max as numpy_max
 
 from oqupy import operators
 from oqupy.config import TEMPO_BACKEND_CONFIG
@@ -47,6 +48,14 @@ class BaseTempoBackend:
         influences are included.
     epsrel: float
         Maximal relative SVD truncation error.
+    unique: Optional[bool]
+        Whether to use degeneracy checks
+    north_degeneracy_map: Optional[ndarray]
+        Array to invert the degeneracy in north direction
+    west_degeneracy_map: Optional[ndarray]
+        Array to invert the degeneracy in west direction
+    dim: Optional[int]
+        Hilbert space dimension, only needed if unique is True
     """
     def __init__(
             self,
@@ -57,7 +66,11 @@ class BaseTempoBackend:
             sum_west: ndarray,
             dkmax: int,
             epsrel: float,
-            config: Optional[Dict] = None):
+            config: Optional[Dict] = None,
+            unique: Optional[bool] = False,
+            north_degeneracy_map: Optional[ndarray] = None,
+            west_degeneracy_map: Optional[ndarray] = None,
+            dim: Optional[int] = None):
         """Create a TempoBackend object. """
         self._initial_state = initial_state
         self._influence = influence
@@ -74,6 +87,10 @@ class BaseTempoBackend:
         self._super_u = None
         self._super_u_dagg = None
         self._sum_north_na = None
+        self._unique = unique
+        self._north_degeneracy_map = north_degeneracy_map
+        self._west_degeneracy_map = west_degeneracy_map
+        self._dim = dim
 
     @property
     def step(self) -> int:
@@ -101,15 +118,33 @@ class BaseTempoBackend:
         else:
             dkmax_pre_compute = self._dkmax + 1
 
+        if self._unique:
+            tmp_north_deg_num_vals = numpy_max(self._north_degeneracy_map)+1
+            tmp_west_deg_num_vals = numpy_max(self._west_degeneracy_map)+1
         for i in range(dkmax_pre_compute):
             infl = self._influence(i)
-            infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+
+
             if i == 0:
+                if self._unique:
+                    tmp=zeros((tmp_west_deg_num_vals,self._dim**2,
+                               tmp_north_deg_num_vals,self._dim**2),
+                              dtype=complex)
+                    for i1 in range(self._dim**2):
+                        tmp[self._west_degeneracy_map[i1]][i1] \
+                            [self._north_degeneracy_map[i1]][i1]= \
+                                infl[self._north_degeneracy_map[i1]]
+                    infl_four_legs = tmp
+                else:
+                    infl_four_legs = create_delta(infl, [1, 0, 0, 1])
                 tmp = dot(moveaxis(infl_four_legs, 1, -1),
-                          self._super_u_dagg)
+                        self._super_u_dagg)
                 tmp = moveaxis(tmp, -1, 1)
                 tmp = dot(tmp, self._super_u.T)
                 infl_four_legs = tmp
+            else:
+                infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+
             influences.append(infl_four_legs)
 
         self._mps = na.NodeArray([self._initial_state],
@@ -274,7 +309,11 @@ class TempoBackend(BaseTempoBackend):
             sum_west: ndarray,
             dkmax: int,
             epsrel: float,
-            config: Optional[Dict] = None):
+            config: Optional[Dict] = None,
+            unique: Optional[bool] = False,
+            north_degeneracy_map: Optional[ndarray] = None,
+            west_degeneracy_map: Optional[ndarray] = None,
+            dim: Optional[int] = None):
         """Create a TempoBackend object. """
         super().__init__(
             initial_state,
@@ -284,7 +323,11 @@ class TempoBackend(BaseTempoBackend):
             sum_west,
             dkmax,
             epsrel,
-            config)
+            config,
+            unique,
+            north_degeneracy_map,
+            west_degeneracy_map,
+            dim)
         self._propagators = propagators
 
     def initialize(self)-> Tuple[int, ndarray]:
