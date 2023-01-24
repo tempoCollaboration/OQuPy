@@ -121,7 +121,7 @@ def get_half_timesteps(pt: BaseProcessTensor, start_time: float)->ndarray:
     half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0] for t in full_timesteps]).flatten()
     return half_timesteps
 
-def get_full_timesteps(pt: BaseProcessTensor, start_time: float):
+def get_full_timesteps(pt: BaseProcessTensor, start_time: float)->ndarray:
     assert isinstance(pt,BaseProcessTensor)
     full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
     return full_timesteps

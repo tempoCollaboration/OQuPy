@@ -31,6 +31,7 @@ __all__ = [
     'Dynamics',
     'FileProcessTensor',
     'guess_tempo_parameters',
+    'GradientDynamics'
     'helpers',
     'import_process_tensor',
     'MeanFieldDynamics',
@@ -65,6 +66,7 @@ from oqupy.bath_dynamics import TwoTimeBathCorrelations
 from oqupy.contractions import compute_correlations
 from oqupy.contractions import compute_dynamics
 from oqupy.contractions import compute_dynamics_with_field
+from oqupy.contractions import compute_gradient_and_dynamics
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
