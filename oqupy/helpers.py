@@ -19,7 +19,7 @@ import numpy as np
 from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from typing import bool
+# from typing import bool
 
 from oqupy.correlations import BaseCorrelations
 from oqupy.tempo import TempoParameters

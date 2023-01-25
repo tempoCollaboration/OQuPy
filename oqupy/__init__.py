@@ -31,7 +31,8 @@ __all__ = [
     'Dynamics',
     'FileProcessTensor',
     'guess_tempo_parameters',
-    'GradientDynamics'
+    'Gradient',
+    'GradientDynamics',
     'helpers',
     'import_process_tensor',
     'MeanFieldDynamics',
@@ -80,6 +81,8 @@ from oqupy.dynamics import MeanFieldDynamics
 
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
+
+from oqupy.gradient import gradient
 
 from oqupy import helpers
 
