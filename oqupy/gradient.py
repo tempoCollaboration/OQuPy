@@ -17,6 +17,8 @@ Module for various applications involving contractions of the process tensor.
 
 from typing import List, Optional, Text, Tuple, Union
 
+from scipy.interpolate import interp1d
+
 import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
@@ -31,7 +33,7 @@ from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
 from oqupy.contractions import _compute_dynamics_input_parse, compute_gradient_and_dynamics
-from oqupy.helpers import get_half_timesteps
+from oqupy.helpers import get_half_timesteps,get_MPO_times
 
 def gradient(
         system: Union[System, TimeDependentSystem],
@@ -114,7 +116,7 @@ def gradient(
                     control=control,
                     record_all=record_all,
                     subdiv_limit=subdiv_limit,
-                    liouvillian_epsrel=subdiv_limit,
+                    liouvillian_epsrel=liouvillian_epsrel,
                     progress_type=progress_type)
 
     total_derivs = _chain_rule(
@@ -148,16 +150,12 @@ def _chain_rule(deriv_list: List[ndarray],
     assert len(dprop_times_list) == len(dprop_dparam_list), \
                     'dprop_dpram_list must be the same length as the number of time slices'
 
-    half_timesteps = get_half_timesteps(process_tensor,start_time)
+    MPO_times = get_MPO_times(process_tensor,start_time)
+    indices = np.arange(0,MPO_times.size)
 
-    # https://stackoverflow.com/questions/8251541/numpy-for-every-element-in
-    # -one-array-find-the-index-in-another-array
-    # this is not safe with the representation of floating point arithmetic
-    # TODO fix
-    searched_index = np.searchsorted(dprop_times_list,half_timesteps)
-    times_used = half_timesteps[searched_index]
+    index_function = interp1d(MPO_times,indices,kind='zero')
 
-    total_derivs = np.zeros(times_used.size,dtype='complex128')
+    total_derivs = np.zeros(dprop_times_list.size,dtype='complex128')
 
     def combine_derivs_single(target_deriv:ndarray,propagator_deriv:ndarray):
         target_deriv_node = tn.Node(target_deriv)
@@ -169,41 +167,9 @@ def _chain_rule(deriv_list: List[ndarray],
         tensor = (target_deriv_node @ propagator_deriv_node).tensor
         return tensor
 
-    dtarget_index_array = _get_dtarget_index_from_timestep(process_tensor)
-
-    for i in range(times_used.size):
-        dtarget_index = dtarget_index_array[i]
-        total_derivs[i] = combine_derivs_single(deriv_list[dtarget_index],dprop_dparam_list[i])
+    for i in range(dprop_times_list.size):
+        dtarget_index = index_function(dprop_times_list[i])
+        total_derivs[i] = combine_derivs_single[deriv_list[dtarget_index],dprop_dparam_list[i]]
 
     return total_derivs
-
-
-def _get_dtarget_index_from_timestep(pt:BaseProcessTensor)->ndarray:
-    '''
-    returns an array of indicies corrisponding to the kth half-timestep.
-    I.e. knowing that time t is the kth half timestep, the kth element of
-    this array corrisponds to the index that gives the derivative that
-    contains this timestep
-
-    This is a generic property of any process tensor and in principal this
-    function can be constructed by only knowing the length of the process tensor,
-    knowing that the number of half propagators is 2x that, and knowing the generic
-    shape of the process tensor.
-
-    Draw out the PT diagram and the locations of the system propagators and you can
-    see how the list is created
-
-    '''
-    indices = np.zeros(2*len(pt))
-
-    mid_section_indices = np.arange(1,len(pt))
-    mid_section_indices_doubled = np.repeat(mid_section_indices,2)
-
-    # first case is special
-    indices[0] = 0
-    indices[-1] = len(pt)
-    indices[1:-1] = mid_section_indices_doubled
-
-    return indices
-
 

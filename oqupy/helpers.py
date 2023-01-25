@@ -19,6 +19,7 @@ import numpy as np
 from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from typing import bool
 
 from oqupy.correlations import BaseCorrelations
 from oqupy.tempo import TempoParameters
@@ -115,11 +116,30 @@ def plot_correlations_with_parameters(
         fig.show()
     return ax
 
-def get_half_timesteps(pt: BaseProcessTensor, start_time: float)->ndarray:
+def get_half_timesteps(pt: BaseProcessTensor,
+                start_time: float,
+                inc_endtime: bool=False)->ndarray:
     assert isinstance(pt,BaseProcessTensor)
-    full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
-    half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0] for t in full_timesteps]).flatten()
+    if inc_endtime:
+        full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
+        half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0] for t in full_timesteps]).flatten()
+        half_timesteps = np.concatenate((half_timesteps,np.array([pt.dt * len(pt)])))
+
+    else:
+        full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
+        half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0] for t in full_timesteps]).flatten()
     return half_timesteps
+
+def get_MPO_times(pt: BaseProcessTensor,
+                start_time: float,
+                inc_endtime: bool=False)->ndarray:
+    '''
+    Times the MPO is called at
+    '''
+    if inc_endtime:
+        MPO_timesteps = (np.arange(0,len(pt))*pt.dt 
+                + start_time + pt.dt*0.5)
+        return MPO_timesteps
 
 def get_full_timesteps(pt: BaseProcessTensor, start_time: float)->ndarray:
     assert isinstance(pt,BaseProcessTensor)
