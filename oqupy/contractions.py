@@ -391,32 +391,11 @@ def compute_gradient_and_dynamics(
         deriv = forwardprop_tensor @ backprop_tensor
         combined_deriv_list.append(deriv.tensor)
 
-
+    # note it prob makes sense to delete the plus one here, which would remove
+    # the -1s in the indices inside the for loop. Might screw up the final pre
+    # node for the Nth step, because if this +1 was here then the final pre node
+    # would be -1. this might be a symptom of a bug, TODO: Investigate.
     for step in reversed(range(num_steps+1)):
-        '''
-        # first connect forwardprop and backprop tensors together to sum across
-        # internal leg storing them as a (d_sys^2,d_sys^2) tensor
-        # to save memory
-        forwardprop_tensor = forwardprop_deriv_list[step-1]
-
-        if get_forward_and_backprop_list:
-            backprop_tensor =  backprop_deriv_list[num_steps - step]
-        else:
-            # if we're not keeping the full list, we can delete the
-            # forwardprop tensor to save memory
-            del forwardprop_deriv_list[num_steps-step]
-            # backprop deriv list could be then deleted as it is big because
-            # it contains an internal bond leg, so in principal nothing other
-            # than the current tensor needs to be stored  in the backprop
-            # but i haven't implemented it yet.
-
-
-        for i in range(num_envs):
-            forwardprop_tensor[i] ^ backprop_tensor[i]
-
-        deriv = forwardprop_tensor @ backprop_tensor
-        combined_deriv_list.append(deriv.tensor)
-        '''
         # -- now the backpropagation part --
 
         # -- apply pre measurement control --
@@ -431,13 +410,6 @@ def compute_gradient_and_dynamics(
 
         # record_all not necessary for backprop as it's been done in the forwardprop
 
-        # # -- extract current state -- update field --
-        # if record_all:
-        #     caps = _get_caps(process_tensors, step)
-        #     state_tensor = _apply_caps(current_node, current_edges, caps)
-        #     state = state_tensor.reshape(hs_dim, hs_dim)
-        #     states.append(state)
-
         # prog_bar.update(num_steps - step) # commented
 
         # -- apply post measurement control --
@@ -447,7 +419,8 @@ def compute_gradient_and_dynamics(
 
         # -- propagate one time step --
         # we're propagating backwards so we're actually using the propagators
-        # from the previous timestep, hence -1 in next line
+        # from the previous timestep, hence -1 in next line (see note at start
+        # of the loop about removing +1 in range() definition)
         first_half_prop, second_half_prop = propagators(step-1)
         pt_mpos = _get_pt_mpos_backprop(process_tensors, step-1)
 
@@ -458,13 +431,7 @@ def compute_gradient_and_dynamics(
 
         # appropriate timeslice in diagram is here
         # # store derivative node
-        # if get_forward_and_backprop_list:
-        #     backprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
-        # else:
-        #     backprop_tensor = tn.replicate_nodes([current_node])[0]
-        # first connect forwardprop and backprop tensors together to sum across
-        # internal leg storing them as a (d_sys^2,d_sys^2) tensor
-        # to save memory
+
         forwardprop_tensor = forwardprop_deriv_list[step-1]
 
         if get_forward_and_backprop_list:
@@ -476,13 +443,11 @@ def compute_gradient_and_dynamics(
             del forwardprop_deriv_list[step-1]
             backprop_tensor =  tn.replicate_nodes([current_node])[0]
 
-
-
         for i in range(num_envs):
             forwardprop_tensor[i] ^ backprop_tensor[i]
 
         deriv = forwardprop_tensor @ backprop_tensor
-        combined_deriv_list.append(deriv.tensor) 
+        combined_deriv_list.append(deriv.tensor)
 
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, first_half_prop.T)
