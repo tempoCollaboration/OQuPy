@@ -939,8 +939,8 @@ def _get_pt_mpos_backprop(process_tensors: List[BaseProcessTensor], step: int):
         pt_mpo = process_tensors[i].get_mpo_tensor(step)
         # now swap axes so propagating upwards on the PT diagram propagates
         # *backwards* in time
-        np.swapaxes(pt_mpo,0,1) # internal bond legs
-        np.swapaxes(pt_mpo,2,3) # system propagator legs
+        pt_mpo = np.swapaxes(pt_mpo,0,1) # internal bond legs
+        pt_mpo = np.swapaxes(pt_mpo,2,3) # system propagator legs
         pt_mpos.append(pt_mpo)
     return pt_mpos
 
