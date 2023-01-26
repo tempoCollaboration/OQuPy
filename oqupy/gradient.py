@@ -150,7 +150,8 @@ def _chain_rule(deriv_list: List[ndarray],
     assert len(dprop_times_list) == len(dprop_dparam_list), \
                     'dprop_dpram_list must be the same length as the number of time slices'
 
-    MPO_times = get_MPO_times(process_tensor,start_time)
+    MPO_times = get_MPO_times(process_tensor,start_time,inc_endtime=True)
+    MPO_times = np.concatenate((np.array([0.0]),MPO_times))
     indices = np.arange(0,MPO_times.size)
 
     index_function = interp1d(MPO_times,indices,kind='zero')
@@ -168,8 +169,7 @@ def _chain_rule(deriv_list: List[ndarray],
         return tensor
 
     for i in range(dprop_times_list.size):
-        dtarget_index = index_function(dprop_times_list[i])
-        total_derivs[i] = combine_derivs_single[deriv_list[dtarget_index],dprop_dparam_list[i]]
+        dtarget_index = int(index_function(dprop_times_list[i]))
+        total_derivs[i] = combine_derivs_single(deriv_list[dtarget_index],dprop_dparam_list[i])
 
     return total_derivs
-

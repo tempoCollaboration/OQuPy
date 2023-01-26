@@ -122,8 +122,10 @@ def get_half_timesteps(pt: BaseProcessTensor,
     assert isinstance(pt,BaseProcessTensor)
     if inc_endtime:
         full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
-        half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0] for t in full_timesteps]).flatten()
-        half_timesteps = np.concatenate((half_timesteps,np.array([pt.dt * len(pt)])))
+        half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0]
+            for t in full_timesteps]).flatten()
+        half_timesteps = np.concatenate((
+            half_timesteps,np.array([pt.dt * len(pt)])))
 
     else:
         full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
@@ -137,9 +139,13 @@ def get_MPO_times(pt: BaseProcessTensor,
     Times the MPO is called at
     '''
     if inc_endtime:
-        MPO_timesteps = (np.arange(0,len(pt))*pt.dt 
-                + start_time + pt.dt*0.5)
-        return MPO_timesteps
+        MPO_timesteps = (np.arange(0,len(pt))*pt.dt + start_time + pt.dt*0.5)
+        MPO_timesteps = np.concatenate((
+            MPO_timesteps,np.array([pt.dt * len(pt)])))
+    else:
+        MPO_timesteps = (np.arange(0,len(pt))*pt.dt + start_time + pt.dt*0.5)
+
+    return MPO_timesteps
 
 def get_full_timesteps(pt: BaseProcessTensor, start_time: float)->ndarray:
     assert isinstance(pt,BaseProcessTensor)
