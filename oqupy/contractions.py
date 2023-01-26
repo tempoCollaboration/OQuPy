@@ -291,6 +291,7 @@ def compute_gradient_and_dynamics(
     prog_bar.enter()
 
     forwardprop_deriv_list = []
+    forwardprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
 
     for step in range(num_steps+1):
         # -- apply pre measurement control --
@@ -373,14 +374,14 @@ def compute_gradient_and_dynamics(
     if get_forward_and_backprop_list:
         backprop_deriv_list = [tn.replicate_nodes([current_node])[0]]
 
-        forwardprop_tensor = forwardprop_deriv_list[num_steps-1]
+        forwardprop_tensor = forwardprop_deriv_list[num_steps]
         backprop_tensor = backprop_deriv_list[0]
 
     else:
-        forwardprop_tensor = forwardprop_deriv_list[num_steps-1]
+        forwardprop_tensor = forwardprop_deriv_list[num_steps]
         # if we're not keeping the full list, we can delete the
         # forwardprop tensor to save memory
-        del forwardprop_deriv_list[num_steps-1]
+        del forwardprop_deriv_list[num_steps]
         backprop_tensor = tn.replicate_nodes([current_node])[0]
         # note now backprop_deriv_list should is unnecessary
 
@@ -472,7 +473,7 @@ def compute_gradient_and_dynamics(
         else:
             # if we're not keeping the full list, we can delete the
             # forwardprop tensor to save memory
-            del forwardprop_deriv_list[num_steps-step]
+            del forwardprop_deriv_list[step-1]
             backprop_tensor =  tn.replicate_nodes([current_node])[0]
 
 
