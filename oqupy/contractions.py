@@ -436,8 +436,12 @@ def compute_gradient_and_dynamics(
 
         if get_forward_and_backprop_list:
             backprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
-            backprop_tensor =  tn.replicate_nodes([current_node])[0]
+            backprop_tensor = tn.replicate_nodes([current_node])[0]
         else:
+            # test:
+            if len(forwardprop_deriv_list)-1 != step-1:
+                    raise IndexError('These should be equal')
+
             # if we're not keeping the full list, we can delete the
             # forwardprop tensor to save memory
             del forwardprop_deriv_list[step-1]
@@ -452,6 +456,10 @@ def compute_gradient_and_dynamics(
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, first_half_prop.T)
 
+    # deriv_list is currently in the reversed order from what you'd expect, so
+    # reversing the order of the list.....
+
+    deriv_list_reversed = list(reversed(combined_deriv_list))
 
     # -- create dynamics object --
     if record_all:
@@ -468,7 +476,7 @@ def compute_gradient_and_dynamics(
             states=states,
             forwardprop_deriv_list=forwardprop_deriv_list,
             backprop_deriv_list=backprop_deriv_list,
-            deriv_list=combined_deriv_list)
+            deriv_list=deriv_list_reversed)
 
 
 

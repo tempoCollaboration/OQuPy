@@ -136,7 +136,10 @@ def get_MPO_times(pt: BaseProcessTensor,
                 start_time: float,
                 inc_endtime: bool=False)->ndarray:
     '''
-    Times the MPO is called at
+    Times the MPO is called at,
+    basically [0.5dt,1.5dt,2.5dt..... (N-0.5)dt]
+    if inc_endtime:
+    [0.5dt,1.5dt,2.5dt..... (N-0.5)dt, Ndt]
     '''
     if inc_endtime:
         MPO_timesteps = (np.arange(0,len(pt))*pt.dt + start_time + pt.dt*0.5)
@@ -151,3 +154,17 @@ def get_full_timesteps(pt: BaseProcessTensor, start_time: float)->ndarray:
     assert isinstance(pt,BaseProcessTensor)
     full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
     return full_timesteps
+
+def get_propagator_intervals(pt: BaseProcessTensor,
+                start_time: float)->ndarray:
+    '''
+    Intervals that contain the half propagators for my interpolation to see
+    which index i'm in. 
+    basically [0,0.5dt,1dt... Ndt]
+    '''
+
+    times = (np.arange(0,2*len(pt))*pt.dt/2 + start_time)
+    times = np.concatenate((
+        times,np.array([pt.dt * len(pt)])))
+
+    return times
