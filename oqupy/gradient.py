@@ -33,7 +33,7 @@ from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
 from oqupy.contractions import _compute_dynamics_input_parse, compute_gradient_and_dynamics
-from oqupy.helpers import get_half_timesteps,get_MPO_times
+from oqupy.helpers import get_half_timesteps,get_MPO_times, get_propagator_intervals
 
 def gradient(
         system: Union[System, TimeDependentSystem],
@@ -148,15 +148,32 @@ def _chain_rule(deriv_list: List[ndarray],
     TODO: lift this requirement
     """
     assert len(dprop_times_list) == len(dprop_dparam_list), \
-                    'dprop_dpram_list must be the same length as the number of time slices'
+            ('dprop_dpram_list must be the same length as the number of time '
+            'slices')
 
     MPO_times = get_MPO_times(process_tensor,start_time,inc_endtime=True)
     MPO_times = np.concatenate((np.array([0.0]),MPO_times))
-    indices = np.arange(0,MPO_times.size)
+    MPO_indices = np.arange(0,MPO_times.size)
+    # this is more of an internal check than anything, if the code is written
+    # correctly this should always be true.
+    # assert indices.size == len(deriv_list), \
+    #         'indices mismatched with deriv_list times'
+    MPO_index_function = interp1d(MPO_times,MPO_indices,kind='zero')
 
-    index_function = interp1d(MPO_times,indices,kind='zero')
+    half_timestep_times = get_propagator_intervals(process_tensor,start_time)
+    half_timestep_indices = np.arange(0,half_timestep_times.size)
+
+    half_timestep_index_function = interp1d(half_timestep_times,half_timestep_indices)
+
+    dprop_timestep_index = half_timestep_index_function(dprop_times_list)
+    dprop_timestep_index = dprop_timestep_index.astype(int)
 
     total_derivs = np.zeros(dprop_times_list.size,dtype='complex128')
+
+    double_times = _find_adjacent_even_numbers(dprop_timestep_index)
+
+    truth_array = np.zeros(dprop_times_list.size,dtype='bool')
+    truth_array[double_times] = True
 
     def combine_derivs_single(target_deriv:ndarray,propagator_deriv:ndarray):
         target_deriv_node = tn.Node(target_deriv)
@@ -168,8 +185,46 @@ def _chain_rule(deriv_list: List[ndarray],
         tensor = (target_deriv_node @ propagator_deriv_node).tensor
         return tensor
 
+    def combine_derivs_double(target_deriv:ndarray,propagator_deriv:ndarray):
+        raise NotImplementedError
+        target_deriv_node = tn.Node(target_deriv)
+        propagator_deriv_node = tn.Node(propagator_deriv)
+        target_deriv_node[0] ^ propagator_deriv_node[0]
+        target_deriv_node[1] ^ propagator_deriv_node[1]
+
+        # this can also be done via np.matmul(target_deriv.T,propagator_deriv)
+        tensor = (target_deriv_node @ propagator_deriv_node).tensor
+        return tensor
+
     for i in range(dprop_times_list.size):
-        dtarget_index = int(index_function(dprop_times_list[i]))
-        total_derivs[i] = combine_derivs_single(deriv_list[dtarget_index],dprop_dparam_list[i])
+        dtarget_index = int(MPO_index_function(dprop_times_list[i]))
+        if truth_array[i]:
+            total_derivs[i],total_derivs[i+1]\
+                = combine_derivs_double()
+        elif truth_array[i-1]:
+            continue
+        else:
+            total_derivs[i] = combine_derivs_single(
+                deriv_list[dtarget_index],dprop_dparam_list[i])
+        # if the previous element was a double we need to skip this iteration
+        # because this index has already been dealt with in the double
 
     return total_derivs
+
+def _find_adjacent_even_numbers(dprop_timestep_index:np.ndarray[int]):
+
+    assert dprop_timestep_index.dtype is int,\
+        'these should be integers, otherwise this function wont work'
+    diff = dprop_timestep_index[1:]-dprop_timestep_index[:-1]
+
+    #find where the two elements differ by a single one
+    indices = np.where(diff==1)
+    indices = indices[0]
+
+    # second_one = np.where(modulo==0)
+    # find where they differ by a single one and the first element is even
+    indices_where_even = np.where(dprop_timestep_index[indices]%2==0)
+
+    indicies_of_array = indices[indices_where_even]
+
+    return indicies_of_array
