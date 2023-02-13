@@ -124,7 +124,9 @@ def gradient(
                 dprop_dparam_list,
                 dprop_times_list,
                 start_time,
-                process_tensor)
+                process_tensor,
+                system,
+                (subdiv_limit,liouvillian_epsrel))
     return total_derivs
 
 
@@ -133,7 +135,9 @@ def _chain_rule(deriv_list: List[ndarray],
             dprop_dparam_list: List[ndarray],
             dprop_times_list: ndarray,
             start_time,
-            process_tensor: BaseProcessTensor):
+            process_tensor: BaseProcessTensor,
+            system: Union[System,TimeDependentSystem],
+            system_params = Tuple):
     """
     Uses chain rule to evaluate the gradient of the fidelity w.r.t. the
     control parameters, which are provided in the dprop dpram list
@@ -175,6 +179,13 @@ def _chain_rule(deriv_list: List[ndarray],
     truth_array = np.zeros(dprop_times_list.size,dtype='bool')
     truth_array[double_times] = True
 
+    propagators = system.get_propagators(
+                    process_tensor.dt,
+                    start_time,
+                    system_params[0],
+                    system_params[1])
+
+
     def combine_derivs_single(target_deriv:ndarray,propagator_deriv:ndarray):
         target_deriv_node = tn.Node(target_deriv)
         propagator_deriv_node = tn.Node(propagator_deriv)
@@ -183,6 +194,36 @@ def _chain_rule(deriv_list: List[ndarray],
 
         # this can also be done via np.matmul(target_deriv.T,propagator_deriv)
         tensor = (target_deriv_node @ propagator_deriv_node).tensor
+        return tensor
+
+    def combine_derivs_v3(
+                target_deriv:ndarray,
+                propagator_deriv:ndarray,
+                pre:ndarray,
+                post:ndarray,
+                pre_post_decider:bool):
+        target_deriv_node = tn.Node(target_deriv)
+        propagator_deriv_node = tn.Node(propagator_deriv)
+        # deriv is a post node -> extra node needed is a pre
+        if pre_post_decider:
+            extra_prop_node = tn.Node(pre)
+            target_deriv_node[0] ^ extra_prop_node[0]
+            target_deriv_node[1] ^ propagator_deriv_node[1]
+            extra_prop_node[1] ^ propagator_deriv_node[0]
+
+        # deriv is a pre node -> extra node needed is a post
+        else:
+            extra_prop_node = tn.Node(post)
+            target_deriv_node[0] ^ propagator_deriv_node[0]
+            target_deriv_node[1] ^ extra_prop_node[0] # i just swapped these, make sure it's correct
+            extra_prop_node[1] ^ propagator_deriv_node[1]
+
+        final_node = target_deriv_node @ propagator_deriv_node \
+            @ extra_prop_node
+
+        # this can also be done via np.matmul(target_deriv.T,propagator_deriv)
+        tensor = final_node.tensor
+        # tensor = (target_deriv_node @ propagator_deriv_node).tensor
         return tensor
 
     def combine_derivs_double(target_deriv:ndarray,propagator_deriv:ndarray):
@@ -197,23 +238,45 @@ def _chain_rule(deriv_list: List[ndarray],
         return tensor
 
     for i in range(dprop_times_list.size):
+        # find the propagator index as used in contractions
+        prop_index = dprop_timestep_index[i] // 2
+        # decide whether it's a pre or post node
+        # NOTE: this needs to be type int otherwise this will cause funny bugs.
+        # This will be checked within combine derivs call.
+        # 0/False -> Pre node, 1/True -> Post node
+        pre_post_decider = dprop_timestep_index[i] % 2
+        pre_prop,post_prop = propagators(prop_index)
+
         dtarget_index = int(MPO_index_function(dprop_times_list[i]))
-        if truth_array[i]:
-            total_derivs[i],total_derivs[i+1]\
-                = combine_derivs_double()
-        elif truth_array[i-1]:
-            continue
-        else:
-            total_derivs[i] = combine_derivs_single(
-                deriv_list[dtarget_index],dprop_dparam_list[i])
-        # if the previous element was a double we need to skip this iteration
-        # because this index has already been dealt with in the double
+
+        total_derivs[i] = combine_derivs_v3(
+                    deriv_list[dtarget_index],
+                    dprop_dparam_list[i],
+                    pre_prop,
+                    post_prop,
+                    pre_post_decider
+        )
+
+
+
+        # dtarget_index = int(MPO_index_function(dprop_times_list[i]))
+        # if truth_array[i]:
+        #     total_derivs[i],total_derivs[i+1]\
+        #         = combine_derivs_double()
+        # elif truth_array[i-1]:
+        #     continue
+        # else:
+        #     total_derivs[i] = combine_derivs_single(
+        #         deriv_list[dtarget_index],dprop_dparam_list[i])
+        # # if the previous element was a double we need to skip this iteration
+        # # because this index has already been dealt with in the double
 
     return total_derivs
 
-def _find_adjacent_even_numbers(dprop_timestep_index:np.ndarray[int]):
+def _find_adjacent_even_numbers(dprop_timestep_index:np.ndarray):
 
-    assert dprop_timestep_index.dtype is int,\
+    # https://stackoverflow.com/q/37726830
+    assert np.issubdtype(dprop_timestep_index.dtype, np.integer),\
         'these should be integers, otherwise this function wont work'
     diff = dprop_timestep_index[1:]-dprop_timestep_index[:-1]
 
