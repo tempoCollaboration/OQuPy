@@ -144,12 +144,8 @@ def _chain_rule(deriv_list: List[ndarray],
 
     NOTE: It is useful to make the dprop_times_list based off the
     helpers.get_half_timesteps method so that any floating point numbers
-    are semi-dealt with cause i'm not sure how well that's gonna work
-    at the moment. I'm also assuming dprop_times_list is sorted
-
-    currently assuming each control parameter only depends on two
-    system propagators (2 because of symmetric trotter splitting)
-    TODO: lift this requirement
+    are semi-dealt with. The method using scipy.interp1d should be relatively
+    safe however it's there so it might as well be used. 
     """
     assert len(dprop_times_list) == len(dprop_dparam_list), \
             ('dprop_dpram_list must be the same length as the number of time '
@@ -167,17 +163,13 @@ def _chain_rule(deriv_list: List[ndarray],
     half_timestep_times = get_propagator_intervals(process_tensor,start_time)
     half_timestep_indices = np.arange(0,half_timestep_times.size)
 
-    half_timestep_index_function = interp1d(half_timestep_times,half_timestep_indices)
+    half_timestep_index_function = interp1d(half_timestep_times,
+                                half_timestep_indices)
 
     dprop_timestep_index = half_timestep_index_function(dprop_times_list)
     dprop_timestep_index = dprop_timestep_index.astype(int)
 
     total_derivs = np.zeros(dprop_times_list.size,dtype='complex128')
-
-    double_times = _find_adjacent_even_numbers(dprop_timestep_index)
-
-    truth_array = np.zeros(dprop_times_list.size,dtype='bool')
-    truth_array[double_times] = True
 
     propagators = system.get_propagators(
                     process_tensor.dt,
@@ -185,18 +177,7 @@ def _chain_rule(deriv_list: List[ndarray],
                     system_params[0],
                     system_params[1])
 
-
-    def combine_derivs_single(target_deriv:ndarray,propagator_deriv:ndarray):
-        target_deriv_node = tn.Node(target_deriv)
-        propagator_deriv_node = tn.Node(propagator_deriv)
-        target_deriv_node[0] ^ propagator_deriv_node[0]
-        target_deriv_node[1] ^ propagator_deriv_node[1]
-
-        # this can also be done via np.matmul(target_deriv.T,propagator_deriv)
-        tensor = (target_deriv_node @ propagator_deriv_node).tensor
-        return tensor
-
-    def combine_derivs_v3(
+    def combine_derivs(
                 target_deriv:ndarray,
                 propagator_deriv:ndarray,
                 pre:ndarray,
@@ -221,20 +202,7 @@ def _chain_rule(deriv_list: List[ndarray],
         final_node = target_deriv_node @ propagator_deriv_node \
             @ extra_prop_node
 
-        # this can also be done via np.matmul(target_deriv.T,propagator_deriv)
         tensor = final_node.tensor
-        # tensor = (target_deriv_node @ propagator_deriv_node).tensor
-        return tensor
-
-    def combine_derivs_double(target_deriv:ndarray,propagator_deriv:ndarray):
-        raise NotImplementedError
-        target_deriv_node = tn.Node(target_deriv)
-        propagator_deriv_node = tn.Node(propagator_deriv)
-        target_deriv_node[0] ^ propagator_deriv_node[0]
-        target_deriv_node[1] ^ propagator_deriv_node[1]
-
-        # this can also be done via np.matmul(target_deriv.T,propagator_deriv)
-        tensor = (target_deriv_node @ propagator_deriv_node).tensor
         return tensor
 
     for i in range(dprop_times_list.size):
@@ -249,7 +217,7 @@ def _chain_rule(deriv_list: List[ndarray],
 
         dtarget_index = int(MPO_index_function(dprop_times_list[i]))
 
-        total_derivs[i] = combine_derivs_v3(
+        total_derivs[i] = combine_derivs(
                     deriv_list[dtarget_index],
                     dprop_dparam_list[i],
                     pre_prop,
