@@ -696,8 +696,8 @@ def compute_correlations(
         dt_ = process_tensor.dt
     else:
         if (process_tensor.dt is not None) and (process_tensor.dt != dt):
-            UserWarning("Specified time step `dt` does not match `dt` " \
-                + "stored in the given process tensor " \
+            raise UserWarning("Specified time step `dt` does not match " \
+                + "`dt` stored in the given process tensor " \
                 + f"({dt}!={process_tensor.dt}). " \
                 + "Using specified `dt`. " \
                 + "Don't specify `dt` to use the time step stored in the " \
