@@ -385,11 +385,11 @@ def compute_gradient_and_dynamics(
         backprop_tensor = tn.replicate_nodes([current_node])[0]
         # note now backprop_deriv_list should is unnecessary
 
-        for i in range(num_envs):
-            forwardprop_tensor[i] ^ backprop_tensor[i]
+    for i in range(num_envs):
+        forwardprop_tensor[i] ^ backprop_tensor[i]
 
-        deriv = forwardprop_tensor @ backprop_tensor
-        combined_deriv_list.append(deriv.tensor)
+    deriv = forwardprop_tensor @ backprop_tensor
+    combined_deriv_list.append(deriv.tensor)
 
     # note it prob makes sense to delete the plus one here, which would remove
     # the -1s in the indices inside the for loop. Might screw up the final pre
