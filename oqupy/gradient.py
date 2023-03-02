@@ -225,37 +225,4 @@ def _chain_rule(deriv_list: List[ndarray],
                     pre_post_decider
         )
 
-
-
-        # dtarget_index = int(MPO_index_function(dprop_times_list[i]))
-        # if truth_array[i]:
-        #     total_derivs[i],total_derivs[i+1]\
-        #         = combine_derivs_double()
-        # elif truth_array[i-1]:
-        #     continue
-        # else:
-        #     total_derivs[i] = combine_derivs_single(
-        #         deriv_list[dtarget_index],dprop_dparam_list[i])
-        # # if the previous element was a double we need to skip this iteration
-        # # because this index has already been dealt with in the double
-
     return total_derivs
-
-def _find_adjacent_even_numbers(dprop_timestep_index:np.ndarray):
-
-    # https://stackoverflow.com/q/37726830
-    assert np.issubdtype(dprop_timestep_index.dtype, np.integer),\
-        'these should be integers, otherwise this function wont work'
-    diff = dprop_timestep_index[1:]-dprop_timestep_index[:-1]
-
-    #find where the two elements differ by a single one
-    indices = np.where(diff==1)
-    indices = indices[0]
-
-    # second_one = np.where(modulo==0)
-    # find where they differ by a single one and the first element is even
-    indices_where_even = np.where(dprop_timestep_index[indices]%2==0)
-
-    indicies_of_array = indices[indices_where_even]
-
-    return indicies_of_array
