@@ -15,22 +15,15 @@
 Module on the discrete time evolution of a density matrix.
 """
 
-from typing import List, Optional, Text, Tuple, Union
+from typing import List, Optional, Text, Tuple
 from copy import copy
 from bisect import bisect
 
 import numpy as np
 from numpy import ndarray
 
-from oqupy.helpers import get_propagator_intervals,get_MPO_times
-from oqupy.system import System, TimeDependentSystem
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype, NpDtypeReal, INTEGRATE_EPSREL, SUBDIV_LIMIT
-from oqupy.pt_tempo import BaseProcessTensor
-
-
-import tensornetwork as tn
-from scipy.interpolate import interp1d
+from oqupy.config import NpDtype, NpDtypeReal
 
 class BaseDynamics(BaseAPIClass):
     """
@@ -330,6 +323,7 @@ class GradientDynamics(Dynamics):
             deriv_list: Optional[List[ndarray]] = None,
             backprop_deriv_list: Optional[List[ndarray]] = None,
             forwardprop_deriv_list: Optional[List[ndarray]] = None,
+            total_derivs: Optional[ndarray] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a Dynamics object. """
@@ -337,121 +331,29 @@ class GradientDynamics(Dynamics):
         self._forwardprop_deriv_list = forwardprop_deriv_list
         self._backprop_deriv_list = backprop_deriv_list
         self._deriv_list = deriv_list
+        self._total_derivs = total_derivs
         for time, state in zip(times, states):
             self.add(time, state)
 
     @property
     def forwardprop_deriv_list(self):
-        return np.array(self._forwardprop_deriv_list)
+        return self._forwardprop_deriv_list
 
     @property
     def backprop_deriv_list(self):
-        return np.array(self._backprop_deriv_list)
+        return self._backprop_deriv_list
 
     @property
     def deriv_list(self):
-        return np.array(self._deriv_list)
+        return self._deriv_list
 
-    def chain_rule(self,
-                dprop_dparam_list: List[ndarray],
-                dprop_times_list: ndarray,
-                process_tensor: BaseProcessTensor,
-                system: Union[System,TimeDependentSystem],
-                subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-                liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL
-                ):
-        """
-        maybe this makes sense to have it as a seperate function, not kept
-        inside the gradient dynamics function.
+    @property
+    def total_derivs(self):
+        return self._total_derivs
 
-        Uses chain rule to evaluate the gradient of the fidelity w.r.t. the
-        control parameters, which are provided in the dprop dpram list
-
-        NOTE: It is useful to make the dprop_times_list based off the
-        helpers.get_half_timesteps method so that any floating point numbers are
-        semi-dealt with. The method using scipy.interp1d should be relatively
-        safe however it's there so it might as well be used. 
-        """
-        assert len(dprop_times_list) == len(dprop_dparam_list), \
-                ('dprop_dpram_list must be the same length as the number of '
-                'time slices')
-        
-        start_time = self.times[0]
-
-        MPO_times = get_MPO_times(process_tensor,start_time,inc_endtime=True)
-        MPO_times = np.concatenate((np.array([0.0]),MPO_times))
-        MPO_indices = np.arange(0,MPO_times.size)
-        # this is more of an internal check than anything, if the code is written
-        # correctly this should always be true.
-        # assert indices.size == len(deriv_list), \
-        #         'indices mismatched with deriv_list times'
-        MPO_index_function = interp1d(MPO_times,MPO_indices,kind='zero')
-
-        half_timestep_times = get_propagator_intervals(process_tensor,start_time)
-        half_timestep_indices = np.arange(0,half_timestep_times.size)
-
-        half_timestep_index_function = interp1d(half_timestep_times,
-                                    half_timestep_indices)
-
-        dprop_timestep_index = half_timestep_index_function(dprop_times_list)
-        dprop_timestep_index = dprop_timestep_index.astype(int)
-
-        total_derivs = np.zeros(dprop_times_list.size,dtype='complex128')
-
-        propagators = system.get_propagators(
-                        process_tensor.dt,
-                        start_time,
-                        subdiv_limit,
-                        liouvillian_epsrel)
-
-        def combine_derivs(
-                    target_deriv:ndarray,
-                    propagator_deriv:ndarray,
-                    pre:ndarray,
-                    post:ndarray,
-                    pre_post_decider:bool):
-            target_deriv_node = tn.Node(target_deriv)
-            propagator_deriv_node = tn.Node(propagator_deriv)
-            # deriv is a post node -> extra node needed is a pre
-            if pre_post_decider:
-                extra_prop_node = tn.Node(pre)
-                target_deriv_node[0] ^ extra_prop_node[0]
-                target_deriv_node[1] ^ propagator_deriv_node[1]
-                extra_prop_node[1] ^ propagator_deriv_node[0]
-
-            # deriv is a pre node -> extra node needed is a post
-            else:
-                extra_prop_node = tn.Node(post)
-                target_deriv_node[0] ^ propagator_deriv_node[0]
-                target_deriv_node[1] ^ extra_prop_node[0] # i just swapped these, make sure it's correct
-                extra_prop_node[1] ^ propagator_deriv_node[1]
-
-            final_node = target_deriv_node @ propagator_deriv_node \
-                @ extra_prop_node
-
-            tensor = final_node.tensor
-            return tensor
-
-        for i in range(dprop_times_list.size):
-            # find the propagator index as used in contractions
-            prop_index = dprop_timestep_index[i] // 2
-            # decide whether it's a pre or post node
-            # NOTE: this needs to be type int otherwise this will cause funny bugs.
-            # This will be checked within combine derivs call.
-            # 0/False -> Pre node, 1/True -> Post node
-            pre_post_decider = dprop_timestep_index[i] % 2
-            pre_prop,post_prop = propagators(prop_index)
-
-            dtarget_index = int(MPO_index_function(dprop_times_list[i]))
-
-            total_derivs[i] = combine_derivs(
-                        deriv_list[dtarget_index],
-                        dprop_dparam_list[i],
-                        pre_prop,
-                        post_prop,
-                        pre_post_decider)
-
-        return total_derivs
+    @total_derivs.setter
+    def total_derivs(self,total_derivs):
+        self._total_derivs = total_derivs
 
 
 def _parse_times_states(times, states) -> Tuple[List[float],
