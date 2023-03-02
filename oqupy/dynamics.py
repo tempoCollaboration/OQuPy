@@ -300,7 +300,7 @@ class MeanFieldDynamics(BaseAPIClass):
         return self._system_dynamics
 
 
-class GradientDymnamics(Dynamics):
+class GradientDynamics(Dynamics):
     """
     Represents a specific time evolution of a density matrix,
     as well as the gradient w.r.t. some objective function

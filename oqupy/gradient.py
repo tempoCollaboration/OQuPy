@@ -25,7 +25,7 @@ import tensornetwork as tn
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
-from oqupy.dynamics import Dynamics, MeanFieldDynamics
+from oqupy.dynamics import Dynamics, MeanFieldDynamics, GradientDynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem, System, TimeDependentSystem
 from oqupy.system import MeanFieldSystem
@@ -50,7 +50,7 @@ def gradient(
         record_all: Optional[bool] = True,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
-        progress_type: Optional[Text] = None) -> Dynamics:
+        progress_type: Optional[Text] = None) -> GradientDynamics:
 
 
     """

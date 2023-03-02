@@ -31,7 +31,7 @@ from oqupy.system import MeanFieldSystem
 from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
-from oqupy.dynamics import GradientDymnamics
+from oqupy.dynamics import GradientDynamics
 
 
 Indices = Union[int, slice, List[Union[int, slice]]]
@@ -201,7 +201,7 @@ def compute_gradient_and_dynamics(
         get_forward_and_backprop_list = False,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
-        progress_type: Optional[Text] = None) -> GradientDymnamics:
+        progress_type: Optional[Text] = None) -> GradientDynamics:
     """
     Compute some objective function and calculate its gradient w.r.t.
     some control parameters, accounting
@@ -472,7 +472,7 @@ def compute_gradient_and_dynamics(
         backprop_deriv_list = None
 
 
-    return GradientDymnamics(times=list(times),
+    return GradientDynamics(times=list(times),
             states=states,
             forwardprop_deriv_list=forwardprop_deriv_list,
             backprop_deriv_list=backprop_deriv_list,
