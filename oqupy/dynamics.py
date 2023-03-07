@@ -355,7 +355,6 @@ class GradientDynamics(Dynamics):
     def total_derivs(self,total_derivs):
         self._total_derivs = total_derivs
 
-
 def _parse_times_states(times, states) -> Tuple[List[float],
         List[ndarray]] :
     """Check times and states are None or lists of the same length"""

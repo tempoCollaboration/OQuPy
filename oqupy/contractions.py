@@ -389,7 +389,7 @@ def compute_gradient_and_dynamics(
         forwardprop_tensor[i] ^ backprop_tensor[i]
 
     deriv = forwardprop_tensor @ backprop_tensor
-    combined_deriv_list.append(deriv.tensor)
+    combined_deriv_list.append(tn.replicate_nodes([deriv])[0].tensor)
 
     # note it prob makes sense to delete the plus one here, which would remove
     # the -1s in the indices inside the for loop. Might screw up the final pre
@@ -408,7 +408,8 @@ def compute_gradient_and_dynamics(
         if step == 0: # i think this is correct
             break
 
-        # record_all not necessary for backprop as it's been done in the forwardprop
+        # record_all not necessary for backprop as it's been done in the
+        # forwardprop
 
         # prog_bar.update(num_steps - step) # commented
 
@@ -440,7 +441,7 @@ def compute_gradient_and_dynamics(
         else:
             # test:
             if len(forwardprop_deriv_list)-1 != step-1:
-                    raise IndexError('These should be equal')
+                raise IndexError('These should be equal')
 
             # if we're not keeping the full list, we can delete the
             # forwardprop tensor to save memory
@@ -451,7 +452,7 @@ def compute_gradient_and_dynamics(
             forwardprop_tensor[i] ^ backprop_tensor[i]
 
         deriv = forwardprop_tensor @ backprop_tensor
-        combined_deriv_list.append(deriv.tensor)
+        combined_deriv_list.append(tn.replicate_nodes([deriv])[0].tensor)
 
         current_node, current_edges = _apply_system_superoperator(
             current_node, current_edges, first_half_prop.T)

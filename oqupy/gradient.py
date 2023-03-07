@@ -172,7 +172,7 @@ def _chain_rule(deriv_list: List[ndarray],
     half_timestep_indices = np.arange(0,half_timestep_times.size)
 
     half_timestep_index_function = interp1d(half_timestep_times,
-                                half_timestep_indices)
+                                half_timestep_indices,kind='zero')
 
     dprop_timestep_index = half_timestep_index_function(dprop_times_list)
     dprop_timestep_index = dprop_timestep_index.astype(int)
@@ -222,6 +222,15 @@ def _chain_rule(deriv_list: List[ndarray],
         # 0/False -> Pre node, 1/True -> Post node
         pre_post_decider = dprop_timestep_index[i] % 2
         pre_prop,post_prop = propagators(prop_index)
+
+        # if first or last timestep, do not include the extra propagator in
+        # diagram as they are special cases where there was no propagator
+        # omitted during the forward and backprop. Cleanest way to implement
+        # this IMO is to set the extra propagator to the identity
+        if dprop_times_list[i] == 0 or dprop_times_list[i] \
+                ==  dprop_times_list.size-1:
+            pre_prop = np.identity(process_tensor.hilbert_space_dimension**2)
+            post_prop = np.identity(process_tensor.hilbert_space_dimension**2)
 
         dtarget_index = int(MPO_index_function(dprop_times_list[i]))
 
