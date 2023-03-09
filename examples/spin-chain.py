@@ -41,7 +41,7 @@ num_steps = 20
 alpha = 0.08
 omega_cutoff = 4.0
 temperature = 1.6
-pt_tcut = 40
+pt_dkmax = 40
 pt_epsrel = 1.0e-5
 
 # -- chain --
@@ -61,8 +61,8 @@ correlations = oqupy.PowerLawSD(alpha=alpha,
                                 temperature=temperature)
 bath = oqupy.Bath(0.5 * sy, correlations)
 pt_tempo_parameters = oqupy.TempoParameters(dt=dt,
-                                            tcut=pt_tcut,
-                                            epsrel=pt_epsrel)
+                                            epsrel=pt_epsrel,
+                                            dkmax=pt_dkmax)
 
 print("Process tensor (PT) computation:")
 pt = oqupy.pt_tempo_compute(bath=bath,

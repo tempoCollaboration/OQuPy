@@ -108,7 +108,7 @@ qualitative result is not really changed though.
     delta_t = 0.2
     initial_state = spin_down
     corr = oqupy.PowerLawSD(alpha, 1, w_cutoff, temperature = 1)
-    pars = oqupy.TempoParameters(delta_t, tcut, epsrel)
+    pars = oqupy.TempoParameters(dt=delta_t, epsrel=epsrel, tcut=tcut)
     system = oqupy.System(Omega*s_x + epsilon*s_z)
     bath = oqupy.Bath(s_z, corr)
     pt = oqupy.PtTempo(bath, 0.0, final_t, pars)

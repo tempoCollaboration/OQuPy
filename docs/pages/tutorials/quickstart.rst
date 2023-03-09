@@ -112,15 +112,15 @@ the job - just to have an idea where we are going:
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  150 of  150 [########################################] 00:00:02
-    Elapsed time: 2.9s
+    100.0%  150 of  150 [########################################] 00:00:03
+    Elapsed time: 3.9s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fe00823be50>
+    <matplotlib.legend.Legend at 0x7fbbebf83cd0>
 
 
 
@@ -230,7 +230,7 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    /home/pip/documents/saints/phd/tempo/oqupyPR/tutorials/../oqupy/tempo.py:849: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    ../oqupy/tempo.py:881: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -239,7 +239,7 @@ to :math:`t=5\,\Omega^{-1}`
 
     --> TEMPO computation:
     100.0%   80 of   80 [########################################] 00:00:01
-    Elapsed time: 1.4s
+    Elapsed time: 2.0s
 
 
 and plot the result:
@@ -257,7 +257,7 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fe003fb4e50>
+    <matplotlib.legend.Legend at 0x7fbb6f953f10>
 
 
 
@@ -271,7 +271,7 @@ Let’s have a look at the above warning. It said:
 
 ::
 
-   WARNING: Estimating parameters for TEMPO calculation. No guarantie that resulting TEMPO calculation converges towards the correct dynamics! Please refere to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+   WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
 We got this message because we didn’t tell the package what parameters
 to use for the TEMPO computation, but instead only specified a
@@ -289,9 +289,9 @@ There are **three key parameters** to a TEMPO computation:
    the environment it valid, and the environment auto-correlation
    function is reasonably well sampled.
 
--  ``tcut`` - Memory cut-off as a time (``float``) or step number
-   (``int``). It must be large enough to capture all non-Markovian
-   effects of the environment.
+-  ``tcut`` (or ``dkmax``) - Memory cut-off time (or number of steps).
+   It must be large enough to capture all non-Markovian effects of the
+   environment.
 
 -  ``epsrel`` - The maximal relative error :math:`\epsilon_\mathrm{rel}`
    in the singular value truncation - It must be small enough such that
@@ -315,6 +315,8 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
+    ../oqupy/tempo.py:881: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+      warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
 
@@ -340,7 +342,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    <Axes: >
+    <AxesSubplot:>
 
 
 
@@ -390,7 +392,7 @@ and check again with the helper function:
 
 .. parsed-literal::
 
-    <Axes: >
+    <AxesSubplot:>
 
 
 

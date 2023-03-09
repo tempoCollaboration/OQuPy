@@ -33,7 +33,7 @@ def test_tempo():
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
-    tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
+    tempo_param_A = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
     tempo_sys_A = tempo.Tempo(system=system,
                               bath=bath,
                               parameters=tempo_param_A,
@@ -57,7 +57,7 @@ def test_tempo_bad_input():
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
-    tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
+    tempo_param_A = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
     with pytest.raises(TypeError):
         tempo_sys_A = tempo.Tempo(system=system,
                                   bath=bath,
@@ -126,7 +126,7 @@ def test_tempo_time_dependent():
                                     cutoff=1.0,
                                     cutoff_type='exponential')
     bath = tempo.Bath(0.1 * tempo.operators.sigma("x"), correlations)
-    tempo_parameters = tempo.TempoParameters(dt=0.1, tcut=10, epsrel=10**(-2))
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-2))
     tempo_A= tempo.Tempo(system=system,
                         bath=bath,
                         parameters=tempo_parameters,
@@ -185,7 +185,7 @@ def test_tempo_with_field():
                                 cutoff_type='gaussian',
                                 temperature=0.1)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
-    tempo_parameters = tempo.TempoParameters(dt=0.1, tcut=20, epsrel=10**(-7))
+    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-7))
     tempo_sys = tempo.MeanFieldTempo(mean_field_system=mean_field_system,
                         bath_list=[bath],
                         initial_state_list=[tempo.operators.spin_dm("z-")],

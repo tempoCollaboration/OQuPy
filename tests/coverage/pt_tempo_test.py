@@ -31,7 +31,7 @@ def test_pt_tempo():
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
-    tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
+    tempo_param_A = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
     pt_tempo_sys_A = tempo.PtTempo(bath=bath,
                                    parameters=tempo_param_A,
                                    start_time=start_time,
@@ -41,7 +41,7 @@ def test_pt_tempo():
     pt_A = pt_tempo_sys_A.get_process_tensor()
     assert len(pt_A) == 11
 
-    tempo_param_B = tempo.TempoParameters(0.1, None, 1.0e-5, name="rough-B")
+    tempo_param_B = tempo.TempoParameters(0.1, 1.0e-5, None, None, name="rough-B")
     pt_tempo_sys_B = tempo.PtTempo(bath=bath,
                                    parameters=tempo_param_B,
                                    start_time=start_time,
@@ -57,7 +57,7 @@ def test_tempo_bad_input():
     correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
 
-    tempo_param = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
+    tempo_param = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
 
     tempo.PtTempo(bath=bath,
                   parameters=tempo_param,

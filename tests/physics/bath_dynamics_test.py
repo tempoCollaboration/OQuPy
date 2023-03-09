@@ -61,7 +61,7 @@ def test():
                               temperature=temperature)
     coupling_operator = np.array([[1,0],[0,-1]])
     system_hamiltonian = np.array([[1,0],[0,-1]])
-    parameters = TempoParameters(dt, tcut, epsrel)
+    parameters = TempoParameters(dt, epsrel, tcut)
     system = System(system_hamiltonian)
     bath = Bath(coupling_operator,correlations)
     pt = PtTempo(bath, 0.0, final_time, parameters)

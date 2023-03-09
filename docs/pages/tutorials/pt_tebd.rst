@@ -176,7 +176,7 @@ time steps.
     PT-TEBD computation (closed spin chain):
     --> PT-TEBD computation:
     100.0%   20 of   20 [########################################] 00:00:00
-    Elapsed time: 0.4s
+    Elapsed time: 0.6s
 
 
 The computation returns a results dictionary which in addition to the
@@ -213,7 +213,7 @@ We can use the dynamics results to then compute the evolution of the
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f2fb90f9840>
+    <matplotlib.legend.Legend at 0x7f935b58e290>
 
 
 
@@ -266,15 +266,8 @@ computation (see Tutorial 02 - Time dependence and PT-TEMPO).
 
     tempo_parameters = oqupy.TempoParameters(
         dt=pt_tebd_params.dt,
-        tcut=40,
+        dkmax=40,
         epsrel=1.0e-5)
-
-
-.. parsed-literal::
-
-    /home/pip/documents/saints/phd/tempo/oqupyPR/tutorials/../oqupy/tempo.py:969: UserWarning: Assuming integer tcut is a timestep (memory time tcut * dt). If you did not intend this, pass a float instead.
-      warnings.warn(INT_TCUT_WARNING_MSG, UserWarning)
-
 
 .. code:: ipython3
 
@@ -292,7 +285,7 @@ computation (see Tutorial 02 - Time dependence and PT-TEMPO).
     Process tensor (PT) computation:
     --> PT-TEMPO computation:
     100.0%   20 of   20 [########################################] 00:00:00
-    Elapsed time: 0.1s
+    Elapsed time: 0.2s
 
 
 To see the effect of the environment clearly we start in a fully mixed
@@ -331,7 +324,7 @@ keep them free by setting them to ``None``.
     PT-TEBD computation (open spin chain):
     --> PT-TEBD computation:
     100.0%   20 of   20 [########################################] 00:00:01
-    Elapsed time: 1.3s
+    Elapsed time: 1.5s
 
 
 .. code:: ipython3
@@ -347,7 +340,7 @@ keep them free by setting them to ``None``.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f2fb90f80a0>
+    <matplotlib.legend.Legend at 0x7f935b986510>
 
 
 

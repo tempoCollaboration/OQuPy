@@ -38,8 +38,8 @@ bath = oqupy.Bath(op.sigma("z")/2.0, correlations)
 
 tempo_parameters = oqupy.TempoParameters(
     dt=0.10,
-    tcut=20,
     epsrel=10**(-5),
+    dkmax=20,
     add_correlation_time=2.0)
 
 oqupy.helpers.plot_correlations_with_parameters(correlations, tempo_parameters)

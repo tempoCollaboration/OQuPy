@@ -50,7 +50,7 @@ def test_tensor_network_tempo_backend_non_diag():
         bath = oqupy.Bath(0.5*base["coupling_op"], correlations)
         tempo_parameters = oqupy.TempoParameters(
             dt=0.1,
-            tcut=30,
+            dkmax=30,
             epsrel=10**(-5),
             add_correlation_time=8.0)
 
@@ -105,7 +105,7 @@ def test_tensor_network_pt_tempo_backend_non_diag():
         bath = oqupy.Bath(0.5*base["coupling_op"], correlations)
         tempo_parameters = oqupy.TempoParameters(
             dt=0.1,
-            tcut=30,
+            dkmax=30,
             epsrel=10**(-5),
             add_correlation_time=8.0)
 
