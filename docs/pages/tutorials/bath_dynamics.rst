@@ -102,13 +102,13 @@ qualitative result is not really changed though.
     alpha = 0.05
     w_cutoff = 10 * Omega
     epsilon = 2 * Omega
-    dkmax = 10
+    tcut = 2.0
     epsrel = 1e-5
     final_t = 20
     delta_t = 0.2
     initial_state = spin_down
     corr = oqupy.PowerLawSD(alpha, 1, w_cutoff, temperature = 1)
-    pars = oqupy.TempoParameters(delta_t, dkmax, epsrel)
+    pars = oqupy.TempoParameters(delta_t, tcut, epsrel)
     system = oqupy.System(Omega*s_x + epsilon*s_z)
     bath = oqupy.Bath(s_z, corr)
     pt = oqupy.PtTempo(bath, 0.0, final_t, pars)
@@ -118,8 +118,8 @@ qualitative result is not really changed though.
 .. parsed-literal::
 
     --> PT-TEMPO computation:
-    100.0%  100 of  100 [########################################] 00:00:03
-    Elapsed time: 3.1s
+    100.0%  100 of  100 [########################################] 00:00:00
+    Elapsed time: 0.8s
 
 
 Now as we saw previously the process tensor can readily be used to
@@ -145,14 +145,14 @@ matrix elements evolve.
 
     --> Compute dynamics:
     100.0%  100 of  100 [########################################] 00:00:00
-    Elapsed time: 0.4s
+    Elapsed time: 0.1s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7ff2e5df9da0>
+    <matplotlib.legend.Legend at 0x7fd9cf197fd0>
 
 
 
@@ -241,8 +241,8 @@ frequency, in this case let’s look at ``w = Omega`` and a bandwidth of
 .. parsed-literal::
 
     --> Compute correlations:
-    100.0%  100 of  100 [########################################] 00:00:14
-    Elapsed time: 14.4s
+    100.0%  100 of  100 [########################################] 00:00:07
+    Elapsed time: 7.7s
 
 
 
@@ -277,23 +277,10 @@ see what happens if we want the energy of another mode now, let’s say
     plt.xlabel(r'$\Omega t$')
     plt.ylabel(r'$\Delta Q (2 \Omega, t)$')
 
-
-
-
-.. parsed-literal::
-
-    Text(0, 0.5, '$\\Delta Q (2 \\Omega, t)$')
-
-
-
-
-.. image:: bath_dynamics_files/bath_dynamics_16_1.png
-
-
 Much quicker! This is because the same set of system correlation
 functions can be used to compute any bath correlation function
 :math:`\langle \alpha_2(t_2)\alpha_1(t_1)\rangle` where
-:math:`\alpha_2, \alpha_1 \in \{a_k^\dagger,a_k\}`  and
+:math:`\alpha\_2, \alpha_1 \in {a_k^\dagger ,a_k}` and
 :math:`t_1,t_2 < t_N`. So now we see the logic of having a bath_dynamics
 object, it allows us to conveniently store the calculated system
 correlation functions and re-use them as we like :)
@@ -320,19 +307,6 @@ exchanged over the process so simply look at the final value of
     plt.xlabel(r"Mode Frequency$/\Omega$")
     plt.ylabel(r"Heat Exchanged$/\Omega$")
 
-
-
-
-.. parsed-literal::
-
-    Text(0, 0.5, 'Heat Exchanged$/\\Omega$')
-
-
-
-
-.. image:: bath_dynamics_files/bath_dynamics_18_1.png
-
-
 This is highly oscillatory, perhaps unsurprising from the dynamics we
 generated but still it would be nice to smooth this out. We expect the
 result to eventually equilibrate but with such a small bandwidth this
@@ -355,22 +329,10 @@ we average over the last :math:`n` timesteps where
     plt.xlabel(r"Mode Frequency$/\Omega$")
     plt.ylabel(r"Heat Exchanged$/\Omega$")
 
-
-
-
-.. parsed-literal::
-
-    Text(0, 0.5, 'Heat Exchanged$/\\Omega$')
-
-
-
-
-.. image:: bath_dynamics_files/bath_dynamics_20_1.png
-
-
 Here, as in the paper, we see heat is absorbed by the system from the
 band of the modes in the vicinity of
 :math:`\tilde{\Omega}=\sqrt{\Omega^2+\epsilon^2}`. This seems sensible
 as in a Markovian theory the system would sample the environment purely
 at its eigensplitting :math:`\tilde{\Omega}`.
 
+--------------

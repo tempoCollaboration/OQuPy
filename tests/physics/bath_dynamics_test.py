@@ -49,7 +49,7 @@ def test():
     alpha = 0.1
     temperature = 2
     dt = .1
-    dkmax = None
+    tcut = None
     final_time = 2
     epsrel = 1e-7
     system_correlations = np.ones((int(final_time/dt),                  #system correlations
@@ -61,7 +61,7 @@ def test():
                               temperature=temperature)
     coupling_operator = np.array([[1,0],[0,-1]])
     system_hamiltonian = np.array([[1,0],[0,-1]])
-    parameters = TempoParameters(dt, dkmax, epsrel)
+    parameters = TempoParameters(dt, tcut, epsrel)
     system = System(system_hamiltonian)
     bath = Bath(coupling_operator,correlations)
     pt = PtTempo(bath, 0.0, final_time, parameters)

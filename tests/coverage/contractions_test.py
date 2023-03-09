@@ -38,7 +38,7 @@ def test_compute_dynamics_with_field():
                                 cutoff_type='gaussian',
                                 temperature=0.0)
     bath = oqupy.Bath(0.5 * oqupy.operators.sigma("x"), correlations)
-    tempo_parameters = oqupy.TempoParameters(dt=dt, dkmax=20, epsrel=10**(-5))
+    tempo_parameters = oqupy.TempoParameters(dt=dt, tcut=20, epsrel=10**(-5))
 
     mean_field_dynamics = oqupy.compute_dynamics_with_field(
             mean_field_system,
@@ -151,7 +151,7 @@ def test_compute_dynamics_with_field():
 
 def test_mean_field_and_with_control():
     sigma_z = oqupy.operators.sigma('z')
-    tempo_parameters = oqupy.TempoParameters(dt=0.2, dkmax=10, epsrel=10**(-2))
+    tempo_parameters = oqupy.TempoParameters(dt=0.2, tcut=10, epsrel=10**(-2))
     t0 = 0.0
     tf = 1.0
 

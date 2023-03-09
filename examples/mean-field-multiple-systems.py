@@ -49,7 +49,7 @@ initial_state_1 = np.array([[0,0],[0,1]])
 initial_state_2 = np.array([[0,0],[0,1]])
 initial_state_list = [initial_state_1, initial_state_2]
 
-tempo_parameters = oqupy.TempoParameters(dt=0.2, dkmax=20, epsrel=10**(-4))
+tempo_parameters = oqupy.TempoParameters(dt=0.2, tcut=2.0, epsrel=10**(-4))
 start_time = 0.0
 end_time = 10
 

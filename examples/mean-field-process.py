@@ -47,7 +47,7 @@ bath = oqupy.Bath(oqupy.operators.sigma("z")/2.0, correlations)
 
 pt_tempo_parameters = oqupy.TempoParameters(
     dt=0.1,
-    dkmax=20,
+    tcut=2.0,
     epsrel=10**(-7))
 
 process_tensor = oqupy.pt_tempo_compute(bath=bath,

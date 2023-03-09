@@ -168,7 +168,7 @@ detuning, we can check the shape of the laser pulse.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fab3d70bb20>
+    <matplotlib.legend.Legend at 0x7fc555eaa170>
 
 
 
@@ -202,7 +202,7 @@ parameters):
 
 .. code:: ipython3
 
-    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, tcut=2.0, epsrel=10**(-4))
     
     tempo_sys = oqupy.Tempo(system=system,
                             bath=bath,
@@ -215,8 +215,8 @@ parameters):
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%   50 of   50 [########################################] 00:00:02
-    Elapsed time: 2.6s
+    100.0%   50 of   50 [########################################] 00:00:00
+    Elapsed time: 0.7s
 
 
 and extract the expectation values
@@ -239,7 +239,7 @@ for plotting:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fab3ab8f430>
+    <matplotlib.legend.Legend at 0x7fc553bb6e30>
 
 
 
@@ -261,7 +261,7 @@ with many different system Hamiltonians at relatively little cost.
 
 .. code:: ipython3
 
-    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-4))
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, tcut=2.0, epsrel=10**(-4))
     
     process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                             start_time=-2.0,
@@ -272,8 +272,8 @@ with many different system Hamiltonians at relatively little cost.
 .. parsed-literal::
 
     --> PT-TEMPO computation:
-    100.0%   50 of   50 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    100.0%   50 of   50 [########################################] 00:00:00
+    Elapsed time: 0.3s
 
 
 Given we want to calculate :math:`\langle\sigma_{xy}\rangle(t)` for 5
@@ -340,7 +340,7 @@ and plot :math:`\langle\sigma_{xy}\rangle(t)` for each:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fab3abec4c0>
+    <matplotlib.legend.Legend at 0x7fc553b84bb0>
 
 
 

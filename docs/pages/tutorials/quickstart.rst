@@ -93,7 +93,7 @@ the job - just to have an idea where we are going:
                                     cutoff=omega_cutoff,
                                     cutoff_type='exponential')
     bath = oqupy.Bath(0.5 * sigma_z, correlations)
-    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4))
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, tcut=3.0, epsrel=10**(-4))
     
     dynamics = oqupy.tempo_compute(system=system,
                                    bath=bath,
@@ -112,15 +112,15 @@ the job - just to have an idea where we are going:
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  150 of  150 [########################################] 00:00:08
-    Elapsed time: 8.5s
+    100.0%  150 of  150 [########################################] 00:00:02
+    Elapsed time: 2.9s
 
 
 
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fd9c63c8d90>
+    <matplotlib.legend.Legend at 0x7fe00823be50>
 
 
 
@@ -230,7 +230,7 @@ to :math:`t=5\,\Omega^{-1}`
 
 .. parsed-literal::
 
-    /home/pip/documents/saints/phd/tempo/OQuPy/tutorials/../oqupy/tempo.py:850: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
+    /home/pip/documents/saints/phd/tempo/oqupyPR/tutorials/../oqupy/tempo.py:849: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
       warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
@@ -238,8 +238,8 @@ to :math:`t=5\,\Omega^{-1}`
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%   80 of   80 [########################################] 00:00:04
-    Elapsed time: 4.3s
+    100.0%   80 of   80 [########################################] 00:00:01
+    Elapsed time: 1.4s
 
 
 and plot the result:
@@ -257,7 +257,7 @@ and plot the result:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fd9c63263e0>
+    <matplotlib.legend.Legend at 0x7fe003fb4e50>
 
 
 
@@ -289,9 +289,9 @@ There are **three key parameters** to a TEMPO computation:
    the environment it valid, and the environment auto-correlation
    function is reasonably well sampled.
 
--  ``dkmax`` - Number of time steps :math:`K \in \mathbb{N}` - It must
-   be large enough such that :math:`\delta t \times K` is larger than
-   the neccessary memory time :math:`\tau_\mathrm{cut}`.
+-  ``tcut`` - Memory cut-off as a time (``float``) or step number
+   (``int``). It must be large enough to capture all non-Markovian
+   effects of the environment.
 
 -  ``epsrel`` - The maximal relative error :math:`\epsilon_\mathrm{rel}`
    in the singular value truncation - It must be small enough such that
@@ -315,8 +315,6 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    /home/pip/documents/saints/phd/tempo/OQuPy/tutorials/../oqupy/tempo.py:850: UserWarning: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
-      warnings.warn(GUESS_WARNING_MSG, UserWarning)
     WARNING: Estimating parameters for TEMPO computation. No guarantee that resulting TEMPO computation converges towards the correct dynamics! Please refer to the TEMPO documentation and check convergence by varying the parameters for TEMPO manually.
 
 
@@ -326,7 +324,7 @@ whether it satisfies the above requirements:
     TempoParameters object: Roughly estimated parameters
      Estimated with 'guess_tempo_parameters()'
       dt                   = 0.0625 
-      dkmax                = 37 
+      tcut [dkmax]         = 2.25 [36] 
       epsrel               = 2.4846963223857106e-05 
       add_correlation_time = None 
     
@@ -342,7 +340,7 @@ whether it satisfies the above requirements:
 
 .. parsed-literal::
 
-    <AxesSubplot:>
+    <Axes: >
 
 
 
@@ -352,19 +350,19 @@ whether it satisfies the above requirements:
 
 In this plot you see the real and imaginary part of the environments
 auto-correlation as a function of the delay time :math:`\tau` and the
-sampling of it corresponding the the chosen parameters. The spacing and
-the number of sampling points is given by ``dt`` and ``dkmax``
-respectively. We can see that the auto-correlation function is close to
-zero for delay times larger than approx :math:`2 \Omega^{-1}` and that
-the sampling points follow the curve reasonably well. Thus this is a
-reasonable set of parameters.
+sampling of it corresponding the the chosen parameters. Sampling points
+with spacing ``dt`` are given up to time ``tcut`` (``dkmax`` points). We
+can see that the auto-correlation function is close to zero for delay
+times larger than approx :math:`2 \Omega^{-1}` and that the sampling
+points follow the curve reasonably well. Thus this is a reasonable set
+of parameters.
 
 We can choose a set of parameters by hand and bundle them into a
 ``TempoParameters`` object,
 
 .. code:: ipython3
 
-    tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=30, epsrel=10**(-4), name="my rough parameters")
+    tempo_parameters = oqupy.TempoParameters(dt=0.1, tcut=3.0, epsrel=10**(-4), name="my rough parameters")
     print(tempo_parameters)
 
 
@@ -374,7 +372,7 @@ We can choose a set of parameters by hand and bundle them into a
     TempoParameters object: my rough parameters
      __no_description__
       dt                   = 0.1 
-      dkmax                = 30 
+      tcut [dkmax]         = 3.0 [30] 
       epsrel               = 0.0001 
       add_correlation_time = None 
     
@@ -392,7 +390,7 @@ and check again with the helper function:
 
 .. parsed-literal::
 
-    <AxesSubplot:>
+    <Axes: >
 
 
 
@@ -426,15 +424,15 @@ We can start by computing the dynamics up to time
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%   50 of   50 [########################################] 00:00:01
-    Elapsed time: 1.9s
+    100.0%   50 of   50 [########################################] 00:00:00
+    Elapsed time: 0.6s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7fd9c53e3760>
+    <oqupy.dynamics.Dynamics at 0x7fe003f1dd80>
 
 
 
@@ -453,7 +451,7 @@ then get and plot the dynamics of expecatation values,
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fd9c4f45ba0>
+    <matplotlib.legend.Legend at 0x7fe003dc13f0>
 
 
 
@@ -471,15 +469,15 @@ then continue the computation to :math:`15.0\,\Omega^{-1}`,
 .. parsed-literal::
 
     --> TEMPO computation:
-    100.0%  100 of  100 [########################################] 00:00:06
-    Elapsed time: 6.1s
+    100.0%  100 of  100 [########################################] 00:00:02
+    Elapsed time: 2.4s
 
 
 
 
 .. parsed-literal::
 
-    <oqupy.dynamics.Dynamics at 0x7fd9c53e3760>
+    <oqupy.dynamics.Dynamics at 0x7fe003f1dd80>
 
 
 
@@ -498,7 +496,7 @@ and then again get and plot the dynamics of expecatation values.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7fd9c5f05870>
+    <matplotlib.legend.Legend at 0x7fe0083e6d70>
 
 
 
@@ -510,6 +508,8 @@ Finally, we note: to validate the accuracy the result **it vital to
 check the convergence of such a simulation by varying all three
 computational parameters!** For this we recommend repeating the same
 simulation with slightly “better” parameters (smaller ``dt``, larger
-``dkmax``, smaller ``epsrel``) and to consider the difference of the
+``tcut``, smaller ``epsrel``) and to consider the difference of the
 result as an estimate of the upper bound of the accuracy of the
 simulation.
+
+--------------

@@ -42,7 +42,7 @@ def test_tempo_parameters():
     assert tempo_param.liouvillian_epsrel == 2.0e-6
     tempo_param.tcut = 0.5
     assert tempo_param.tcut == 0.5
-    assert tempo_param.dkmax == 5
+    assert tempo_param.dkmax == 10
     del tempo_param.tcut
     assert tempo_param.tcut == None
     assert tempo_param.dkmax == None
@@ -50,16 +50,18 @@ def test_tempo_parameters():
     assert tempo_param.subdiv_limit == None
 
 def test_tempo_parameters_bad_input():
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo.TempoParameters("x", 42, 1.0e-5, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, "x", 1.0e-5, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
+        tempo.TempoParameters(0.1, -1, 1.0e-05, None, None, 2.0e-6, "rough", "bla")
+    with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 42, "x", None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 42, 1.0e-05, "x", None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 42, 1.0e-05, None, "x", 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 42, 1.0e-05, None, None, "x", "rough", "bla")
 

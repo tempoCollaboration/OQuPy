@@ -69,7 +69,7 @@ system_E = oqupy.System(h_sys_E)
 def test_tensor_network_tempo_backend_E():
     tempo_params_E = oqupy.TempoParameters(
         dt=0.4,
-        dkmax=2,
+        tcut=2,
         epsrel=1.0e-5,
         add_correlation_time=np.infty)
     tempo_E = oqupy.Tempo(
@@ -86,7 +86,7 @@ def test_tensor_network_tempo_backend_E():
 def test_tensor_network_pt_tempo_backend_E():
     tempo_params_E = oqupy.TempoParameters(
         dt=0.4,
-        dkmax=2,
+        tcut=2,
         epsrel=1.0e-5,
         add_correlation_time=np.infty)
     pt = oqupy.pt_tempo_compute(

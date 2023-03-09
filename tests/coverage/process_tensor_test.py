@@ -43,7 +43,7 @@ bath2 = oqupy.Bath(
     name="phonon bath")
 tempo_params = oqupy.TempoParameters(
     dt=0.1,
-    dkmax=5,
+    tcut=0.5,
     epsrel=10**(-5))
 pt1 = oqupy.pt_tempo_compute(
     bath1,

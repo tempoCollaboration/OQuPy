@@ -35,7 +35,7 @@ num_steps = 10
 alpha = 0.3
 omega_cutoff = 3.0
 temperature = 0.8
-pt_dkmax = 10
+pt_tcut = 10
 pt_epsrel = 1.0e-6
 
 # -- chain --
@@ -66,7 +66,7 @@ correlations = oqupy.PowerLawSD(
 bath = oqupy.Bath(0.5 * oqupy.operators.sigma("z"), correlations)
 tempo_parameters = oqupy.TempoParameters(
     dt=dt,
-    dkmax=pt_dkmax,
+    tcut=pt_tcut,
     epsrel=pt_epsrel,
     add_correlation_time=5.0)
 pt = oqupy.pt_tempo_compute(
