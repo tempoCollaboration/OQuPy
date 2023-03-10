@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for various applications involving contractions of the process tensor.
+Frontend for computing the gradient of some objective function w.r.t. some
+control parameters.
 """
 
 from typing import List, Optional, Text, Tuple, Union
+from warnings import warn
 
 from scipy.interpolate import interp1d
 
@@ -23,15 +25,11 @@ import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 
-from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
-from oqupy.dynamics import Dynamics, MeanFieldDynamics, GradientDynamics
+from oqupy.dynamics import GradientDynamics
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import BaseSystem, System, TimeDependentSystem
-from oqupy.system import MeanFieldSystem
-from oqupy.operators import left_super, right_super
-from oqupy.util import check_convert, check_isinstance, check_true
-from oqupy.util import get_progress
+from oqupy.system import System, TimeDependentSystem
 from oqupy.contractions import _compute_dynamics_input_parse, compute_gradient_and_dynamics
 from oqupy.helpers import get_half_timesteps,get_MPO_times, get_propagator_intervals
 
@@ -48,6 +46,7 @@ def gradient(
         process_tensor: Optional[Union[List[BaseProcessTensor],
                                        BaseProcessTensor]] = None,
         control: Optional[Control] = None,
+        get_forward_backprop_list: Optional[bool] = False,
         record_all: Optional[bool] = True,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
         liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
@@ -55,16 +54,26 @@ def gradient(
 
 
     """
-    compute the system dynamics for a given objective function which contains
-    a system hamiltonian, and accounting (optionally) for interaction with
-    an environment using one or more process tensors.
+    compute the system dynamics as well as the gradient with respect to some
+    objective function which contains a system hamiltonian, and accounting
+    (optionally) for interaction with an environment using one or more process
+    tensors.
 
     Parameters
     ----------
     system: Union[System, TimeDependentSystem]
         Object containing the system Hamiltonian information.
+    gradient_dynamics: GradientDynamics
+    Optional: if provided, takes the recombined forwardprop and backprop and
+    addes it to the specified dprop_dparam_list and produces the total gradient.
+    If it is not provided then the forwardprop and backprop are performed to
+    generate this object
     initial_state: ndarray
         Initial system state.
+    target_state: ndarray
+        Target state or derivative of target state (maybe rename variable?)
+    dprop_dparam_list
+        derivative of half timestep propagators w.r.t. control parameter
     dprop_times_list:
         SORTED!! list of times which the dprop_dparam_list is defined
     dt: float
@@ -77,6 +86,14 @@ def gradient(
         Optional process tensor object or list of process tensor objects.
     control: Control
         Optional control operations.
+    get_forward_backprop_list: Bool
+        save both the states stored during the forward propagation and back
+        propagation to the GradientDynamics object. This is not necessary for
+        obtaining the gradient through the adjoint method, and this method is
+        simply provided for convenience. Also note that with this option
+        disabled (the default), once the forwardprop and backprop states are
+        used they are deleted. This is a significant memory saving as both
+        contain a dangling internal bond leg, which is generally large.
     record_all: bool
         If `false` function only computes the final state.
     subdiv_limit: int (default = config.SUBDIV_LIMIT)
@@ -94,9 +111,9 @@ def gradient(
 
     Returns
     -------
-    dynamics: Dynamics
+    GradientDynamics: 
         The system dynamics for the given system Hamiltonian
-        (accounting for the interaction with the environment).
+        (accounting for the interaction with the environment), and 
     """
     if gradient_dynamics is None:
         # -- input parsing --
@@ -117,6 +134,7 @@ def gradient(
                         process_tensor=process_tensors,
                         control=control,
                         record_all=record_all,
+                        get_forward_and_backprop_list=get_forward_backprop_list,
                         subdiv_limit=subdiv_limit,
                         liouvillian_epsrel=liouvillian_epsrel,
                         progress_type=progress_type)
@@ -176,6 +194,21 @@ def _chain_rule(deriv_list: List[ndarray],
 
     dprop_timestep_index = half_timestep_index_function(dprop_times_list)
     dprop_timestep_index = dprop_timestep_index.astype(int)
+
+    # test to make sure that all of the dprop_times_list time supplied actually
+    # correspond to correct propagator times
+    # comment out the following block of code in order to supress warning
+    # ~~~~~~~~~ cut here ~~~~~~~~~
+    oqupy_half_timestep_times = get_half_timesteps(process_tensor,start_time=start_time)
+
+    proposed_dprop_times = oqupy_half_timestep_times[dprop_timestep_index]
+
+    if not np.allclose(proposed_dprop_times,dprop_times_list,rtol=1e-04):
+        warn('warning, you have supplied a dprop_time that is significantly '
+            'different from what I calculate as your dprop_times. If you '
+            'absolutely know what you are doing please suppress this message '
+            'within oqupy.gradient.py or change rtol in np.allclose()' )
+    # ~~~~~~~~~~ end cut ~~~~~~~~~
 
     total_derivs = np.zeros(dprop_times_list.size,dtype='complex128')
 
