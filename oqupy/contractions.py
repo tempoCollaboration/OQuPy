@@ -327,8 +327,9 @@ def compute_gradient_and_dynamics(
         current_node, current_edges = _apply_pt_mpos(
             current_node, current_edges, pt_mpos)
 
-        # appropriate timeslice in diagram is here
-        # store derivative node
+        # appropriate timeslice to store forwardprop is here (after the MPO and
+        # before the second_half_prop)
+        # -- store derivative node --
         forwardprop_deriv_list.append(tn.replicate_nodes([current_node])[0])
 
         current_node, current_edges = _apply_system_superoperator(
@@ -383,7 +384,7 @@ def compute_gradient_and_dynamics(
         # forwardprop tensor to save memory
         del forwardprop_deriv_list[num_steps]
         backprop_tensor = tn.replicate_nodes([current_node])[0]
-        # note now backprop_deriv_list should is unnecessary
+        # note now backprop_deriv_list is unnecessary
 
     for i in range(num_envs):
         forwardprop_tensor[i] ^ backprop_tensor[i]
@@ -403,7 +404,7 @@ def compute_gradient_and_dynamics(
 
         if post_measurement_control is not None:
             current_node, current_edges = _apply_system_superoperator(
-                current_node, current_edges, post_measurement_control.T) # possibly with a transpose
+                current_node, current_edges, post_measurement_control.T)
 
         if step == 0: # i think this is correct
             break
@@ -468,7 +469,7 @@ def compute_gradient_and_dynamics(
     else:
         times = [start_time + len(states)*dt]
 
-    if get_forward_and_backprop_list == False:
+    if get_forward_and_backprop_list is False:
         forwardprop_deriv_list = None
         backprop_deriv_list = None
 

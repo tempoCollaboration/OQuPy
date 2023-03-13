@@ -30,16 +30,21 @@ from oqupy.control import Control
 from oqupy.dynamics import GradientDynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import System, TimeDependentSystem
-from oqupy.contractions import _compute_dynamics_input_parse, compute_gradient_and_dynamics
-from oqupy.helpers import get_half_timesteps,get_MPO_times, get_propagator_intervals
+from oqupy.contractions import _compute_dynamics_input_parse
+from oqupy.contractions import compute_gradient_and_dynamics
+from oqupy.helpers import get_half_timesteps,get_MPO_times
+from oqupy.helpers import get_propagator_intervals
 
+# note for those reading. The arguments for the gradient function are basically
+# stolen from the compute_dynamics function in contractions.py, see notes below
+# because some of them are prob no longer optional.
 def gradient(
         system: Union[System, TimeDependentSystem],
         gradient_dynamics: Optional[GradientDynamics] = None,
         initial_state: Optional[ndarray] = None, # why is this optional, this is def needed
         target_state: Optional[ndarray] = None, # same again
         dprop_dparam_list: Optional[List[ndarray]] = None,
-        dprop_times_list: Optional[ndarray] = None,# this one is actually optional
+        dprop_times_list: Optional[ndarray] = None,# this one is actually optional (well debatably)
         dt: Optional[float] = None,
         num_steps: Optional[int] = None,
         start_time: Optional[float] = 0.0,
@@ -75,7 +80,7 @@ def gradient(
     dprop_dparam_list
         derivative of half timestep propagators w.r.t. control parameter
     dprop_times_list:
-        SORTED!! list of times which the dprop_dparam_list is defined
+        list of times which the dprop_dparam_list is defined
     dt: float
         Length of a single time step.
     num_steps: int
@@ -111,9 +116,10 @@ def gradient(
 
     Returns
     -------
-    GradientDynamics: 
+    GradientDynamics:
         The system dynamics for the given system Hamiltonian
-        (accounting for the interaction with the environment), and 
+        (accounting for the interaction with the environment), and the
+        derivative of the objective function with respect to the specified
     """
     if gradient_dynamics is None:
         # -- input parsing --
@@ -171,7 +177,7 @@ def _chain_rule(deriv_list: List[ndarray],
     NOTE: It is useful to make the dprop_times_list based off the
     helpers.get_half_timesteps method so that any floating point numbers
     are semi-dealt with. The method using scipy.interp1d should be relatively
-    safe however it's there so it might as well be used. 
+    safe however it's there so it might as well be used.
     """
     assert len(dprop_times_list) == len(dprop_dparam_list), \
             ('dprop_dpram_list must be the same length as the number of time '
@@ -199,7 +205,8 @@ def _chain_rule(deriv_list: List[ndarray],
     # correspond to correct propagator times
     # comment out the following block of code in order to supress warning
     # ~~~~~~~~~ cut here ~~~~~~~~~
-    oqupy_half_timestep_times = get_half_timesteps(process_tensor,start_time=start_time)
+    oqupy_half_timestep_times = get_half_timesteps(
+            process_tensor,start_time=start_time)
 
     proposed_dprop_times = oqupy_half_timestep_times[dprop_timestep_index]
 
@@ -237,7 +244,7 @@ def _chain_rule(deriv_list: List[ndarray],
         else:
             extra_prop_node = tn.Node(post)
             target_deriv_node[0] ^ propagator_deriv_node[0]
-            target_deriv_node[1] ^ extra_prop_node[0] # i just swapped these, make sure it's correct
+            target_deriv_node[1] ^ extra_prop_node[0]
             extra_prop_node[1] ^ propagator_deriv_node[1]
 
         final_node = target_deriv_node @ propagator_deriv_node \
@@ -250,8 +257,8 @@ def _chain_rule(deriv_list: List[ndarray],
         # find the propagator index as used in contractions
         prop_index = dprop_timestep_index[i] // 2
         # decide whether it's a pre or post node
-        # NOTE: this needs to be type int otherwise this will cause funny bugs.
-        # This will be checked within combine derivs call.
+        # assuming dprop_times_list is int because it is converted to int after
+        # it is created so shouldn't need to check again
         # 0/False -> Pre node, 1/True -> Post node
         pre_post_decider = dprop_timestep_index[i] % 2
         pre_prop,post_prop = propagators(prop_index)
