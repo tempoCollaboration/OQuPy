@@ -162,9 +162,7 @@ def get_full_timesteps(pt: BaseProcessTensor,
     '''
     assert isinstance(pt,BaseProcessTensor)
     if inc_endtime:
-        full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
-        full_timesteps = np.concatenate((
-            full_timesteps,np.array([pt.dt * len(pt)])))
+        full_timesteps = np.arange(0,len(pt)+1)*pt.dt + start_time
     else:
         full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
     return full_timesteps
