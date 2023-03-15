@@ -365,7 +365,8 @@ def compute_gradient_and_dynamics(
     # not sure if this is correct but to get the final cap,
     final_cap = _get_caps(process_tensors, num_steps)
 
-    target_ndarray = target_state.reshape(hs_dim**2)
+    target_ndarray = target_state.T
+    target_ndarray = target_ndarray.reshape(hs_dim**2)
     target_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
     current_node = tn.Node(np.outer(final_cap,target_ndarray)) # might be a wire crossed or something
     current_edges = current_node[:]
