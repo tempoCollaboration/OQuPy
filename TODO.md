@@ -2,6 +2,7 @@
 
 - [x] Piper's suggestion for a concrete description of what is required in a `oqupy.gradient` call
 - [ ] rewrite description referring to these requirements throughout the text, because this should make everything far clearer and easier to understand
+- [ ] Punctuate equations in tutorial
 - [ ] Move comparison with FD somewhere other than tutorial
     - [ ] decide where to put it
 - [ ] Talk about the requirements for `oqupy.gradient` function
