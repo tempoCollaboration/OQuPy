@@ -136,12 +136,12 @@ def get_half_timesteps(pt: BaseProcessTensor,
 def get_MPO_times(pt: BaseProcessTensor,
                 start_time: float,
                 inc_endtime: Optional[bool]=False)->ndarray:
-    '''
+    """
     Times the MPO is called at,
     basically [0.5dt,1.5dt,2.5dt..... (N-0.5)dt]
     if inc_endtime:
     [0.5dt,1.5dt,2.5dt..... (N-0.5)dt, Ndt]
-    '''
+    """
     if inc_endtime:
         MPO_timesteps = (np.arange(0,len(pt))*pt.dt + start_time + pt.dt*0.5)
         MPO_timesteps = np.concatenate((
@@ -154,12 +154,12 @@ def get_MPO_times(pt: BaseProcessTensor,
 def get_full_timesteps(pt: BaseProcessTensor,
                     start_time: float,
                     inc_endtime:Optional[bool] = False)->ndarray:
-    '''
+    """
     The times at which the density matrix is evaluated at.
 
     inc_endtime includes the final time in the array
     [0dt,1dt,2dt...(N-1)dt, **Ndt] (** only included if inc_endtime specified)
-    '''
+    """
     assert isinstance(pt,BaseProcessTensor)
     if inc_endtime:
         full_timesteps = np.arange(0,len(pt)+1)*pt.dt + start_time
@@ -169,11 +169,11 @@ def get_full_timesteps(pt: BaseProcessTensor,
 
 def get_propagator_intervals(pt: BaseProcessTensor,
                 start_time: float)->ndarray:
-    '''
+    """
     Returns times that when interpolated as piecewise constant will return the
     index of the propagator for that time. To do this I basically need an array
     that looks like [0,0.5dt,1dt... Ndt]
-    '''
+    """
 
     times = (np.arange(0,2*len(pt))*pt.dt/2 + start_time)
     times = np.concatenate((
