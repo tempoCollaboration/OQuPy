@@ -662,16 +662,17 @@ def compute_dynamics_with_field(
         # -- calculate time reached --
         t = start_time + step * dt
 
-        # -- apply pre measurement control --
+        # -- get pre & post measurement control list --
         controls_tuple_list = [prepare_controls(step, control)
                                for control in parsed_parameters_dict["control"]]
 
-        for (current_node, current_edges), \
-        (pre_measurement_control, post_measurement_control) in \
-        zip(nodes_and_edges_list, controls_tuple_list):
-            if pre_measurement_control is not None:
-                current_node, current_edges = _apply_system_superoperator(
-                        current_node, current_edges, pre_measurement_control)
+        # -- apply pre measurement control --
+        nodes_and_edges_list = [
+            _apply_system_superoperator(
+                current_node, current_edges, pre_measurement_control) \
+                for (current_node, current_edges), (pre_measurement_control,_) \
+                in zip(nodes_and_edges_list, controls_tuple_list)
+        ]
 
         if step == num_steps:
             break
@@ -701,12 +702,12 @@ def compute_dynamics_with_field(
         prog_bar.update(step)
 
         # -- apply post measurement control --
-        for (current_node, current_edges), \
-                (pre_measurement_control, post_measurement_control) in \
-            zip(nodes_and_edges_list, controls_tuple_list):
-            if post_measurement_control is not None:
-                current_node, current_edges = _apply_system_superoperator(
-                        current_node, current_edges, post_measurement_control)
+        nodes_and_edges_list = [
+            _apply_system_superoperator(
+                current_node, current_edges, post_measurement_control) \
+                for (current_node, current_edges), (_,post_measurement_control)\
+                in zip(nodes_and_edges_list, controls_tuple_list)
+        ]
 
         # -- propagate one time step --
         propagator_tuples_list = [propagators(step, field,
@@ -924,6 +925,8 @@ def _get_pt_mpos_backprop(process_tensors: List[BaseProcessTensor], step: int):
 
 def _apply_system_superoperator(current_node, current_edges, sup_op):
     """ToDo """
+    if sup_op is None:
+        return current_node, current_edges
     sup_op_node = tn.Node(sup_op.T)
     current_edges[-1] ^ sup_op_node[0]
     new_sys_edge = sup_op_node[1]
@@ -1038,8 +1041,8 @@ def compute_correlations(
         dt_ = process_tensor.dt
     else:
         if (process_tensor.dt is not None) and (process_tensor.dt != dt):
-            UserWarning("Specified time step `dt` does not match `dt` " \
-                + "stored in the given process tensor " \
+            raise UserWarning("Specified time step `dt` does not match " \
+                + "`dt` stored in the given process tensor " \
                 + f"({dt}!={process_tensor.dt}). " \
                 + "Using specified `dt`. " \
                 + "Don't specify `dt` to use the time step stored in the " \
