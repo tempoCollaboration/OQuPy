@@ -330,7 +330,7 @@ letter.
 
 .. code:: ipython3
 
-    tempo_parameters = oqupy.TempoParameters(dt=3.2e-3, dkmax=20, epsrel=10**(-5))
+    tempo_parameters = oqupy.TempoParameters(dt=3.2e-3, tcut=64e-3, epsrel=10**(-5))
     start_time = 0.0
     end_time = 0.3
 
@@ -352,8 +352,8 @@ used to compute the dynamics for an ordinary ``System``:
 .. parsed-literal::
 
     --> TEMPO-with-field computation:
-    100.0%   93 of   93 [########################################] 00:00:13
-    Elapsed time: 13.3s
+    100.0%   93 of   93 [########################################] 00:00:06
+    Elapsed time: 6.3s
 
 
 ``MeanFieldTempo.compute`` returns a ``MeanFieldDynamics`` object
@@ -385,7 +385,7 @@ producing the first part of a single line of **Fig. 2a.**:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f848ff957e0>
+    <matplotlib.legend.Legend at 0x7fdb289b2b90>
 
 
 
@@ -396,7 +396,7 @@ producing the first part of a single line of **Fig. 2a.**:
 If you have the time you can calculate the dynamics to
 :math:`t=1.3\,\text{ps}` as in the Letter and check that, even for these
 very rough parameters, the results are reasonably close to being
-converged with respect to ``dt``, ``dkmax`` and ``epsrel``.
+converged with respect to ``dt``, ``tcut`` and ``epsrel``.
 
 While you could repeat the TEMPO computation for each pump strength
 :math:`\Gamma_\uparrow` appearing in **Fig. 2a.**, a more efficient
@@ -428,8 +428,8 @@ bath via
 .. parsed-literal::
 
     --> PT-TEMPO computation:
-    100.0%   93 of   93 [########################################] 00:00:02
-    Elapsed time: 2.8s
+    100.0%   93 of   93 [########################################] 00:00:01
+    Elapsed time: 1.1s
 
 
 Refer the Time Dependence and PT-TEMPO tutorial for further discussion
@@ -482,17 +482,17 @@ using the process tensor (now in a list) calculated above:
 .. parsed-literal::
 
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:09
-    Elapsed time: 9.6s
+    100.0%   93 of   93 [########################################] 00:00:04
+    Elapsed time: 4.2s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:09
-    Elapsed time: 9.9s
+    100.0%   93 of   93 [########################################] 00:00:03
+    Elapsed time: 3.9s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:09
-    Elapsed time: 9.9s
+    100.0%   93 of   93 [########################################] 00:00:04
+    Elapsed time: 4.1s
     --> Compute dynamics with field:
-    100.0%   93 of   93 [########################################] 00:00:08
-    Elapsed time: 8.7s
+    100.0%   93 of   93 [########################################] 00:00:04
+    Elapsed time: 4.0s
 
 
 Finally, plotting the results:
@@ -513,7 +513,7 @@ Finally, plotting the results:
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f848f7e88b0>
+    <matplotlib.legend.Legend at 0x7fdb28590d00>
 
 
 

@@ -53,7 +53,7 @@ system_G = oqupy.TimeDependentSystemWithField(
 mean_field_system_G = oqupy.MeanFieldSystem([system_G], field_eom_G)
 tempo_params_G = oqupy.TempoParameters(
         dt=0.05,
-        dkmax=None,
+        tcut=None,
         epsrel=10**(-7))
 
 # -----------------------------------------------------------------------------

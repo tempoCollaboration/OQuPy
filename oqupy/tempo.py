@@ -61,16 +61,22 @@ class TempoParameters(BaseAPIClass):
         such that a trotterisation between the system Hamiltonian and the
         environment it valid, and the environment auto-correlation function
         is reasonably well sampled.
-    dkmax: int
-        Number of time steps :math:`K\in\mathbb{N}` that should be included in
-        the non-Markovian memory. - It must be large
-        enough such that :math:`\delta t \times K` is larger than the
-        necessary memory time :math:`\tau_\mathrm{cut}`.
     epsrel: float
         The maximal relative error in the singular value truncation (done
         in the underlying tensor network algorithm). - It must be small enough
         such that the numerical compression (using tensor network algorithms)
         does not truncate relevant correlations.
+    tcut: float (default = None)
+        Length of time :math:`t_\mathrm{cut}` included in the non-Markovian
+        memory. - This should be large enough to capture all non-Markovian
+        effects of the environment. If set to None no finite memory
+        approximation is made. Note only one of tcut, dkmax should be
+        specified.
+    dkmax: int (default = None)
+        Length of non-Markovian memory in number of timesteps i.e.
+        :math:`t_\mathrm{cut}=K\in\mathbb{N}`. If set to None no finite
+        approximation is made. Note only one of tcut, dkmax should be
+        specified.
     add_correlation_time: float
         Additional correlation time to include in the last influence
         functional as explained in [Strathearn2017].
@@ -90,27 +96,79 @@ class TempoParameters(BaseAPIClass):
     def __init__(
             self,
             dt: float,
-            dkmax: int,
             epsrel: float,
+            tcut: Optional[float] = None,
+            dkmax: Optional[int] = None,
             add_correlation_time: Optional[float] = None,
             subdiv_limit: Optional[int] = SUBDIV_LIMIT,
             liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a TempoParameters object."""
-        self.dt = dt
-        self.dkmax = dkmax
-        self.epsrel = epsrel
-        self.add_correlation_time = add_correlation_time
-        self.subdiv_limit = subdiv_limit
-        self.liouvillian_epsrel = liouvillian_epsrel
+
+        try:
+            tmp_dt = float(dt)
+        except Exception as e:
+            raise TypeError("Argument 'dt' must be float.") from e
+        if tmp_dt <= 0.0:
+            raise ValueError("Argument 'dt' must be positive.")
+        self._dt = tmp_dt
+
+        try:
+            tmp_epsrel = float(epsrel)
+        except Exception as e:
+            raise TypeError("Argument 'epsrel' must be float.") from e
+        if tmp_epsrel <= 0.0:
+            raise ValueError("Argument 'epsrel' must be positive.")
+        self._epsrel = tmp_epsrel
+
+        self._tcut, self._dkmax = _parameter_memory_input_parse(
+                tcut, dkmax, dt)
+
+        try:
+            if add_correlation_time is None:
+                tmp_tau = None
+            else:
+                tmp_tau = float(add_correlation_time)
+        except Exception as e:
+            raise TypeError("Argument 'add_correlation_time' "\
+                    "must be float or None.") from e
+        if tmp_tau is not None and tmp_tau < 0:
+            raise ValueError(
+                "Argument 'add_correlation_time' must be non-negative.")
+        self._add_correlation_time = tmp_tau
+
+        try:
+            if subdiv_limit is None:
+                tmp_subdiv_limit = None
+            else:
+                tmp_subdiv_limit = int(subdiv_limit)
+        except Exception as e:
+            raise TypeError("Argument 'subdiv_limit' must be int or "\
+                    "None.") from e
+        if tmp_subdiv_limit is not None and tmp_subdiv_limit < 0:
+            raise ValueError(
+            "Argument 'subdiv_limit' must be non-negative or None.")
+        self._subdiv_limit = tmp_subdiv_limit
+
+        try:
+            tmp_liouvillian_epsrel = float(liouvillian_epsrel)
+        except Exception as e:
+            raise TypeError("Argument 'liouvillian_epsrel' must be "\
+                    "float.") from e
+        if tmp_liouvillian_epsrel <= 0.0:
+            raise ValueError("Argument 'liouvillian_epsrel' must be "\
+                    "positive.")
+        self._liouvillian_epsrel = tmp_liouvillian_epsrel
+
         super().__init__(name, description)
 
     def __str__(self) -> Text:
         ret = []
         ret.append(super().__str__())
         ret.append("  dt                   = {} \n".format(self.dt))
-        ret.append("  dkmax                = {} \n".format(self.dkmax))
+        ret.append("  tcut [dkmax]         = {} [{}] \n".format(
+            self.tcut, self.dkmax))
         ret.append("  epsrel               = {} \n".format(self.epsrel))
         ret.append("  add_correlation_time = {} \n".format(
             self.add_correlation_time))
@@ -121,54 +179,20 @@ class TempoParameters(BaseAPIClass):
         """Length of a time step."""
         return self._dt
 
-    @dt.setter
-    def dt(self, new_dt: float) -> None:
-        try:
-            tmp_dt = float(new_dt)
-        except Exception as e:
-            raise AssertionError("Argument 'dt' must be float.") from e
-        assert tmp_dt > 0.0, \
-            "Argument 'dt' must be bigger than 0."
-        self._dt = tmp_dt
-
-    @property
-    def dkmax(self) -> float:
-        """Number of time steps that should be included in the non-Markovian
-        memory. """
-        return self._dkmax
-
-    @dkmax.setter
-    def dkmax(self, new_dkmax: float) -> None:
-        try:
-            if new_dkmax is None:
-                tmp_dkmax = None
-            else:
-                tmp_dkmax = int(new_dkmax)
-        except Exception as e:
-            raise AssertionError("Argument 'dkmax' must be int or None.") \
-                from e
-        assert tmp_dkmax is None or tmp_dkmax > 0, \
-            "Argument 'dkmax' must be bigger than or equal to 0 or None."
-        self._dkmax = tmp_dkmax
-
-    @dkmax.deleter
-    def dkmax(self) -> None:
-        self._dkmax = None
-
     @property
     def epsrel(self) -> float:
         """The maximal relative error in the singular value truncation."""
         return self._epsrel
 
-    @epsrel.setter
-    def epsrel(self, new_epsrel: float) -> None:
-        try:
-            tmp_epsrel = float(new_epsrel)
-        except Exception as e:
-            raise AssertionError("Argument 'epsrel' must be float.") from e
-        assert tmp_epsrel > 0.0, \
-            "Argument 'epsrel' must be bigger than 0."
-        self._epsrel = tmp_epsrel
+    @property
+    def tcut(self) -> float:
+        """Length of non-Markovian memory"""
+        return self._tcut
+
+    @property
+    def dkmax(self) -> Union[int, None]:
+        """Number of time steps included in the non-Markovian memory."""
+        return self._dkmax
 
     @property
     def add_correlation_time(self) -> float:
@@ -178,66 +202,17 @@ class TempoParameters(BaseAPIClass):
         """
         return self._add_correlation_time
 
-    @add_correlation_time.setter
-    def add_correlation_time(self, new_tau: Optional[float] = None) -> None:
-        if new_tau is None:
-            del self.add_correlation_time
-        else:
-            # check input: cutoff
-            try:
-                tmp_new_tau = float(new_tau)
-            except Exception as e:
-                raise AssertionError( \
-                    "Additional correlation time must be a float.") from e
-            if tmp_new_tau < 0:
-                raise ValueError(
-                    "Additional correlation time must be non-negative.")
-            self._add_correlation_time = tmp_new_tau
-
-    @add_correlation_time.deleter
-    def add_correlation_time(self) -> None:
-        self._add_correlation_time = None
-
     @property
     def subdiv_limit(self) -> int:
         """The maximum number of subdivisions used during the adaptive
         algorithm when integrating a time-dependent Liouvillian."""
         return self._subdiv_limit
 
-    @subdiv_limit.setter
-    def subdiv_limit(self, new_subdiv_limit: int) -> None:
-        try:
-            if new_subdiv_limit is None:
-                tmp_subdiv_limit = None
-            else:
-                tmp_subdiv_limit = int(new_subdiv_limit)
-        except Exception as e:
-            raise AssertionError("Argument 'subdiv_limit' must be int or "\
-                    "None.") from e
-        assert tmp_subdiv_limit is None or tmp_subdiv_limit > 0, \
-            "Argument 'subdiv_limit' must be bigger than or equal to 0 or None."
-        self._subdiv_limit = tmp_subdiv_limit
-
-    @subdiv_limit.deleter
-    def subdiv_limit(self) -> None:
-        self._subdiv_limit = None
-
     @property
     def liouvillian_epsrel(self) -> float:
         """The relative error tolerance for integrating a time-dependent
         system Liouvillian. """
         return self._liouvillian_epsrel
-
-    @liouvillian_epsrel.setter
-    def liouvillian_epsrel(self, new_liouvillian_epsrel: float) -> None:
-        try:
-            tmp_liouvillian_epsrel = float(new_liouvillian_epsrel)
-        except Exception as e:
-            raise AssertionError("Argument 'liouvillian_epsrel' must be "\
-                    "float.") from e
-        assert tmp_liouvillian_epsrel > 0.0, \
-            "Argument 'liouvillian_epsrel' must be bigger than 0."
-        self._liouvillian_epsrel = tmp_liouvillian_epsrel
 
 class Tempo(BaseAPIClass):
     """
@@ -292,7 +267,7 @@ class Tempo(BaseAPIClass):
         try:
             tmp_start_time = float(start_time)
         except Exception as e:
-            raise AssertionError("Start time must be a float.") from e
+            raise TypeError("Start time must be a float.") from e
         self._start_time = tmp_start_time
 
         if backend_config is None:
@@ -688,7 +663,7 @@ def _check_time(end_time):
     try:
         tmp_end_time = float(end_time)
     except Exception as e:
-        raise AssertionError("End time must be a float.") from e
+        raise TypeError("End time must be a float.") from e
     return tmp_end_time
 
 def influence_matrix(
@@ -790,7 +765,8 @@ GUESS_WARNING_MSG = "Estimating parameters for TEMPO computation. " \
     + "Please refer to the TEMPO documentation and check convergence by " \
     + "varying the parameters for TEMPO manually."
 
-MAX_DKMAX_WARNING_MSG = f"Reached maximal recommended `dkmax` ({MAX_DKMAX})! " \
+MAX_DKMAX_WARNING_MSG = "Reached maximal recommended `tcut` "\
+    + f"(DKMAX = {MAX_DKMAX} timesteps)! " \
     + "Interrupt TEMPO parameter estimation. "\
     + "Please choose a lower tolerance, or analyse the correlation function " \
     + "to choose TEMPO parameters manually. " \
@@ -836,7 +812,7 @@ def guess_tempo_parameters(
         tmp_start_time = float(start_time)
         tmp_end_time = float(end_time)
     except Exception as e:
-        raise AssertionError("Start and end time must be a float.") from e
+        raise TypeError("Start and end time must be a float.") from e
     if tmp_end_time <= tmp_start_time:
         raise ValueError("End time must be bigger than start time.")
     assert isinstance(system, (type(None), BaseSystem)), \
@@ -844,7 +820,7 @@ def guess_tempo_parameters(
     try:
         tmp_tolerance = float(tolerance)
     except Exception as e:
-        raise AssertionError("Argument 'tolerance' must be float.") from e
+        raise TypeError("Argument 'tolerance' must be float.") from e
     assert tmp_tolerance > 0.0, \
         "Argument 'tolerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
@@ -882,8 +858,8 @@ def guess_tempo_parameters(
 
     return TempoParameters(
         dt=dt,
-        dkmax=dkmax,
         epsrel=epsrel,
+        dkmax=dkmax,
         name="Roughly estimated parameters",
         description="Estimated with 'guess_tempo_parameters()'")
 
@@ -952,6 +928,29 @@ def tempo_compute(
                   description)
     tempo.compute(end_time, progress_type=progress_type)
     return tempo.get_dynamics()
+
+def _parameter_memory_input_parse(tcut, dkmax, dt):
+    """Parse tcut and dkmax parameters"""
+    if tcut is not None and dkmax is not None:
+        raise AssertionError(
+                "Only one of 'tcut', 'dkmax' should be specified.")
+    if dkmax is not None:
+        tmp_dkmax = dkmax
+        if not isinstance(tmp_dkmax, int):
+            raise TypeError("Argument 'dkmax' must be int or None.")
+        if tmp_dkmax < 0:
+            raise ValueError("Argument 'dkmax' must be non-negative.")
+        tmp_tcut = dkmax * dt
+    elif tcut is not None:
+        tmp_tcut = tcut
+        if not isinstance(tmp_tcut, float):
+            raise TypeError("Argument 'tcut' must be float or None.")
+        if tmp_tcut < 0:
+            raise ValueError("Argument 'tcut' must be non-negative.")
+        tmp_dkmax = int(np.round(tcut/dt))
+    else:
+        tmp_tcut, tmp_dkmax = None, None
+    return tmp_tcut, tmp_dkmax
 
 def _tempo_physical_input_parse(
        with_field, system, initial_state, bath) -> tuple:

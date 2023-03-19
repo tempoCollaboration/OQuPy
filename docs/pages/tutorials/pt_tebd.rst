@@ -175,8 +175,8 @@ time steps.
 
     PT-TEBD computation (closed spin chain):
     --> PT-TEBD computation:
-    100.0%   20 of   20 [########################################] 00:00:01
-    Elapsed time: 1.2s
+    100.0%   20 of   20 [########################################] 00:00:00
+    Elapsed time: 0.6s
 
 
 The computation returns a results dictionary which in addition to the
@@ -213,7 +213,7 @@ We can use the dynamics results to then compute the evolution of the
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f7b31700f40>
+    <matplotlib.legend.Legend at 0x7f935b58e290>
 
 
 
@@ -285,7 +285,7 @@ computation (see Tutorial 02 - Time dependence and PT-TEMPO).
     Process tensor (PT) computation:
     --> PT-TEMPO computation:
     100.0%   20 of   20 [########################################] 00:00:00
-    Elapsed time: 0.4s
+    Elapsed time: 0.2s
 
 
 To see the effect of the environment clearly we start in a fully mixed
@@ -323,8 +323,8 @@ keep them free by setting them to ``None``.
 
     PT-TEBD computation (open spin chain):
     --> PT-TEBD computation:
-    100.0%   20 of   20 [########################################] 00:00:02
-    Elapsed time: 2.9s
+    100.0%   20 of   20 [########################################] 00:00:01
+    Elapsed time: 1.5s
 
 
 .. code:: ipython3
@@ -340,7 +340,7 @@ keep them free by setting them to ``None``.
 
 .. parsed-literal::
 
-    <matplotlib.legend.Legend at 0x7f7b30febca0>
+    <matplotlib.legend.Legend at 0x7f935b986510>
 
 
 

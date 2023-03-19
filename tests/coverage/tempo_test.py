@@ -12,50 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.tempo module.
+Tests for the Tempo module.
 """
 
 import pytest
 import numpy as np
 
 import oqupy as tempo
-
-def test_tempo_parameters():
-    tempo_param = tempo.TempoParameters(
-        0.1, None, 1.0e-5, None, None, 2.0e-5, "rough", "bla")
-    str(tempo_param)
-    assert tempo_param.dt == 0.1
-    assert tempo_param.dkmax == None
-    assert tempo_param.epsrel == 1.0e-5
-    assert tempo_param.subdiv_limit == None
-    assert tempo_param.liouvillian_epsrel == 2.0e-5
-    tempo_param.dt = 0.05
-    tempo_param.dkmax = 42
-    tempo_param.epsrel = 1.0e-6
-    tempo_param.subdiv_limit = 256
-    tempo_param.liouvillian_epsrel = 2.0e-6
-    assert tempo_param.dt == 0.05
-    assert tempo_param.dkmax == 42
-    assert tempo_param.epsrel == 1.0e-6
-    assert tempo_param.liouvillian_epsrel == 2.0e-6
-    del tempo_param.dkmax
-    assert tempo_param.dkmax == None
-    del tempo_param.subdiv_limit
-    assert tempo_param.subdiv_limit == None
-
-def test_tempo_parameters_bad_input():
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters("x", 42, 1.0e-5, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, "x", 1.0e-5, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, "x", None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, 1.0e-05, "x", None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, 1.0e-05, None, "x", 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 42, 1.0e-05, None, None, "x", "rough", "bla")
 
 def test_tempo():
     start_time = -0.3
@@ -70,7 +33,7 @@ def test_tempo():
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
-    tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
+    tempo_param_A = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
     tempo_sys_A = tempo.Tempo(system=system,
                               bath=bath,
                               parameters=tempo_param_A,
@@ -94,14 +57,14 @@ def test_tempo_bad_input():
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
 
-    tempo_param_A = tempo.TempoParameters(0.1, 5, 1.0e-5, name="rough-A")
+    tempo_param_A = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
     with pytest.raises(TypeError):
         tempo_sys_A = tempo.Tempo(system=system,
                                   bath=bath,
                                   parameters=tempo_param_A,
                                   initial_state="bla",
                                   start_time=start_time)
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo_sys_A = tempo.Tempo(system=system,
                                   bath=bath,
                                   parameters=tempo_param_A,
@@ -113,7 +76,7 @@ def test_tempo_bad_input():
                               parameters=tempo_param_A,
                               initial_state=initial_state,
                               start_time=start_time)
-    with pytest.raises(AssertionError):
+    with pytest.raises(TypeError):
         tempo_sys_A.compute(end_time="bla", progress_type="bar")
 
 
@@ -127,11 +90,11 @@ def test_guess_tempo_parameters():
                                              start_time=0.0,
                                              end_time=15.0)
 
-    with pytest.raises(AssertionError): # bad start time input
+    with pytest.raises(TypeError): # bad start time input
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time="bla",
                                              end_time=15.0)
-    with pytest.raises(AssertionError): # bad end time input
+    with pytest.raises(TypeError): # bad end time input
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=0.0,
                                              end_time="bla")
@@ -139,7 +102,7 @@ def test_guess_tempo_parameters():
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=10.0,
                                              end_time=0.0)
-    with pytest.raises(AssertionError): # bad tolerance
+    with pytest.raises(TypeError): # bad tolerance
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=0.0,
                                              end_time=15.0,
@@ -196,7 +159,7 @@ def test_tempo_dynamics_reference():
                                     cutoff=1.0,
                                     cutoff_type='exponential')
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
-    tempo_parameters = tempo.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-4))
+    tempo_parameters = tempo.TempoParameters(dt=0.1, tcut=1.0, epsrel=10**(-4))
     tempo_A= tempo.Tempo(system=system,
                         bath=bath,
                         parameters=tempo_parameters,

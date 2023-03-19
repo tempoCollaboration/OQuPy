@@ -61,8 +61,8 @@ correlations = oqupy.PowerLawSD(alpha=alpha,
                                 temperature=temperature)
 bath = oqupy.Bath(0.5 * sy, correlations)
 pt_tempo_parameters = oqupy.TempoParameters(dt=dt,
-                                            dkmax=pt_dkmax,
-                                            epsrel=pt_epsrel)
+                                            epsrel=pt_epsrel,
+                                            dkmax=pt_dkmax)
 
 print("Process tensor (PT) computation:")
 pt = oqupy.pt_tempo_compute(bath=bath,

@@ -24,12 +24,13 @@ gam_up   = 0.01 # incoherent gain
 Sx=np.array([[0,0.5],[0.5,0]])
 wc=0.0
 kappa=0.1
-end_time=1
+end_time=1.0
 def field_eom(t, states, field):
     sx_exp = np.matmul(Sx, states[0]).trace().real
     return -(1j*wc+kappa)*field - 1j*gn*sx_exp
 def H_MF(t, field):
     return 2.0 * gn * np.real(field) * Sx
+
 
 system = oqupy.TimeDependentSystemWithField(H_MF,
         #gammas = [gam_down, gam_up],
@@ -44,7 +45,7 @@ correlations = oqupy.PowerLawSD(alpha=a,
                                 temperature=temperature)
 bath = oqupy.Bath(oqupy.operators.sigma("z")/2.0, correlations)
 
-tempo_parameters = oqupy.TempoParameters(dt=0.1, dkmax=20, epsrel=10**(-7))
+tempo_parameters = oqupy.TempoParameters(dt=0.1, tcut=2.0, epsrel=10**(-7))
 
 tempo_sys = oqupy.MeanFieldTempo(mean_field_system=mean_field_system,
                         bath_list=[bath],

@@ -67,7 +67,7 @@ system_A = oqupy.System(h_sys_A,
 def test_tempo_backend_A():
     tempo_params_A = oqupy.TempoParameters(
         dt=0.05,
-        dkmax=None,
+        tcut=None,
         epsrel=10**(-7))
     tempo_A = oqupy.Tempo(
         system_A,
@@ -82,7 +82,7 @@ def test_tempo_backend_A():
 def test_tensor_network_pt_tempo_backend_A():
     tempo_params_A = oqupy.TempoParameters(
         dt=0.05,
-        dkmax=None,
+        tcut=None,
         epsrel=10**(-7))
     pt = oqupy.pt_tempo_compute(
         bath_A,

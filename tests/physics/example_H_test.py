@@ -35,7 +35,6 @@ num_steps = 10
 alpha = 0.3
 omega_cutoff = 3.0
 temperature = 0.8
-pt_dkmax = 10
 pt_epsrel = 1.0e-6
 
 # -- chain --
