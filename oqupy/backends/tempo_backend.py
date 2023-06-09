@@ -18,12 +18,292 @@ Module for tempo and mean-field tempo backend.
 from typing import Callable, Dict, List, Optional, Tuple
 from copy import copy, deepcopy
 
-from numpy import ndarray, moveaxis, dot
+from numpy import ndarray, moveaxis, dot, expand_dims, eye
+from scipy.linalg import svd as la_svd
+from scipy.linalg import block_diag, LinAlgError
+from functools import cache
 
 from oqupy import operators
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.backends import node_array as na
 from oqupy.util import create_delta
+
+
+class BaseBackend:
+    """
+    Backend class for TEMPO.
+
+    Parameters
+    ----------
+    dimension: int
+        Global dimension of the network.
+    matrix: callable(int, int) -> ndarray
+        Callable that takes the integer coordinates k, kd for a node in the network and returns tensor
+    truncation_precision: float
+        Maximal relative SVD truncation error.
+
+    """
+
+    def __init__(
+            self,
+            dimension: int,
+            matrix: Callable[[int, int], ndarray],
+            truncation_precision: float,
+            max_step: Optional[int] = None,
+            max_mps_length: Optional[int] = None,
+            initial_data: Optional[ndarray] = None,
+            config: Optional[Dict] = None):
+        """Create a BaseBackend object. """
+
+        self._dimension = dimension
+        self._matrix = matrix
+        self._precision = truncation_precision
+
+        self._max_step = 500 if max_step is None else max_step  # need oqupy default max
+        self._kmax = max_step if max_mps_length is None else max_mps_length
+        self._initial_data = eye(self._dimension) if initial_data is None else initial_data
+        self._config = TEMPO_BACKEND_CONFIG if config is None else config
+
+        self._cap = expand_dims(eye(self._dimension), -1)
+        self._step = None
+        self._mps = None
+
+    @property
+    def precision(self) -> float:
+        """The current step in the TEMPO computation. """
+        return self._precision
+
+    @property
+    def step(self) -> int:
+        """The current step in the TEMPO computation. """
+        return self._step
+
+    @property
+    def max_step(self) -> int:
+        return self._max_step
+
+    @max_step.setter
+    def max_step(self, n):
+        assert n > self._step, 'max step needs to be greater than current step'
+        self._max_step = n
+
+    @property
+    def kmax(self) -> int:
+        return self._kmax
+
+    @kmax.setter
+    def kmax(self, k):
+        assert k > len(self._mps), 'kmax needs to be greater than current step'
+        self._kmax = k
+
+    @cache
+    def _influence_tensor(self, k):
+        tensor = self._matrix(self._step, k)
+        vert, hor = tensor.shape
+        tensor = block_diag(*[v for v in tensor]).reshape((vert * vert, hor))  # block_diag slow?
+        tensor = block_diag(*[v for v in tensor.T]).reshape((hor, hor, vert, vert))  # problems when degenerate?
+        return tensor
+
+    def _contract(self, k) -> List:
+        # this contracts mps site with an mpo site to give another mps site with larger bond dims
+        #                          \
+        #     MPO site        W1 --O-- E1
+        #                          \                                 \
+        #                                      ---->     (W1 x W2) --O-- (E1 x E2)   MPS site
+        #                          \
+        #     MPS site        W2 --O-- E2
+        #
+        tens = self._influence_tensor(len(self._mps) - 1 - k)
+        if k == 0:
+            tens = expand_dims(tens.sum(0), 0)
+
+        mps_w, mps_n, mps_e = self._mps[k].shape
+        mpo_w, mpo_e, mpo_n, mpo_s = tens.shape
+
+        tmp = tens.dot(self._mps[k])  # new shape (oW, oE, oN, sW, sE)
+        tmp = tmp.swapaxes(1, 3)  # new shape (oW, sW, oN, oE, sE)
+        tmp = tmp.reshape((mpo_w * mps_w, mpo_n, mpo_e * mps_e))  # new shape (oW * sW, oN, oE * sE)
+
+        self._mps[k] = tmp
+        return self._mps[k].shape
+
+    def _truncate_right(self, k) -> int:
+        # truncates the k'th bond of the MPS using an SVD
+        #
+        #             \              \
+        #          ---O---  Edim  ---O---
+        #
+        #                    ^
+        #  (k-1)'th site     ^       k'th site
+        #                    ^
+        #                k'th bond
+
+        # Overall then we are left with:
+        #
+        #          ---U---  chi  ---Udag.M---O---
+        #             \                      \
+        #                    ^
+        #  (k-1)'th site     ^               k'th site
+        #                    ^
+        #             truncated k'th bond
+
+        # start by combining south and west legs of (k-1)'th site to give 2-leg tensor which is
+        # the rectangular matrix we will perform the SVD on
+        #
+        #     Wdim  --O--  Edim  ----->      (Wdim x SNdim) --M-- Edim
+        #             \
+        #           SNdim                                  'theta'
+        #
+        west, north, east = self._mps[k].shape
+        theta = self._mps[k].reshape((west * north, east))  # ( -1, self._mps[k].shape[-1])
+
+        u, s, v_dag = self.scipy_svd(theta, self._precision)
+
+        self._mps[k] = u.reshape((west, north, len(s)))  # (self._mps[k].shape[0], -1, len(s) )
+        self._mps[k + 1] = u.conj().T.dot(theta).dot(self._mps[k + 1].swapaxes(0, 1))
+        return len(s)
+
+    def _truncate_left(self, k) -> int:
+        # truncates the k'th bond of the MPS using an SVD
+        #
+        #             \              \
+        #          ---O---  Edim  ---O---
+        #
+        #                    ^
+        #  (k-1)'th site     ^       k'th site
+        #                    ^
+        #                k'th bond
+
+        # Overall then we are left with:
+        #
+        #          ---U---  chi  ---Udag.M---O---
+        #             \                      \
+        #                    ^
+        #  (k-1)'th site     ^               k'th site
+        #                    ^
+        #             truncated k'th bond
+
+        # start by combining south and west legs of (k-1)'th site to give 2-leg tensor which is
+        # the rectangular matrix we will perform the SVD on
+        #
+        #     Wdim  --O--  Edim  ----->      (Wdim x SNdim) --M-- Edim
+        #             \
+        #           SNdim                                  'theta'
+        #
+        west, north, east = self._mps[k].shape
+        theta = self._mps[k].reshape((west, north * east))  # (self._mps[k].shape[0], -1)
+
+        u, s, v_dag = self.scipy_svd(theta, self._precision)
+
+        self._mps[k] = v_dag.reshape((len(s), north, east))  # (len(s), -1, self._mps[k].shape[-1] )
+        self._mps[k - 1] = self._mps[k - 1].dot(theta).dot(v_dag.conj().T)
+        return len(s)
+
+    def initialise(self) -> List:
+        tensor = self._matrix(0, 0).T
+        v, h = tensor.shape
+        tensor = block_diag(*[row for row in tensor])
+        tensor = tensor.reshape((v, v, h))
+        tensor = self._initial_data.dot(tensor)
+        self._mps = [tensor, self._cap]
+        self._step = 1
+        return [s.shape for s in self._mps]
+
+    def compute(self) -> List:
+        """
+        Takes a step in the TEMPO tensor network computation.
+
+        For example, for at step 4, we start with:
+        t, current_state_list, current_field)
+            A ... self._mps
+            B ... self._mpo
+            w ... self._sum_west
+            n ... self._sum_north_array
+            p1 ... prop_1
+            p2 ... prop_2
+
+              n  n  n  n
+              |  |  |  |
+
+              |  |  |  |     |
+        w~~ ~~B~~B~~B~~B~~ ~~p2
+              |  |  |  |
+                       p1
+              |  |  |  |
+              A~~A~~A~~A
+
+        return:
+            step = 4
+            state = contraction of A,B,w,n,p1
+
+        effects:
+            self._mpo will grow to the left with the next influence functional
+            self._mps will be contraction of A,B,w,p1,p2
+
+        Returns
+        -------
+        step: int
+            The current step count.
+        state: ndarray
+            Density matrix at the current step.
+
+        """
+        if not self._step:
+            self.initialise()
+        if self._step >= self._max_step:
+            print('max step reached')
+            return [s.shape for s in self._mps]
+
+        first = 0  # index for the first mps site
+        mid = int(len(self._mps) / 2)  # index for the middle mps site
+        last = len(self._mps) - 1  # index for the last mps site
+
+        self._contract(first)
+        self._contract(last)
+
+        for jj in range(first + 1, mid):  # contract in new tensors, left to middle
+            self._contract(jj)
+            self._truncate_right(jj - 1)
+        for jj in range(last - 1, mid - 1, -1):  # contract in new tensors, right to middle
+            self._contract(jj)
+            self._truncate_left(jj + 1)
+
+        for jj in range(last, first + 1, -1):  # svd sweep right to left
+            self._truncate_left(jj)
+        for jj in range(first, last - 1):  # svd sweep left to right: mps now canonical
+            self._truncate_right(jj)
+
+        self._mps.append(self._cap)
+
+        if len(self._mps) > self._kmax + 1:
+            end = self._mps.pop(0).sum(1)  # remove first site, turn into matrix
+            self._mps[0] = end.dot(self._mps[0].swapaxes(0, 1))  # update new first site
+
+        self._step += 1
+
+        return [s.shape for s in self._mps]
+
+    def readout(self) -> ndarray:
+        result = self._mps[-1].sum(2)
+        for m in reversed([s.sum(1) for s in self._mps[:-1]]):
+            result = m @ result
+        return result
+
+    @staticmethod
+    def scipy_svd(theta, precision):
+        try:
+            u, singular_values, v_dagger = la_svd(theta, full_matrices=False, lapack_driver='gesvd')
+        except LinAlgError:
+            u, singular_values, v_dagger = la_svd(theta, full_matrices=False, lapack_driver='gesdd')
+
+        try:
+            chi = next(i for i in range(len(singular_values))
+                       if singular_values[i] / max(singular_values) < precision)
+        except StopIteration:
+            chi = len(singular_values)
+        # chi = len(singular_values)
+        return u[:, 0:chi], singular_values[0:chi], v_dagger[0:chi, :]
+
 
 class BaseTempoBackend:
     """
@@ -259,6 +539,7 @@ class BaseTempoBackend:
         state = tmp_mps.nodes[0].get_tensor()
 
         return state
+
 
 class TempoBackend(BaseTempoBackend):
     """
