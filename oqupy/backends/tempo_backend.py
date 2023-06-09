@@ -38,12 +38,18 @@ class BaseBackend:
     dimension: int
         Global dimension of the network.
     matrix: callable(int, int) -> ndarray
-        Callable that takes the integer coordinates k, kd for a node in the network and returns tensor
+        Callable that takes the integer coordinates for a node in the 2D network
+        and returns the corresponding tensor
     truncation_precision: float
         Maximal relative SVD truncation error.
-
+    max_step: int
+        Maximal step the backend computes to.
+    max_mps_length: int
+        Maximal length the mps can grow to.
+    initial_data: ndarray,
+        initial array to contract into the initial input leg.
+        Must have initial_data.shape = ( n, dimension ) for some n
     """
-
     def __init__(
             self,
             dimension: int,
@@ -59,7 +65,7 @@ class BaseBackend:
         self._matrix = matrix
         self._precision = truncation_precision
 
-        self._max_step = 500 if max_step is None else max_step  # need oqupy default max
+        self._max_step = 500 if max_step is None else max_step  # need oqupy default max?
         self._kmax = max_step if max_mps_length is None else max_mps_length
         self._initial_data = eye(self._dimension) if initial_data is None else initial_data
         self._config = TEMPO_BACKEND_CONFIG if config is None else config
@@ -70,7 +76,7 @@ class BaseBackend:
 
     @property
     def precision(self) -> float:
-        """The current step in the TEMPO computation. """
+        """The svd truncation precision of the TEMPO computation. """
         return self._precision
 
     @property
@@ -80,6 +86,7 @@ class BaseBackend:
 
     @property
     def max_step(self) -> int:
+        """The maximum step to compute to."""
         return self._max_step
 
     @max_step.setter
@@ -89,6 +96,7 @@ class BaseBackend:
 
     @property
     def kmax(self) -> int:
+        """The maximum length of the mps"""
         return self._kmax
 
     @kmax.setter
@@ -98,24 +106,29 @@ class BaseBackend:
 
     @cache
     def _influence_tensor(self, k):
+        """Creates rank 4 influence tensor from rank 2 influence matrix"""
         tensor = self._matrix(self._step, k)
         vert, hor = tensor.shape
         tensor = block_diag(*[v for v in tensor]).reshape((vert * vert, hor))  # block_diag slow?
         tensor = block_diag(*[v for v in tensor.T]).reshape((hor, hor, vert, vert))  # problems when degenerate?
+        # should be overall the same as tensor = create_delta(self._matrix(self._step, k), [1, 0, 0, 1])
         return tensor
 
     def _contract(self, k) -> List:
-        # this contracts mps site with an mpo site to give another mps site with larger bond dims
-        #                          \
-        #     MPO site        W1 --O-- E1
-        #                          \                                 \
-        #                                      ---->     (W1 x W2) --O-- (E1 x E2)   MPS site
-        #                          \
-        #     MPS site        W2 --O-- E2
-        #
+        """
+        Contracts k'th mps site with rank-4 influence tensor
+        this contracts mps site with an mpo site to give another mps site with larger bond dims
+                                    |
+            MPO site        mpo_w --O-- mpo_e
+                                    |                                    |
+                                             ---->     (mpo_w * mps_w) --O-- (mpo_e * mps_e)
+                                    |
+            MPS site        mps_w --O-- mps_e
+
+        """
         tens = self._influence_tensor(len(self._mps) - 1 - k)
         if k == 0:
-            tens = expand_dims(tens.sum(0), 0)
+            tens = expand_dims(tens.sum(0), 0)  # sum over mpo_w and create new leg with mpo_w=1
 
         mps_w, mps_n, mps_e = self._mps[k].shape
         mpo_w, mpo_e, mpo_n, mpo_s = tens.shape
@@ -128,32 +141,7 @@ class BaseBackend:
         return self._mps[k].shape
 
     def _truncate_right(self, k) -> int:
-        # truncates the k'th bond of the MPS using an SVD
-        #
-        #             \              \
-        #          ---O---  Edim  ---O---
-        #
-        #                    ^
-        #  (k-1)'th site     ^       k'th site
-        #                    ^
-        #                k'th bond
-
-        # Overall then we are left with:
-        #
-        #          ---U---  chi  ---Udag.M---O---
-        #             \                      \
-        #                    ^
-        #  (k-1)'th site     ^               k'th site
-        #                    ^
-        #             truncated k'th bond
-
-        # start by combining south and west legs of (k-1)'th site to give 2-leg tensor which is
-        # the rectangular matrix we will perform the SVD on
-        #
-        #     Wdim  --O--  Edim  ----->      (Wdim x SNdim) --M-- Edim
-        #             \
-        #           SNdim                                  'theta'
-        #
+        """ Perform svd on kth mps site and truncate the bond with (k+1)'th site"""
         west, north, east = self._mps[k].shape
         theta = self._mps[k].reshape((west * north, east))  # ( -1, self._mps[k].shape[-1])
 
@@ -164,32 +152,7 @@ class BaseBackend:
         return len(s)
 
     def _truncate_left(self, k) -> int:
-        # truncates the k'th bond of the MPS using an SVD
-        #
-        #             \              \
-        #          ---O---  Edim  ---O---
-        #
-        #                    ^
-        #  (k-1)'th site     ^       k'th site
-        #                    ^
-        #                k'th bond
-
-        # Overall then we are left with:
-        #
-        #          ---U---  chi  ---Udag.M---O---
-        #             \                      \
-        #                    ^
-        #  (k-1)'th site     ^               k'th site
-        #                    ^
-        #             truncated k'th bond
-
-        # start by combining south and west legs of (k-1)'th site to give 2-leg tensor which is
-        # the rectangular matrix we will perform the SVD on
-        #
-        #     Wdim  --O--  Edim  ----->      (Wdim x SNdim) --M-- Edim
-        #             \
-        #           SNdim                                  'theta'
-        #
+        """ Perform svd on kth mps site and truncate the bond with (k-1)'th site"""
         west, north, east = self._mps[k].shape
         theta = self._mps[k].reshape((west, north * east))  # (self._mps[k].shape[0], -1)
 
@@ -200,6 +163,7 @@ class BaseBackend:
         return len(s)
 
     def initialise(self) -> List:
+        """ ToDo """
         tensor = self._matrix(0, 0).T
         v, h = tensor.shape
         tensor = block_diag(*[row for row in tensor])
@@ -215,38 +179,21 @@ class BaseBackend:
 
         For example, for at step 4, we start with:
         t, current_state_list, current_field)
-            A ... self._mps
-            B ... self._mpo
-            w ... self._sum_west
-            n ... self._sum_north_array
-            p1 ... prop_1
-            p2 ... prop_2
-
-              n  n  n  n
-              |  |  |  |
+            A ... self._mps[k]
+            B ... self._influence_tensor(step, k)
+            c ... self._cap
 
               |  |  |  |     |
-        w~~ ~~B~~B~~B~~B~~ ~~p2
+              B~~B~~B~~B~~ ~~c
               |  |  |  |
-                       p1
+
               |  |  |  |
-              A~~A~~A~~A
-
-        return:
-            step = 4
-            state = contraction of A,B,w,n,p1
-
-        effects:
-            self._mpo will grow to the left with the next influence functional
-            self._mps will be contraction of A,B,w,p1,p2
+            ~~A~~A~~A~~A
 
         Returns
         -------
-        step: int
-            The current step count.
-        state: ndarray
-            Density matrix at the current step.
-
+        bond dimensions: list
+            list of the dimensions of mps sites
         """
         if not self._step:
             self.initialise()
@@ -267,13 +214,12 @@ class BaseBackend:
         for jj in range(last - 1, mid - 1, -1):  # contract in new tensors, right to middle
             self._contract(jj)
             self._truncate_left(jj + 1)
-
         for jj in range(last, first + 1, -1):  # svd sweep right to left
             self._truncate_left(jj)
         for jj in range(first, last - 1):  # svd sweep left to right: mps now canonical
             self._truncate_right(jj)
 
-        self._mps.append(self._cap)
+        self._mps.append(self._cap)  # turn east leg at last site into north leg at new last site
 
         if len(self._mps) > self._kmax + 1:
             end = self._mps.pop(0).sum(1)  # remove first site, turn into matrix
@@ -284,6 +230,14 @@ class BaseBackend:
         return [s.shape for s in self._mps]
 
     def readout(self) -> ndarray:
+        """
+                Readout result from mps
+                For example, at step 4
+
+                      s  s  s
+                      |  |  |  |            |
+                    ~~A~~A~~A~~A     ->   ~~R
+        """
         result = self._mps[-1].sum(2)
         for m in reversed([s.sum(1) for s in self._mps[:-1]]):
             result = m @ result
@@ -291,6 +245,7 @@ class BaseBackend:
 
     @staticmethod
     def scipy_svd(theta, precision):
+        """ static svd truncation method using scipy.linalg.svd"""
         try:
             u, singular_values, v_dagger = la_svd(theta, full_matrices=False, lapack_driver='gesvd')
         except LinAlgError:
