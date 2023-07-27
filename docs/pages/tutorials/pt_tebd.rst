@@ -5,11 +5,7 @@ An introduction on how to use the OQuPy package to compute the dynamics
 of a chain of open quantum systems using the process tensor approach to
 time evolving block decimation (PT-TEBD). We illustrate this by applying
 PT-TEBD to a 5-site XYZ Heisenberg spin chain. This method and example
-is explained in detail in [Fux2022].
-
-**[Fux2022]** G. E. Fux, D. Kilda, B. W. Lovett, and J. Keeling,
-*Thermalization of a spin chain strongly coupled to its environment*,
-arXiv:2201.05529 (2022).
+is explained in detail in [Fux2022] (`arXiv:2201.05529 <https://arxiv.org/abs/2201.05529>`__).
 
 -  `launch
    binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fpt_tebd.ipynb>`__

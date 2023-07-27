@@ -3,7 +3,9 @@ Mean-Field Dynamics
 
 In this tutorial we discuss to use TEMPO and the process tensor approach
 to compute the dynamics of a many-body system of the type introduced in
-`FowlerWright2022 <%5BPhys.%20Rev.%20Lett.%20129,%20173001%20(2022).%5D(https://doi.org/10.1103/PhysRevLett.129.173001)>`__.
+[FowlerWright2022] (`PhysRevLett.129.173001 (2022)
+<https://doi.org/10.1103/PhysRevLett.129.173001>`__ /
+`arXiv:2112.09003 <https://arxiv.org/abs/2112.09003>`__).
 
 -  `launch
    binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fmf_tempo.ipynb>`__
@@ -64,8 +66,7 @@ The following matrices will be useful below:
 1. Background and introduction
 ------------------------------
 
-Our goal will be to reproduce a line from **Fig. 2a.** of
-`FowlerWright2022 <%5BPhys.%20Rev.%20Lett.%20129,%20173001%20(2022).%5D(https://doi.org/10.1103/PhysRevLett.129.173001)>`__
+Our goal will be to reproduce a line from **Fig. 2a.** of [FowlerWright2022]
 which shows the photon number dynamics for the driven-dissipative system
 of molecules in a single-mode cavity.
 
