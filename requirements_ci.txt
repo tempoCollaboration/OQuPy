@@ -12,3 +12,4 @@ scipy>=1.4.0
 tensornetwork==0.4.3
 matplotlib>=3.0.0
 tox
+h5py>=3.1.0
