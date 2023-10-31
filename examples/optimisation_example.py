@@ -30,8 +30,7 @@ if process_tensor_type == 'default':
     process_tensor = oqupy.import_process_tensor(
                 'optimisation_pt.processTensor','simple')
 
-dprop_dpram_times = get_half_timesteps(process_tensor,0)
-
+half_timestep_times = get_half_timesteps(process_tensor,0)
 
 def get_hamiltonian(hx:np.ndarray,hz:np.ndarray,pt:BaseProcessTensor):
     """
@@ -87,6 +86,9 @@ def dpropagator(hamiltonian,
     return deriv
 
 def sum_adjacent_elements(array:np.ndarray)-> np.ndarray:
+    """
+    Takes an array where the length is even and summs the two adjacent elements.
+    """
     # maybe this goes in helpers.py or utils.py?
     half_the_size = array.size / 2
     assert (half_the_size).is_integer(), \
@@ -111,7 +113,7 @@ def cost_function(control_parameters,
                         progress_type='silent')
     final_state = dynamics.states[-1]
     infidelity = 1 - np.matmul(final_state,target_state).trace()
-    return infidelity
+    return infidelity.real
 
 def gradient_function(control_parameters,
                       pt):
@@ -120,13 +122,14 @@ def gradient_function(control_parameters,
                                     hz=control_parameters[len(pt):], # second half is sigma z
                                     pt=pt)
     system = oqupy.TimeDependentSystem(hamiltonian_t)
+    # list of the derivs of the propagators w.r.t. the control parameters
     dprop_dpram_derivs_x = []
     dprop_dpram_derivs_z = []
 
-    for i in range(dprop_dpram_times.size):
+    for i in range(half_timestep_times.size):
         dprop_x = dpropagator(
                             hamiltonian_t,
-                            dprop_dpram_times[i],
+                            half_timestep_times[i],
                             process_tensor.dt,
                             op=0.5*oqupy.operators.sigma('x'),
                             h = 10**(-6))
@@ -134,7 +137,7 @@ def gradient_function(control_parameters,
 
         dprop_z = dpropagator(
                             hamiltonian_t,
-                            dprop_dpram_times[i],
+                            half_timestep_times[i],
                             process_tensor.dt,
                             op=0.5*oqupy.operators.sigma('z'),
                             h = 10**(-6))
@@ -146,16 +149,27 @@ def gradient_function(control_parameters,
                                     target_state=target_state,
                                     dprop_dparam_list=dprop_dpram_derivs_x,
                                     progress_type='silent')
+    # extract derivs of control parameters over half a step, so will need to sum
+    # them later to get the full step
     total_derivs_x = gradient_with_x.total_derivs
 
+    # since we have already done forwardprop and backprop, we can reuse result
+    # by passing the object returned by oqupy.gradient back into oqupy.gradient,
+    # except this time with a different dprop_dparam list.
+    # NOTE that now we don't need to specify initial and target state as the
+    # forward and backprop have already been done
     gradient_with_z = oqupy.gradient(system=system,
                                      process_tensor=pt,
                                      gradient_dynamics=gradient_with_x,
                                      dprop_dparam_list=dprop_dpram_derivs_z)
+    # extract derivs of CPs over half steps
     total_derivs_z = gradient_with_z.total_derivs
 
+    # combine two results into one array that's the same shape as the control
+    # parameters, for L-BFGS-B algorithm
     total_derivs = np.concatenate((total_derivs_x,total_derivs_z))
     total_derivs = -1 * total_derivs.real # get infidelity
+    # sum adjacent elements to get derivs over whole timesteps
     total_derivs_summed = sum_adjacent_elements(total_derivs)
     # L-BFGS-B needs to have a jacobian expressed as a fortran type array
     # (column major)
