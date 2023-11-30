@@ -25,7 +25,7 @@ from scipy import integrate
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 
-
+#np.seterr(all='warn')
 # --- spectral density classes ------------------------------------------------
 
 class BaseCorrelations(BaseAPIClass):
@@ -949,6 +949,7 @@ class ThermalCustomSD(BaseCorrelations):  #### Temperature assigned here
         if self.temperature == 0.0:
             integrand = lambda w: self._spectral_density(w) * np.exp(-1j * w * tau)
         else:
+
             integrand = lambda w: self._spectral_density(w) \
                                   * (np.exp(-1j * tau * w) + np.exp(-(1 / self.temperature * w - 1j * tau * w))) \
                                   / (1 - np.exp(-w / self.temperature))
@@ -968,6 +969,7 @@ class ThermalCustomSD(BaseCorrelations):  #### Temperature assigned here
 
         return integral
 
+    @functools.cache
     def eta_function(
             self,
             tau: ArrayLike,
@@ -1004,11 +1006,23 @@ class ThermalCustomSD(BaseCorrelations):  #### Temperature assigned here
 
         # convention is tau.imag < 0
         if self.temperature == 0.0:
-            integrand = lambda w: self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+            # integrand = lambda w: self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+            def integrand(w): return self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
         else:
-            integrand = lambda w: self._spectral_density(w) / w ** 2 * (
+            #print(1 / self.temperature)
+            def integrand(w): # change of variable tau -> 1j*tau can give minus
+                if w/self.temperature < 1e2:
+                    inte = self._spectral_density(w) / w ** 2 * (
                                   ((np.exp(-1j*tau * w) + np.exp(-(1 / self.temperature * w - 1j*tau * w)))
                                    - np.exp(- w / self.temperature) - 1) / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
+                else:
+                    #print('except')
+                    inte = self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+                return inte
+
+            # integrand = lambda w: self._spectral_density(w) / w ** 2 * (
+            #                       ((np.exp(-1j*tau * w) + np.exp(-(1 / self.temperature * w - 1j*tau * w)))
+            #                        - np.exp(- w / self.temperature) - 1) / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
 
         integral = _complex_integral(integrand,
                                      a=0.0,
