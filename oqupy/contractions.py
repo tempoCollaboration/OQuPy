@@ -27,7 +27,7 @@ from oqupy.control import Control
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem, System, TimeDependentSystem
-from oqupy.system import MeanFieldSystem
+from oqupy.system import MeanFieldSystem, ParametrizedSystem
 from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
 from oqupy.util import get_progress
@@ -188,15 +188,11 @@ def compute_dynamics(
 
 
 def compute_gradient_and_dynamics(
-        system: Union[System, TimeDependentSystem],
+        system: ParametrizedSystem,
         initial_state: Optional[ndarray] = None,
         target_state: Optional[ndarray] = None,
-        dt: Optional[float] = None,
-        num_steps: Optional[int] = None,
-        start_time: Optional[float] = 0.0,
         process_tensor: Optional[Union[List[BaseProcessTensor],
                                        BaseProcessTensor]] = None,
-        control: Optional[Control] = None,
         record_all: Optional[bool] = True,
         get_forward_and_backprop_list = False,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
@@ -261,8 +257,9 @@ def compute_gradient_and_dynamics(
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
-    propagators = system.get_propagators(dt, start_time, subdiv_limit,
-                                       liouvillian_epsrel)
+    # propagators = system.get_propagators(dt, start_time, subdiv_limit,
+    #                                    liouvillian_epsrel)
+    propagators = system.propagators
 
     # -- prepare controls --
     def controls(step: int):

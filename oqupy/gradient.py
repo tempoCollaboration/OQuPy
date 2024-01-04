@@ -29,7 +29,7 @@ from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
 from oqupy.dynamics import GradientDynamics
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import System, TimeDependentSystem
+from oqupy.system import ParametrizedSystem
 from oqupy.contractions import _compute_dynamics_input_parse
 from oqupy.contractions import compute_gradient_and_dynamics
 from oqupy.helpers import get_half_timesteps,get_MPO_times
@@ -39,18 +39,12 @@ from oqupy.helpers import get_propagator_intervals
 # stolen from the compute_dynamics function in contractions.py, see notes below
 # because some of them are prob no longer optional.
 def gradient(
-        system: Union[System, TimeDependentSystem],
+        system: ParametrizedSystem,
         gradient_dynamics: Optional[GradientDynamics] = None,
-        initial_state: Optional[ndarray] = None, # why is this optional, this is def needed
-        target_state: Optional[ndarray] = None, # same again
-        dprop_dparam_list: Optional[List[ndarray]] = None,
-        dprop_times_list: Optional[ndarray] = None,# this one is actually optional (well debatably)
-        dt: Optional[float] = None,
-        num_steps: Optional[int] = None,
-        start_time: Optional[float] = 0.0,
+        initial_state: Optional[ndarray] = None,
+        target_state: Optional[ndarray] = None,
         process_tensor: Optional[Union[List[BaseProcessTensor],
                                        BaseProcessTensor]] = None,
-        control: Optional[Control] = None,
         get_forward_backprop_list: Optional[bool] = False,
         record_all: Optional[bool] = True,
         subdiv_limit: Optional[int] = SUBDIV_LIMIT,
@@ -66,8 +60,8 @@ def gradient(
 
     Parameters
     ----------
-    system: Union[System, TimeDependentSystem]
-        Object containing the system Hamiltonian information.
+    system: ParamatarizedSystem
+        Object containing the system Hamiltonian information, and parameters
     gradient_dynamics: GradientDynamics
     Optional: if provided, takes the recombined forwardprop and backprop and
     addes it to the specified dprop_dparam_list and produces the total gradient.
@@ -77,20 +71,8 @@ def gradient(
         Initial system state.
     target_state: ndarray
         Target state or derivative of target state (maybe rename variable?)
-    dprop_dparam_list
-        derivative of half timestep propagators w.r.t. control parameter
-    dprop_times_list:
-        list of times which the dprop_dparam_list is defined
-    dt: float
-        Length of a single time step.
-    num_steps: int
-        Optional number of time steps to be computed.
-    start_time: float
-        Optional start time offset.
     process_tensor: Union[List[BaseProcessTensor],BaseProcessTensor]
         Optional process tensor object or list of process tensor objects.
-    control: Control
-        Optional control operations.
     get_forward_backprop_list: Bool
         save both the states stored during the forward propagation and back
         propagation to the GradientDynamics object. This is not necessary for
@@ -128,7 +110,6 @@ def gradient(
             process_tensor, control, record_all)
         system, initial_state, dt, num_steps, start_time, \
             process_tensors, control, record_all, hs_dim = parsed_parameters
-
 
         gradient_dynamics = compute_gradient_and_dynamics(
                         system=system,
