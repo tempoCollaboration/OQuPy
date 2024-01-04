@@ -165,6 +165,7 @@ def gradient(
 
 def _chain_rule(deriv_list: List[ndarray],
             dprop_dparam_list: List[ndarray],
+            # dprop_dparam_indices = List[int],
             dprop_times_list: ndarray,
             start_time,
             process_tensor: BaseProcessTensor,
@@ -233,6 +234,9 @@ def _chain_rule(deriv_list: List[ndarray],
                 pre_post_decider:bool):
         target_deriv_node = tn.Node(target_deriv)
         propagator_deriv_node = tn.Node(propagator_deriv)
+        # in the following: when a pre or post is chosen, then the post / pre
+        # that is not used is simply discarded
+
         # deriv is a post node -> extra node needed is a pre
         if pre_post_decider:
             extra_prop_node = tn.Node(pre)
@@ -261,16 +265,22 @@ def _chain_rule(deriv_list: List[ndarray],
         # it is created so shouldn't need to check again
         # 0/False -> Pre node, 1/True -> Post node
         pre_post_decider = dprop_timestep_index[i] % 2
-        pre_prop,post_prop = propagators(prop_index)
 
         # if first or last timestep, do not include the extra propagator in
         # diagram as they are special cases where there was no propagator
         # omitted during the forward and backprop. Cleanest way to implement
         # this IMO is to set the extra propagator to the identity
-        if dprop_times_list[i] == 0 or dprop_times_list[i] \
+        if dprop_timestep_index[i] == 0 or dprop_timestep_index[i] \
                 ==  dprop_times_list.size-1:
             pre_prop = np.identity(process_tensor.hilbert_space_dimension**2)
             post_prop = np.identity(process_tensor.hilbert_space_dimension**2)
+
+        # post node -> extra node needed comes from previous step
+        elif pre_post_decider:
+            pre_prop,post_prop = propagators(prop_index+1)
+        # pre node -> extra node needed comes from following step
+        else:
+            pre_prop,post_prop = propagators(prop_index-1)
 
         dtarget_index = int(MPO_index_function(dprop_times_list[i]))
 
