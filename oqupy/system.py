@@ -284,117 +284,31 @@ class PropagatorSystem(BaseSystem):
     """
     def __init__(
             self,
-            hamiltonian: Optional[Callable[[Tuple], ndarray]] = None,
-            propagators: Optional[List[ndarray]] = None,
-            dprop_dparam: Optional[List[ndarray]] = None,
-            dprop_dparam_indices: Optional[ndarray] = None,
+            propagators: List[ndarray],
+            dprop_dparam: List[ndarray],
+            dprop_dparam_indices: ndarray,
             dprop_dparam_times: Optional[ndarray] = None,
-            gammas: \
-                Optional[List[Callable[[Tuple], float]]] = None,
-            lindblad_operators: \
-                Optional[List[Callable[[Tuple], ndarray]]] = None,
-            propagator_derivatives: Callable[[float, Tuple], Tuple] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a ParametrizedSystem object."""
         # input check for Hamiltonian.
-        if hamiltonian is not None:
-            number_of_parameters = len(getfullargspec(hamiltonian).args)
-            self._hamiltonian = np.vectorize(hamiltonian)
-            trail_hamiltonian = hamiltonian(*(list([0.5]*number_of_parameters)))
-            _check_hamiltonian(trail_hamiltonian)
-            dimension = trail_hamiltonian.shape[0]
+        assert dprop_dparam is not None, ('if providing propagators, '
+        'dprop_dparam must also be specified.')
+        if dprop_dparam_indices is None:
+            dprop_dparam_indices = np.arange(len(dprop_dparam))
+        dimension = np.sqrt(propagators[0].shape)
+        self._dimension = dimension
+        self._number_of_parameters = len(dprop_dparam)
+        self._propagator_derivatives = dprop_dparam
+        self._dprop_indices = dprop_dparam_indices
+        self._propagators = propagators
 
-            self._dimension = dimension
-            self._number_of_parameters = number_of_parameters
-            self._hamiltonian = hamiltonian
-            self._gammas = gammas
-            self._lindblad_operators = lindblad_operators
-            self._propagator_derivatives = propagator_derivatives
-            self._propagators = get_propagators(NotImplemented)
-        elif propagators is not None:
-            assert dprop_dparam is not None, ('if providing propagators, '
-            'dprop_dparam must also be specified.')
-            if dprop_dparam_indices is None:
-                dprop_dparam_indices = np.arange(len(dprop_dparam))
-            self._dimension = np.sqrt(propagators[0].shape)
-            self._number_of_parameters = len(dprop_dparam)
-            if gammas is not None or lindblad_operators is not None:
-                warn('you have specified both a lindblad dissipator and a pre '
-                     'computed propagator, the lindblad dissipator is doing '
-                     'nothing')
-            self._gammas = gammas
-            self._lindblad_operators = lindblad_operators
-            self._propagator_derivatives = dprop_dparam
-            self._dprop_indices = dprop_dparam_indices
-            self._propagators = propagators
-
-        else:
-            raise KeyError('One of hamiltonian or propagators must be provided')
         super().__init__(dimension, name, description)
-
-    def liouvillian(self, *parameters: float) -> ndarray:
-        r"""
-        ToDo.
-        """
-        return NotImplemented # return the liouvillian for the given parameters.
-
-    def get_propagators(
-            self,
-            dt: float,
-            parameters: Tuple[List]) -> Callable[[int], Tuple[ndarray,ndarray]]:
-        """ ToDo. """
-        def propagators(step: int):
-            """Create the system propagators (first and second half) for
-            the time step `step`  """
-            # ToDo
-            # return "pre"-propagator, "post"-propagator
-            return NotImplemented, NotImplemented
-        return propagators
-
-    def get_propagator_derivatives(
-            self,
-            dt: float,
-            parameters: Tuple[List]) -> Callable[[int],Tuple[Tuple,Tuple]]:
-        """ ToDo. """
-        if self._propagator_derivatives is not None:
-            def propagator_derivatives(step: int):
-                pre_params = (p[2*step] for p in parameters)
-                post_params = (p[2*step+1] for p in parameters)
-                pre_prop_derivs = self._propagator_derivatives(dt, pre_params)
-                post_prop_derivs = self._propagator_derivatives(dt, post_params)
-                # e.g: pre_prop_derivs[i] is the derivative of the propagator at
-                #      the first half of time step `step` with respect to the
-                #      ith parameter.
-                return pre_prop_derivs, post_prop_derivs
-            return propagator_derivatives
-
-        else:
-            def propagator_derivs(step: int):
-                # do finite difference
-                return NotImplementedError
-
-        return NotImplemented
 
     @property
     def number_of_parameters(self) -> Callable[[Tuple], ndarray]:
         """The system's number of parameters. """
         return copy(self._number_of_parameters)
-
-    @property
-    def hamiltonian(self) -> Callable[[Tuple], ndarray]:
-        """The system Hamiltonian. """
-        return copy(self._hamiltonian)
-
-    @property
-    def gammas(self) -> List[Callable[[Tuple], float]]:
-        """List of gammas. """
-        return copy(self._gammas)
-
-    @property
-    def lindblad_operators(self) -> List[Callable[[Tuple], ndarray]]:
-        """List of lindblad operators. """
-        return copy(self._lindblad_operators)
 
     @property
     def propagators(self) -> List[ndarray]:
@@ -411,7 +325,7 @@ class PropagatorSystem(BaseSystem):
         """System Propagators"""
         return copy(self._dprop_indices)
 
-class ParametrizedSystem(ParametrizedSystem):
+class ParametrizedSystem(PropagatorSystem):
     r"""
     Either supply a hamiltonian parameterized as follows or a list of
     propagators, as well as their derivatives with respect to the parameters.
@@ -420,10 +334,6 @@ class ParametrizedSystem(ParametrizedSystem):
     def __init__(
             self,
             hamiltonian: Optional[Callable[[Tuple], ndarray]] = None,
-            propagators: Optional[List[ndarray]] = None,
-            dprop_dparam: Optional[List[ndarray]] = None,
-            dprop_dparam_indices: Optional[ndarray] = None,
-            dprop_dparam_times: Optional[ndarray] = None,
             gammas: \
                 Optional[List[Callable[[Tuple], float]]] = None,
             lindblad_operators: \
@@ -433,40 +343,30 @@ class ParametrizedSystem(ParametrizedSystem):
             description: Optional[Text] = None) -> None:
         """Create a ParametrizedSystem object."""
         # input check for Hamiltonian.
-        if hamiltonian is not None:
-            number_of_parameters = len(getfullargspec(hamiltonian).args)
-            self._hamiltonian = np.vectorize(hamiltonian)
-            trail_hamiltonian = hamiltonian(*(list([0.5]*number_of_parameters)))
-            _check_hamiltonian(trail_hamiltonian)
-            dimension = trail_hamiltonian.shape[0]
 
-            self._dimension = dimension
-            self._number_of_parameters = number_of_parameters
-            self._hamiltonian = hamiltonian
-            self._gammas = gammas
-            self._lindblad_operators = lindblad_operators
-            self._propagator_derivatives = propagator_derivatives
-            self._propagators = get_propagators(NotImplemented)
-        elif propagators is not None:
-            assert dprop_dparam is not None, ('if providing propagators, '
-            'dprop_dparam must also be specified.')
-            if dprop_dparam_indices is None:
-                dprop_dparam_indices = np.arange(len(dprop_dparam))
-            self._dimension = np.sqrt(propagators[0].shape)
-            self._number_of_parameters = len(dprop_dparam)
-            if gammas is not None or lindblad_operators is not None:
-                warn('you have specified both a lindblad dissipator and a pre '
-                     'computed propagator, the lindblad dissipator is doing '
-                     'nothing')
-            self._gammas = gammas
-            self._lindblad_operators = lindblad_operators
-            self._propagator_derivatives = dprop_dparam
-            self._dprop_indices = dprop_dparam_indices
-            self._propagators = propagators
+        number_of_parameters = len(getfullargspec(hamiltonian).args)
+        self._hamiltonian = np.vectorize(hamiltonian)
+        trail_hamiltonian = hamiltonian(*(list([0.5]*number_of_parameters)))
+        _check_hamiltonian(trail_hamiltonian)
+        dimension = trail_hamiltonian.shape[0]
 
-        else:
-            raise KeyError('One of hamiltonian or propagators must be provided')
-        super().__init__(dimension, name, description)
+        self._dimension = dimension
+        self._number_of_parameters = number_of_parameters
+        self._hamiltonian = hamiltonian
+        self._gammas = gammas
+        self._lindblad_operators = lindblad_operators
+        self._propagator_derivatives = propagator_derivatives
+        self._propagators = get_propagators(NotImplemented)
+
+        self._gammas = gammas
+        self._lindblad_operators = lindblad_operators
+        super().__init__(propagators,
+                         dprop_dparam_list,
+                         dprop_dparam_indices,
+                         dprop_times_list,
+                         name,
+                         description)
+
 
     def liouvillian(self, *parameters: float) -> ndarray:
         r"""
@@ -530,21 +430,6 @@ class ParametrizedSystem(ParametrizedSystem):
     def lindblad_operators(self) -> List[Callable[[Tuple], ndarray]]:
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
-
-    @property
-    def propagators(self) -> List[ndarray]:
-        """System Propagators"""
-        return copy(self._propagators)
-
-    @property
-    def propagator_derivatives(self) -> List[ndarray]:
-        """System Propagators"""
-        return copy(self._propagator_derivatives)
-
-    @property
-    def dprop_indices(self) -> List[ndarray]:
-        """System Propagators"""
-        return copy(self._dprop_indices)
 
 class TimeDependentSystemWithField(BaseSystem):
     r"""
