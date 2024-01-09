@@ -115,26 +115,16 @@ def gradient(
                         system=system,
                         initial_state=initial_state,
                         target_state=target_state,
-                        dt=dt,
-                        num_steps=num_steps,
-                        start_time=start_time,
                         process_tensor=process_tensors,
-                        control=control,
                         record_all=record_all,
                         get_forward_and_backprop_list=get_forward_backprop_list,
                         subdiv_limit=subdiv_limit,
                         liouvillian_epsrel=liouvillian_epsrel,
                         progress_type=progress_type)
 
-    if dprop_dparam_list is not None:
-
-        if dprop_times_list is None:
-            dprop_times_list = get_half_timesteps(pt=process_tensor,start_time=start_time)
-
+    if system.propagator_derivatives is not None:
         total_derivs = _chain_rule(
                     gradient_dynamics.deriv_list,
-                    dprop_dparam_list,
-                    dprop_times_list,
                     start_time,
                     process_tensor,
                     system,
@@ -146,12 +136,11 @@ def gradient(
 
 def _chain_rule(deriv_list: List[ndarray],
             dprop_dparam_list: List[ndarray],
-            # dprop_dparam_indices = List[int],
-            dprop_times_list: ndarray,
             start_time,
             process_tensor: BaseProcessTensor,
-            system: Union[System,TimeDependentSystem],
-            system_params = Tuple)->ndarray:
+            system: ParametrizedSystem,
+            system_params = Tuple,
+            )->ndarray:
     """
     Uses chain rule to evaluate the gradient of the fidelity w.r.t. the
     control parameters, which are provided in the dprop dpram list
