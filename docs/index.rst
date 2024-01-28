@@ -102,6 +102,7 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
    pages/contributing
    pages/authors
    pages/how_to_cite
+   pages/sharing
    pages/bibliography
 
 
@@ -110,3 +111,12 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`search`
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Consider sharing this project:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: graphics//oqupy-github-qr.png
+    :align: center
+    :width: 200
+    :alt: OQuPy GitHub QR Code
