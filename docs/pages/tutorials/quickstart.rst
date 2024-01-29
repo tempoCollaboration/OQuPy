@@ -100,7 +100,8 @@ the job - just to have an idea where we are going:
                                    initial_state=up_density_matrix,
                                    start_time=0.0,
                                    end_time=15.0,
-                                   parameters=tempo_parameters)
+                                   parameters=tempo_parameters,
+                                   unique=False)
     t, s_z = dynamics.expectations(0.5*sigma_z, real=True)
     
     plt.plot(t, s_z, label=r'$\alpha=0.3$')
@@ -225,7 +226,8 @@ to :math:`t=5\,\Omega^{-1}`
                                        initial_state=up_density_matrix,
                                        start_time=0.0,
                                        end_time=5.0,
-                                       tolerance=0.01)
+                                       tolerance=0.01,
+                                       unique=False)
 
 
 .. parsed-literal::
@@ -266,6 +268,12 @@ and plot the result:
 
 
 Yay! This looks like the plot in figure 2a [Strathearn2018].
+
+**Note:** the option ``unique`` has been set to false, however the computation
+time can be reduced by setting this option to True. The default behaviour in
+future versions of OQuPy will to have this on, however this feature is
+currently in a test phase. If in doubt compare your results with the option on
+and off.
 
 Let’s have a look at the above warning. It said:
 
@@ -413,7 +421,8 @@ without having to start over. For this we start with creating a
                           bath=bath,
                           parameters=tempo_parameters,
                           initial_state=up_density_matrix,
-                          start_time=0.0)
+                          start_time=0.0,
+                          unique=False)
 
 We can start by computing the dynamics up to time
 :math:`5.0\,\Omega^{-1}`,
