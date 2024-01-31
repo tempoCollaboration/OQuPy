@@ -1,5 +1,5 @@
-How to Cite this Project
-========================
+Citing this Project
+===================
 
 Citing the Code
 ---------------

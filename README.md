@@ -79,3 +79,7 @@ Please, feel free to file an issue in the [Issues](https://github.com/tempoColla
 ## Citing, Authors and Bibliography
 See the files [`HOW_TO_CITE.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/HOW_TO_CITE.md), [`AUTHORS.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/AUTHORS.md) and [`BIBLIOGRAPHY.md`](https://github.com/tempoCollaboration/OQuPy/blob/main/BIBLIOGRAPHY.md).
 
+#### Consider sharing this project:
+<p align="center">
+<img src="docs/graphics/oqupy-github-qr.png" alt="OQuPy - GitHub QR Code" width="200"/>
+</p>
