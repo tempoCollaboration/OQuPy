@@ -20,7 +20,7 @@ You are free to use these for academics talks, posters and other works.
 Please include a citation where appropriate.
 
 Note the logo font is Google's `EB Garmamond <https://fonts.google.com/specimen/EB+Garamond>`_
-and the foreground and background colors are ``59a6ed`` |colour1| and ``02284b`` |colour2|.
+and the foreground and background colors are  ``02284b`` |colour2| and ``59a6ed`` |colour1|.
 
 A vector format of the logo and other graphic files are available on the `GitHub repository <https://github.com/tempoCollaboration/OQuPy/tree/main/docs/graphics>`_.
 
