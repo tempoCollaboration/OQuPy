@@ -80,7 +80,7 @@ class Bath(BaseAPIClass):
                 self._unitary @ self._coupling_operator \
                 @ self._unitary.conjugate().T)
 
-        # compute the degeneracies in eigen level differences
+        # identify degeneracies in eigensystem of coupling operator
         tmp_coupling_comm = commutator(self._coupling_operator)
         tmp_coupling_acomm = acommutator(self._coupling_operator)
         coupling_comm = tmp_coupling_comm.diagonal()
@@ -128,17 +128,27 @@ class Bath(BaseAPIClass):
 
     @property
     def north_degeneracy_map(self) -> np.ndarray:
-        """The north degeneracy. """
+        """Map to minimal set of indices for influence tensors in
+        north-south direction according to simultaneous degeneracies in
+        sums & differences of eigenvalues of coupling operator (minimal
+        dimension is number of unique values in this map).
+        Used by a Tempo computation if unique==True only. """
         return copy(self._north_degeneracy_map)
 
     @property
     def west_degeneracy_map(self) -> np.ndarray:
-        """The west degeneracy. """
+        """Map to minimal set of indices for influence tensors in
+        west-east direction according to degeneracies in sums of
+        eigenvalues of coupling operator (minimal dimension is number
+        of unique values in this map).
+        Used by a Tempo computation if unique==True only. """
         return copy(self._west_degeneracy_map)
 
 
 def _row_degeneracy(matrix):
-    """Finds the row degeneracy of matrix"""
+    """Finds the row degeneracy of matrix. Returns array of
+    indices mapping full space to non-degenerate rows (repeated
+    indices indicate row degeneracy in the original matrix)."""
     mat = np.array(matrix).round(decimals=DEFAULT_TOLERANCE_DEGENERACY)
     return_map = np.unique(mat.T,return_inverse=True,axis=0)[1]
     return return_map

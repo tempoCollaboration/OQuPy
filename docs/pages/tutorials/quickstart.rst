@@ -269,13 +269,14 @@ and plot the result:
 
 Yay! This looks like the plot in figure 2a [Strathearn2018].
 
-**Note:** the option ``unique`` has been set to false, however the computation
-time can be reduced by setting this option to True. The default behaviour in
-future versions of OQuPy will to have this on, however this feature is
-currently in a test phase. If in doubt compare your results with the option on
-and off.
+**Note:** with the option `unique=True` an attempt is made to simplify the
+calculation by checking for degeneracies in the eigensystem of the bath
+coupling operator. This may greatly decrease the computation time without
+significant loss of accuracy. This feature is currently in testing, so if
+used we recommend checking results against those obtained with `unqiue=False`
+(the default).
 
-Let’s have a look at the above warning. It said:
+We should also address the warning that was given in the above computation:
 
 ::
 

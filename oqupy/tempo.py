@@ -232,7 +232,10 @@ class Tempo(BaseAPIClass):
     start_time: float
         The start time.
     unique: bool (default = False),
-        Whether to use degeneracy checking
+        Whether to use degeneracy checking. If True reduces dimension of
+        bath tensors in case of degeneracies in sums ('west') and
+        sums,differences ('north') of bath coupling operator.
+        See bath:north_degeneracy_map, bath:west_degeneracy_map.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
