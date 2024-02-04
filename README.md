@@ -61,7 +61,7 @@ for more information.
 ## Quickstart Tutorial
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
 
-Click the `launch binder` button above to start a tutorial in a browser based jupyter notebook (no installation required) or checkout the [tutorial in the documentation](https://oqupy.readthedocs.io/en/latest/pages/tutorials/quickstart/quickstart.html).
+Click the `launch binder` button above to start a tutorial in a browser based jupyter notebook (no installation required) or checkout the [tutorial in the documentation](https://oqupy.readthedocs.io/en/latest/pages/tutorials/quickstart.html).
 
 
 ## Contributing
