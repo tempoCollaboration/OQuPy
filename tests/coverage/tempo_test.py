@@ -45,6 +45,20 @@ def test_tempo():
     tempo_sys_A.compute(end_time=end_time3, progress_type="simple")
     dyn_A = tempo_sys_A.get_dynamics()
     assert len(dyn_A.times) == 12
+    
+    # With degeneracy checks on
+    tempo_sys_B = tempo.Tempo(system=system,
+                              bath=bath,
+                              parameters=tempo_param_A,
+                              initial_state=initial_state,
+                              start_time=start_time,
+                              unique=True)
+    assert tempo_sys_B.dimension == 2
+    tempo_sys_B.compute(end_time=end_time1, progress_type="bar")
+    tempo_sys_B.compute(end_time=end_time2, progress_type="silent")
+    tempo_sys_B.compute(end_time=end_time3, progress_type="simple")
+    dyn_B = tempo_sys_B.get_dynamics()
+    assert len(dyn_B.times) == 12
 
 def test_tempo_bad_input():
     start_time = -0.3
@@ -70,6 +84,14 @@ def test_tempo_bad_input():
                                   parameters=tempo_param_A,
                                   initial_state=initial_state,
                                   start_time="bla")
+    
+    with pytest.raises(AssertionError):
+        tempo_sys_A = tempo.Tempo(system=system,
+                                  bath=bath,
+                                  parameters=tempo_param_A,
+                                  initial_state=initial_state,
+                                  start_time=start_time,
+                                  unique="bla")
 
     tempo_sys_A = tempo.Tempo(system=system,
                               bath=bath,
@@ -144,13 +166,15 @@ def test_tempo_compute():
     correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
     initial_state = tempo.operators.spin_dm("z+")
+    unique = False
 
     with pytest.warns(UserWarning):
         dyn_A = tempo.tempo_compute(system=system,
                                     bath=bath,
                                     initial_state=initial_state,
                                     start_time=start_time,
-                                    end_time=end_time)
+                                    end_time=end_time,
+                                    unique=unique)
 
 def test_tempo_dynamics_reference():
     system = tempo.System(0.5 * tempo.operators.sigma("x"))

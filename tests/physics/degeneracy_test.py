@@ -103,6 +103,38 @@ system_B = oqupy.System(h_sys_B)
 
 
 # -----------------------------------------------------------------------------
+# -- Test C: 1D bath coupling -------------------------------------------------
+
+# Initial state:
+initial_state_C = np.array([[1.0,0.0,0.0],
+                            [0.0,0.0,0.0],
+                            [0.0,0.0,0.0]])
+
+# System operator
+h_sys_C = -2 * s_z @ s_z + s_x
+
+# Ohmic spectral density with exponential cutoff
+coupling_operator_C = np.eye(3)
+alpha_C = 0.3
+cutoff_C = 5.0
+temperature_C = 0.0
+
+# end time
+t_end_C = 2.0
+
+correlations_C = oqupy.PowerLawSD(alpha=alpha_C,
+                                  zeta=1.0,
+                                  cutoff=cutoff_C,
+                                  cutoff_type="exponential",
+                                  temperature=temperature_C,
+                                  name="ohmic")
+bath_C = oqupy.Bath(coupling_operator_C,
+                    correlations_C,
+                    name="phonon bath")
+system_C = oqupy.System(h_sys_C)
+
+
+# -----------------------------------------------------------------------------
 
 def test_degeneracy_exact():
     tempo_params_A = oqupy.TempoParameters(
@@ -141,6 +173,32 @@ def test_degeneracy_compare():
         unique=False)
     tempo_unique.compute(end_time=t_end_B)
     tempo_non_unique.compute(end_time=t_end_B)
+    dyn_unique = tempo_unique.get_dynamics()
+    dyn_non_unique = tempo_non_unique.get_dynamics()
+    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
+                                   decimal=4)
+
+def test_degeneracy_1d():
+    tempo_params_C = oqupy.TempoParameters(
+        dt=0.05,
+        tcut=None,
+        epsrel=10**(-7))
+    tempo_unique = oqupy.Tempo(
+        system_C,
+        bath_C,
+        tempo_params_C,
+        initial_state_C,
+        start_time=0.0,
+        unique=True)
+    tempo_non_unique = oqupy.Tempo(
+        system_C,
+        bath_C,
+        tempo_params_C,
+        initial_state_C,
+        start_time=0.0,
+        unique=False)
+    tempo_unique.compute(end_time=t_end_C)
+    tempo_non_unique.compute(end_time=t_end_C)
     dyn_unique = tempo_unique.get_dynamics()
     dyn_non_unique = tempo_non_unique.get_dynamics()
     np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
