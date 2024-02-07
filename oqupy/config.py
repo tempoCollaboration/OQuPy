@@ -65,3 +65,10 @@ PT_TEBD_DEFAULT_ORDER = 2
 
 # Default relative singular value truncation tolerance
 PT_TEBD_DEFAULT_EPSREL = 1.0e-5
+
+
+# -- BATH --------------------------------------------------------------------
+
+
+# default tolerance for degeneracy checking (how many decimals to round to)
+DEFAULT_TOLERANCE_DEGENERACY = 12

@@ -231,6 +231,11 @@ class Tempo(BaseAPIClass):
         The initial density matrix of the system.
     start_time: float
         The start time.
+    unique: bool (default = False),
+        Whether to use degeneracy checking. If True reduces dimension of
+        bath tensors in case of degeneracies in sums ('west') and
+        sums,differences ('north') of bath coupling operator.
+        See bath:north_degeneracy_map, bath:west_degeneracy_map.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -246,6 +251,7 @@ class Tempo(BaseAPIClass):
             parameters: TempoParameters,
             initial_state: ndarray,
             start_time: float,
+            unique: Optional[bool] = False,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
@@ -269,6 +275,10 @@ class Tempo(BaseAPIClass):
         except Exception as e:
             raise TypeError("Start time must be a float.") from e
         self._start_time = tmp_start_time
+
+        assert isinstance(unique, bool), \
+            "Argument 'unique' must be a boolean."
+        self._unique = unique
 
         if backend_config is None:
             self._backend_config = TEMPO_BACKEND_CONFIG
@@ -294,12 +304,22 @@ class Tempo(BaseAPIClass):
     def _influence(self, dk: int) -> ndarray:
         """Create the influence functional matrix for a time step distance
         of dk. """
+        tmp_north_deg_positions = np.array([np.where( \
+            self._bath.north_degeneracy_map == i)[0][0] for i in \
+                range(np.max(self._bath.north_degeneracy_map)+1)])
+        tmp_west_deg_positions = np.array([np.where( \
+            self._bath.west_degeneracy_map == i)[0][0] for i in \
+                range(np.max(self._bath.west_degeneracy_map)+1)])
+
         return influence_matrix(
             dk,
             parameters=self._parameters,
             correlations=self._correlations,
             coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm)
+            coupling_comm=self._coupling_comm,
+            unique=self._unique,
+            north_deg_positions=tmp_north_deg_positions,
+            west_deg_positions=tmp_west_deg_positions)
 
     def _time(self, step: int) -> float:
         """Return the time that corresponds to the time step `step`. """
@@ -330,8 +350,14 @@ class Tempo(BaseAPIClass):
                 self._start_time,
                 self._parameters.subdiv_limit,
                 self._parameters.liouvillian_epsrel)
-        sum_north = np.array([1.0]*(dim**2))
-        sum_west = np.array([1.0]*(dim**2))
+        if self._unique:
+            sum_north = np.array([1.0]* \
+                (np.max(self._bath.north_degeneracy_map)+1))
+            sum_west = np.array([1.0]* \
+                (np.max(self._bath.west_degeneracy_map)+1))
+        else:
+            sum_north = np.array([1.0]*(dim**2))
+            sum_west = np.array([1.0]*(dim**2))
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
         self._backend_instance = TempoBackend(
@@ -343,7 +369,11 @@ class Tempo(BaseAPIClass):
                 sum_west,
                 dkmax,
                 epsrel,
-                config=self._backend_config)
+                config=self._backend_config,
+                unique=self._unique,
+                north_degeneracy_map = self._bath.north_degeneracy_map,
+                west_degeneracy_map = self._bath.west_degeneracy_map,
+                dim=dim)
 
     def _init_dynamics(self):
         """Create a Dynamics object with metadata from the Tempo object. """
@@ -671,7 +701,10 @@ def influence_matrix(
         parameters: TempoParameters,
         correlations: BaseCorrelations,
         coupling_acomm: ndarray,
-        coupling_comm: ndarray):
+        coupling_comm: ndarray,
+        unique: Optional[bool] = False,
+        north_deg_positions: Optional[ndarray] = None,
+        west_deg_positions: Optional[ndarray] = None):
     """Compute the influence functional matrix. """
     dt = parameters.dt
     dkmax = parameters.dkmax
@@ -706,9 +739,13 @@ def influence_matrix(
     if dk == 0:
         infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
                                         + 1j*eta_dk.imag*op_p)))
+        if unique:
+            infl = np.diag(infl)[north_deg_positions]
     else:
         infl = np.exp(-np.outer(eta_dk.real*op_m \
                                 + 1j*eta_dk.imag*op_p, op_m))
+        if unique:
+            infl=(infl[north_deg_positions].T)[west_deg_positions].T
 
     return infl
 
@@ -872,6 +909,7 @@ def tempo_compute(
         end_time: float,
         parameters: Optional[TempoParameters] = None,
         tolerance: Optional[float] = DEFAULT_TOLERANCE,
+        unique: Optional[bool] = False,
         backend_config: Optional[Dict] = None,
         progress_type: Optional[Text] = None,
         name: Optional[Text] = None,
@@ -897,6 +935,8 @@ def tempo_compute(
     tolerance: float
         Tolerance for the parameter estimation (only applicable if
         `parameters` is None).
+    unique: bool (default = False)
+        Whether to preform degeneracy checks
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -923,6 +963,7 @@ def tempo_compute(
                   parameters,
                   initial_state,
                   start_time,
+                  unique,
                   backend_config,
                   name,
                   description)
