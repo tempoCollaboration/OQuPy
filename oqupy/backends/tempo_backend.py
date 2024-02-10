@@ -24,7 +24,7 @@ from numpy import max as numpy_max
 from oqupy import operators
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.backends import node_array as na
-from oqupy.util import create_delta, check_isinstance
+from oqupy.util import create_delta
 
 class BaseTempoBackend:
     """
