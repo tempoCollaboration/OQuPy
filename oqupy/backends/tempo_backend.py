@@ -24,7 +24,7 @@ from numpy import max as numpy_max
 from oqupy import operators
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.backends import node_array as na
-from oqupy.util import create_delta
+from oqupy.util import create_delta, check_isinstance
 
 class BaseTempoBackend:
     """
@@ -55,7 +55,7 @@ class BaseTempoBackend:
     west_degeneracy_map: Optional[ndarray]
         Array to invert the degeneracy in west direction
     dim: Optional[int]
-        Hilbert space dimension, only needed if unique is True
+        Hilbert space dimension, needed if unique is True
     """
     def __init__(
             self,
@@ -91,6 +91,13 @@ class BaseTempoBackend:
         self._north_degeneracy_map = north_degeneracy_map
         self._west_degeneracy_map = west_degeneracy_map
         self._dim = dim
+        if unique:
+            assert north_degeneracy_map is not None, "north_degeneracy_map "\
+                    "must be specified if unique."
+            assert west_degeneracy_map is not None, "west_degeneracy_map "\
+                    "must be specified if unique."
+            assert dim is not None, "dim "\
+                    "must be specified if unique."
 
     @property
     def step(self) -> int:
