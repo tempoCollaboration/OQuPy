@@ -41,7 +41,6 @@ from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.correlations import BaseCorrelations
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
-from oqupy.operators import commutator, acommutator
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField, MeanFieldSystem
 from oqupy.backends.tempo_backend import TempoBackend
@@ -346,13 +345,13 @@ class Tempo(BaseAPIClass):
                 self._parameters.subdiv_limit,
                 self._parameters.liouvillian_epsrel)
         if self._unique:
-            sum_north = np.array([1.0]* \
-                (np.max(self._bath.north_degeneracy_map)+1))
-            sum_west = np.array([1.0]* \
-                (np.max(self._bath.west_degeneracy_map)+1))
+            sum_north = np.ones(np.max(self._bath.north_degeneracy_map)+1,
+                                dtype=float)
+            sum_west = np.ones(np.max(self._bath.west_degeneracy_map)+1,
+                               dtype=float)
         else:
-            sum_north = np.array([1.0]*(dim**2))
-            sum_west = np.array([1.0]*(dim**2))
+            sum_north = np.ones(dim**2, dtype=float)
+            sum_west = np.ones(dim**2, dtype=float)
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
         self._backend_instance = TempoBackend(
@@ -560,16 +559,16 @@ class MeanFieldTempo(BaseAPIClass):
         compute_field = self._compute_field
         compute_field_derivative = self._compute_field_derivative
         if self._unique:
-            sum_north_list = [np.array([1.0]* \
-                (np.max(bath.north_degeneracy_map)+1))
+            sum_north_list = [np.ones(np.max(bath.north_degeneracy_map)+1,
+                                      dtype=float)
                 for bath in self._parsed_parameters_dict["bath"]]
-            sum_west_list = [np.array([1.0]* \
-                (np.max(bath.west_degeneracy_map)+1))
+            sum_west_list = [np.ones(np.max(bath.west_degeneracy_map)+1,
+                                      dtype=float)
                 for bath in self._parsed_parameters_dict["bath"]]
         else:
-            sum_north_list = [np.array([1.0]*(dim**2))
+            sum_north_list = [np.ones(dim**2, dtype=float)
                     for dim in self._parsed_parameters_dict["hs_dim"]]
-            sum_west_list = [np.array([1.0]*(dim**2))
+            sum_west_list = [np.ones(dim**2, dtype=float)
                     for dim in self._parsed_parameters_dict["hs_dim"]]
         north_degeneracy_list = [bath.north_degeneracy_map
                 for bath in self._parsed_parameters_dict["bath"]]
