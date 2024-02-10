@@ -234,7 +234,7 @@ class Tempo(BaseAPIClass):
     unique: bool (default = False),
         Whether to use degeneracy checking. If True reduces dimension of
         bath tensors in case of degeneracies in sums ('west') and
-        sums,differences ('north') of bath coupling operator.
+        sums,differences ('north') of the bath coupling operator.
         See bath:north_degeneracy_map, bath:west_degeneracy_map.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
@@ -285,11 +285,6 @@ class Tempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        tmp_coupling_comm = commutator(self._bath._coupling_operator)
-        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
-        self._coupling_comm = tmp_coupling_comm.diagonal()
-        self._coupling_acomm = tmp_coupling_acomm.diagonal()
-
         self._dynamics = None
         self._backend_instance = None
 
@@ -315,8 +310,8 @@ class Tempo(BaseAPIClass):
             dk,
             parameters=self._parameters,
             correlations=self._correlations,
-            coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm,
+            coupling_acomm=self._bath.coupling_acomm,
+            coupling_comm=self._bath.coupling_comm,
             unique=self._unique,
             north_deg_positions=tmp_north_deg_positions,
             west_deg_positions=tmp_west_deg_positions)
@@ -619,17 +614,13 @@ class MeanFieldTempo(BaseAPIClass):
         tmp_west_deg_positions = np.array([np.where( \
             bath.west_degeneracy_map == i)[0][0] for i in \
                 range(np.max(bath.west_degeneracy_map)+1)])
-        tmp_coupling_comm = commutator(bath._coupling_operator)
-        tmp_coupling_acomm = acommutator(bath._coupling_operator)
-        coupling_comm = tmp_coupling_comm.diagonal()
-        coupling_acomm = tmp_coupling_acomm.diagonal()
         def influence(dk: int) -> ndarray:
             return influence_matrix(
                 dk,
                 parameters=self._parameters,
                 correlations=bath.correlations,
-                coupling_acomm=coupling_acomm,
-                coupling_comm=coupling_comm,
+                coupling_acomm=bath.coupling_acomm,
+                coupling_comm=bath.coupling_comm,
                 unique=self._unique,
                 north_deg_positions=tmp_north_deg_positions,
                 west_deg_positions=tmp_west_deg_positions)

@@ -395,10 +395,10 @@ class MeanFieldTempoBackend():
     unique: Optional[bool]
         Whether to use degeneracy checks.
     north_degeneracy_list: Optional[List[ndarray]]
-        List of arrays to invert the degeneracy in north direction for each 
+        List of arrays to invert the degeneracy in north direction for each
         system's environment.
     west_degeneracy_list: Optional[List[ndarray]]
-        List of arrays to invert the degeneracy in west direction for each 
+        List of arrays to invert the degeneracy in west direction for each
         system's environment.
     dim_list: Optional[List[int]]
         Hilbert space dimension of each system, needed if unique is True.

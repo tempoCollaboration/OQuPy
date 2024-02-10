@@ -83,12 +83,12 @@ class Bath(BaseAPIClass):
         # identify degeneracies in eigensystem of coupling operator
         tmp_coupling_comm = commutator(self._coupling_operator)
         tmp_coupling_acomm = acommutator(self._coupling_operator)
-        coupling_comm = tmp_coupling_comm.diagonal()
-        coupling_acomm = tmp_coupling_acomm.diagonal()
+        self._coupling_comm = tmp_coupling_comm.diagonal()
+        self._coupling_acomm = tmp_coupling_acomm.diagonal()
 
-        self._north_degeneracy_map = _row_degeneracy([coupling_comm,
-                                                      coupling_acomm])
-        self._west_degeneracy_map = _row_degeneracy([coupling_comm])
+        self._north_degeneracy_map = _row_degeneracy([self._coupling_comm,
+                                                      self._coupling_acomm])
+        self._west_degeneracy_map = _row_degeneracy([self._coupling_comm])
 
         # input check for correlations.
         if not isinstance(correlations, BaseCorrelations):
@@ -125,6 +125,18 @@ class Bath(BaseAPIClass):
     def correlations(self) -> BaseCorrelations:
         """The correlations of the bath. """
         return copy(self._correlations)
+
+    @property
+    def coupling_acomm(self) -> np.ndarray:
+        """Diagonal elements of the anti-commutator of the coupling
+        operator. """
+        return self._coupling_acomm.copy()
+
+    @property
+    def coupling_comm(self) -> np.ndarray:
+        """Diagonal elements of the commutator of the coupling
+        operator. """
+        return self._coupling_comm.copy()
 
     @property
     def north_degeneracy_map(self) -> np.ndarray:
