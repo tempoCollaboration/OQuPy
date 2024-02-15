@@ -15,12 +15,16 @@
 Handy helper functions.
 """
 
+from typing import Optional
 import numpy as np
+from numpy import ndarray
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+# from typing import bool
 
 from oqupy.correlations import BaseCorrelations
 from oqupy.tempo import TempoParameters
+from oqupy.process_tensor import BaseProcessTensor
 
 
 def plot_correlations_with_parameters(
@@ -112,3 +116,67 @@ def plot_correlations_with_parameters(
     if show:
         fig.show()
     return ax
+
+def get_half_timesteps(pt: BaseProcessTensor,
+                start_time: float,
+                inc_endtime: Optional[bool]=False)->ndarray:
+    assert isinstance(pt,BaseProcessTensor)
+    if inc_endtime:
+        full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
+        half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0]
+            for t in full_timesteps]).flatten()
+        half_timesteps = np.concatenate((
+            half_timesteps,np.array([pt.dt * len(pt)])))
+
+    else:
+        full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
+        half_timesteps = np.array([[t+pt.dt/4.0,t+pt.dt*3.0/4.0] for t in full_timesteps]).flatten()
+    return half_timesteps
+
+def get_MPO_times(pt: BaseProcessTensor,
+                start_time: float,
+                inc_endtime: Optional[bool]=False)->ndarray:
+    """
+    Times the MPO is called at,
+    basically [0.5dt,1.5dt,2.5dt..... (N-0.5)dt]
+    if inc_endtime:
+    [0.5dt,1.5dt,2.5dt..... (N-0.5)dt, Ndt]
+    """
+    if inc_endtime:
+        MPO_timesteps = (np.arange(0,len(pt))*pt.dt + start_time + pt.dt*0.5)
+        MPO_timesteps = np.concatenate((
+            MPO_timesteps,np.array([pt.dt * len(pt)])))
+    else:
+        MPO_timesteps = (np.arange(0,len(pt))*pt.dt + start_time + pt.dt*0.5)
+
+    return MPO_timesteps
+
+def get_full_timesteps(pt: BaseProcessTensor,
+                    start_time: float,
+                    inc_endtime:Optional[bool] = False)->ndarray:
+    """
+    The times at which the density matrix is evaluated at.
+
+    inc_endtime includes the final time in the array
+    [0dt,1dt,2dt...(N-1)dt, **Ndt] (** only included if inc_endtime specified)
+    """
+    assert isinstance(pt,BaseProcessTensor)
+    if inc_endtime:
+        full_timesteps = np.arange(0,len(pt)+1)*pt.dt + start_time
+    else:
+        full_timesteps = np.arange(0,len(pt))*pt.dt + start_time
+    return full_timesteps
+
+def get_propagator_intervals(pt: BaseProcessTensor,
+                start_time: float)->ndarray:
+    """
+    Returns times that when interpolated as piecewise constant will return the
+    index of the propagator for that time. To do this I basically need an array
+    that looks like [0,0.5dt,1dt... Ndt]
+    """
+
+    times = (np.arange(0,2*len(pt))*pt.dt/2 + start_time)
+    times = np.concatenate((
+        times,np.array([pt.dt * len(pt)])))
+
+    return times

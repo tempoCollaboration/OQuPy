@@ -299,6 +299,62 @@ class MeanFieldDynamics(BaseAPIClass):
         """Dynamics object for each system. """
         return self._system_dynamics
 
+
+class GradientDynamics(Dynamics):
+    """
+    Represents a specific time evolution of a density matrix,
+    as well as the gradient w.r.t. some objective function
+
+    Parameters
+    ----------
+    times: List[float] (default = None)
+        A list of points in time.
+    states: List[ndarray] (default = None)
+        A list of states at the times `times`.
+    name: str
+        An optional name for the dynamics.
+    description: str
+        An optional description of the dynamics.
+    """
+    def __init__(
+            self,
+            times: Optional[List[float]] = None,
+            states: Optional[List[ndarray]] = None,
+            deriv_list: Optional[List[ndarray]] = None,
+            backprop_deriv_list: Optional[List[ndarray]] = None,
+            forwardprop_deriv_list: Optional[List[ndarray]] = None,
+            total_derivs: Optional[ndarray] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a Dynamics object. """
+        super().__init__(times,states,name, description)
+        self._forwardprop_deriv_list = forwardprop_deriv_list
+        self._backprop_deriv_list = backprop_deriv_list
+        self._deriv_list = deriv_list
+        self._total_derivs = total_derivs
+        for time, state in zip(times, states):
+            self.add(time, state)
+
+    @property
+    def forwardprop_deriv_list(self):
+        return self._forwardprop_deriv_list
+
+    @property
+    def backprop_deriv_list(self):
+        return self._backprop_deriv_list
+
+    @property
+    def deriv_list(self):
+        return self._deriv_list
+
+    @property
+    def total_derivs(self):
+        return self._total_derivs
+
+    @total_derivs.setter
+    def total_derivs(self,total_derivs):
+        self._total_derivs = total_derivs
+
 def _parse_times_states(times, states) -> Tuple[List[float],
         List[ndarray]] :
     """Check times and states are None or lists of the same length"""
