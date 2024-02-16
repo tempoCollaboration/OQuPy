@@ -55,7 +55,7 @@ class BaseTempoBackend:
     west_degeneracy_map: Optional[ndarray]
         Array to invert the degeneracy in west direction
     dim: Optional[int]
-        Hilbert space dimension, only needed if unique is True
+        Hilbert space dimension, needed if unique is True
     """
     def __init__(
             self,
@@ -91,6 +91,13 @@ class BaseTempoBackend:
         self._north_degeneracy_map = north_degeneracy_map
         self._west_degeneracy_map = west_degeneracy_map
         self._dim = dim
+        if unique:
+            assert north_degeneracy_map is not None, "north_degeneracy_map "\
+                    "must be specified if unique."
+            assert west_degeneracy_map is not None, "west_degeneracy_map "\
+                    "must be specified if unique."
+            assert dim is not None, "dim "\
+                    "must be specified if unique."
 
     @property
     def step(self) -> int:
@@ -392,6 +399,16 @@ class MeanFieldTempoBackend():
         are included. Applies to all systems.
     epsrel: float
         Maximal relative SVD truncation error. Applies to all systems.
+    unique: Optional[bool]
+        Whether to use degeneracy checks.
+    north_degeneracy_list: Optional[List[ndarray]]
+        List of arrays to invert the degeneracy in north direction for each
+        system's environment.
+    west_degeneracy_list: Optional[List[ndarray]]
+        List of arrays to invert the degeneracy in west direction for each
+        system's environment.
+    dim_list: Optional[List[int]]
+        Hilbert space dimension of each system, needed if unique is True.
     """
     def __init__(
             self,
@@ -409,7 +426,12 @@ class MeanFieldTempoBackend():
             sum_west_list: List[ndarray],
             dkmax: int,
             epsrel: float,
-            config: Dict):
+            config: Dict,
+            unique: Optional[bool] = False,
+            north_degeneracy_list: Optional[List[ndarray]] = None,
+            west_degeneracy_list: Optional[List[ndarray]] = None,
+            dim_list: Optional[List[ndarray]] = None,
+            ):
         """Create a MeanFieldTempoBackend object. """
         self._initial_state_list = initial_state_list
         self._initial_field = initial_field
@@ -419,6 +441,8 @@ class MeanFieldTempoBackend():
         self._state_list = initial_state_list
         self._step = None
         self._propagators_list = propagators_list
+        self._north_degeneracy_list = north_degeneracy_list
+        self._west_degeneracy_list = west_degeneracy_list
         # List of BaseTempoBackends use to calculate each system dynamics
         self._backend_list = [BaseTempoBackend(initial_state,
                          influence,
@@ -427,11 +451,18 @@ class MeanFieldTempoBackend():
                          sum_west,
                          dkmax,
                          epsrel,
-                         config)
+                         config,
+                         unique,
+                         north_degeneracy_map,
+                         west_degeneracy_map,
+                         dim)
                          for initial_state, influence, unitary_transform,
-                         sum_north, sum_west in zip(initial_state_list,
+                         sum_north, sum_west, north_degeneracy_map,
+                         west_degeneracy_map, dim in zip(initial_state_list,
                              influence_list, unitary_transform_list,
-                             sum_north_list, sum_west_list)]
+                             sum_north_list, sum_west_list,
+                             north_degeneracy_list, west_degeneracy_list,
+                             dim_list)]
 
     @property
     def step(self) -> int:

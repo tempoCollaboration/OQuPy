@@ -135,6 +135,48 @@ system_C = oqupy.System(h_sys_C)
 
 
 # -----------------------------------------------------------------------------
+# -- Test D: Two-species MF with degeneracy comparison ------------------------
+
+I2 = np.eye(2, dtype=float)
+# end time
+t_end_D = 0.2
+
+# initial states
+down = np.array([[0,0],[0,1]], dtype=float)
+initial_state_list_D = [np.kron(down,down), np.kron(down, down)]
+initial_field_D = 0.1 + 0.1j
+
+# Operators for system Hamiltonian 
+ops = oqupy.operators
+g1, g2 = 0.1, 0.2
+ha = np.kron(ops.sigma("x"), I2)
+hb = np.sqrt(0.7) * np.kron(ops.sigma("z"), np.matmul(ops.sigma("+"), ops.sigma("-")))
+# System Hamiltonians 
+def HMF1(_, a):
+    return np.real(a) * g1 * ha + hb
+def HMF2(_, a):
+    return np.real(a) * g2 * ha + hb
+
+expec_op_D = np.kron(ops.sigma("-"), I2)
+def field_eom(_, states, a):
+    expec1 = np.matmul(expec_op_D, states[0]).trace()
+    expec2 = np.matmul(expec_op_D, states[1]).trace()
+    return -(1j * 0.2 + 0.1) * a - 0.5j * (g1 * expec1 + g2 * expec2)
+
+system_D1 = oqupy.TimeDependentSystemWithField(HMF1) 
+system_D2 = oqupy.TimeDependentSystemWithField(HMF2) 
+mean_field_system_D = oqupy.MeanFieldSystem([system_D1, system_D2], field_eom)
+
+correlations_D = oqupy.PowerLawSD(alpha=0.1,
+                                zeta=1,
+                                cutoff=4.0,
+                                cutoff_type="gaussian",
+                                temperature=0.1)
+coupling_operator_D = np.kron(0.5 * ops.sigma("z"), I2)
+bath_D = oqupy.Bath(coupling_operator_D,
+                    correlations_D,
+                    name="electronic bath")
+# -----------------------------------------------------------------------------
 
 def test_degeneracy_exact():
     tempo_params_A = oqupy.TempoParameters(
@@ -204,4 +246,35 @@ def test_degeneracy_1d():
     np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
                                    decimal=4)
 
+def test_mean_field_degeneracy_compare():
+    tempo_params_D = oqupy.TempoParameters(
+        dt=0.05,
+        tcut=None,
+        epsrel=10**(-7))
+    tempo_unique = oqupy.MeanFieldTempo(
+            mean_field_system=mean_field_system_D,
+            bath_list=[bath_D, bath_D],
+            initial_state_list=initial_state_list_D,
+            initial_field=initial_field_D,
+            start_time=0.0,
+            parameters=tempo_params_D,
+            unique=True)
+    tempo_non_unique = oqupy.MeanFieldTempo(
+            mean_field_system=mean_field_system_D,
+            bath_list=[bath_D, bath_D],
+            initial_state_list=initial_state_list_D,
+            initial_field=initial_field_D,
+            start_time=0.0,
+            parameters=tempo_params_D,
+            unique=False)
+    dyn1 = tempo_unique.compute(end_time=t_end_D)
+    dyn2 = tempo_non_unique.compute(end_time=t_end_D)
+    dyn_unique = dyn1.system_dynamics[0]
+    _, field_unique = dyn1.field_expectations()
+    dyn_non_unique = dyn2.system_dynamics[0]
+    _, field_non_unique = dyn2.field_expectations()
+    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
+                                   decimal=4)
+    np.testing.assert_almost_equal(field_unique, field_non_unique,
+                                   decimal=4)
 # -----------------------------------------------------------------------------

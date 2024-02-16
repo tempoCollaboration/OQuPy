@@ -34,11 +34,13 @@ def test_tempo():
     initial_state = tempo.operators.spin_dm("z+")
 
     tempo_param_A = tempo.TempoParameters(0.1, 1.0e-5, None, 5, name="rough-A")
+    # With degeneracy checks off
     tempo_sys_A = tempo.Tempo(system=system,
                               bath=bath,
                               parameters=tempo_param_A,
                               initial_state=initial_state,
-                              start_time=start_time)
+                              start_time=start_time,
+                              unique=False)
     assert tempo_sys_A.dimension == 2
     tempo_sys_A.compute(end_time=end_time1, progress_type="bar")
     tempo_sys_A.compute(end_time=end_time2, progress_type="silent")
@@ -215,8 +217,18 @@ def test_tempo_with_field():
                         initial_state_list=[tempo.operators.spin_dm("z-")],
                         initial_field=1.0+1.0j,
                         start_time=0.0,
-                        parameters=tempo_parameters)
-    mean_field_dynamics = tempo_sys.compute(end_time=0.5, progress_type="silent")
+                        parameters=tempo_parameters,
+                        unique=False)
+    mean_field_dynamics = tempo_sys.compute(end_time=0.3, progress_type="silent")
+    # With degeneracy checks on
+    tempo_sysB = tempo.MeanFieldTempo(mean_field_system=mean_field_system,
+                        bath_list=[bath],
+                        initial_state_list=[tempo.operators.spin_dm("z-")],
+                        initial_field=1.0+1.0j,
+                        start_time=0.0,
+                        parameters=tempo_parameters,
+                        unique=True)
+    mean_field_dynamicsB = tempo_sysB.compute(end_time=0.3, progress_type="silent")
     assert isinstance(mean_field_dynamics, tempo.dynamics.MeanFieldDynamics)
     assert len(mean_field_dynamics.times == 6)
     # bad input
@@ -230,14 +242,16 @@ def test_tempo_with_field():
                         initial_state_list=[tempo.operators.spin_dm("z-")],
                         initial_field=1.0+1.0j,
                         start_time=0.0,
-                        parameters=tempo_parameters)
+                        parameters=tempo_parameters,
+                        unique=True)
     with pytest.raises(TypeError):
         # no initial field
         tempo.MeanFieldTempo(mean_field_system=[system],
                         bath_list=[bath],
                         initial_state_list=[tempo.operators.spin_dm("z-")],
                         start_time=0.0,
-                        parameters=tempo_parameters)
+                        parameters=tempo_parameters,
+                        unique=False)
     with pytest.raises(AssertionError):
         # forget lists
         tempo.MeanFieldTempo(mean_field_system=mean_field_system,
@@ -282,3 +296,23 @@ def test_tempo_with_field():
                         initial_field=1.0,
                         start_time=0.0,
                         parameters=tempo_parameters)
+    with pytest.raises(AssertionError):
+        # non-boolean unique option
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system2,
+                        bath_list=[bath, bath],
+                        initial_state_list=[tempo.operators.sigma('z'),
+                          tempo.operators.sigma('x')],
+                        initial_field=1.0,
+                        start_time=0.0,
+                        parameters=tempo_parameters,
+                        unique=None)
+    with pytest.raises((ValueError, TypeError)):
+        # Invalid start time
+        tempo.MeanFieldTempo(mean_field_system=mean_field_system2,
+                        bath_list=[bath, bath],
+                        initial_state_list=[tempo.operators.sigma('z'),
+                          tempo.operators.sigma('x')],
+                        initial_field=1.0,
+                        start_time='GO!',
+                        parameters=tempo_parameters,
+                        unique=False)

@@ -346,7 +346,8 @@ used to compute the dynamics for an ordinary ``System``:
                                      initial_state_list=initial_state_list,
                                      initial_field=initial_field,
                                      start_time=start_time,
-                                     parameters=tempo_parameters)
+                                     parameters=tempo_parameters,
+                                     unique=True)
     mean_field_dynamics = tempo_sys.compute(end_time=end_time)
 
 

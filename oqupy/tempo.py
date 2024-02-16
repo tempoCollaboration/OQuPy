@@ -41,7 +41,6 @@ from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.correlations import BaseCorrelations
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
-from oqupy.operators import commutator, acommutator
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField, MeanFieldSystem
 from oqupy.backends.tempo_backend import TempoBackend
@@ -234,7 +233,7 @@ class Tempo(BaseAPIClass):
     unique: bool (default = False),
         Whether to use degeneracy checking. If True reduces dimension of
         bath tensors in case of degeneracies in sums ('west') and
-        sums,differences ('north') of bath coupling operator.
+        sums,differences ('north') of the bath coupling operator.
         See bath:north_degeneracy_map, bath:west_degeneracy_map.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
@@ -285,11 +284,6 @@ class Tempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        tmp_coupling_comm = commutator(self._bath._coupling_operator)
-        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
-        self._coupling_comm = tmp_coupling_comm.diagonal()
-        self._coupling_acomm = tmp_coupling_acomm.diagonal()
-
         self._dynamics = None
         self._backend_instance = None
 
@@ -315,8 +309,8 @@ class Tempo(BaseAPIClass):
             dk,
             parameters=self._parameters,
             correlations=self._correlations,
-            coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm,
+            coupling_acomm=self._bath.coupling_acomm,
+            coupling_comm=self._bath.coupling_comm,
             unique=self._unique,
             north_deg_positions=tmp_north_deg_positions,
             west_deg_positions=tmp_west_deg_positions)
@@ -351,13 +345,13 @@ class Tempo(BaseAPIClass):
                 self._parameters.subdiv_limit,
                 self._parameters.liouvillian_epsrel)
         if self._unique:
-            sum_north = np.array([1.0]* \
-                (np.max(self._bath.north_degeneracy_map)+1))
-            sum_west = np.array([1.0]* \
-                (np.max(self._bath.west_degeneracy_map)+1))
+            sum_north = np.ones(np.max(self._bath.north_degeneracy_map)+1,
+                                dtype=float)
+            sum_west = np.ones(np.max(self._bath.west_degeneracy_map)+1,
+                               dtype=float)
         else:
-            sum_north = np.array([1.0]*(dim**2))
-            sum_west = np.array([1.0]*(dim**2))
+            sum_north = np.ones(dim**2, dtype=float)
+            sum_west = np.ones(dim**2, dtype=float)
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
         self._backend_instance = TempoBackend(
@@ -459,6 +453,12 @@ class MeanFieldTempo(BaseAPIClass):
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
+    unique: bool (default = False),
+        Whether to use degeneracy checking. If True reduces dimension of
+        bath tensors in case of degeneracies in sums ('west') and
+        sums,differences ('north') of the bath coupling operator for a
+        system.
+        See bath:north_degeneracy_map, bath:west_degeneracy_map.
     name: str (default = None)
         An optional name for the tempo object.
     description: str (default = None)
@@ -472,6 +472,7 @@ class MeanFieldTempo(BaseAPIClass):
             initial_state_list: List[ndarray],
             initial_field: complex,
             start_time: Optional[float] = 0.0,
+            unique: Optional[bool] = False,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
@@ -491,6 +492,10 @@ class MeanFieldTempo(BaseAPIClass):
         assert isinstance(parameters, TempoParameters), \
             "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
+
+        assert isinstance(unique, bool), \
+            "Argument 'unique' must be a boolean."
+        self._unique = unique
 
         super().__init__(name, description)
 
@@ -538,6 +543,8 @@ class MeanFieldTempo(BaseAPIClass):
         """Create and initialize the MeanFieldTempo backend. """
         initial_state_list = \
                 self._parsed_parameters_dict["initial_state"]
+        hs_dim_list = \
+                self._parsed_parameters_dict["hs_dim"]
         initial_field = self._initial_field
         influence_list = [self._get_influence(bath)
                 for bath in self._parsed_parameters_dict["bath"]]
@@ -551,10 +558,22 @@ class MeanFieldTempo(BaseAPIClass):
             for system in self._parsed_parameters_dict["system"]]
         compute_field = self._compute_field
         compute_field_derivative = self._compute_field_derivative
-        sum_north_list = [np.array([1.0]*(dim**2))
-                for dim in self._parsed_parameters_dict["hs_dim"]]
-        sum_west_list = [np.array([1.0]*(dim**2))
-                for dim in self._parsed_parameters_dict["hs_dim"]]
+        if self._unique:
+            sum_north_list = [np.ones(np.max(bath.north_degeneracy_map)+1,
+                                      dtype=float)
+                for bath in self._parsed_parameters_dict["bath"]]
+            sum_west_list = [np.ones(np.max(bath.west_degeneracy_map)+1,
+                                      dtype=float)
+                for bath in self._parsed_parameters_dict["bath"]]
+        else:
+            sum_north_list = [np.ones(dim**2, dtype=float)
+                    for dim in self._parsed_parameters_dict["hs_dim"]]
+            sum_west_list = [np.ones(dim**2, dtype=float)
+                    for dim in self._parsed_parameters_dict["hs_dim"]]
+        north_degeneracy_list = [bath.north_degeneracy_map
+                for bath in self._parsed_parameters_dict["bath"]]
+        west_degeneracy_list = [bath.west_degeneracy_map
+                for bath in self._parsed_parameters_dict["bath"]]
         # N.B. For now all baths constrained to have same memory length
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
@@ -570,7 +589,12 @@ class MeanFieldTempo(BaseAPIClass):
                 sum_west_list,
                 dkmax,
                 epsrel,
-                config=self._backend_config)
+                config=self._backend_config,
+                unique=self._unique,
+                north_degeneracy_list=north_degeneracy_list,
+                west_degeneracy_list=west_degeneracy_list,
+                dim_list=hs_dim_list,
+                )
 
     def _init_dynamics(self):
         """Create a MeanFieldDynamics object with metadata from the
@@ -583,15 +607,22 @@ class MeanFieldTempo(BaseAPIClass):
     def _get_influence(self, bath) -> Callable[[int], ndarray]:
         """Create function that calculates the influence functional
         matrix for a bath. """
-        coupling_comm = commutator(bath.coupling_operator).diagonal()
-        coupling_acomm = acommutator(bath.coupling_operator).diagonal()
+        tmp_north_deg_positions = np.array([np.where( \
+            bath.north_degeneracy_map == i)[0][0] for i in \
+                range(np.max(bath.north_degeneracy_map)+1)])
+        tmp_west_deg_positions = np.array([np.where( \
+            bath.west_degeneracy_map == i)[0][0] for i in \
+                range(np.max(bath.west_degeneracy_map)+1)])
         def influence(dk: int) -> ndarray:
             return influence_matrix(
                 dk,
                 parameters=self._parameters,
                 correlations=bath.correlations,
-                coupling_acomm=coupling_acomm,
-                coupling_comm=coupling_comm)
+                coupling_acomm=bath.coupling_acomm,
+                coupling_comm=bath.coupling_comm,
+                unique=self._unique,
+                north_deg_positions=tmp_north_deg_positions,
+                west_deg_positions=tmp_west_deg_positions)
         return influence
 
     def _compute_field(self, step:int, state_list: List[ndarray],

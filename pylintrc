@@ -140,6 +140,7 @@ disable=print-statement,
         abstract-method,                  # GEFux: added for development
         consider-using-enumerate,         # GEFux: added by hand
         consider-using-f-string,          # GEFux: added for development
+		too-many-arguments,				  # piperfw: added for development (MF degeneracy)
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
