@@ -1,6 +1,5 @@
 # TEMPO file formats
-*.tempoDynamics
-*.processTensor
+tests/data/temp/
 *.hdf5
 
 # local development
