@@ -18,6 +18,7 @@ Please consider citing
 - Multiple environments: **[Gribben2022]**
 - Chains (PT-TEBD): **[Fux2022]**
 - Mean-Field TEMPO: **[FowlerWright2022]**
+- Multi-time correlations: **[deWit2024]**
 
 BibTeX
 ------

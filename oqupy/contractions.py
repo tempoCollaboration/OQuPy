@@ -21,6 +21,7 @@ import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 from oqupy.system import TimeDependentSystemWithField
+from itertools import product
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
@@ -34,7 +35,6 @@ from oqupy.util import get_progress
 
 
 Indices = Union[int, slice, List[Union[int, slice]]]
-
 
 # -- compute dynamics ---------------------------------------------------------
 
@@ -616,9 +616,236 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
         current_edges[-1] = new_sys_edge
     return current_node, current_edges
 
+#--------------------------Compute n-time correlations-------------------
+
+def compute_nt_correlations(
+        system: BaseSystem,
+        process_tensor: BaseProcessTensor,
+        dipole_ops: List[ndarray],
+        ops_times: List[Union[Indices, float, Tuple[float, float]]],
+        ops_order: List[Text],
+        initial_state: Optional[ndarray] = None,
+        start_time: Optional[float] = 0.0,
+        dt: Optional[float] = None,
+        progress_type: Text = None,
+    ) -> Tuple[List[ndarray], ndarray]:
+    r"""
+    Compute n-time correlations for a given system Hamiltonian.
+
+    Times may be specified with indices, a single float, or a pair of floats
+    specifying the start and end time. Indices may be integers, slices, or
+    lists of integers and slices.
+
+    This code -- written for non-linear spectroscopy purposes -- assumes that
+    specified times are time-ordered; i.e. times_a <= times_b, etc.
+
+    Parameters
+    ---------------------------------------------------------------------------
+    system: BaseSystem
+        Object containing the system Hamiltonian.
+    process_tensor: BaseProcessTensor
+        A process tensor object.
+    dipole_ops: List[ndarray, ...]
+        System dipole transiton operators :math:`\hat{V}`.
+    ops_times: Tuple[Union[Indices, float, Tuple[float, float]], ...]
+        Time(s) at which dipole operators are applied.
+    ops_order: List[Text]
+        Whether to apply each operator to the left or right of the density
+        matrix, specified by ``'left'`` or ``'right'``.
+        For example, :math:`Tr(\hat{V}(t_2)\rho\hat{V}(t_1))` would correspond
+        to [``'right'``, ``'left'``].
+    initial_state: ndarray (default = None)
+        Initial system state.
+    start_time: float (default = 0.0)
+        Initial time.
+    dt: float (default = None)
+        Time step size.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``'silent'``, ``'simple'``, ``'bar'``}. If `None` then
+        the default progress type is used.
+
+    Returns
+    ---------------------------------------------------------------------------
+    ops_times: List[ndarray]
+        The :math:`N` times :math:`t^A_n`, math:`M` times :math:`t^B_m`, etc.
+    correlations: ndarray
+        The :math:`L \times N \times M \times ...` correlations
+        :math:`\langle C(t^C_l) B(t^B_m) A(t^A_n)... \rangle`.
+
+    """
+
+    assert isinstance(system, BaseSystem)
+    assert isinstance(process_tensor, BaseProcessTensor)
+    dim = system.dimension
+    assert process_tensor.hilbert_space_dimension == dim
+
+    for i in range(len(dipole_ops)):
+        assert dipole_ops[i].shape == (dim,dim)
+    assert isinstance(start_time, float)
+
+    if dt is None:
+        assert process_tensor.dt is not None, \
+            "It is necessary to specify time step `dt` because the given " \
+             + "tensor has none."
+        dt_ = process_tensor.dt
+    else:
+        if (process_tensor.dt is not None) and (process_tensor.dt != dt):
+            UserWarning("Specified time step `dt` does not match `dt` " \
+                + "stored in the given process tensor " \
+                + f"({dt}!={process_tensor.dt}). " \
+                + "Using specified `dt`. " \
+                + "Don't specify `dt` to use the time step stored in the " \
+                + "process tensor.")
+        dt_ = dt
+
+    #Check that lengths of the ops_order, ops_times and dip_ops lists are equal
+    assert len(dipole_ops) == len(ops_times) == len(ops_order), \
+        "Lengths of the lists ops_order, ops_times and dip_ops do not match."
+
+#Input parsing; ensures that specified times that are not an integer multiple
+#of dt are assigned the closest integer multiple.------------------------------
+
+    max_step = len(process_tensor)
+
+    ops_times_=[]
+    ret_times=[] #These are the times returned by the function
+    times_length=[]
+    for i in range(len(ops_times)):
+        times = _parse_times(ops_times[i], max_step, dt_, start_time)
+        ops_times_.append(times)
+        times2 = start_time + dt_ * times
+        ret_times.append(times2)
+        lengths = len(ops_times_[i])
+        times_length.append(lengths)
+
+    ret_correlations = np.empty(times_length, dtype=NpDtype)
+    #This array will contain all correlations
+    ret_correlations[:] = np.NaN + 1.0j*np.NaN
 
 
-# -- compute correlations ------------------------------------------------
+    parameters = {
+        "system": system,
+        "process_tensor": process_tensor,
+        "initial_state": initial_state,
+        "start_time": start_time,
+        }
+
+#Schedule determines in what order all the correlations are calculated.-------
+
+    schedule, sch_indices = _schedule_nt_correlations(ops_times_)
+
+    progress = get_progress(progress_type)
+    num_steps = len(schedule)
+    title = "--> Compute correlations:"
+    with progress(num_steps, title) as prog_bar:
+        prog_bar.update(0)
+        for i in range(len(schedule)):
+            first_times = schedule[i][0:-1]
+            last_times = schedule[i][-1]
+
+            #check time ordering
+            ft = np.array(first_times)
+            check = sorted(first_times)
+            if not np.allclose(ft, check):
+                continue
+            ft_max = ft.max()
+            if (ft_max > last_times).any():
+                lt = last_times[last_times > ft.max()]
+                if len(lt)>0:
+                    last_times = lt
+                    inds = sch_indices[i][-1][-len(lt):]
+                    sch_indices[i][-1] = inds
+                else:
+                    continue
+
+            sch_indices[i] = tuple(sch_indices[i])
+
+            corr = _compute_ordered_nt_correlations(first_times = first_times,
+                                                    last_times = last_times,
+                                                    dipole_ops = dipole_ops,
+                                                    ops_order = ops_order,
+                                                    **parameters)
+            ret_correlations[sch_indices[i]] = corr
+            prog_bar.update(i+1)
+
+    return ret_times, ret_correlations
+
+def _compute_ordered_nt_correlations(
+        system: BaseSystem,
+        process_tensor: BaseProcessTensor,
+        dipole_ops: List[ndarray],
+        first_times: Tuple[int, ...],
+        last_times: ndarray,
+        ops_order: List[Text],
+        initial_state: Optional[ndarray] = None,
+        start_time: Optional[float] = 0.0,
+        dt: Optional[float] = None,
+    ) -> Tuple[ndarray]:
+    """
+    Compute ordered system correlations for a given system Hamiltonian.
+    Here, first, second, etc. time corresponds to the absolute time
+    (i.e. integer number of timesteps), such that time_a<time_b, etc.
+
+    """
+
+    super_operators = []
+    for i in range(len(dipole_ops)):
+        if ops_order[i] == "left":
+            super_operators.append(left_super(dipole_ops[i]))
+        elif ops_order[i] == "right":
+            super_operators.append(right_super(dipole_ops[i]))
+
+
+    max_step = last_times.max()
+    dim = system.dimension
+    control = Control(dim)
+
+#Insert n-1 superoperators into the tensor network at relevant time steps:
+    for i in range(len(first_times)):
+        control.add_single(int(first_times[i]), super_operators[i])
+
+#Correlation function is computed by taking the expectation value of the n^th
+#superoperator.----------------------------------------------------------------
+
+    dynamics = compute_dynamics(
+        system=system,
+        process_tensor=process_tensor,
+        control=control,
+        start_time=start_time,
+        initial_state=initial_state,
+        dt=dt,
+        num_steps=max_step,
+        progress_type='silent')
+    _, corr = dynamics.expectations(dipole_ops[-1])
+    ret_correlations = corr[last_times]
+    return ret_correlations
+
+def _schedule_nt_correlations(ops_times_):
+
+    """Figure out in which order to calculate the n-time correlations."""
+
+    indices = []
+    for i in range(len(ops_times_)):
+        counts = []
+        for j in range (len(ops_times_[i])):
+            counts.append(j)
+        indices.append(np.array(counts))
+
+    sched_ind = list(product(*indices[0:-1]))
+
+    sched =  list(product(*ops_times_[0:-1]))
+
+    for i in range(len(sched)):
+        sched[i] = list(sched[i])
+        sched[i].append(ops_times_[-1])
+        sched[i] = tuple(sched[i])
+        sched_ind[i] = list(sched_ind[i])
+        sched_ind[i].append(indices[-1])
+    return sched, sched_ind
+
+
+# -- compute two-time correlations --------------------------------------------
 
 def compute_correlations(
         system: BaseSystem,
@@ -656,7 +883,7 @@ def compute_correlations(
         Time(s) :math:`t_B`.
     time_order: str (default = ``'ordered'``)
         Which two time correlations to compute. Types are:
-        {``'ordered'``, ``'anti'``, ``'full'``}.
+        {``'ordered'``, ``'anti'``}.
     initial_state: ndarray (default = None)
         Initial system state.
     start_time: float (default = 0.0)
@@ -680,159 +907,29 @@ def compute_correlations(
         Entries that are outside the scope specified in `time_order` are set to
         be `NaN + NaN j`.
     """
-    # -- input parsing --
-    assert isinstance(system, BaseSystem)
-    assert isinstance(process_tensor, BaseProcessTensor)
-    dim = system.dimension
-    assert process_tensor.hilbert_space_dimension == dim
-    assert operator_a.shape == (dim, dim)
-    assert operator_b.shape == (dim, dim)
-    assert isinstance(start_time, float)
 
-    if dt is None:
-        assert process_tensor.dt is not None, \
-            "It is necessary to specify time step `dt` because the given " \
-             + "tensor has none."
-        dt_ = process_tensor.dt
-    else:
-        if (process_tensor.dt is not None) and (process_tensor.dt != dt):
-            raise UserWarning("Specified time step `dt` does not match " \
-                + "`dt` stored in the given process tensor " \
-                + f"({dt}!={process_tensor.dt}). " \
-                + "Using specified `dt`. " \
-                + "Don't specify `dt` to use the time step stored in the " \
-                + "process tensor.")
-        dt_ = dt
-
-    max_step = len(process_tensor)
-    times_a_ = _parse_times(times_a, max_step, dt_, start_time)
-    times_b_ = _parse_times(times_b, max_step, dt_, start_time)
-
-    ret_times_a = start_time + dt_ * times_a_
-    ret_times_b = start_time + dt_ * times_b_
-    ret_correlations = np.empty((len(times_a_), len(times_b_)), dtype=NpDtype)
-    ret_correlations[:] = np.NaN + 1.0j*np.NaN
-
-    parameters = {
-        "system": system,
-        "process_tensor": process_tensor,
-        "initial_state": initial_state,
-        "start_time": start_time,
-        }
-
-    schedule = _schedule_correlation_computations(
-        times_a=times_a_,
-        times_b=times_b_,
-        time_order=time_order)
-
-    progress = get_progress(progress_type)
-    num_steps = len(schedule)
-    title = "--> Compute correlations:"
-    with progress(num_steps, title) as prog_bar:
-        prog_bar.update(0)
-        for i, (indices_a, indices_b, anti_time_ordered) in enumerate(schedule):
-            if anti_time_ordered:
-                first_time = int(times_b_[indices_b])
-                first_operator = operator_b
-                last_times= times_a_[indices_a]
-                last_operator = operator_a
-            else:
-                first_time = int(times_a_[indices_a])
-                first_operator = operator_a
-                last_times= times_b_[indices_b]
-                last_operator = operator_b
-
-            corr = _compute_ordered_correlations(
-                first_time = first_time,
-                first_operator = first_operator,
-                last_times = last_times,
-                last_operator = last_operator,
-                anti_time_ordered = anti_time_ordered,
-                **parameters)
-            ret_correlations[indices_a, indices_b] = corr
-            prog_bar.update(i+1)
-    return ret_times_a, ret_times_b, ret_correlations
-
-def _compute_ordered_correlations(
-        system: BaseSystem,
-        process_tensor: BaseProcessTensor,
-        first_operator: ndarray,
-        last_operator: ndarray,
-        first_time: int,
-        last_times: ndarray,
-        anti_time_ordered: Optional[bool] = False,
-        initial_state: Optional[ndarray] = None,
-        start_time: Optional[float] = 0.0,
-        dt: Optional[float] = None,
-    ) -> Tuple[ndarray]:
-    """
-    Compute ordered system correlations for a given system Hamiltonian.
-    """
-
-    for last_time in last_times:
-        assert first_time <= last_time
-
-    if anti_time_ordered:
-        first_super_operator = right_super(first_operator)
-    else:
-        first_super_operator = left_super(first_operator)
-
-    max_step = last_times.max()
-    dim = system.dimension
-    control = Control(dim)
-    control.add_single(first_time, first_super_operator)
-
-    dynamics = compute_dynamics(
-        system=system,
-        process_tensor=process_tensor,
-        control=control,
-        start_time=start_time,
-        initial_state=initial_state,
-        dt=dt,
-        num_steps=max_step,
-        progress_type='silent')
-    _, corr = dynamics.expectations(last_operator)
-    ret_correlations = corr[last_times]
-    return ret_correlations
-
-def _schedule_correlation_computations(
-        times_a: ndarray,
-        times_b: ndarray,
-        time_order: Text,
-    ) -> List[Tuple[ndarray,ndarray,bool]]:
-    """Figure out in which order to calculate two time correlations."""
+    #------call nt correlations------------------
     if time_order == "ordered":
-        ordered = True
-        anti_ordered = False
-    elif time_order == "anti":
-        ordered = False
-        anti_ordered = True
-    elif time_order == "full":
-        ordered = True
-        anti_ordered = True
-    else:
-        raise ValueError("Parameter `time_order` must be either " \
-            + "``ordered``, ``anti``, or ``full``.")
+        ops_order = ["left", "left"]
+        dipole_ops = [operator_a, operator_b]
+        ops_times = [times_a, times_b]
+    if time_order == "anti":
+        ops_order = ["right", "left"]
+        dipole_ops = [operator_b, operator_a]
+        ops_times = [times_b, times_a]
 
-    schedule = []
-    if ordered:
-        for i_a, time_a in enumerate(times_a):
-            later_i_bs = []
-            for i_b, time_b in enumerate(times_b):
-                if time_a <= time_b:
-                    later_i_bs.append(i_b)
-            if len(later_i_bs)>0:
-                schedule.append((np.array(i_a), np.array(later_i_bs), False))
-    if anti_ordered:
-        for i_b, time_b in enumerate(times_b):
-            later_i_as = []
-            for i_a, time_a in enumerate(times_a):
-                if time_b < time_a:
-                    later_i_as.append(i_a)
-            if len(later_i_as)>0:
-                schedule.append((np.array(later_i_as), np.array(i_b), True))
+    corr = compute_nt_correlations(system = system,
+                                   process_tensor = process_tensor,
+                                   dipole_ops = dipole_ops,
+                                   ops_times = ops_times,
+                                   ops_order = ops_order,
+                                   initial_state = initial_state,
+                                   start_time = start_time,
+                                   dt = dt,
+                                   progress_type = "bar")
+    return corr
 
-    return schedule
+#--------------------Parse times for correlations-----------------------
 
 def _parse_times(times, max_step, dt, start_time):
     """Input parsing of specified time steps or time interval. """

@@ -19,6 +19,8 @@ import pytest
 import numpy as np
 
 import oqupy
+from oqupy.contractions import compute_nt_correlations
+
 
 def test_compute_dynamics_with_field():
     start_time = 1
@@ -185,3 +187,178 @@ def test_mean_field_and_with_control():
             process_tensor_list=[pt],
             control_list=[control],
         )
+
+
+
+#########Multi-time correlations spin boson model##############################
+
+sigma_x = oqupy.operators.sigma("x")
+sigma_z = oqupy.operators.sigma("z")
+up_density_matrix = oqupy.operators.spin_dm("z+")
+
+initial_state = up_density_matrix
+
+
+def test_compute_nt_correlations():
+    dt=0.1
+    times_a=(1*dt, 4*dt)
+    times_b= 2*dt
+    times_c=6*dt
+    times_d = (6*dt, 9*dt)
+    ops_times = [times_a, times_b, times_c, times_d]
+    time_order = ["left", "left", "left", "left"]
+    start_time = 0.
+    dipole_ops = [sigma_x, sigma_x, sigma_x, sigma_x]
+    
+    system = oqupy.System(0.5 * 5. * sigma_x)
+    
+    correlations = oqupy.PowerLawSD(alpha=0.1,
+                                    zeta=1.,
+                                    cutoff=3.,
+                                    cutoff_type='exponential',
+                                    temperature=1.)
+    bath = oqupy.Bath(0.5 * sigma_z, correlations)
+    
+    tempo_parameters = oqupy.TempoParameters(dt=dt, dkmax=100, epsrel=10**(-4))
+    
+    process_tensor = oqupy.pt_tempo_compute(bath=bath,
+                                            start_time=0.,
+                                            end_time= dt * 10,
+                                            parameters=tempo_parameters)
+    
+    cor = compute_nt_correlations(system = system, 
+                                      process_tensor=process_tensor, 
+                                      dipole_ops = dipole_ops, 
+                                      ops_times=ops_times, 
+                                      ops_order=time_order,
+                                      dt = dt,
+                                      initial_state = initial_state,
+                                      start_time = start_time,
+                                      progress_type = "bar")
+    assert len(cor) == 2
+    assert len(cor[0]) == len(ops_times)
+    for i in range (len(ops_times)):
+        assert len(cor[0][i]) == cor[1].shape[i]
+    assert len(dipole_ops) == len(ops_times) == len(time_order)
+    assert type(cor[1][0][0][0][0]) == oqupy.config.NpDtype
+    
+    # input checks
+    # no process tensor
+    with pytest.raises(AssertionError):
+        compute_nt_correlations(system = system, 
+                                          process_tensor=None, 
+                                          dipole_ops = dipole_ops, 
+                                          ops_times=ops_times, 
+                                          ops_order=time_order,
+                                          dt = dt,
+                                          initial_state = initial_state,
+                                          start_time = start_time,
+                                          progress_type = "bar")
+    # time arguments and no. of operators don't match
+    with pytest.raises(AssertionError):
+        compute_nt_correlations(system = system, 
+                                          process_tensor=process_tensor, 
+                                          dipole_ops = [sigma_x, 
+                                                        sigma_x, sigma_x], 
+                                          ops_times=[0*dt, 2*dt], 
+                                          ops_order=time_order,
+                                          dt = dt,
+                                          initial_state = initial_state,
+                                          start_time = start_time,
+                                          progress_type = "bar")
+    # time argument exceeds process tensor length
+    with pytest.raises(IndexError):
+        compute_nt_correlations(system = system, 
+                                          process_tensor=process_tensor, 
+                                          dipole_ops = dipole_ops, 
+                                          ops_times=[0*dt, 1*dt, 2*dt, 12*dt], 
+                                          ops_order=time_order,
+                                          dt = dt,
+                                          initial_state = initial_state,
+                                          start_time = start_time,
+                                          progress_type = "bar")
+    #no specified time step
+    cor=compute_nt_correlations(system = system, 
+                                          process_tensor=process_tensor, 
+                                          dipole_ops = dipole_ops, 
+                                          ops_times=ops_times, 
+                                          ops_order=time_order,
+                                          dt = None,
+                                          initial_state = initial_state,
+                                          start_time = start_time,
+                                          progress_type = "bar")
+    assert cor[0][0][1]-cor[0][0][0] == process_tensor.dt
+    #time out of bound
+    with pytest.raises(IndexError):
+        cor=compute_nt_correlations(system = system, 
+                                          process_tensor=process_tensor, 
+                                          dipole_ops = dipole_ops, 
+                                          ops_times=[0, 1, 2, 12], 
+                                          ops_order=time_order,
+                                          dt = None,
+                                          initial_state = initial_state,
+                                          start_time = start_time,
+                                          progress_type = "bar")
+    #Wrong time argument type
+    with pytest.raises(TypeError):
+        cor=compute_nt_correlations(system = system, 
+                                          process_tensor=process_tensor, 
+                                          dipole_ops = dipole_ops, 
+                                          ops_times=["blah", 1.*dt, 2.*dt, 
+                                                     3.*dt], 
+                                          ops_order=time_order,
+                                          dt = None,
+                                          initial_state = initial_state,
+                                          start_time = start_time,
+                                          progress_type = "bar")
+    
+    
+#####################Time ordering############################################
+def test_compute_nt_correlations_B():
+    dt=0.1
+    ops_times = [5.*dt, 3 * dt]
+    time_order = ["left", "left"]
+    start_time = 0.
+    dipole_ops = [sigma_x, sigma_x]
+    
+    system = oqupy.System(0.5 * 5 * sigma_x)
+    
+    correlations = oqupy.PowerLawSD(alpha=0.1,
+                                    zeta=1.,
+                                    cutoff=3.,
+                                    cutoff_type='exponential',
+                                    temperature=1.)
+    bath = oqupy.Bath(0.5 * sigma_z, correlations)
+    
+    tempo_parameters = oqupy.TempoParameters(dt=dt, dkmax=100, epsrel=10**(-4))
+    
+    process_tensor = oqupy.pt_tempo_compute(bath=bath,
+                                            start_time=0.,
+                                            end_time= dt * 10,
+                                            parameters=tempo_parameters)
+    
+    cor = compute_nt_correlations(system = system, 
+                                      process_tensor=process_tensor, 
+                                      dipole_ops = dipole_ops, 
+                                      ops_times=ops_times, 
+                                      ops_order=time_order,
+                                      dt = dt,
+                                      initial_state = initial_state,
+                                      start_time = start_time,
+                                      progress_type = "bar")
+    assert np.isnan(cor[1][0][0])
+    
+    ops_times = [5*dt, (4*dt, 6*dt)]
+    cor = compute_nt_correlations(system = system, 
+                                      process_tensor=process_tensor, 
+                                      dipole_ops = dipole_ops, 
+                                      ops_times=ops_times, 
+                                      ops_order=time_order,
+                                      dt = dt,
+                                      initial_state = initial_state,
+                                      start_time = start_time,
+                                      progress_type = "bar")
+    assert np.isnan(cor[1][0][0])
+    assert type(cor[1][0][1]) == oqupy.config.NpDtype
+    
+
