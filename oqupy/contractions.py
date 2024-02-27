@@ -701,7 +701,7 @@ def compute_nt_correlations(
 
     #Check that lengths of the ops_order, ops_times and dip_ops lists are equal
     assert len(dipole_ops) == len(ops_times) == len(ops_order), \
-        "The lengths of the lists ops_order, ops_times and dip_ops do not match."
+        "Lengths of the lists ops_order, ops_times and dip_ops do not match."
 
 #Input parsing; ensures that specified times that are not an integer multiple 
 #of dt are assigned the closest integer multiple.------------------------------
@@ -744,13 +744,26 @@ def compute_nt_correlations(
             first_times = schedule[i][0:-1]
             last_times = schedule[i][-1]
             
-            check = tuple(sorted(first_times))
-            if check == first_times and all(first_times) <= last_times[0]:
+            #check time ordering
+            ft = np.array(first_times)
+            check = sorted(first_times)
+            if check == ft and (ft <= last_times[0]).all():
                 ordered = True
+            elif check == ft and (ft.max() > last_times).any():
+                lt = last_times[last_times > ft.max()]
+                if len(lt)>0:
+                    last_times = lt
+                    inds = sch_indices[i][-1][-len(lt):]
+                    sch_indices[i][-1] = inds
+                    ordered = True
+                else:
+                    ordered = False
             else:
                 ordered = False
             
-            if ordered == True:
+            sch_indices[i] = tuple(sch_indices[i])
+            
+            if ordered:
                 corr = _compute_ordered_nt_correlations(first_times = first_times,
                                                         last_times = last_times,
                                                         dipole_ops = dipole_ops,
@@ -832,13 +845,12 @@ def _schedule_nt_correlations(ops_times_):
         sched[i] = tuple(sched[i])
         sched_ind[i] = list(sched_ind[i])
         sched_ind[i].append(indices[-1])
-        sched_ind[i] = tuple(sched_ind[i])
     return sched, sched_ind
 
 
 # -- compute two-time correlations --------------------------------------------
 
-def compute_correlations(
+def compute_tt_correlations(
         system: BaseSystem,
         process_tensor: BaseProcessTensor,
         operator_a: ndarray,
@@ -901,17 +913,10 @@ def compute_correlations(
     
     #------call nt correlations------------------
     if time_order == "ordered":
-        ordered = True
-        anti_ordered = False
-    if time_order == "anti":
-        ordered = False
-        anti_ordered = True
-    
-    if ordered:
         ops_order = ["left", "left"]
         dipole_ops = [operator_a, operator_b]
         ops_times = [times_a, times_b]
-    if anti_ordered:
+    if time_order == "anti":
         ops_order = ["right", "left"]
         dipole_ops = [operator_b, operator_a]
         ops_times = [times_b, times_a]
@@ -927,6 +932,7 @@ def compute_correlations(
                                    progress_type = "bar")
     return corr
 
+#--------------------Parse times for correlations-----------------------
 
 def _parse_times(times, max_step, dt, start_time):
     """Input parsing of specified time steps or time interval. """
