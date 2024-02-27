@@ -886,7 +886,7 @@ def compute_tt_correlations(
         Time(s) :math:`t_B`.
     time_order: str (default = ``'ordered'``)
         Which two time correlations to compute. Types are:
-        {``'ordered'``, ``'anti'``, ``'full'``}.
+        {``'ordered'``, ``'anti'``}.
     initial_state: ndarray (default = None)
         Initial system state.
     start_time: float (default = 0.0)
