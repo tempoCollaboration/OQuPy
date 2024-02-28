@@ -850,7 +850,7 @@ def _schedule_nt_correlations(ops_times_):
 
 # -- compute two-time correlations --------------------------------------------
 
-def compute_tt_correlations(
+def compute_correlations(
         system: BaseSystem,
         process_tensor: BaseProcessTensor,
         operator_a: ndarray,
