@@ -747,9 +747,9 @@ def compute_nt_correlations(
             #check time ordering
             ft = np.array(first_times)
             check = sorted(first_times)
-            if check == ft and (ft <= last_times[0]).all():
+            if (check == ft).all() and (ft <= last_times[0]).all():
                 ordered = True
-            elif check == ft and (ft.max() > last_times).any():
+            elif (check == ft).all() and (ft.max() > last_times).any():
                 lt = last_times[last_times > ft.max()]
                 if len(lt)>0:
                     last_times = lt
