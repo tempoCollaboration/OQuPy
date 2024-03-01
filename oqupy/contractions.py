@@ -737,7 +737,7 @@ def compute_nt_correlations(
 
     progress = get_progress(progress_type)
     num_steps = len(schedule)
-    title = "--> Compute correlations:"
+    title = "--> Compute correlations:"          
     with progress(num_steps, title) as prog_bar:
         prog_bar.update(0)
         for i in range(len(schedule)):
@@ -747,29 +747,26 @@ def compute_nt_correlations(
             #check time ordering
             ft = np.array(first_times)
             check = sorted(first_times)
-            if (check == ft).all() and (ft <= last_times[0]).all():
-                ordered = True
-            elif (check == ft).all() and (ft.max() > last_times).any():
+            if not np.allclose(ft, check):
+                continue
+            ft_max = ft.max()
+            if (ft_max > last_times).any():
                 lt = last_times[last_times > ft.max()]
                 if len(lt)>0:
                     last_times = lt
                     inds = sch_indices[i][-1][-len(lt):]
                     sch_indices[i][-1] = inds
-                    ordered = True
                 else:
-                    ordered = False
-            else:
-                ordered = False
-            
+                    continue
+           
             sch_indices[i] = tuple(sch_indices[i])
             
-            if ordered:
-                corr = _compute_ordered_nt_correlations(first_times = first_times,
-                                                        last_times = last_times,
-                                                        dipole_ops = dipole_ops,
-                                                        ops_order = ops_order,
-                                                        **parameters)
-                ret_correlations[sch_indices[i]] = corr 
+            corr = _compute_ordered_nt_correlations(first_times = first_times,
+                                                    last_times = last_times,
+                                                    dipole_ops = dipole_ops,
+                                                    ops_order = ops_order,
+                                                    **parameters)
+            ret_correlations[sch_indices[i]] = corr 
             prog_bar.update(i+1)
             
     return ret_times, ret_correlations

@@ -53,20 +53,20 @@ system:
 
 .. code:: ipython3
 
-    P_1 = np.array([[0.+0.j, 0.+0.j, 0.+0.j],
-           [0.+0.j, 1.+0.j, 0.+0.j],[0.+0.j, 0.+0.j, 0.+0.j]])
+    P_1 = np.array([[0., 0., 0.],
+           [0., 1., 0.],[0., 0., 0.]], dtype=complex)
     
     P_2 = np.array([[0.+0.j, 0.+0.j, 0.+0.j],
-           [0.+0.j, 0.+0.j, 0.+0.j],[0.+0.j, 0.+0.j, 1.+0.j]])
+           [0.+0.j, 0.+0.j, 0.+0.j],[0.+0.j, 0.+0.j, 1.+0.j]],dtype=complex)
     
-    sigma_min = np.array([[0.+0.j, 0.+0.j, 0.+0.j],
-           [0.+0.j, 0.+0.j, 1.+0.j],[0.+0.j, 0.+0.j, 0.+0.j]])
+    sigma_min = np.array([[0., 0., 0.],
+           [0., 0., 1.],[0., 0., 0.]],dtype=complex)
     
-    sigma_plus = np.array([[0.+0.j, 0.+0.j, 0.+0.j],
-           [0.+0.j, 0.+0.j, 0.+0.j],[0.+0.j, 1.+0.j, 0.+0.j]])
+    sigma_plus = np.array([[0., 0., 0.],
+           [0., 0., 0.],[0., 1., 0.]],dtype=complex)
     
-    dip_02 = np.array([[0.+0.j, 0.+0.j, 1.+0.j],
-           [0.+0.j, 0.+0.j, 0.+0.j],[1.+0.j, 0.+0.j, 0.+0.j]])
+    dip_02 = np.array([[0., 0., 1.],
+           [0., 0., 0.],[1., 0., 0.]],dtype=complex)
 
 Background - 2D electronic spectroscopy
 ---------------------------------------
@@ -89,10 +89,12 @@ given by:
 .. math::
 
     
-   R_1 =  \mathrm{Tr}\big[ \hat{V}(\tau_4)\hat{V}(\tau_1)\rho_0\hat{V}(\tau_2)\hat{V}(\tau_3) \big] \\
-   R_2 = \mathrm{Tr} \big[\hat{V}(\tau_4)\hat{V}(\tau_2)\rho_0 \hat{V}(\tau_1)\hat{V}(\tau_3) \big] \\
-   R_3 = \mathrm{Tr} \big[\hat{V}(\tau_4)\hat{V}(\tau_3)\rho_0 \hat{V}(\tau_1)\hat{V}(\tau_2) \big] \\
-   R_4 = \mathrm{Tr} \big[\hat{V}(\tau_4)\hat{V}(\tau_3)\hat{V}(\tau_2)\hat{V}(\tau_1) \rho_0 \big] 
+   \begin{align}
+   R_1 &=  \mathrm{Tr}\big[ \hat{V}(\tau_4)\hat{V}(\tau_1)\rho_0\hat{V}(\tau_2)\hat{V}(\tau_3) \big] \\
+   R_2 &= \mathrm{Tr} \big[\hat{V}(\tau_4)\hat{V}(\tau_2)\rho_0 \hat{V}(\tau_1)\hat{V}(\tau_3) \big] \\
+   R_3 &= \mathrm{Tr} \big[\hat{V}(\tau_4)\hat{V}(\tau_3)\rho_0 \hat{V}(\tau_1)\hat{V}(\tau_2) \big] \\
+   R_4 &= \mathrm{Tr} \big[\hat{V}(\tau_4)\hat{V}(\tau_3)\hat{V}(\tau_2)\hat{V}(\tau_1) \rho_0 \big] 
+   \end{align}
 
 where :math:`\tau_{1,2,3,4}` are the times at which the pulses are
 applied, :math:`\hat{V}` is a dipole transition operator and
@@ -227,7 +229,7 @@ process tensor:
 
     --> PT-TEMPO computation:
     100.0%   40 of   40 [########################################] 00:00:01
-    Elapsed time: 2.0s
+    Elapsed time: 1.3s
 
 
 2. Define the system and dipole operators
@@ -248,12 +250,12 @@ system state:
     system = oqupy.System((eps+reorg)*(P_1 + P_2)
                           + omeg * (sigma_plus + sigma_min))
     
-    dip_v = np.array([[0.+0.j, 0.+0.j, 1.+0.j],
-           [0.+0.j, 0.+0.j, 0.+0.j],[1.+0.j, 0.+0.j, 0.+0.j]])
+    dip_v = np.array([[0., 0., 1.],
+           [0., 0., 0.],[1., 0., 0.]], dtype=complex)
     dipole_ops = [dip_v, dip_v, dip_v, dip_v]
     
-    initial_state = np.array([[1.+0.j, 0.+0.j, 0.+0.j],
-           [0.+0.j, 0.+0.j, 0.+0.j],[0.+0.j, 0.+0.j, 0.+0.j]])
+    initial_state = np.array([[1., 0., 0.],
+           [0., 0., 0.],[0., 0., 0.]], dtype=complex)
 
 3. Calculate four-time correlation functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -318,16 +320,16 @@ correlation function in a list ``cors``:
 
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.5s
+    Elapsed time: 1.1s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.5s
+    Elapsed time: 1.1s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.5s
+    Elapsed time: 1.1s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.4s
+    Elapsed time: 1.1s
 
 
 ``compute_nt_correlations`` outputs a list of length 2, where the first
