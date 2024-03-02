@@ -751,14 +751,12 @@ def compute_nt_correlations(
                 continue
             ft_max = ft.max()
             if (ft_max > last_times).any():
-                lt = last_times[last_times > ft.max()]
-                if len(lt)>0:
-                    last_times = lt
-                    inds = sch_indices[i][-1][-len(lt):]
-                    sch_indices[i][-1] = inds
-                else:
+                lt = last_times[last_times > ft_max]
+                if len(lt) == 0:
                     continue
-
+                last_times = lt
+                inds = sch_indices[i][-1][-len(lt):]
+                sch_indices[i][-1] = inds
             sch_indices[i] = tuple(sch_indices[i])
 
             corr = _compute_ordered_nt_correlations(first_times = first_times,
@@ -824,14 +822,7 @@ def _compute_ordered_nt_correlations(
 def _schedule_nt_correlations(ops_times_):
 
     """Figure out in which order to calculate the n-time correlations."""
-
-    indices = []
-    for i in range(len(ops_times_)):
-        counts = []
-        for j in range (len(ops_times_[i])):
-            counts.append(j)
-        indices.append(np.array(counts))
-
+    indices = [np.arange(len(op_time)) for op_time in ops_times_]
     sched_ind = list(product(*indices[0:-1]))
 
     sched =  list(product(*ops_times_[0:-1]))
