@@ -296,8 +296,11 @@ To calculate :math:`R_{1,2,3,4}` as a function of the time delays
     
     ops_times = [times_1, times_2, times_3, times_4]
 
-We can now calculate :math:`R_{1,2,3,4}`, adding the output for each
-correlation function in a list ``cors``:
+As above, the time arguments can be given as a tuple of floats or a
+single float. They can alternatively be input as indices written as
+integers, slices, or lists of integers and slices. We can now calculate
+:math:`R_{1,2,3,4}`, adding the output for each correlation function in
+a list ``cors``:
 
 .. code:: ipython3
 
@@ -375,7 +378,7 @@ the length of each time range:
 
 In order to plot the output, we will flatten each array to a matrix. We
 will furthermore flip the axis corresponding to :math:`\tau_1`, such
-that the time delay :math:`\tau_2 - \tau_2` increases (rather than
+that the time delay :math:`\tau_2 - \tau_1` increases (rather than
 decreases) with each subsequent element in the array.
 
 .. code:: ipython3
