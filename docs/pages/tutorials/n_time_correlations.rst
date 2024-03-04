@@ -2,9 +2,9 @@ Multi-time correlations
 =======================
 
 In this tutorial, we show how to use the OQuPy package to calculate
-multi-time correlations functions for (possbily) non-Markovian open
-quantum systems. We will calculate a series of four-time correlation
-functions to simulate a 2D electronic spectoscopy measurement.
+multi-time correlations functions for non-Markovian open quantum
+systems. We will calculate a series of four-time correlation functions
+to simulate a 2D electronic spectoscopy measurement.
 
 -  `launch
    binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fn_time_correlations.ipynb>`__
@@ -323,16 +323,16 @@ a list ``cors``:
 
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.0s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.0s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.0s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.2s
 
 
 ``compute_nt_correlations`` outputs a list of length 2, where the first
