@@ -30,15 +30,17 @@ import oqupy
 #       /test/data/process_tensors when needed.
 
 #       The process tensors to generate should be combinations of
-#       Coupling strength alpha: 0.08 / 0.16 / 0.32
-#       Spectral density exponent: 0.5 / 1.0 / 3.0
-#       Temperature: 0.0 / 0.8 / 1.6
-#       Cutoff: gaussian
-#       dt: 2**(-4) / 2**(-5) / 2**(-6)
-#       steps: 2**7 / 2**8 / 2**9
-
+#       Coupling strength 'alpha': 0.08 / 0.16 / 0.32
+#       Spectral density 'zeta': 0.5 / 1.0 / 3.0
+#       Temperature 'T': 0.0 / 0.8 / 1.6
+#       Cutoff frequency 'cutOff': 1.0
+#       Cutoff type : gauss / expon
+#       time step length 'dt': 2**(-4) / 2**(-5) / 2**(-6)
+#       number of time steps 'steps': 2**7 / 2**8 / 2**9
+#       Relative SVD cutoff 'epsrel': 2**(-15) / 2**(-16) / 2**(-17)
+#
 #       The filenames should then have a form like this example:
-#       "boson_alpha0.16_zeta3.0_T0.8_gaussian_dt05_steps08.hdf5"
+#       "spinBoson_alpha0.08_zeta1.0_T0.8_cutOff1.0expon_tcut2.0_dt04_steps06_epsrel15.hdf5"
 # """
 
 PT_DIR_PATH = "./tests/data/process_tensors/"
