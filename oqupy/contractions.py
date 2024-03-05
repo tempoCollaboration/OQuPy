@@ -618,7 +618,7 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
 
 #--------------------------Compute n-time correlations-------------------
 
-def compute_nt_correlations(
+def compute_correlations_nt(
         system: BaseSystem,
         process_tensor: BaseProcessTensor,
         dipole_ops: List[ndarray],
@@ -908,7 +908,7 @@ def compute_correlations(
         dipole_ops = [operator_b, operator_a]
         ops_times = [times_b, times_a]
 
-    corr = compute_nt_correlations(system = system,
+    corr = compute_correlations_nt(system = system,
                                    process_tensor = process_tensor,
                                    dipole_ops = dipole_ops,
                                    ops_times = ops_times,

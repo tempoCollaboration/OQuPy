@@ -19,7 +19,7 @@ import pytest
 import numpy as np
 
 import oqupy
-from oqupy.contractions import compute_nt_correlations
+from oqupy.contractions import compute_correlations_nt
 
 
 def test_compute_dynamics_with_field():
@@ -199,7 +199,7 @@ up_density_matrix = oqupy.operators.spin_dm("z+")
 initial_state = up_density_matrix
 
 
-def test_compute_nt_correlations():
+def test_compute_correlations_nt():
     dt=0.1
     times_a=(1*dt, 4*dt)
     times_b= 2*dt
@@ -226,7 +226,7 @@ def test_compute_nt_correlations():
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
     
-    cor = compute_nt_correlations(system = system, 
+    cor = compute_correlations_nt(system = system, 
                                       process_tensor=process_tensor, 
                                       dipole_ops = dipole_ops, 
                                       ops_times=ops_times, 
@@ -245,7 +245,7 @@ def test_compute_nt_correlations():
     # input checks
     # no process tensor
     with pytest.raises(AssertionError):
-        compute_nt_correlations(system = system, 
+        compute_correlations_nt(system = system, 
                                           process_tensor=None, 
                                           dipole_ops = dipole_ops, 
                                           ops_times=ops_times, 
@@ -256,7 +256,7 @@ def test_compute_nt_correlations():
                                           progress_type = "bar")
     # time arguments and no. of operators don't match
     with pytest.raises(AssertionError):
-        compute_nt_correlations(system = system, 
+        compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
                                           dipole_ops = [sigma_x, 
                                                         sigma_x, sigma_x], 
@@ -268,7 +268,7 @@ def test_compute_nt_correlations():
                                           progress_type = "bar")
     # time argument exceeds process tensor length
     with pytest.raises(IndexError):
-        compute_nt_correlations(system = system, 
+        compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
                                           dipole_ops = dipole_ops, 
                                           ops_times=[0*dt, 1*dt, 2*dt, 12*dt], 
@@ -278,7 +278,7 @@ def test_compute_nt_correlations():
                                           start_time = start_time,
                                           progress_type = "bar")
     #no specified time step
-    cor=compute_nt_correlations(system = system, 
+    cor=compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
                                           dipole_ops = dipole_ops, 
                                           ops_times=ops_times, 
@@ -290,7 +290,7 @@ def test_compute_nt_correlations():
     assert cor[0][0][1]-cor[0][0][0] == process_tensor.dt
     #time out of bound
     with pytest.raises(IndexError):
-        cor=compute_nt_correlations(system = system, 
+        cor=compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
                                           dipole_ops = dipole_ops, 
                                           ops_times=[0, 1, 2, 12], 
@@ -301,7 +301,7 @@ def test_compute_nt_correlations():
                                           progress_type = "bar")
     #Wrong time argument type
     with pytest.raises(TypeError):
-        cor=compute_nt_correlations(system = system, 
+        cor=compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
                                           dipole_ops = dipole_ops, 
                                           ops_times=["blah", 1.*dt, 2.*dt, 
@@ -314,7 +314,7 @@ def test_compute_nt_correlations():
     
     
 #####################Time ordering############################################
-def test_compute_nt_correlations_B():
+def test_compute_correlations_nt_B():
     dt=0.1
     ops_times = [5.*dt, 3 * dt]
     time_order = ["left", "left"]
@@ -337,7 +337,7 @@ def test_compute_nt_correlations_B():
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
     
-    cor = compute_nt_correlations(system = system, 
+    cor = compute_correlations_nt(system = system, 
                                       process_tensor=process_tensor, 
                                       dipole_ops = dipole_ops, 
                                       ops_times=ops_times, 
@@ -349,7 +349,7 @@ def test_compute_nt_correlations_B():
     assert np.isnan(cor[1][0][0])
     
     ops_times = [5*dt, (4*dt, 6*dt)]
-    cor = compute_nt_correlations(system = system, 
+    cor = compute_correlations_nt(system = system, 
                                       process_tensor=process_tensor, 
                                       dipole_ops = dipole_ops, 
                                       ops_times=ops_times, 
