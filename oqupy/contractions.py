@@ -17,11 +17,11 @@ Module for various applications involving contractions of the process tensor.
 
 from typing import List, Optional, Text, Tuple, Union
 
+from itertools import product
 import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 from oqupy.system import TimeDependentSystemWithField
-from itertools import product
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
@@ -618,7 +618,7 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
 
 #--------------------------Compute n-time correlations-------------------
 
-def compute_nt_correlations(
+def compute_correlations_nt(
         system: BaseSystem,
         process_tensor: BaseProcessTensor,
         dipole_ops: List[ndarray],
@@ -739,8 +739,8 @@ def compute_nt_correlations(
     num_steps = len(schedule)
     title = "--> Compute correlations:"
     with progress(num_steps, title) as prog_bar:
-        prog_bar.update(0)
         for i in range(len(schedule)):
+            prog_bar.update(i)
             first_times = schedule[i][0:-1]
             last_times = schedule[i][-1]
 
@@ -765,8 +765,7 @@ def compute_nt_correlations(
                                                     ops_order = ops_order,
                                                     **parameters)
             ret_correlations[sch_indices[i]] = corr
-            prog_bar.update(i+1)
-
+        prog_bar.update(len(schedule))
     return ret_times, ret_correlations
 
 def _compute_ordered_nt_correlations(
@@ -819,17 +818,17 @@ def _compute_ordered_nt_correlations(
     ret_correlations = corr[last_times]
     return ret_correlations
 
-def _schedule_nt_correlations(ops_times_):
+def _schedule_nt_correlations(ops_times):
 
     """Figure out in which order to calculate the n-time correlations."""
-    indices = [np.arange(len(op_time)) for op_time in ops_times_]
+    indices = [np.arange(len(op_time)) for op_time in ops_times]
     sched_ind = list(product(*indices[0:-1]))
 
-    sched =  list(product(*ops_times_[0:-1]))
+    sched =  list(product(*ops_times[0:-1]))
 
     for i in range(len(sched)):
         sched[i] = list(sched[i])
-        sched[i].append(ops_times_[-1])
+        sched[i].append(ops_times[-1])
         sched[i] = tuple(sched[i])
         sched_ind[i] = list(sched_ind[i])
         sched_ind[i].append(indices[-1])
@@ -850,7 +849,7 @@ def compute_correlations(
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         progress_type: Text = None,
-    ) -> Tuple[ndarray, ndarray, ndarray]:
+    ) -> Tuple[List[ndarray], ndarray]:
     r"""
     Compute system correlations for a given system Hamiltonian.
 
@@ -888,10 +887,8 @@ def compute_correlations(
 
     Returns
     -------
-    times_a: ndarray
-        The :math:`N` times :math:`t^A_n`.
-    times_b: ndarray
-        The :math:`M` times :math:`t^B_m`.
+    ops_times: List[ndarray]
+        The :math:`N` times :math:`t^A_n` and :math:`M` times :math:`t^B_m`.
     correlations: ndarray
         The :math:`N \times M` correlations
         :math:`\langle B(t^B_m) A(t^A_n) \rangle`.
@@ -909,7 +906,7 @@ def compute_correlations(
         dipole_ops = [operator_b, operator_a]
         ops_times = [times_b, times_a]
 
-    corr = compute_nt_correlations(system = system,
+    corr = compute_correlations_nt(system = system,
                                    process_tensor = process_tensor,
                                    dipole_ops = dipole_ops,
                                    ops_times = ops_times,

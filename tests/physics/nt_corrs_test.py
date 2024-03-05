@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import oqupy
-from oqupy.contractions import compute_nt_correlations
+from oqupy.contractions import compute_correlations_nt
 
 
 # -----------------------------------------------------------------------------
@@ -84,7 +84,7 @@ jt = np.array(j_t)
 
 def test_nt_correlations_A():
     jt = np.array(j_t)
-    j_t_num = compute_nt_correlations(system = system,
+    j_t_num = compute_correlations_nt(system = system,
                                               process_tensor = process_tensor,
                                               dipole_ops = [sigma_x, sigma_x],
                                               ops_times = [0. , (0.,end_time)],
@@ -97,7 +97,7 @@ def test_nt_correlations_A():
     
     
 
-def test_compute_nt_correlations_D():
+def test_compute_correlations_nt_D():
     ops_times = [0., 0., 0., 0.,]
     time_order = ["left", "left", "left", "left"]
     start_time = 0.
@@ -119,7 +119,7 @@ def test_compute_nt_correlations_D():
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
     
-    cor = compute_nt_correlations(system = system, 
+    cor = compute_correlations_nt(system = system, 
                                       process_tensor=process_tensor, 
                                       dipole_ops = dipole_ops, 
                                       ops_times=ops_times, 
@@ -133,7 +133,7 @@ def test_compute_nt_correlations_D():
 
 #-------------Compare against compute_correlations---------------------------
 
-def test_compute_nt_correlations_C():
+def test_compute_correlations_nt_C():
     dt=0.1
     ops_times = [0., 10 * dt]
     time_order = ["left", "left"]
@@ -156,7 +156,7 @@ def test_compute_nt_correlations_C():
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
     
-    cor = compute_nt_correlations(system = system, 
+    cor = compute_correlations_nt(system = system, 
                                       process_tensor=process_tensor, 
                                       dipole_ops = dipole_ops, 
                                       ops_times=ops_times, 

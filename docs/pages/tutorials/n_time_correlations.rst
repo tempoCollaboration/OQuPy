@@ -43,7 +43,7 @@ and plot the results:
     sys.path.insert(0,'..')
     
     import oqupy
-    from oqupy.contractions import compute_nt_correlations
+    from oqupy.contractions import compute_correlations_nt
     import numpy as np
     import matplotlib.pyplot as plt
     from scipy.fft import fftfreq, fftshift, fft2
@@ -307,7 +307,7 @@ a list ``cors``:
     cors=[]
     
     for i in range (len(ops_orders)):
-        cor = compute_nt_correlations(system = system, 
+        cor = compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
                                           dipole_ops = dipole_ops, 
                                           ops_times=ops_times, 
@@ -335,7 +335,7 @@ a list ``cors``:
     Elapsed time: 1.2s
 
 
-``compute_nt_correlations`` outputs a list of length 2, where the first
+``compute_correlations_nt`` outputs a list of length 2, where the first
 element returns the times at which the operators were applied:
 
 .. code:: ipython3
