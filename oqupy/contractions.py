@@ -956,3 +956,4 @@ def _parse_times(times, max_step, dt, start_time):
         raise TypeError("Parameters `times_a` and `times_b` must be either " \
             + "int, slice, list, or tuple.")
     return ret_times
+        
