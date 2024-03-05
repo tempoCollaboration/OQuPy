@@ -17,11 +17,11 @@ Module for various applications involving contractions of the process tensor.
 
 from typing import List, Optional, Text, Tuple, Union
 
+from itertools import product
 import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 from oqupy.system import TimeDependentSystemWithField
-from itertools import product
 
 from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
@@ -819,19 +819,19 @@ def _compute_ordered_nt_correlations(
     ret_correlations = corr[last_times]
     return ret_correlations
 
-def _schedule_nt_correlations(ops_times_):
+def _schedule_nt_correlations(ops_times):
 
     """Figure out in which order to calculate the n-time correlations."""
 
-    indices = [np.arange(len(op_time)) for op_time in ops_times_]
+    indices = [np.arange(len(op_time)) for op_time in ops_times]
 
     sched_ind = list(product(*indices[0:-1]))
 
-    sched =  list(product(*ops_times_[0:-1]))
+    sched =  list(product(*ops_times[0:-1]))
 
     for i in range(len(sched)):
         sched[i] = list(sched[i])
-        sched[i].append(ops_times_[-1])
+        sched[i].append(ops_times[-1])
         sched[i] = tuple(sched[i])
         sched_ind[i] = list(sched_ind[i])
         sched_ind[i].append(indices[-1])
@@ -954,4 +954,3 @@ def _parse_times(times, max_step, dt, start_time):
         raise TypeError("Parameters `times_a` and `times_b` must be either " \
             + "int, slice, list, or tuple.")
     return ret_times
- 
