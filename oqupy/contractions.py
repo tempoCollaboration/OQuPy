@@ -739,8 +739,8 @@ def compute_nt_correlations(
     num_steps = len(schedule)
     title = "--> Compute correlations:"
     with progress(num_steps, title) as prog_bar:
-        prog_bar.update(0)
         for i in range(len(schedule)):
+            prog_bar.update(i)
             first_times = schedule[i][0:-1]
             last_times = schedule[i][-1]
 
@@ -766,7 +766,7 @@ def compute_nt_correlations(
                                                     ops_order = ops_order,
                                                     **parameters)
             ret_correlations[sch_indices[i]] = corr
-            prog_bar.update(i+1)
+        prog_bar.update(len(schedule))
     return ret_times, ret_correlations
 
 def _compute_ordered_nt_correlations(
