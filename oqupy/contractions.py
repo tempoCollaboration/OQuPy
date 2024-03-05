@@ -851,7 +851,7 @@ def compute_correlations(
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         progress_type: Text = None,
-    ) -> Tuple[ndarray, ndarray, ndarray]:
+    ) -> Tuple[List[ndarray], ndarray]:
     r"""
     Compute system correlations for a given system Hamiltonian.
 
@@ -889,10 +889,8 @@ def compute_correlations(
 
     Returns
     -------
-    times_a: ndarray
-        The :math:`N` times :math:`t^A_n`.
-    times_b: ndarray
-        The :math:`M` times :math:`t^B_m`.
+    ops_times: List[ndarray]
+        The :math:`N` times :math:`t^A_n` and :math:`M` times :math:`t^B_m`.
     correlations: ndarray
         The :math:`N \times M` correlations
         :math:`\langle B(t^B_m) A(t^A_n) \rangle`.
@@ -956,4 +954,4 @@ def _parse_times(times, max_step, dt, start_time):
         raise TypeError("Parameters `times_a` and `times_b` must be either " \
             + "int, slice, list, or tuple.")
     return ret_times
-        
+ 
