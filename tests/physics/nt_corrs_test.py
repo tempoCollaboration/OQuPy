@@ -69,7 +69,7 @@ system = oqupy.System(0.5 * (eps + reorg) * sigma_z)
 
 #--------------------Analytical result---------------------------------------
 g_t=[]
-t_corr0=np.arange(0.,end_time,dt)
+t_corr0=np.arange(0.,end_time+dt,dt)
 for i in range(len(t_corr0)):
     g=correlations.correlation_2d_integral(delta=t_corr0[i],
                                            time_1=0.,shape="upper-triangle")

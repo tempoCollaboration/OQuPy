@@ -49,10 +49,6 @@ The code in this project is based on ideas from the following publications:
   *Thermalization of a spin chain strongly coupled to its environment*,
   `arXiv:2201.05529 <http://arxiv.org/abs/2201.05529>`_
   (2022).
-- **[deWit2024]** de Wit et al.,
-  *Non-Markovian bath-induced coupling revealed by two-dimensional spectroscopy*,
-  `arXiv:2402.15454 <https://arxiv.org/abs/2402.15454>`_
-  (2024).
 
 .. _bibtex:
 
@@ -213,12 +209,3 @@ BibTeX
     year = {2020}
   }
   
-  @article{deWit2024,
-    title = {{Non-Markovian bath-induced coupling revealed by two-dimensional spectroscopy}},
-    author = {de Wit, R. and Keeling, J. and Lovett, B.W. and Chin, A.W.},
-    archivePrefix = {arXiv},
-    arxivId = {2402.15454},
-    eprint = {2402.15454},
-    url = {https://arxiv.org/abs/2402.15454},
-    year = {2024}
-  }

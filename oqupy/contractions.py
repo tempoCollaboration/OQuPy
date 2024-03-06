@@ -947,7 +947,7 @@ def _parse_times(times, max_step, dt, start_time):
         if index_end < 0 or index_end > max_step:
             raise IndexError("Specified end time is out of bound.")
         direction = 1 if index_start <= index_end else -1
-        ret_times = np.arange(max_step + 1)[index_start:index_end:direction]
+        ret_times = np.arange(max_step + 1)[index_start:index_end+direction:direction]
     else:
         raise TypeError("Parameters `times_a` and `times_b` must be either " \
             + "int, slice, list, or tuple.")

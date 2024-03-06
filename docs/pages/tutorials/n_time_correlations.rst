@@ -2,9 +2,9 @@ Multi-time correlations
 =======================
 
 In this tutorial, we show how to use the OQuPy package to calculate
-multi-time correlations functions for non-Markovian open quantum
-systems. We will calculate a series of four-time correlation functions
-to simulate a 2D electronic spectoscopy measurement.
+multi-time correlations functions for (possibly) non-Markovian open
+quantum systems. We will calculate a series of four-time correlation
+functions to simulate a 2D electronic spectroscopy measurement.
 
 -  `launch
    binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fn_time_correlations.ipynb>`__
@@ -54,28 +54,32 @@ system:
 .. code:: ipython3
 
     P_1 = np.array([[0., 0., 0.],
-           [0., 1., 0.],[0., 0., 0.]], dtype=complex)
+                    [0., 1., 0.],
+                    [0., 0., 0.]], dtype=complex)
     
-    P_2 = np.array([[0.+0.j, 0.+0.j, 0.+0.j],
-           [0.+0.j, 0.+0.j, 0.+0.j],[0.+0.j, 0.+0.j, 1.+0.j]],dtype=complex)
+    P_2 = np.array([[0., 0., 0.],
+                    [0., 0., 0.],
+                    [0., 0., 1.]], dtype=complex)
     
     sigma_min = np.array([[0., 0., 0.],
-           [0., 0., 1.],[0., 0., 0.]],dtype=complex)
+                          [0., 0., 1.],
+                          [0., 0., 0.]], dtype=complex)
     
     sigma_plus = np.array([[0., 0., 0.],
-           [0., 0., 0.],[0., 1., 0.]],dtype=complex)
+                           [0., 0., 0.],
+                           [0., 1., 0.]], dtype=complex)
     
     dip_02 = np.array([[0., 0., 1.],
-           [0., 0., 0.],[1., 0., 0.]],dtype=complex)
+                       [0., 0., 0.],
+                       [1., 0., 0.]], dtype=complex)
 
 Background - 2D electronic spectroscopy
 ---------------------------------------
 
 To illustrate how multi-time correlation functions are calculated with
-OQuPy, we’ll reconstruct Figure 2(a) of [deWit2024]
-(`arXiv:2402.15454 <https://arxiv.org/abs/2402.15454>`__). This figure
-depicts a simulated 2D spectrum for a three-level system that captures
-the essential features of a chromophore (i.e. light absorbing molecule).
+OQuPy, we will simulate a 2D spectrum for a three-level system that
+captures the essential features of a chromophore (i.e. light absorbing
+molecule).
 
 2D electronic spectroscopy (2DES) is an experimental technique that
 probes a system with three femtosecond laser pulses. Due to its
@@ -229,7 +233,7 @@ process tensor:
 
     --> PT-TEMPO computation:
     100.0%   40 of   40 [########################################] 00:00:01
-    Elapsed time: 1.3s
+    Elapsed time: 1.5s
 
 
 2. Define the system and dipole operators
@@ -289,9 +293,9 @@ To calculate :math:`R_{1,2,3,4}` as a function of the time delays
 
 .. code:: ipython3
 
-    times_1=(start_time, dt*20 + dt)
-    times_2= dt*20
-    times_3= dt*20
+    times_1 = (start_time, dt*20)
+    times_2 = dt*20
+    times_3 = dt*20
     times_4 = (dt*20, dt*40)
     
     ops_times = [times_1, times_2, times_3, times_4]
@@ -323,13 +327,13 @@ a list ``cors``:
 
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.0s
+    Elapsed time: 1.3s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.0s
+    Elapsed time: 1.2s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.0s
+    Elapsed time: 1.2s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
     Elapsed time: 1.2s
@@ -352,7 +356,7 @@ element returns the times at which the operators were applied:
      array([4.]),
      array([4.]),
      array([4. , 4.2, 4.4, 4.6, 4.8, 5. , 5.2, 5.4, 5.6, 5.8, 6. , 6.2, 6.4,
-            6.6, 6.8, 7. , 7.2, 7.4, 7.6, 7.8])]
+            6.6, 6.8, 7. , 7.2, 7.4, 7.6, 7.8, 8. ])]
 
 
 
@@ -369,7 +373,7 @@ the length of each time range:
 
 .. parsed-literal::
 
-    (21, 1, 1, 20)
+    (21, 1, 1, 21)
 
 
 
@@ -391,8 +395,7 @@ decreases) with each subsequent element in the array.
 
 To visualise the results, we Fourier transform all four correlation
 functions contained in ``Rs``, padding with zeroes to increase the
-resolution in the frequency domain. We add an extra zero to the
-:math:`\tau_4` axis to obtain a square matrix:
+resolution in the frequency domain:
 
 .. code:: ipython3
 
@@ -400,41 +403,42 @@ resolution in the frequency domain. We add an extra zero to the
     
     Rfs=[]
     for i in range (4):
-        Rpad = np.pad(Rs[i], ((0,pad),(0,pad+1)), 'constant')
+        Rpad = np.pad(Rs[i], ((0,pad),(0,pad)), 'constant')
         Rf=fftshift((fft2(Rpad)))
         Rfs.append(Rf)
     
     time = cors[0][0][0]
     f_time = 2*np.pi*fftshift(fftfreq(time.size+pad,dt))
 
-Finally, we can plot the 2D spectrum shown in Fig 2(a). The spectrum is
-given by the sum of the real parts of :math:`R_{1,2,3,4}` in frequency
-space, contained in the list ``Rfs``. Additionally, due to differences
-in the signs of the complex phases, we flip the arrays such that all
-four correlations appear in the same quadrant in frequency space:
+Finally, we can plot the 2D spectrum. The spectrum is given by the sum
+of the real parts of :math:`R_{1,2,3,4}` in frequency space, contained
+in the list ``Rfs``. Additionally, due to differences in the signs of
+the complex phases, we flip the arrays such that all four correlations
+appear in the same quadrant in frequency space:
 
 .. code:: ipython3
 
-    fig, ax =plt.subplots(1,1)
+    fig, ax = plt.subplots(1,1)
     yax = np.flip(Rfs[0].real) + np.flip(Rfs[1].real,1) + np.flip(Rfs[2].real,1) + np.flip(Rfs[3].real) 
     cont1=ax.contour(f_time, f_time, yax, levels=8)
     cbar = fig.colorbar(cont1)
     ax.set_xlim([-5, 15])
     ax.set_ylim([-5, 15])
     ax.set_aspect('equal', adjustable='box')
+    ax.set_xlabel(r'$\omega_{detec}\,\, (ps^{-1})$')
+    ax.set_ylabel(r'$\omega_{exc}\,\,(ps^{-1})$')
     ax.plot([0, 1], [0, 1], '--', color='gray', transform=ax.transAxes, linewidth=0.75)
-    ax.set(xlabel = r'$\omega_{detec}\,\, (ps^{-1})$', ylabel = r'$\omega_{exc}\,\,(ps^{-1})$')
 
 
 
 
 .. parsed-literal::
 
-    [Text(0.5, 0, '$\\omega_{detec}\\,\\, (ps^{-1})$'),
-     Text(0, 0.5, '$\\omega_{exc}\\,\\,(ps^{-1})$')]
+    [<matplotlib.lines.Line2D at 0x7f80d2022fa0>]
 
 
 
 
 .. image:: n_time_correlations_files/n_time_correlations_32_1.png
+
 
