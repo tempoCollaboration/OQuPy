@@ -36,7 +36,7 @@ from numpy import ndarray
 
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE
+from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE, MAX_SYS_SAMPLES
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.correlations import BaseCorrelations
@@ -827,11 +827,10 @@ def _estimate_epsrel(
     power = np.log(dkmax)/np.log(4)-np.log(tolerance)/np.log(10)
     return np.power(10,-power)
 
-GUESS_WARNING_MSG = "Estimating parameters for TEMPO computation. " \
-    + "No guarantee that resulting TEMPO computation converges towards " \
-    + "the correct dynamics! " \
+GUESS_WARNING_MSG = "Estimating TEMPO parameters. " \
+    + "No guarantee subsequent dynamics calculations are converged. " \
     + "Please refer to the TEMPO documentation and check convergence by " \
-    + "varying the parameters for TEMPO manually."
+    + "varying the parameters manually."
 
 MAX_DKMAX_WARNING_MSG = "Reached maximal recommended `tcut` "\
     + f"(DKMAX = {MAX_DKMAX} timesteps)! " \
@@ -840,12 +839,18 @@ MAX_DKMAX_WARNING_MSG = "Reached maximal recommended `tcut` "\
     + "to choose TEMPO parameters manually. " \
     + "Could not reach specified tolerance! "
 
+MAX_SYS_SAMPLES_MSG = "Reached maximal recommend sample points "\
+    + f"MAX_SYS_SAMPLES = {MAX_SYS_SAMPLES} when attempting to resolve "\
+    + "maximum system frequency. Please choose a lower tolerance "\
+    + "or determine TEMPO parameters manually. "
+
 def guess_tempo_parameters(
         bath: Bath,
         start_time: float,
         end_time: float,
         system: Optional[BaseSystem] = None,
-        tolerance: Optional[float] = DEFAULT_TOLERANCE) -> TempoParameters:
+        tolerance: Optional[float] = DEFAULT_TOLERANCE,
+        max_sys_samples: Optional[int] = MAX_SYS_SAMPLES)-> TempoParameters:
     """
     Function to roughly estimate appropriate parameters for a TEMPO
     computation.
@@ -868,6 +873,9 @@ def guess_tempo_parameters(
         The system.
     tolerance: float
         Tolerance for the parameter estimation.
+    max_sys_samples: int
+        Maximum number of samples of system Hamiltonian and Lindbladian's
+        in parameter estimation
 
     Returns
     -------
@@ -892,7 +900,7 @@ def guess_tempo_parameters(
     assert tmp_tolerance > 0.0, \
         "Argument 'tolerance' must be larger then 0."
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
-    print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
+    #print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
 
     max_tau = tmp_end_time - tmp_start_time
 
@@ -924,13 +932,97 @@ def guess_tempo_parameters(
     epsrel = _estimate_epsrel(dkmax, tolerance)
     sys.stderr.flush()
 
-    return TempoParameters(
-        dt=dt,
-        epsrel=epsrel,
-        dkmax=dkmax,
-        name="Roughly estimated parameters",
-        description="Estimated with 'guess_tempo_parameters()'")
+    if system is None:
+        return TempoParameters(
+            dt=dt,
+            epsrel=epsrel,
+            dkmax=dkmax,
+            name="Roughly estimated parameters",
+            description="Estimated with 'guess_tempo_parameters()' "\
+                    "based on bath correlations.")
 
+    bath_dt = dt
+
+    SAMPLE_RATE = 0.5 # 'Nyquist' frequency
+
+    if isinstance(system, System):
+        system_dt = SAMPLE_RATE / _max_system_frequency(system)
+        dt, dkmax, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
+        return TempoParameters(
+            dt=dt,
+            epsrel=epsrel,
+            dkmax=dkmax,
+            name="Roughly estimated parameters",
+            description=desc)
+
+    if isinstance(system, TimeDependentSystemWithField):
+        print("WARNING: Required dt to resolve system dynamics may vary "\
+                "with field value (assuming unit value).")
+        guess_field = np.exp(1j*np.pi/4)
+        hamt = lambda t: system.hamiltonian(t, guess_field)
+    else:
+        hamt = system.hamiltonian
+
+    system_dt = dt
+    num = len(times) 
+    max_freq = _max_tdependentsystem_frequency(system, times)
+
+    # Determine maximum system frequency
+    while True:
+        num = 2*num
+        if num > MAX_SYS_SAMPLES:
+            warnings.warn(MAX_SYS_SAMPLES_MSG, UserWarning)
+            break
+        times = np.linspace(tmp_start_time, tmp_end_time, num, endpoint=True)
+        new_max_freq = _max_tdependentsystem_frequency(system, times)
+        error  = abs(max_freq-new_max_freq)
+        if error < DEFAULT_TOLERANCE:
+            break
+        max_freq = new_max_freq
+
+    system_dt = SAMPLE_RATE / max_freq
+
+    dt, dkmax, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
+    return TempoParameters(
+            dt=dt,
+            epsrel=epsrel,
+            dkmax=dkmax,
+            name="Roughly estimated parameters",
+            description=desc)       
+
+def _decide_dt_dkmax(bath_dt, system_dt, dkmax):
+    if system_dt < bath_dt:
+        desc =  "Estimated with 'guess_tempo_parameters()' "\
+            "based on bath correlations and system "\
+            "frequencies (limiting)."
+        new_dkmax = int(np.ceil(dkmax * bath_dt / system_dt))
+        return system_dt, new_dkmax, desc
+    desc =  "Estimated with 'guess_tempo_parameters()' "\
+            "based on bath correlations (limiting) and system "\
+            "frequencies."
+    return bath_dt, dkmax, desc
+
+
+def _spectral_norm(operator):
+    operator_square = np.conj(operator.T) @ operator
+    return np.max(np.abs(np.linalg.eigvalsh(operator_square)))
+
+def _max_system_frequency(system):
+    H_ev = [_spectral_norm(system.hamiltonian)]
+    L_evs = [_spectral_norm(gamma * operator) for gamma, operator in\
+            zip(system.gammas, system.lindblad_operators)]
+    return max(H_ev + L_evs)
+
+def _max_tdependentsystem_frequency(system, times):
+    if isinstance(system, TimeDependentSystemWithField):
+        guess_field = np.exp(1j*np.pi/4)
+        hamt = lambda t: system.hamiltonian(t, guess_field)
+    else:
+        hamt = system.hamiltonian
+    H_evs = [_spectral_norm(system.hamiltonian(t)) for t in times]
+    L_evs = [_spectral_norm(gamma(t) * operator(t)) for t in times
+        for gamma, operator in zip(system.gammas, system.lindblad_operators)]
+    return max(H_evs + L_evs)
 
 def tempo_compute(
         system: BaseSystem,
