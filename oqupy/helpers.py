@@ -85,6 +85,10 @@ def plot_correlations_with_parameters(
         marker="o", color="C1")
     ax.plot(times_extra, np.real(corr_extra), color="C0", linestyle="-")
     ax.plot(times_extra, np.imag(corr_extra), color="C1", linestyle="-")
+    ax.spines['bottom'].set_position('zero')
+    # Eliminate upper and right axes
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
 
     if infinity:
         ax.axvline(times_add[0], color="r", linestyle="dashed")
