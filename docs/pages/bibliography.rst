@@ -3,7 +3,7 @@ Bibliography
 
 The code in this project is based on ideas from the following publications:
 
-- **[Stratearn2017]** Strathearn et al.,
+- **[Strathearn2017]** Strathearn et al.,
   *Efficient real-time path integrals for non-Markovian spin-boson models*.
   `New J. Phys. 19(9), p.093009 <http://dx.doi.org/10.1088/1367-2630/aa8744>`_
   (2017).
