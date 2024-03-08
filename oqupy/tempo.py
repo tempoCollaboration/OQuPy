@@ -780,57 +780,14 @@ def influence_matrix(
 
     return infl
 
-def _analyse_correlation(
-        corr_func: Callable[[np.ndarray],np.ndarray],
-        times: np.ndarray,
-        corr_vals: np.ndarray):
-    """Check correlation function on a finer grid."""
-    additional_times = (times[:-1] + times[1:])/2.0
-    additional_corr_vals = corr_func(additional_times)
-    new_times = list(times)
-    new_corr_vals = list(corr_vals)
-    for i in range(len(additional_times)):
-        new_times.insert(2*i+1,additional_times[i])
-        new_corr_vals.insert(2*i+1,additional_corr_vals[i])
-
-    errors = []
-    integrals = []
-    integral = 0.0
-
-    for i in range(len(times)-1):
-        dt = new_times[2*i+2] - new_times[2*i]
-
-        rough_int = 0.5 * dt * (new_corr_vals[2*i] + new_corr_vals[2*i+2])
-        fine_int = 0.5 * (rough_int + dt * new_corr_vals[2*i+1])
-        error = np.abs(rough_int-fine_int)
-        errors.append(error)
-
-        rough_abs_int = 0.5 * dt \
-                * (np.abs(new_corr_vals[2*i]) + np.abs(new_corr_vals[2*i+2]))
-        fine_abs_int = 0.5 * (rough_abs_int + dt * np.abs(new_corr_vals[2*i+1]))
-        integral += fine_abs_int
-        integrals.append(integral)
-
-    full_abs_integral = integrals[-1]
-
-    new_times = np.array(new_times)
-    new_corr_val = np.array(new_corr_vals)
-    errors = np.array(errors) / full_abs_integral
-    integrals = np.array(integrals) / full_abs_integral
-
-    return new_times, new_corr_val, errors, integrals
-
-def _estimate_epsrel(
-        dkmax: int,
-        tolerance: float) -> float:
-    """Heuristic estimation of appropriate epsrel for TEMPO."""
-    power = np.log(dkmax)/np.log(4)-np.log(tolerance)/np.log(10)
-    return np.power(10,-power)
 
 GUESS_WARNING_MSG = "Estimating TEMPO parameters. " \
     + "No guarantee subsequent dynamics calculations are converged. " \
     + "Please refer to the TEMPO documentation and check convergence by " \
     + "varying the parameters manually."
+
+MF_SYS_WARNING_MSG = "Assuming unit complex field value in "\
+        "mean-field Hamiltonian to estimate max system frequency."
 
 MAX_DKMAX_WARNING_MSG = "Reached maximal recommended `tcut` "\
     + f"(DKMAX = {MAX_DKMAX} timesteps)! " \
@@ -848,9 +805,10 @@ def guess_tempo_parameters(
         bath: Bath,
         start_time: float,
         end_time: float,
-        system: Optional[BaseSystem] = None,
+        system: Optional[Union[System, TimeDependentSystem,
+                               TimeDependentSystemWithField]] = None,
         tolerance: Optional[float] = DEFAULT_TOLERANCE,
-        max_sys_samples: Optional[int] = MAX_SYS_SAMPLES)-> TempoParameters:
+        max_samples: Optional[int] = MAX_SYS_SAMPLES)-> TempoParameters:
     """
     Function to roughly estimate appropriate parameters for a TEMPO
     computation.
@@ -864,23 +822,25 @@ def guess_tempo_parameters(
     Parameters
     ----------
     bath: Bath
-        The bath.
+        The bath correlation functions are analysed to estimate a suitable
+        memory length and timestep for a dynamics calculation.
     start_time: float
         The start time.
     end_time: float
         The time to which the TEMPO should be computed.
-    system: BaseSystem
-        The system.
-    tolerance: float
-        Tolerance for the parameter estimation.
-    max_sys_samples: int
-        Maximum number of samples of system Hamiltonian and Lindbladian's
-        in parameter estimation
+    system: Optional[Union[System, TimeDependentSystem,
+                    TimeDependentSystemWithField]]
+        If specified, the maximum system frequencies (from the spectral norm
+        of the Hamiltonian or dissipators) is used to estimate a suitable
+        timestep length for a dynamics calculation. This is used for the
+        returned TempoParamters object only in the case it is smaller than
+        that estimated from the bath correlation functions.
 
     Returns
     -------
     tempo_parameters : TempoParameters
-        Estimate of appropriate tempo parameters.
+        TempoParameters object encapsulating estimate of computational
+        parameters that can be used in a Tempo or PtTempo calculation.
     """
     assert isinstance(bath, Bath), \
         "Argument 'bath' must be a oqupy.Bath object."
@@ -899,130 +859,47 @@ def guess_tempo_parameters(
         raise TypeError("Argument 'tolerance' must be float.") from e
     assert tmp_tolerance > 0.0, \
         "Argument 'tolerance' must be larger then 0."
+    try:
+        tmp_max_samples = int(max_samples)
+    except Exception as e:
+        raise TypeError("Argument 'max_samples' must be int.") from e
+    assert tmp_max_samples > 0, "Argument 'max_samples' must be positive."
+
     warnings.warn(GUESS_WARNING_MSG, UserWarning)
-    #print("WARNING: "+GUESS_WARNING_MSG, file=sys.stderr, flush=True)
 
-    max_tau = tmp_end_time - tmp_start_time
+    descrip = "Estimated with 'guess_tempo_parameters()' based on "\
+            "bath correlations"
 
-    corr_func = np.vectorize(bath.correlations.correlation)
-    new_times = np.linspace(0, max_tau, 11, endpoint=True)
-    new_corr_vals = corr_func(new_times)
-    times = new_times
-    corr_vals = new_corr_vals
+    bath_dt, dkmax = _estimate_dt_dkmax_from_bath(bath,
+                                                  tmp_start_time,
+                                                  tmp_end_time,
+                                                  tmp_tolerance)
 
-    while True:
-        if len(new_times) > MAX_DKMAX:
-            warnings.warn(MAX_DKMAX_WARNING_MSG, UserWarning)
-            break
-        times = new_times
-        corr_vals = new_corr_vals
-        new_times, new_corr_vals, errors, integrals = \
-                _analyse_correlation(corr_func, times, corr_vals)
-        cut = np.where(integrals>(1-tolerance))[0][0]
-        cut = cut+2 if cut+2<=len(times) else len(times)
-        times = times[:cut]
-        corr_vals = corr_vals[:cut]
-        new_times = new_times[:2*cut-1]
-        new_corr_vals = new_corr_vals[:2*cut-1]
-        if (errors < tolerance).all():
-            break
+    system_dt = _estimate_dt_from_system(system,
+                                         tmp_start_time,
+                                         tmp_end_time,
+                                         tmp_tolerance,
+                                         tmp_max_samples)
 
-    dt = np.min(times[1:] - times[:-1])
-    dkmax = len(times)
-    epsrel = _estimate_epsrel(dkmax, tolerance)
-    sys.stderr.flush()
-
-    if system is None:
-        return TempoParameters(
-            dt=dt,
-            epsrel=epsrel,
-            dkmax=dkmax,
-            name="Roughly estimated parameters",
-            description="Estimated with 'guess_tempo_parameters()' "\
-                    "based on bath correlations.")
-
-    bath_dt = dt
-
-    SAMPLE_RATE = 0.5 # 'Nyquist' frequency
-
-    if isinstance(system, System):
-        system_dt = SAMPLE_RATE / _max_system_frequency(system)
-        dt, dkmax, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
-        return TempoParameters(
-            dt=dt,
-            epsrel=epsrel,
-            dkmax=dkmax,
-            name="Roughly estimated parameters",
-            description=desc)
-
-    if isinstance(system, TimeDependentSystemWithField):
-        print("WARNING: Required dt to resolve system dynamics may vary "\
-                "with field value (assuming unit value).")
-        guess_field = np.exp(1j*np.pi/4)
-        hamt = lambda t: system.hamiltonian(t, guess_field)
+    if system_dt is None:
+        descrip += "."
+        dt = bath_dt
+    elif system_dt >= bath_dt:
+        descrip += " (limiting) and system frequencies."
+        dt = bath_dt
     else:
-        hamt = system.hamiltonian
+        descrip += " and system frequencies (limiting)."
+        dt = system_dt
+        dkmax = int(np.ceil(dkmax * bath_dt / system_dt))
 
-    system_dt = dt
-    num = len(times) 
-    max_freq = _max_tdependentsystem_frequency(system, times)
+    epsrel = _estimate_epsrel(dkmax, tmp_tolerance)
+    dt, epsrel = _signif([dt, epsrel], 4) # 4 sig. fig.
 
-    # Determine maximum system frequency
-    while True:
-        num = 2*num
-        if num > MAX_SYS_SAMPLES:
-            warnings.warn(MAX_SYS_SAMPLES_MSG, UserWarning)
-            break
-        times = np.linspace(tmp_start_time, tmp_end_time, num, endpoint=True)
-        new_max_freq = _max_tdependentsystem_frequency(system, times)
-        error  = abs(max_freq-new_max_freq)
-        if error < DEFAULT_TOLERANCE:
-            break
-        max_freq = new_max_freq
-
-    system_dt = SAMPLE_RATE / max_freq
-
-    dt, dkmax, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
-    return TempoParameters(
-            dt=dt,
-            epsrel=epsrel,
-            dkmax=dkmax,
-            name="Roughly estimated parameters",
-            description=desc)       
-
-def _decide_dt_dkmax(bath_dt, system_dt, dkmax):
-    if system_dt < bath_dt:
-        desc =  "Estimated with 'guess_tempo_parameters()' "\
-            "based on bath correlations and system "\
-            "frequencies (limiting)."
-        new_dkmax = int(np.ceil(dkmax * bath_dt / system_dt))
-        return system_dt, new_dkmax, desc
-    desc =  "Estimated with 'guess_tempo_parameters()' "\
-            "based on bath correlations (limiting) and system "\
-            "frequencies."
-    return bath_dt, dkmax, desc
-
-
-def _spectral_norm(operator):
-    operator_square = np.conj(operator.T) @ operator
-    return np.max(np.abs(np.linalg.eigvalsh(operator_square)))
-
-def _max_system_frequency(system):
-    H_ev = [_spectral_norm(system.hamiltonian)]
-    L_evs = [_spectral_norm(gamma * operator) for gamma, operator in\
-            zip(system.gammas, system.lindblad_operators)]
-    return max(H_ev + L_evs)
-
-def _max_tdependentsystem_frequency(system, times):
-    if isinstance(system, TimeDependentSystemWithField):
-        guess_field = np.exp(1j*np.pi/4)
-        hamt = lambda t: system.hamiltonian(t, guess_field)
-    else:
-        hamt = system.hamiltonian
-    H_evs = [_spectral_norm(system.hamiltonian(t)) for t in times]
-    L_evs = [_spectral_norm(gamma(t) * operator(t)) for t in times
-        for gamma, operator in zip(system.gammas, system.lindblad_operators)]
-    return max(H_evs + L_evs)
+    return TempoParameters(dt=dt,
+                           epsrel=epsrel,
+                           dkmax=dkmax,
+                           name="Roughly estimated parameters",
+                           description=descrip)
 
 def tempo_compute(
         system: BaseSystem,
@@ -1106,12 +983,13 @@ def _parameter_memory_input_parse(tcut, dkmax, dt):
             raise ValueError("Argument 'dkmax' must be non-negative.")
         tmp_tcut = dkmax * dt
     elif tcut is not None:
-        tmp_tcut = tcut
-        if not isinstance(tmp_tcut, float):
-            raise TypeError("Argument 'tcut' must be float or None.")
+        try:
+            tmp_tcut = float(tcut)
+        except Exception as e:
+            raise TypeError("Argument 'tcut' must be float or None.") from e
         if tmp_tcut < 0:
             raise ValueError("Argument 'tcut' must be non-negative.")
-        tmp_dkmax = int(np.round(tcut/dt))
+        tmp_dkmax = int(np.ceil(np.round(tcut/dt)))
     else:
         tmp_tcut, tmp_dkmax = None, None
     return tmp_tcut, tmp_dkmax
@@ -1142,3 +1020,137 @@ def _tempo_physical_input_parse(
 
     parameters = (system, initial_state, bath, hs_dim)
     return parameters
+
+def _estimate_dt_dkmax_from_bath(bath, start_time, end_time, tolerance):
+    max_tau = end_time - start_time
+
+    corr_func = np.vectorize(bath.correlations.correlation)
+    new_times = np.linspace(0, max_tau, 11, endpoint=True)
+    new_corr_vals = corr_func(new_times)
+    times = new_times
+    corr_vals = new_corr_vals
+
+    while True:
+        if len(new_times) > MAX_DKMAX:
+            warnings.warn(MAX_DKMAX_WARNING_MSG, UserWarning)
+            break
+        times = new_times
+        corr_vals = new_corr_vals
+        new_times, new_corr_vals, errors, integrals = \
+                _analyse_correlation(corr_func, times, corr_vals)
+        cut = np.where(integrals>(1-tolerance))[0][0]
+        cut = cut+2 if cut+2<=len(times) else len(times)
+        times = times[:cut]
+        corr_vals = corr_vals[:cut]
+        new_times = new_times[:2*cut-1]
+        new_corr_vals = new_corr_vals[:2*cut-1]
+        if (errors < tolerance).all():
+            break
+
+    dt = np.min(times[1:] - times[:-1])
+    dkmax = len(times)
+    sys.stderr.flush()
+    return dt, dkmax
+
+def _analyse_correlation(
+        corr_func: Callable[[np.ndarray],np.ndarray],
+        times: np.ndarray,
+        corr_vals: np.ndarray):
+    """Check correlation function on a finer grid."""
+    additional_times = (times[:-1] + times[1:])/2.0
+    additional_corr_vals = corr_func(additional_times)
+    new_times = list(times)
+    new_corr_vals = list(corr_vals)
+    for i in range(len(additional_times)):
+        new_times.insert(2*i+1,additional_times[i])
+        new_corr_vals.insert(2*i+1,additional_corr_vals[i])
+
+    errors = []
+    integrals = []
+    integral = 0.0
+
+    for i in range(len(times)-1):
+        dt = new_times[2*i+2] - new_times[2*i]
+
+        rough_int = 0.5 * dt * (new_corr_vals[2*i] + new_corr_vals[2*i+2])
+        fine_int = 0.5 * (rough_int + dt * new_corr_vals[2*i+1])
+        error = np.abs(rough_int-fine_int)
+        errors.append(error)
+
+        rough_abs_int = 0.5 * dt \
+                * (np.abs(new_corr_vals[2*i]) + np.abs(new_corr_vals[2*i+2]))
+        fine_abs_int = 0.5 * (rough_abs_int + dt * np.abs(new_corr_vals[2*i+1]))
+        integral += fine_abs_int
+        integrals.append(integral)
+
+    full_abs_integral = integrals[-1]
+
+    new_times = np.array(new_times)
+    new_corr_val = np.array(new_corr_vals)
+    errors = np.array(errors) / full_abs_integral
+    integrals = np.array(integrals) / full_abs_integral
+
+    return new_times, new_corr_val, errors, integrals
+
+def _estimate_dt_from_system(system, start_time, end_time, tolerance,
+                             max_samples):
+    if system is None:
+        return None
+    sample_rate = 0.5 # Nyquist rate
+    if isinstance(system, System):
+        return sample_rate / _max_system_frequency(system)
+
+    if isinstance(system, TimeDependentSystemWithField):
+        warnings.warn(MF_SYS_WARNING_MSG, UserWarning)
+
+    num = 11
+    times = np.linspace(start_time, end_time, num, endpoint=True)
+    max_freq = _max_tdependentsystem_frequency(system, times)
+
+    while True:
+        num = 2*num
+        if num > max_samples:
+            warnings.warn(MAX_SYS_SAMPLES_MSG, UserWarning)
+            return sample_rate / max_freq
+        times = np.linspace(start_time, end_time, num, endpoint=True)
+        new_max_freq = _max_tdependentsystem_frequency(system, times)
+        error  = abs(max_freq-new_max_freq)
+        if error < DEFAULT_TOLERANCE:
+            return sample_rate / max_freq
+        max_freq = new_max_freq
+
+def _spectral_norm(operator):
+    operator_square = np.conj(operator.T) @ operator
+    return np.max(np.abs(np.linalg.eigvalsh(operator_square)))
+
+def _max_system_frequency(system):
+    h_ev = [_spectral_norm(system.hamiltonian)]
+    l_evs = [_spectral_norm(gamma * operator) for gamma, operator in\
+            zip(system.gammas, system.lindblad_operators)]
+    return max(h_ev + l_evs)
+
+def _max_tdependentsystem_frequency(system, times):
+    if isinstance(system, TimeDependentSystemWithField):
+        guess_field = np.exp(1j*np.pi/4)
+        hamt = lambda t: system.hamiltonian(t, guess_field)
+    elif isinstance(system, TimeDependentSystem):
+        hamt = system.hamiltonian
+    else:
+        raise TypeError("System must have time-dependence")
+    h_evs = [_spectral_norm(hamt(t)) for t in times]
+    l_evs = [_spectral_norm(gamma(t) * operator(t)) for t in times
+        for gamma, operator in zip(system.gammas, system.lindblad_operators)]
+    return max(h_evs + l_evs)
+
+def _signif(x, p):
+    x = np.asarray(x)
+    x_positive = np.where(np.isfinite(x) & (x != 0), np.abs(x), 10**(p-1))
+    mags = 10 ** (p - 1 - np.floor(np.log10(x_positive)))
+    return np.round(x * mags) / mags
+
+def _estimate_epsrel(
+        dkmax: int,
+        tolerance: float) -> float:
+    """Heuristic estimation of appropriate epsrel for TEMPO."""
+    power = np.log(dkmax)/np.log(4)-np.log(tolerance)/np.log(10)
+    return np.power(10,-power)
