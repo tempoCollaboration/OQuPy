@@ -947,7 +947,7 @@ def guess_tempo_parameters(
 
     if isinstance(system, System):
         system_dt = SAMPLE_RATE / _max_system_frequency(system)
-        dt, dkmax, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
+        dt, dkmax, epsel, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
         return TempoParameters(
             dt=dt,
             epsrel=epsrel,
@@ -982,7 +982,7 @@ def guess_tempo_parameters(
 
     system_dt = SAMPLE_RATE / max_freq
 
-    dt, dkmax, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
+    dt, dkmax, epsrel, desc = _decide_dt_dkmax(bath_dt, system_dt, dkmax)
     return TempoParameters(
             dt=dt,
             epsrel=epsrel,
@@ -995,11 +995,12 @@ def _decide_dt_dkmax(bath_dt, system_dt, dkmax):
         desc =  "Estimated with 'guess_tempo_parameters()' "\
             "based on bath correlations and system "\
             "frequencies (limiting)."
-        new_dkmax = int(np.ceil(dkmax * bath_dt / system_dt))
-        return system_dt, new_dkmax, desc
-    desc =  "Estimated with 'guess_tempo_parameters()' "\
+        dkmax = int(np.ceil(dkmax * bath_dt / system_dt))
+    else:
+        desc =  "Estimated with 'guess_tempo_parameters()' "\
             "based on bath correlations (limiting) and system "\
             "frequencies."
+    epsrel = _estimate_epsrel(dkmax, tolerance) # recalculate epsrel
     return bath_dt, dkmax, desc
 
 
