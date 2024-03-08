@@ -89,6 +89,7 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
    pages/tutorials/pt_tebd
    pages/tutorials/mf_tempo
    pages/tutorials/n_time_correlations
+   pages/tutorials/parameters
 
 .. toctree::
    :maxdepth: 1
