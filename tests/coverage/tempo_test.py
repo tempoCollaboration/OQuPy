@@ -106,6 +106,9 @@ def test_tempo_bad_input():
 
 def test_guess_tempo_parameters():
     system = tempo.System(0.5 * tempo.operators.sigma("x"))
+    t_system = tempo.TimeDependentSystem(
+            lambda t: t * np.sin(10*t) * tempo.operators.sigma("z"))
+    f_system = tempo.TimeDependentSystemWithField(lambda t,a: t+a * np.eye(2))
     correlation_function = lambda t: (np.cos(t)+1j*np.sin(6.0*t)) * np.exp(-2.0*t)
     correlations = tempo.CustomCorrelations(correlation_function)
     bath = tempo.Bath(0.5 * tempo.operators.sigma("z"), correlations)
@@ -113,7 +116,6 @@ def test_guess_tempo_parameters():
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time=0.0,
                                              end_time=15.0)
-
     with pytest.raises(TypeError): # bad start time input
         param = tempo.guess_tempo_parameters(bath=bath,
                                              start_time="bla",
@@ -141,6 +143,45 @@ def test_guess_tempo_parameters():
                                              start_time=0.0,
                                              end_time=15.0,
                                              tolerance=1.0e-12)
+    with pytest.raises(AssertionError): # Not a system
+        param = tempo.guess_tempo_parameters(system=bath,
+                                             bath=bath,
+                                             start_time=0.0,
+                                             end_time=15.0)
+    with pytest.raises(TypeError): # bad max_samples
+        param = tempo.guess_tempo_parameters(system=system,
+                                             bath=bath,
+                                             start_time=0.0,
+                                             end_time=15.0,
+                                             tolerance=0.01,
+                                             max_samples='A')
+    with pytest.raises(AssertionError): # bad max_samples
+        param = tempo.guess_tempo_parameters(system=system,
+                                             bath=bath,
+                                             start_time=0.0,
+                                             end_time=15.0,
+                                             tolerance=0.01,
+                                             max_samples=0)
+    with pytest.warns(UserWarning): # reach max_samples
+        param = tempo.guess_tempo_parameters(system=t_system,
+                                             bath=bath,
+                                             start_time=0.0,
+                                             end_time=15.0,
+                                             tolerance=1.0e-3,
+                                             max_samples=30)
+    with pytest.warns(UserWarning): # warn about field guess
+        param = tempo.guess_tempo_parameters(system=f_system,
+                                             bath=bath,
+                                             start_time=0.0,
+                                             end_time=5.0)
+    with pytest.warns(UserWarning):
+        # Large system frequencies
+        t_system = tempo.TimeDependentSystem(
+            lambda t: 1e2 * t * tempo.operators.sigma("z"))
+        param = tempo.guess_tempo_parameters(system=t_system,
+                                             bath=bath,
+                                             start_time=0.0,
+                                             end_time=5.0)
 
 def test_tempo_time_dependent():
     # Tempo class must be able to handle TimeDependentSystem as well
