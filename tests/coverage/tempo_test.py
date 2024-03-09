@@ -61,6 +61,19 @@ def test_tempo():
     tempo_sys_B.compute(end_time=end_time3, progress_type="simple")
     dyn_B = tempo_sys_B.get_dynamics()
     assert len(dyn_B.times) == 12
+    # With added correlation time and backend config
+    tempo_param_C = oqupy.TempoParameters(dt=0.1,
+                                          epsrel=1.0e-5, 
+                                          dkmax=3,
+                                          add_correlation_time=0.5)
+    tempo_sys_C = oqupy.Tempo(system=system,
+                              bath=bath,
+                              parameters=tempo_param_C,
+                              initial_state=initial_state,
+                              start_time=0.0,
+                              unique=False,
+                              backend_config={})
+    tempo_sys_C.compute(end_time=0.9)
 
 def test_tempo_bad_input():
     start_time = -0.3
@@ -103,6 +116,84 @@ def test_tempo_bad_input():
     with pytest.raises(TypeError):
         tempo_sys_A.compute(end_time="bla", progress_type="bar")
 
+def test_tempo_parameters():
+    with pytest.raises(AssertionError): # tcut and dkmax
+        param = oqupy.TempoParameters(dt=0.1,
+                                      tcut=1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05)
+    with pytest.raises(TypeError): # invalid dkmax
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=[],
+                                      epsrel=2.0e-05)
+    with pytest.raises(ValueError): # invalid dkmax
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=-1,
+                                      epsrel=2.0e-05)
+    with pytest.raises(TypeError): # invalid tcut
+        param = oqupy.TempoParameters(dt=0.1,
+                                      tcut='a',
+                                      epsrel=2.0e-05)
+    with pytest.raises(ValueError): # invalid tcut
+        param = oqupy.TempoParameters(dt=0.1,
+                                      tcut=-1.0,
+                                      epsrel=2.0e-05)
+    with pytest.raises(TypeError): # invalid dt
+        param = oqupy.TempoParameters(dt=None,
+                                      dkmax=10,
+                                      epsrel=2.0e-05)
+    with pytest.raises(ValueError): # invalid dt
+        param = oqupy.TempoParameters(dt=-0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05)
+    with pytest.raises(TypeError): # invalid epsrel
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel='a')
+    with pytest.raises(ValueError): # invalid epsrel
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=-2.0e-05)
+    with pytest.raises(TypeError): # invalid add_correlation
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05,
+                                      add_correlation_time='a')
+    with pytest.raises(ValueError): # invalid add_correlation
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05,
+                                      add_correlation_time=-1.0)
+    with pytest.raises(TypeError): # invalid subdiv_limit
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05,
+                                      subdiv_limit='a')
+    with pytest.raises(ValueError): # invalid subdiv_limit
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05,
+                                      subdiv_limit=-1.0)
+    with pytest.raises(TypeError): # invalid liouvillian_epsrel
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05,
+                                      liouvillian_epsrel='a')
+    with pytest.raises(ValueError): # invalid liouvillian_epsrel
+        param = oqupy.TempoParameters(dt=0.1,
+                                      dkmax=10,
+                                      epsrel=2.0e-05,
+                                      liouvillian_epsrel=-1.0)
+    # Cover None sub_div limit, printing parameters
+    param = oqupy.TempoParameters(dt=0.1,
+                                  dkmax=10,
+                                  epsrel=2.0e-05,
+                                  subdiv_limit=None)
+    print(param)
+    # Must be true on creation
+    assert np.isclose(param.tcut, param.dkmax * param.dt)
+    # Test NO memory cutoff specified (allowed)
+    param = oqupy.TempoParameters(dt=0.1, epsrel=1.0e-06)
 
 def test_guess_tempo_parameters():
     system = oqupy.System(0.5 * oqupy.operators.sigma("x"))
@@ -261,15 +352,18 @@ def test_tempo_with_field():
                         parameters=tempo_parameters,
                         unique=False)
     mean_field_dynamics = tempo_sys.compute(end_time=0.3, progress_type="silent")
-    # With degeneracy checks on
+    # With degeneracy checks on, plus backend config (empty)
     tempo_sysB = oqupy.MeanFieldTempo(mean_field_system=mean_field_system,
                         bath_list=[bath],
                         initial_state_list=[oqupy.operators.spin_dm("z-")],
                         initial_field=1.0+1.0j,
                         start_time=0.0,
                         parameters=tempo_parameters,
-                        unique=True)
+                        unique=True,
+                        backend_config={})
     mean_field_dynamicsB = tempo_sysB.compute(end_time=0.3, progress_type="silent")
+    mean_field_dynamicsB_get = tempo_sysB.get_dynamics()
+    assert mean_field_dynamicsB == mean_field_dynamicsB_get
     assert isinstance(mean_field_dynamics, oqupy.dynamics.MeanFieldDynamics)
     assert len(mean_field_dynamics.times == 6)
     # bad input
