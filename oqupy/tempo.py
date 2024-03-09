@@ -980,12 +980,13 @@ def _parameter_memory_input_parse(tcut, dkmax, dt):
             raise ValueError("Argument 'dkmax' must be non-negative.")
         tmp_tcut = dkmax * dt
     elif tcut is not None:
-        tmp_tcut = tcut
-        if not isinstance(tmp_tcut, float):
-            raise TypeError("Argument 'tcut' must be float or None.")
+        try:
+            tmp_tcut = float(tcut)
+        except Exception as e:
+            raise TypeError("Argument 'tcut' must be float or None.") from e
         if tmp_tcut < 0:
             raise ValueError("Argument 'tcut' must be non-negative.")
-        tmp_dkmax = int(np.round(tcut/dt))
+        tmp_dkmax = int(np.ceil(np.round(tcut/dt)))
     else:
         tmp_tcut, tmp_dkmax = None, None
     return tmp_tcut, tmp_dkmax
