@@ -68,7 +68,7 @@ def pt_tebd_performance_A(process_tensor_name,
         h = np.array([[0.0, 0.0, 1.0]]*N)
         J = np.array([[1.3, 0.7, 1.2]]*(N-1))
     else:
-        raise ValueError("Model '{model}' not implemented!")
+        raise ValueError(f"Model '{model}' not implemented!")
 
     system_chain = oqupy.SystemChain(hilbert_space_dimensions=[2]*N)
 
@@ -139,9 +139,4 @@ ALL_TESTS = [
     # (pt_tebd_performance_B, [parameters_B1, parameters_B2]),
 ]
 
-REQUIRED_PTS = [
-    "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel15",
-    "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel16",
-    "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel17",
-    "spinBoson_alpha0.32_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel16",
-]
+REQUIRED_PTS = list(set().union(*[params[0] for params in [parameters_A1, parameters_A2]]))
