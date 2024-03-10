@@ -57,6 +57,8 @@ def generate_spin_boson_pt(name, pt_dir = PT_DIR_PATH):
 
       """
       res = re.match('spinBoson_alpha([\d.]+)_zeta([\d.]+)_T([\d.]+)_cutoff([\d.]+)([a-z]+)_tcut([\d.]+)_dt([\d]+)_steps([\d]+)_epsrel([\d]+)', name)
+      if res is None:
+          raise ValueError(f"Invalid PT name '{name}'")
       p = {
             'alpha':float(res[1]),
             'zeta':float(res[2]),
@@ -76,15 +78,12 @@ def generate_spin_boson_pt(name, pt_dir = PT_DIR_PATH):
       epsrel = 2**(-p['epsrelExp'])
       end_time = 2**(p['stepsExp']-p['dtExp'])
 
-      if p['cutoffType'] == 'gss':
-            cutoff_type = 'gaussian'
-      elif p['cutoffType'] == 'exp':
-            cutoff_type = 'exponential'
-      elif p['cutoffType'] == 'hrd':
-            cutoff_type = 'hard'
+      cutoff_map = {'gss': 'gaussian', 'exp': 'exponential', 'hrd':'hard'}
 
-      else:
-            raise ValueError(f"Cutoff Type {p['cutoffType']} not known.")
+      try:
+          cutoff_type = cutoff_map[p['cutoffType']]
+      except KeyError:
+          raise ValueError(f"Cutoff Type {p['cutoffType']} not known.")
 
       correlations = oqupy.PowerLawSD(alpha=p['alpha'],
                                       zeta=p['zeta'],
