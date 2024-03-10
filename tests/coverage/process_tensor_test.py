@@ -19,8 +19,8 @@ import pytest
 
 import oqupy
 
-TEMP_FILE_1 = "./tests/data/temp1.hdf5"
-TEMP_FILE_2 = "./tests/data/temp2.hdf5"
+TEMP_FILE_1 = "./tests/data/temp/temp1.hdf5"
+TEMP_FILE_2 = "./tests/data/temp/temp2.hdf5"
 
 # -- prepare a process tensor -------------------------------------------------
 
