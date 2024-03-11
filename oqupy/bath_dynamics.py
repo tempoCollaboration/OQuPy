@@ -130,7 +130,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
             coup_op = self.bath.unitary_transform \
                 @ self.bath.coupling_operator \
                 @ self.bath.unitary_transform.conjugate().T
-            _,_,_new_sys_correlations = \
+            _,_new_sys_correlations = \
                 compute_correlations(self.system,
                                      self._process_tensor,
                                      coup_op, coup_op,
