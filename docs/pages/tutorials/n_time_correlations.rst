@@ -233,7 +233,7 @@ process tensor:
 
     --> PT-TEMPO computation:
     100.0%   40 of   40 [########################################] 00:00:01
-    Elapsed time: 1.4s
+    Elapsed time: 1.5s
 
 
 2. Define the system and dipole operators
@@ -293,7 +293,7 @@ To calculate :math:`R_{1,2,3,4}` as a function of the time delays
 
 .. code:: ipython3
 
-    times_1 = (start_time, dt*20 + dt)
+    times_1 = (start_time, dt*20)
     times_2 = dt*20
     times_3 = dt*20
     times_4 = (dt*20, dt*40)
@@ -327,16 +327,16 @@ a list ``cors``:
 
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.3s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
+    Elapsed time: 1.2s
     --> Compute correlations:
-    100.0%   21 of   21 [########################################] 00:00:00
-    Elapsed time: 1.0s
+    100.0%   21 of   21 [########################################] 00:00:01
+    Elapsed time: 1.2s
     --> Compute correlations:
-    100.0%   21 of   21 [########################################] 00:00:00
-    Elapsed time: 1.0s
+    100.0%   21 of   21 [########################################] 00:00:01
+    Elapsed time: 1.2s
 
 
 ``compute_correlations_nt`` outputs a list of length 2, where the first
@@ -356,7 +356,7 @@ element returns the times at which the operators were applied:
      array([4.]),
      array([4.]),
      array([4. , 4.2, 4.4, 4.6, 4.8, 5. , 5.2, 5.4, 5.6, 5.8, 6. , 6.2, 6.4,
-            6.6, 6.8, 7. , 7.2, 7.4, 7.6, 7.8])]
+            6.6, 6.8, 7. , 7.2, 7.4, 7.6, 7.8, 8. ])]
 
 
 
@@ -373,7 +373,7 @@ the length of each time range:
 
 .. parsed-literal::
 
-    (21, 1, 1, 20)
+    (21, 1, 1, 21)
 
 
 
@@ -395,8 +395,7 @@ decreases) with each subsequent element in the array.
 
 To visualise the results, we Fourier transform all four correlation
 functions contained in ``Rs``, padding with zeroes to increase the
-resolution in the frequency domain. We add an extra zero to the
-:math:`\tau_4` axis to obtain a square matrix:
+resolution in the frequency domain:
 
 .. code:: ipython3
 
@@ -404,7 +403,7 @@ resolution in the frequency domain. We add an extra zero to the
     
     Rfs=[]
     for i in range (4):
-        Rpad = np.pad(Rs[i], ((0,pad),(0,pad+1)), 'constant')
+        Rpad = np.pad(Rs[i], ((0,pad),(0,pad)), 'constant')
         Rf=fftshift((fft2(Rpad)))
         Rfs.append(Rf)
     
@@ -435,7 +434,7 @@ appear in the same quadrant in frequency space:
 
 .. parsed-literal::
 
-    [<matplotlib.lines.Line2D at 0x7f089a531b50>]
+    [<matplotlib.lines.Line2D at 0x7f80d2022fa0>]
 
 
 
