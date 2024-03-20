@@ -20,11 +20,29 @@ sys.path.insert(0,'.')
 
 import dill
 
+from tests.data.generate_pts import generate_spin_boson_pt
+from tests.data.generate_pts import spin_boson_pt_exists
 from tests.performance.run_all import run_all
 from tests.performance.pt_tebd import ALL_TESTS
+from tests.performance.pt_tebd import REQUIRED_PTS
 
-# -----------------------------------------------------------------------------
+# -- preparation --------------------------------------------------------------
+
+print("# Prepare computations:")
+
+for pt_name in REQUIRED_PTS:
+    if spin_boson_pt_exists(pt_name):
+        print(f"Process tensor '{pt_name}' already exists. ")
+    else:
+        print(f"Generating process tensor '{pt_name}' ... ")
+        generate_spin_boson_pt(pt_name)
+
+print("... preparation done.")
+
+# -- computation --------------------------------------------------------------
 
 all_results = run_all(ALL_TESTS)
 with open('./tests/data/performance_results/pt_tebd.pkl', 'wb') as f:
     dill.dump(all_results, f)
+
+print("... all done.")

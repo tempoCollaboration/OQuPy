@@ -54,6 +54,7 @@ def run_all(tests, verbose=True):
                 result = performance_function(*params)
                 result['metadata'] = make_meta(performance_function, params)
                 results.append(result)
+                results.append(performance_function(*params))
             results_list.append(results)
         results_list_list.append(results_list)
     return results_list_list
