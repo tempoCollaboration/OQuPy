@@ -14,13 +14,21 @@
 
 import itertools
 
-def run_all(tests):
+def run_all(tests, verbose=True):
     results_list_list = []
     for performance_function, parameters_list in tests:
         results_list = []
-        for parameters in parameters_list:
+        if verbose:
+            print(f"# Run {performance_function.__name__}:")
+        for i, parameters in enumerate(parameters_list):
             param_comb = list(itertools.product(*parameters))
-            results = [performance_function(*params) for params in param_comb]
+            if verbose:
+                print(f"## {i+1}/{len(parameters_list)}: {len(param_comb)} parameter sets:")
+            results = []
+            for j, params in enumerate(param_comb):
+                if verbose:
+                    print(f"### parameter set {j+1} of {len(param_comb)}:")
+                results.append(performance_function(*params))
             results_list.append(results)
         results_list_list.append(results_list)
     return results_list_list
