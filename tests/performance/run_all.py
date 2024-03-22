@@ -13,6 +13,29 @@
 # limitations under the License.
 
 import itertools
+from time import time
+from pkg_resources import get_distribution
+from platform import python_version
+import sys
+sys.path.insert(0,'.')
+import oqupy
+
+target_modules = ['numpy',
+                  'scipy',
+                  'tensornetwork',
+                  'matplotlib',
+                  'h5py']
+
+def make_meta(function, parameters):
+    module_info = {module:get_distribution(module).version
+                   for module in target_modules}
+    return {'time': time(),
+            'python': python_version(),
+            'oqupy': oqupy.__version__,
+            'modules': module_info,
+            'name': function.__name__,
+            'parameters': parameters,
+            }
 
 def run_all(tests, verbose=True):
     results_list_list = []
@@ -28,8 +51,11 @@ def run_all(tests, verbose=True):
             for j, params in enumerate(param_comb):
                 if verbose:
                     print(f"### parameter set {j+1} of {len(param_comb)}:")
-                results.append(performance_function(*params))
+                result = performance_function(*params)
+                result['metadata'] = make_meta(performance_function, params)
+                results.append(result)
             results_list.append(results)
         results_list_list.append(results_list)
     return results_list_list
+
 
