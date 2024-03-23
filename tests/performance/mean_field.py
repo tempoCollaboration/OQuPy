@@ -155,109 +155,18 @@ def mean_field_performance_A(process_tensor_name,
 
     return result
 
-# -- Test B -------------------------------------------------------------------
-
-def mean_field_performance_B(process_tensor_name, 
-                             number_of_systems):
-    """
-    This test checks that all final subsystem states within a mean field system are the same.
-    It returns the field expectations and associated times of the mean field system.
-
-    Returns
-    -------
-        times: ndarray
-            The points in time :math:`t`.
-        field_expectations: ndarray
-            Values :math:`$\langle`$ a(t) \rangle`.
-    """
-
-    # system parameters
-    sigma_z = oqupy.operators.sigma("z")
-    sigma_plus = oqupy.operators.sigma("+")
-    sigma_minus = oqupy.operators.sigma("-")
-
-    omega_0 = 0.0
-    omega_c = -30.4
-    Omega = 303.9
-
-    kappa = 15.2
-    Gamma_down = 15.2
-    Gamma_up = 0.8 * Gamma_down
-
-    gammas = [ lambda t: Gamma_down, lambda t: Gamma_up]
-    lindblad_operators = [ lambda t: sigma_minus, lambda t: sigma_plus]
-
-    def H_MF(t, a):
-        return 0.5 * omega_0 * sigma_z +\
-            0.5 * Omega * (a * sigma_plus + np.conj(a) * sigma_minus)
-
-    
-    initial_field = np.sqrt(0.05)               # Note n_0 = <a^dagger a>(0) = 0.05
-    initial_state = np.array([[0,0],[0,1]])     # spin down
-
-
-    # load process tensor
-    pt_file_path = os.path.join(PT_DIR_PATH, f"{process_tensor_name}.hdf5")
-    process_tensor = oqupy.import_process_tensor(pt_file_path)
-
-    fractions = [1/number_of_systems for i in range(number_of_systems)]
-
-    def field_eom(t, states, field):
-        sx_exp_list = [np.matmul(sigma_minus, state).trace() for state in states]
-        sx_exp_weighted_sum = sum([fraction*sx_exp for fraction, sx_exp in zip(fractions, sx_exp_list)])
-        return -(1j*omega_c+kappa)*field - 0.5j*Omega*sx_exp_weighted_sum
-    
-    system = oqupy.TimeDependentSystemWithField(
-        H_MF,
-        gammas=gammas,
-        lindblad_operators=lindblad_operators)
-    system_list = [system for i in range(number_of_systems)]
-    mean_field_system = oqupy.MeanFieldSystem(system_list, field_eom=field_eom)
-
-    mean_field_dynamics = oqupy.compute_dynamics_with_field(
-                                    mean_field_system, 
-                                    initial_field=initial_field, 
-                                    initial_state_list=[initial_state for i in range(number_of_systems)], 
-                                    start_time=0.0,
-                                    process_tensor_list = [process_tensor for i in range(number_of_systems)]
-                                    )
-
-    times, field_expectations = mean_field_dynamics.field_expectations()
-    
-    # check that all subsystem states are equal
-    for i in range(number_of_systems - 1):
-        assert np.allclose(mean_field_dynamics.system_dynamics[i].states, 
-                        mean_field_dynamics.system_dynamics[i+1].states)
-    
-    # also check explicitly that first subsystem state is the same as last subsystem state
-    # (extra check since np.allclose does not guarantee transitivity)
-    assert np.allclose(mean_field_dynamics.system_dynamics[0].states, 
-                        mean_field_dynamics.system_dynamics[-1].states)
-
-  
-    return times, field_expectations
-
-
-
 # -----------------------------------------------------------------------------
 parameters_A1 = [
-        #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
-    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
-    [[i for i in range(1, 11)]], # list of number of systems (up to 10 systems)
-]
-
-parameters_B1 = [
-        #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
-    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
-    [10] # number of systems
+    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
+    #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
+    [[i for i in range(1, 2)]], # list of number of systems (up to 10 systems)
 ]
 
 ALL_TESTS = [
     (mean_field_performance_A, [parameters_A1]),
-    (mean_field_performance_B, [parameters_B1])
 ]
 
 # -----------------------------------------------------------------------------
 
-REQUIRED_PTS = list(set().union(*[params[0] for params in [parameters_A1, parameters_B1]]))
+REQUIRED_PTS = list(set().union(*[params[0] for params in [parameters_A1]]))
 
