@@ -31,34 +31,22 @@ import oqupy.operators as op
 PT_DIR_PATH = "./tests/data/process_tensors/"
 
 # -- Test A -------------------------------------------------------------------
-# """
-# Computational cost with number of systems.
-# """
-
-parameters_A1 = [
-    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0expon_tcut227.9_dt10_steps06_epsrel15"],
-    [[i for i in range(1, 11)]],      # list of number of systems (up to 10 systems)
-]
-
-parameters_B1 = [
-    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0expon_tcut227.9_dt10_steps06_epsrel15"],
-    [10]      # number of systems
-]
-
-
 
 def mean_field_performance_A(process_tensor_name, 
                              number_of_systems_list):
     """
     Checks runtime scaling with number of systems.
-    Returns
-    -------
-        number_of_systems_list: list
-            List with number of systems
-        runtimes: list
-            List with runtimes corresponding to different numbers of systems
+    Parameters
+    ----------
+    process_tensor_name:
+        Name of the process tensor that represents the environment (following
+        the convention defined in /tests/data/generate_pts.py)
+    number_of_systems_list:
+        List of number of distinct TimeDependentSystemWithField objects in each calculation.
+        In addition, a calculation using a TimeDependentSystem is performed ('0' number_of_systems)
     
-
+    Returned result contains times and field variables for each calculation, and the calculation's
+    walltime.
     """
 
     # system parameters
@@ -91,6 +79,13 @@ def mean_field_performance_A(process_tensor_name,
     pt_file_path = os.path.join(PT_DIR_PATH, f"{process_tensor_name}.hdf5")
     process_tensor = oqupy.import_process_tensor(pt_file_path)
 
+    result = {'times':[],
+              'fields':[],
+              'number_of_systems':[],
+              'walltimes':[],
+              'process_tensor_name':process_tensor_name,
+              }
+
     def compute_n_systems(n):
         """Return runtime for the dynamics of mean field systems with n systems.
            (helper function) 
@@ -111,7 +106,7 @@ def mean_field_performance_A(process_tensor_name,
         mean_field_system = oqupy.MeanFieldSystem(system_list, field_eom=field_eom)
 
         start_time = time.perf_counter()
-        oqupy.compute_dynamics_with_field(
+        dynamics = oqupy.compute_dynamics_with_field(
                                         mean_field_system, 
                                         initial_field=initial_field, 
                                         initial_state_list=[initial_state for i in range(n)], 
@@ -119,14 +114,48 @@ def mean_field_performance_A(process_tensor_name,
                                         process_tensor_list = [process_tensor for i in range(n)]
                                         )
         end_time = time.perf_counter()
-        time_taken = end_time - start_time
-        return time_taken
+        t, fields = dynamics.field_expectations()
+        result['times'].append(t)
+        result['fields'].append(fields)
+        result['number_of_systems'].append(n)
+        result['walltimes'].append(end_time - start_time)
 
-    runtimes = [compute_n_systems(n) for n in number_of_systems_list]
+    num_calculations = len(number_of_systems_list) + 1
+    for i, n in enumerate(number_of_systems_list):
+        print(f'#### inner-test calculation {i+1} of {num_calculations} (n={n} MeanFieldSystems)')
+        compute_n_systems(n)
+        if i > 0:
+           assert np.allclose(result['fields'][i], result['fields'][0], atol=1e-4)
 
-    return number_of_systems_list, runtimes
+    # Now test with NO mean-field system
+    target_t = result['times'][0]
+    target_fields = result['fields'][0]
+    target_field_dynamics = zip(target_t, target_fields)
+    def H_MF_FAKE(t):
+        a = next((field for time, field in target_field_dynamics if time >= t), target_fields[-1])
+        return 0.5 * omega_0 * sigma_z +\
+            0.5 * Omega * (a * sigma_plus + np.conj(a) * sigma_minus)
+    system = oqupy.TimeDependentSystem(H_MF_FAKE,
+                                       gammas=gammas,
+                                       lindblad_operators=lindblad_operators)
 
+    print(f'#### inner-test calculation {num_calculations} of {num_calculations} (NO MeanFieldSystems)')
+    start_time = time.perf_counter()
+    dynamics = oqupy.compute_dynamics(
+            system=system,
+            process_tensor=process_tensor,
+            start_time=0.0,
+            initial_state=initial_state
+            )
+    end_time = time.perf_counter()
+    result['times'].insert(0, dynamics.times)
+    result['fields'].insert(0, target_fields)
+    result['number_of_systems'].insert(0, 0)
+    result['walltimes'].insert(0, end_time - start_time)
 
+    return result
+
+# -- Test B -------------------------------------------------------------------
 
 def mean_field_performance_B(process_tensor_name, 
                              number_of_systems):
@@ -207,7 +236,21 @@ def mean_field_performance_B(process_tensor_name,
 
   
     return times, field_expectations
+
+
+
 # -----------------------------------------------------------------------------
+parameters_A1 = [
+        #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
+    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
+    [[i for i in range(1, 11)]], # list of number of systems (up to 10 systems)
+]
+
+parameters_B1 = [
+        #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
+    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
+    [10] # number of systems
+]
 
 ALL_TESTS = [
     (mean_field_performance_A, [parameters_A1]),
@@ -216,21 +259,5 @@ ALL_TESTS = [
 
 # -----------------------------------------------------------------------------
 
-def run_all():
-    results_list_list = []
-    for performance_function, parameters_list in ALL_TESTS:
-        results_list = []
-        for parameters in parameters_list:
-            param_comb = list(itertools.product(*parameters))
-            results = [performance_function(*params) for params in param_comb]
-            results_list.append(results)
-        results_list_list.append(results_list)
-    return results_list_list
-
-# -----------------------------------------------------------------------------
-
-all_results = run_all()
-
-with open('./tests/data/temp/mean-field_results.pkl', 'wb') as f:
-    dill.dump(all_results, f)
+REQUIRED_PTS = list(set().union(*[params[0] for params in [parameters_A1, parameters_B1]]))
 

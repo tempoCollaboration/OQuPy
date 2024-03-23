@@ -102,5 +102,6 @@ def generate_spin_boson_pt(name):
 
 
 #name = "spinBoson_alpha0.32_zeta1.0_T0.0_cutoff1.0expon_tcut4.0_dt04_steps07_epsrel17"
-name = "spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0expon_tcut227.9_dt10_steps06_epsrel15"
+name = "spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9expon_tcut0.1_dt10_steps07_epsrel26"
+#name = "spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0expon_tcut227.9_dt10_steps06_epsrel15"
 generate_spin_boson_pt(name)
