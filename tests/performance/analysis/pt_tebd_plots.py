@@ -25,6 +25,8 @@ import dill
 import oqupy
 import oqupy.operators as op
 
+plt.style.use('./tests/performance/analysis/matplotlib_style.mplstyle')
+
 with open("./tests/data/performance_results/pt_tebd.pkl", 'rb') as f:
     all_results = dill.load(f)
 
@@ -52,7 +54,7 @@ for i in range(4):
     walltime = result["walltime"]
     ax2.plot(bonds, max_bond_dims, color="#000000", linestyle=styles[i],
             label=f"K={result['K']} | walltime={result['walltime']:.01f}s")
-ax2.legend(loc=8, labelspacing=0.1, fontsize=10, handletextpad=0.3, borderpad=0.2)
+ax2.legend(loc=8)
 ax2.set_yscale('log')
 ax2.set_ylim(1,200)
 ax2.set_xlabel("bond")

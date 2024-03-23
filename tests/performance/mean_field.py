@@ -157,9 +157,9 @@ def mean_field_performance_A(process_tensor_name,
 
 # -----------------------------------------------------------------------------
 parameters_A1 = [
-    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
-    #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
-    [[i for i in range(1, 2)]], # list of number of systems (up to 10 systems)
+    #["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff1.0exp_tcut227.9_dt10_steps06_epsrel15"], # easy
+    ["spinBoson_alpha0.25_zeta1.0_T39.3_cutoff227.9exp_tcut0.1_dt10_steps07_epsrel26"], # realistic
+    [[i for i in range(1, 11)]], # list of number of systems (up to 10 systems)
 ]
 
 ALL_TESTS = [
