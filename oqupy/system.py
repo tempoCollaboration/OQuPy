@@ -908,6 +908,8 @@ def _check_tdependent_gammas_lindblad_operators(
 def _check_mean_field_system_list(system_list):
     assert isinstance(system_list, list), "Parameter system_list must "\
             "be a list of TimeDependentSystemWithField objects."
+    assert len(system_list) > 0, "Parameter system_list must contain at "\
+            "least one TimeDependentSystemWithField"
     for obj in system_list:
         assert isinstance(obj, TimeDependentSystemWithField), "Each "\
                 "element of system_list must be a "\
