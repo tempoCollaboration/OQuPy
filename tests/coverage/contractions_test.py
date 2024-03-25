@@ -107,6 +107,18 @@ def test_compute_dynamics_with_field():
                 num_steps = num_steps,
                 start_time = start_time
                 )
+    # mean-field system system list is empty
+    with pytest.raises(AssertionError):
+        mean_field_system_bad = oqupy.MeanFieldSystem([system], field_eom)
+        mean_field_system_bad._system_list = []
+        oqupy.compute_dynamics_with_field(
+                mean_field_system_bad,
+                initial_field,
+                initial_state_list = [np.eye(2)],
+                num_steps = num_steps,
+                dt = 0.2,
+                start_time = start_time,
+                )
     # too many process tensors
     with pytest.raises(AssertionError):
         oqupy.compute_dynamics_with_field(
