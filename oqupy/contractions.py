@@ -252,6 +252,9 @@ def compute_dynamics_with_field(
             "MeanFieldSystem."
 
     number_of_systems = len(mean_field_system.system_list)
+    assert number_of_systems > 0, "Argument 'mean_field_system.system_list' "\
+            "must contain at least one instance of MeanFieldSystem"
+
     if initial_state_list is None:
         initial_state_list = [None] * number_of_systems
 
