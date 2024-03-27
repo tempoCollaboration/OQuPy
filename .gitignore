@@ -1,5 +1,7 @@
 # TEMPO file formats
 tests/data/temp/
+tests/data/performance_results/
+tests/data/plots/
 *.hdf5
 
 # local development

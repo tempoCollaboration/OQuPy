@@ -1,4 +1,4 @@
-# Copyright 2020 The TEMPO Collaboration
+# Copyright 2024 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,48 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# """
-# Performance tests for PT-TEBD computations.
-# """
+"""
+Performance tests for PT-TEBD computations.
+"""
 import sys
 sys.path.insert(0,'.')
 import os
 
-import dill
-import itertools
 import numpy as np
 import time
 
-
 import oqupy
 import oqupy.operators as op
+from tests.data.generate_pts import PT_DIR_PATH
 
-
-PT_DIR_PATH = "./tests/data/process_tensors/"
 
 # -- Test A -------------------------------------------------------------------
-# """
-# ToDo: Here should be some description of the performance tests scenario A.
-# """
-#"spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0expon_tcut4.0_dt04_steps06_epsrel15",
-
-parameters_A1 = [
-    ["spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0expon_tcut4.0_dt04_steps06_epsrel15",
-     "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0expon_tcut4.0_dt04_steps06_epsrel16",
-     "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0expon_tcut4.0_dt04_steps06_epsrel17"], # process_tensor_name
-    [7],                             # number_of_sites
-    [2],                             # number_of_pts
-    ["XY"],                          # model
-    [2**(-15), 2**(-16), 2**(-17)],  # tebd_epsrel
-]
-
-parameters_A2 = [
-    ["spinBoson_alpha0.32_zeta1.0_T0.0_cutoff1.0expon_tcut4.0_dt04_steps06_epsrel16"], # process_tensor_name
-    [7],                     # number_of_sites
-    [0,1,2,3],               # number_of_pts
-    ["XY"],                  # model
-    [2**(-16)],              # tebd_epsrel
-]
 
 def pt_tebd_performance_A(process_tensor_name,
                           number_of_sites,
@@ -60,10 +34,23 @@ def pt_tebd_performance_A(process_tensor_name,
                           model,
                           tebd_epsrel):
     """
-    ToDo: Implement computation A
-    ToDo: This function should return the most relevant information concerning
-          performance of a computation.
-    """
+    Here we compute the dynamics of a XY or XYZ Heisenberg spin chain with
+    environments coupling strongly to the first few sites of the chain.
+
+    Parameters
+    ----------
+    process_tensor_name:
+        Name of the process tensor that represents the environment (following
+        the convention defined in /tests/data/generate_pts.py)
+    number_of_sites:
+        Total number of sites in the XY / XYZ spin chain.
+    number_of_pts:
+        Number of the spins that couple to an environment.
+    model:
+        Which model to use: 'XY' or 'XYZ'.
+    tebd_epsrel:
+        Relative SVD cutoff of the PT-TEBD algorithm.
+"""
     N = number_of_sites
     K = number_of_pts
     tebd_order = 2
@@ -81,7 +68,7 @@ def pt_tebd_performance_A(process_tensor_name,
         h = np.array([[0.0, 0.0, 1.0]]*N)
         J = np.array([[1.3, 0.7, 1.2]]*(N-1))
     else:
-        raise ValueError("Model '{model}' not implemented!")
+        raise ValueError(f"Model '{model}' not implemented!")
 
     system_chain = oqupy.SystemChain(hilbert_space_dimensions=[2]*N)
 
@@ -124,6 +111,26 @@ def pt_tebd_performance_A(process_tensor_name,
 
     return result
 
+# Parameter set intended to check convergence with PTs epsrel.
+parameters_A1 = [
+    ["spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel15",
+     "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel16",
+     "spinBoson_alpha0.16_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel17"], # process_tensor_name
+    [7],                             # number_of_sites
+    [2],                             # number_of_pts
+    ["XY"],                          # model
+    [2**(-15), 2**(-16), 2**(-17)],  # tebd_epsrel
+]
+
+# Parameter set intended study the scaling of bond dimension, walltime etc
+# for an increasing number of coupled environments 'number_of_pts'.
+parameters_A2 = [
+    ["spinBoson_alpha0.32_zeta1.0_T0.0_cutoff1.0exp_tcut4.0_dt04_steps06_epsrel16"], # process_tensor_name
+    [7],                     # number_of_sites
+    [0,1,2,3],               # number_of_pts
+    ["XY"],                  # model
+    [2**(-16)],              # tebd_epsrel
+]
 
 # -----------------------------------------------------------------------------
 
@@ -132,22 +139,4 @@ ALL_TESTS = [
     # (pt_tebd_performance_B, [parameters_B1, parameters_B2]),
 ]
 
-# -----------------------------------------------------------------------------
-
-def run_all():
-    results_list_list = []
-    for performance_function, parameters_list in ALL_TESTS:
-        results_list = []
-        for parameters in parameters_list:
-            param_comb = list(itertools.product(*parameters))
-            results = [performance_function(*params) for params in param_comb]
-            results_list.append(results)
-        results_list_list.append(results_list)
-    return results_list_list
-
-# -----------------------------------------------------------------------------
-
-all_results = run_all()
-with open('./tests/data/temp/pt_tebd_results.pkl', 'wb') as f:
-    dill.dump(all_results, f)
-
+REQUIRED_PTS = list(set().union(*[params[0] for params in [parameters_A1, parameters_A2]]))
