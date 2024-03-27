@@ -1,0 +1,7 @@
+legend.fontsize: 10.0
+legend.labelspacing: 0.1
+legend.handletextpad: 0.3
+legend.borderpad: 0.2
+figure.figsize: 6.0, 4.0
+figure.constrained_layout.use: True
+

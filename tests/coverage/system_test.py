@@ -250,4 +250,9 @@ def test_mean_field_system():
     tsys = TimeDependentSystem(lambda t: t * np.eye(2))
     with pytest.raises(AssertionError):
         MeanFieldSystem([tsys], fieldEomGood)
+    with pytest.raises(AssertionError): 
+        # empty system list
+        meansysField = MeanFieldSystem([],
+                                       fieldEomGood,
+                                       name="mean-field sys")
 
