@@ -27,6 +27,7 @@ plt.rc('xtick', labelsize=8)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 plt.rc('legend', fontsize=8)    # legend fontsize
 plt.rc('figure', titlesize=8)  # fontsize of the figure title
+#plt.style.use('./tests/performance/analysis/matplotlib_style.mplstyle') # recommended
 
 import dill
 
@@ -34,9 +35,6 @@ import oqupy
 import oqupy.operators as op
 
 import os
-
-
-os.chdir('/home/rmadw/Documents/OQuPy')
 
 with open("./tests/data/performance_results/nt_corrs.pkl", 'rb') as f:
     all_results = dill.load(f)

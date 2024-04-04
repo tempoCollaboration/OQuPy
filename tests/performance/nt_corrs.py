@@ -24,8 +24,7 @@ import time
 import oqupy
 import oqupy.operators as op
 
-#from oqupy.contractions import compute_correlations_nt
-import n_time_correlations as nt #with code implemented in oqupy, uncomment above and delete this import
+from oqupy.contractions import compute_correlations_nt
 
 PT_DIR_PATH = "./tests/data/process_tensors/"
 
@@ -100,7 +99,7 @@ def nt_corr_performance_A(process_tensor_name,
     result = dict.fromkeys(keys, None)
 
     start_time = time.time()
-    cor = nt.compute_nt_correlations(system = system,
+    cor = compute_correlations_nt(system = system,
                                       process_tensor=pt,
                                       dipole_ops = dipole_ops,
                                       ops_times=ops_times,

@@ -17,7 +17,6 @@ Script to run the multi-time correlations performance analysis.
 
 import sys
 sys.path.insert(0,'.')
-sys.path.append('/home/rmadw/Documents/OQuPy/tests/')
 
 import oqupy
 import dill
@@ -25,11 +24,10 @@ import os
 import numpy as np
 import re
 
-from performance.run_all import run_all
-from performance.nt_corrs import ALL_TESTS
-from performance.nt_corrs import REQUIRED_PTS
+from tests.performance.run_all import run_all
+from tests.performance.nt_corrs import ALL_TESTS
+from tests.performance.nt_corrs import REQUIRED_PTS
 
-os.chdir('/home/rmadw/Documents/OQuPy')
 PT_DIR_PATH = "./tests/data/process_tensors/"
 
 
