@@ -128,17 +128,6 @@ class System(BaseSystem):
             return first_step, second_step
         return propagators
 
-    def get_imaginary_propagators(self, dt, start_time, subdiv_limit, epsrel):
-        """Prepare propagator functions for the system. """
-        tmp_lio = _imaginary_liouvillian(self._hamiltonian, 0, 0)
-        first_step = expm(tmp_lio * dt/2.0)
-        second_step = expm(tmp_lio * dt/2.0)
-        def propagators(step: int):
-            """Create the system propagators (first and second half) for
-            the time step `step`  """
-            return first_step, second_step
-        return propagators
-
     def get_unitary_propagators(self, dt, start_time, subdiv_limit, epsrel):
         """Prepare propagator functions for the system. """
         first_step = expm(-1j*self._hamiltonian*dt/2.0)

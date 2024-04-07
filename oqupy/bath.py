@@ -113,43 +113,43 @@ class Bath(BaseAPIClass):
     def correlations(self) -> BaseCorrelations:
         """The correlations of the bath. """
         return copy(self._correlations)
-
-class  ThermalBath(Bath):
-    """
-    Represents the bath degrees of freedom with a specific coupling operator
-    (to the system) and a specific auto-correlation function.
-
-    Parameters
-    ----------
-    coupling_operator: np.ndarray
-        The system operator to which the bath couples.
-    correlations: BaseCorrelations
-        The bath's auto correlation function.
-    name: str
-        An optional name for the bath.
-    description: str
-        An optional description of the bath.
-    """
-    def __init__(
-            self,
-            coupling_operator: ndarray,
-            correlations: ThermalCustomSD,
-            temperature: float,
-            mean: Optional[BaseCorrelations] = None,
-            name: Optional[Text] = None,
-            description: Optional[Text] = None) -> None:
-        """Creates a Bath object. """
-
-        super().__init__(name,
-                         description,
-                         coupling_operator,
-                         correlations)
-
-        self._temperature = copy(temperature)
-
-        @property
-        def temperature(self) -> float:
-            """The temperature of the bath. """
-            return copy(self._temperature)
+#
+# class ThermalBath(Bath):
+#     """
+#     Represents the bath degrees of freedom with a specific coupling operator
+#     (to the system) and a specific auto-correlation function.
+#
+#     Parameters
+#     ----------
+#     coupling_operator: np.ndarray
+#         The system operator to which the bath couples.
+#     correlations: BaseCorrelations
+#         The bath's auto correlation function.
+#     name: str
+#         An optional name for the bath.
+#     description: str
+#         An optional description of the bath.
+#     """
+#     def __init__(
+#             self,
+#             coupling_operator: ndarray,
+#             correlations: ThermalCustomSD,
+#             temperature: float,
+#             mean: Optional[BaseCorrelations] = None,
+#             name: Optional[Text] = None,
+#             description: Optional[Text] = None) -> None:
+#         """Creates a Bath object. """
+#
+#         super().__init__(name,
+#                          description,
+#                          coupling_operator,
+#                          correlations)
+#
+#         self._temperature = copy(temperature)
+#
+#         @property
+#         def temperature(self) -> float:
+#             """The temperature of the bath. """
+#             return copy(self._temperature)
 
 

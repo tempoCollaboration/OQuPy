@@ -1099,7 +1099,7 @@ class ThermalCustomSD(BaseCorrelations):  #### Temperature assigned here
              time_2 = time_1
         if matsubara: #check pointers
             time_1 = -1j * time_1
-            time_2 = -1j * time_2
+            time_2 = -1j * time_2 # only needed for nonstationary baths
             delta = -1j * delta
 
         if time_1 == 0.0:
