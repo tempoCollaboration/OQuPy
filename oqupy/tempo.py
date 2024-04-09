@@ -809,9 +809,9 @@ class GibbsTempo(BaseAPIClass):
 
         self._correlations = self._bath.correlations
 
-        assert self._correlations.temperature() > 0, \
+        assert self._correlations.temperature > 0, \
         "Temperature must be greater than zero"
-        self._temperature = self._correlations.temperature()
+        self._temperature = self._correlations.temperature
 
         assert isinstance(parameters, TempoParameters), \
             "Argument 'parameters' must be an instance of TempoParameters."
@@ -867,18 +867,22 @@ class GibbsTempo(BaseAPIClass):
                 self._parameters.dt,
                 k * self._parameters.dt, matsubara=True)
 
-        operators = (-self._bath._coupling_operator(), self._bath._coupling_operator(), np.zeros((dim,)))
+        operators = (-self._bath._coupling_operator.diagonal(), self._bath._coupling_operator.diagonal(), np.zeros((dim,)))
 
         unitary_transform = self._bath.unitary_transform
-        propagators = self._system.get_unitary_propagators(
-               - 1j*self._parameters.dt)
+
         epsrel = self._parameters.epsrel
+        max_step = int(self._end_time / self._parameters.dt)
+        dt = self._end_time / max_step
+        propagators = self._system.get_unitary_propagators(
+            - 1j * dt, 0, 0, 0)
         self._backend_instance = TIBaseBackend(
                 dim,
                 epsrel,
-                propagators,
+                propagators(1)[0],
                 coeffs,
                 operators,
+                max_step=max_step,
                 config=self._backend_config)
 
     def _init_dynamics(self):
@@ -913,7 +917,7 @@ class GibbsTempo(BaseAPIClass):
 
         dim = self._dimension
         if self._backend_instance.step is None:
-            step, state = self._backend_instance.initialize()
+            step, state = self._backend_instance.initialise()
             self._init_dynamics()
             self._dynamics.add(self._time(step), state)
 
