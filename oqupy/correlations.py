@@ -778,7 +778,7 @@ class CustomSD(BaseCorrelations):
 
 
 def _complex_integral(
-        integrand: Callable[[float], float],
+        integrand: Callable[[float], complex],
         a: Optional[float] = 0.0,
         b: Optional[float] = 1.0,
         epsrel: Optional[float] = INTEGRATE_EPSREL,
@@ -1007,7 +1007,8 @@ class ThermalCustomSD(BaseCorrelations):  #### Temperature assigned here
         # convention is tau.imag < 0
         if self.temperature == 0.0:
             # integrand = lambda w: self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
-            def integrand(w): return self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+            def integrand(w):
+                return self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
         else:
             #print(1 / self.temperature)
             def integrand(w): # change of variable tau -> 1j*tau can give minus

@@ -873,9 +873,9 @@ class GibbsTempo(BaseAPIClass):
 
         epsrel = self._parameters.epsrel
         max_step = int(self._end_time / self._parameters.dt)
-        dt = self._end_time / max_step
+        self._parameters._dt = self._end_time / max_step  ## NOT IDEAL
         propagators = self._system.get_unitary_propagators(
-            - 1j * dt, 0, 0, 0)
+            - 1j * self._parameters.dt, 0, 0, 0)
         self._backend_instance = TIBaseBackend(
                 dim,
                 epsrel,
@@ -884,6 +884,7 @@ class GibbsTempo(BaseAPIClass):
                 operators,
                 max_step=max_step,
                 config=self._backend_config)
+
 
     def _init_dynamics(self):
         """Create a Dynamics object with metadata from the Tempo object. """
@@ -919,10 +920,12 @@ class GibbsTempo(BaseAPIClass):
         if self._backend_instance.step is None:
             step, state = self._backend_instance.initialise()
             self._init_dynamics()
-            self._dynamics.add(self._time(step), state)
+            for ii, d in enumerate(self._backend_instance.data):
+                self._dynamics.add(self._time(ii), d)
+            #self._dynamics.add(self._time(step), state)
 
         start_step = self._backend_instance.step
-        num_step = self._get_num_step(start_step, tmp_end_time)
+        num_step = self._get_num_step(start_step, tmp_end_time) - 1
 
         progress = get_progress(progress_type)
         title = "--> TEMPO computation:"
@@ -930,7 +933,7 @@ class GibbsTempo(BaseAPIClass):
             for i in range(num_step):
                 prog_bar.update(i)
                 step, state = self._backend_instance.compute_step()
-                self._dynamics.add(self._time(step), state)
+                self._dynamics.add(self._time(step+1), state)
             prog_bar.update(num_step)
 
         return self._dynamics
