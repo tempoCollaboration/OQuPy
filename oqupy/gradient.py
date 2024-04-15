@@ -15,19 +15,16 @@
 Frontend for computing the gradient of some objective function w.r.t. some
 control parameters.
 """
-from typing import Dict, Iterable, List, Optional, Tuple, Callable,Union
+from typing import Dict, List, Optional, Tuple, Callable,Union
 
 import numpy as np
 import tensornetwork as tn
 
-from numpy import ndarray, sqrt, zeros
-
+from numpy import ndarray
 
 from oqupy.contractions import compute_gradient_and_dynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import ParameterizedSystem
-from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
-from scipy.linalg import sqrtm
 
 def state_gradient(
         system: ParameterizedSystem,

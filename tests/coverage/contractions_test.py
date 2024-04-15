@@ -197,3 +197,85 @@ def test_mean_field_and_with_control():
             process_tensor_list=[pt],
             control_list=[control],
         )
+
+    
+def test_compute_gradient_and_dynamics():
+    start_time=0
+    num_steps=2
+    dt=0.2
+    end_time=start_time+num_steps*dt
+    initial_state = oqupy.operators.spin_dm('x-')
+    target_derivative = oqupy.operators.spin_dm('x+').T
+
+    x0 = np.ones(2*num_steps)
+    x0=list(zip(x0))
+
+    def discrete_h_sys(hx):
+        return 0.5*hx * oqupy.operators.sigma('x')
+
+    system= oqupy.ParameterizedSystem(hamiltonian=discrete_h_sys)
+
+    correlations = oqupy.PowerLawSD(alpha=3,
+                                zeta=1,
+                                cutoff=1.0,
+                                cutoff_type='gaussian',
+                                temperature=0.0)
+    bath = oqupy.Bath(0.5 * oqupy.operators.sigma("x"), correlations)
+
+    tempo_params =oqupy.TempoParameters(dt=0.2,tcut=None,epsrel=10**(-7))
+    pt = oqupy.pt_tempo_compute(
+        bath,
+        start_time=start_time,
+        end_time=end_time,
+        parameters=tempo_params)
+    
+    grad_prop,dyn = oqupy.compute_gradient_and_dynamics(system=system,
+                                                parameters=x0,
+                                                process_tensors=[pt],
+                                                initial_state=initial_state,
+                                                target_derivative=target_derivative
+                                                )
+    
+    # Check derivative list is the correct type
+    assert isinstance(grad_prop,list)
+    # Check there is 1 more state than derivatives
+    assert len(dyn.states) == 1 + len(grad_prop)
+    # Check times have been recorded correctly
+    assert np.isclose(np.min(dyn.times),start_time)
+    # Check the initial state is first element 
+    assert np.allclose(dyn.states[-1],initial_state)
+    # Check t=0 is recorded
+    assert len(dyn.times) == 1 + num_steps
+    # Check shape of adjoint tensors
+    assert np.shape(grad_prop[0]) == (4,4,4,4)
+
+    # input checks
+    # No initial field / wrong type
+    with pytest.raises(TypeError):
+        oqupy.compute_dynamics_with_field(
+                system,
+                initial_state_list = 0,
+                dt = dt,
+                )
+    
+    # Wrong system type
+    with pytest.raises(AssertionError):
+        oqupy.compute_gradient_and_dynamics(
+                system =oqupy.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
+                parameters=x0,
+                initial_state= np.eye(2),
+                dt = dt,
+                process_tensors=[pt],
+                num_steps = num_steps
+                )
+        
+    # forgets process_tensors accepts list
+    with pytest.raises(AssertionError):
+        oqupy.compute_gradient_and_dynamics(
+                system =oqupy.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
+                parameters=x0,
+                initial_state= np.eye(2),
+                dt = dt,
+                process_tensors=[pt],
+                num_steps = num_steps
+                )

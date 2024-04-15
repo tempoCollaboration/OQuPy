@@ -98,6 +98,7 @@ from oqupy.system import SystemChain
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
 from oqupy.system import MeanFieldSystem
+from oqupy.system import ParameterizedSystem
 
 from oqupy.pt_tempo import PtTempo
 from oqupy.pt_tempo import pt_tempo_compute
@@ -107,3 +108,5 @@ from oqupy.tempo import TempoParameters
 from oqupy.tempo import MeanFieldTempo
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import tempo_compute
+
+from oqupy.gradient import state_gradient

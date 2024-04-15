@@ -774,7 +774,7 @@ def _compute_dynamics_input_parse(
     if with_field:
         check_isinstance(system, TimeDependentSystemWithField, "system")
     else:
-        check_isinstance(system, (System, TimeDependentSystem), "system")
+        check_isinstance(system, (System, TimeDependentSystem,ParameterizedSystem), "system")
 
     hs_dim = system.dimension
 
