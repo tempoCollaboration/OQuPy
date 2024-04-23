@@ -21,7 +21,7 @@ import numpy as np
 from numpy import ndarray
 
 from oqupy.config import NpDtype
-from oqupy.correlations import BaseCorrelations, ThermalCustomSD
+from oqupy.correlations import BaseCorrelations, CustomSD
 from oqupy.base_api import BaseAPIClass
 
 

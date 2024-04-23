@@ -219,169 +219,128 @@ class TempoParameters(BaseAPIClass):
 
     # lio epsrel for dynamics time integrals only
 #
-# class GibbsParameters(BaseAPIClass):
-#     r"""
-#     Parameters for the TEMPO computation.
-#
-#     Parameters
-#     ----------
-#     dt: float
-#         Length of a time step :math:`\delta t`. - It should be small enough
-#         such that a trotterisation between the system Hamiltonian and the
-#         environment it valid, and the environment auto-correlation function
-#         is reasonably well sampled.
-#     epsrel: float
-#         The maximal relative error in the singular value truncation (done
-#         in the underlying tensor network algorithm). - It must be small enough
-#         such that the numerical compression (using tensor network algorithms)
-#         does not truncate relevant correlations.
-#     tcut: float (default = None)
-#         Length of time :math:`t_\mathrm{cut}` included in the non-Markovian
-#         memory. - This should be large enough to capture all non-Markovian
-#         effects of the environment. If set to None no finite memory
-#         approximation is made. Note only one of tcut, dkmax should be
-#         specified.
-#     dkmax: int (default = None)
-#         Length of non-Markovian memory in number of timesteps i.e.
-#         :math:`t_\mathrm{cut}=K\in\mathbb{N}`. If set to None no finite
-#         approximation is made. Note only one of tcut, dkmax should be
-#         specified.
-#     add_correlation_time: float
-#         Additional correlation time to include in the last influence
-#         functional as explained in [Strathearn2017].
-#     subdiv_limit: int (default = config.SUBDIV_LIMIT)
-#         The maximum number of subdivisions used during the adaptive
-#         algorithm when integrating a time-dependent Liouvillian. If
-#         None then the Liouvillian is not integrated but sampled twice
-#         to construct the system propagators at a timestep.
-#     liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
-#         The relative error tolerance for the adaptive algorithm
-#         when integrating a time-dependent Liouvillian.
-#     name: str (default = None)
-#         An optional name for the tempo parameters object.
-#     description: str (default = None)
-#         An optional description of the tempo parameters object.
-#     """
-#     def __init__(
-#             self,
-#             dt: float,
-#             epsrel: float,
-#             tcut: Optional[float] = None,
-#             dkmax: Optional[int] = None,
-#             add_correlation_time: Optional[float] = None,
-#             subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-#             liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
-#             name: Optional[Text] = None,
-#             description: Optional[Text] = None) -> None:
-#         """Create a TempoParameters object."""
-#
-#         try:
-#             tmp_dt = float(dt)
-#         except Exception as e:
-#             raise TypeError("Argument 'dt' must be float.") from e
-#         if tmp_dt <= 0.0:
-#             raise ValueError("Argument 'dt' must be positive.")
-#         self._dt = tmp_dt
-#
-#         try:
-#             tmp_epsrel = float(epsrel)
-#         except Exception as e:
-#             raise TypeError("Argument 'epsrel' must be float.") from e
-#         if tmp_epsrel <= 0.0:
-#             raise ValueError("Argument 'epsrel' must be positive.")
-#         self._epsrel = tmp_epsrel
-#
-#         self._tcut, self._dkmax = _parameter_memory_input_parse(
-#                 tcut, dkmax, dt)
-#
-#         try:
-#             if add_correlation_time is None:
-#                 tmp_tau = None
-#             else:
-#                 tmp_tau = float(add_correlation_time)
-#         except Exception as e:
-#             raise TypeError("Argument 'add_correlation_time' "\
-#                     "must be float or None.") from e
-#         if tmp_tau is not None and tmp_tau < 0:
-#             raise ValueError(
-#                 "Argument 'add_correlation_time' must be non-negative.")
-#         self._add_correlation_time = tmp_tau
-#
-#         try:
-#             if subdiv_limit is None:
-#                 tmp_subdiv_limit = None
-#             else:
-#                 tmp_subdiv_limit = int(subdiv_limit)
-#         except Exception as e:
-#             raise TypeError("Argument 'subdiv_limit' must be int or "\
-#                     "None.") from e
-#         if tmp_subdiv_limit is not None and tmp_subdiv_limit < 0:
-#             raise ValueError(
-#             "Argument 'subdiv_limit' must be non-negative or None.")
-#         self._subdiv_limit = tmp_subdiv_limit
-#
-#         try:
-#             tmp_liouvillian_epsrel = float(liouvillian_epsrel)
-#         except Exception as e:
-#             raise TypeError("Argument 'liouvillian_epsrel' must be "\
-#                     "float.") from e
-#         if tmp_liouvillian_epsrel <= 0.0:
-#             raise ValueError("Argument 'liouvillian_epsrel' must be "\
-#                     "positive.")
-#         self._liouvillian_epsrel = tmp_liouvillian_epsrel
-#
-#         super().__init__(name, description)
-#
-#     def __str__(self) -> Text:
-#         ret = []
-#         ret.append(super().__str__())
-#         ret.append("  dt                   = {} \n".format(self.dt))
-#         ret.append("  tcut [dkmax]         = {} [{}] \n".format(
-#             self.tcut, self.dkmax))
-#         ret.append("  epsrel               = {} \n".format(self.epsrel))
-#         ret.append("  add_correlation_time = {} \n".format(
-#             self.add_correlation_time))
-#         return "".join(ret)
-#
-#     @property
-#     def dt(self) -> float:
-#         """Length of a time step."""
-#         return self._dt
-#
-#     @property
-#     def epsrel(self) -> float:
-#         """The maximal relative error in the singular value truncation."""
-#         return self._epsrel
-#
-#     @property
-#     def tcut(self) -> float:
-#         """Length of non-Markovian memory"""
-#         return self._tcut
-#
-#     @property
-#     def dkmax(self) -> Union[int, None]:
-#         """Number of time steps included in the non-Markovian memory."""
-#         return self._dkmax
-#
-#     @property
-#     def add_correlation_time(self) -> float:
-#         """
-#         Additional correlation time to include in the last influence
-#         functional.
-#         """
-#         return self._add_correlation_time
-#
-#     @property
-#     def subdiv_limit(self) -> int:
-#         """The maximum number of subdivisions used during the adaptive
-#         algorithm when integrating a time-dependent Liouvillian."""
-#         return self._subdiv_limit
-#
-#     @property
-#     def liouvillian_epsrel(self) -> float:
-#         """The relative error tolerance for integrating a time-dependent
-#         system Liouvillian. """
-#         return self._liouvillian_epsrel
+class GibbsParameters(BaseAPIClass):
+    r"""
+    Parameters for the TEMPO computation.
+
+    Parameters
+    ----------
+    dt: float
+        Length of a time step :math:`\delta t`. - It should be small enough
+        such that a trotterisation between the system Hamiltonian and the
+        environment it valid, and the environment auto-correlation function
+        is reasonably well sampled.
+    epsrel: float
+        The maximal relative error in the singular value truncation (done
+        in the underlying tensor network algorithm). - It must be small enough
+        such that the numerical compression (using tensor network algorithms)
+        does not truncate relevant correlations.
+    tcut: float (default = None)
+        Length of time :math:`t_\mathrm{cut}` included in the non-Markovian
+        memory. - This should be large enough to capture all non-Markovian
+        effects of the environment. If set to None no finite memory
+        approximation is made. Note only one of tcut, dkmax should be
+        specified.
+    dkmax: int (default = None)
+        Length of non-Markovian memory in number of timesteps i.e.
+        :math:`t_\mathrm{cut}=K\in\mathbb{N}`. If set to None no finite
+        approximation is made. Note only one of tcut, dkmax should be
+        specified.
+    add_correlation_time: float
+        Additional correlation time to include in the last influence
+        functional as explained in [Strathearn2017].
+    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+        The maximum number of subdivisions used during the adaptive
+        algorithm when integrating a time-dependent Liouvillian. If
+        None then the Liouvillian is not integrated but sampled twice
+        to construct the system propagators at a timestep.
+    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating a time-dependent Liouvillian.
+    name: str (default = None)
+        An optional name for the tempo parameters object.
+    description: str (default = None)
+        An optional description of the tempo parameters object.
+    """
+    def __init__(
+            self,
+            temperature: float,
+            n_steps: int,
+            epsrel: float,
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a TempoParameters object."""
+
+        try:
+            tmp_temp = float(temperature)
+        except Exception as e:
+            raise TypeError("Argument 'dt' must be float.") from e
+        if tmp_temp <= 0.0:
+            raise ValueError("Argument 'dt' must be positive.")
+        self._temperature = tmp_temp
+
+        try:
+            tmp_n = int(n_steps)
+        except Exception as e:
+            raise TypeError("Argument 'n_steps' must be integer.") from e
+        if tmp_n <= 0:
+            raise ValueError("Argument 'n_steps' must be positive.")
+        self._temperature = tmp_temp
+
+        try:
+            tmp_epsrel = float(epsrel)
+        except Exception as e:
+            raise TypeError("Argument 'epsrel' must be float.") from e
+        if tmp_epsrel <= 0.0:
+            raise ValueError("Argument 'epsrel' must be positive.")
+        self._epsrel = tmp_epsrel
+
+        try:
+            if subdiv_limit is None:
+                tmp_subdiv_limit = None
+            else:
+                tmp_subdiv_limit = int(subdiv_limit)
+        except Exception as e:
+            raise TypeError("Argument 'subdiv_limit' must be int or "\
+                    "None.") from e
+        if tmp_subdiv_limit is not None and tmp_subdiv_limit < 0:
+            raise ValueError(
+            "Argument 'subdiv_limit' must be non-negative or None.")
+        self._subdiv_limit = tmp_subdiv_limit
+
+
+        super().__init__(name, description)
+
+    def __str__(self) -> Text:
+        ret = []
+        ret.append(super().__str__())
+        ret.append("  temperature          = {} \n".format(self.temperature))
+        ret.append("  nsteps               = {}  \n".format(self.n_steps))
+        ret.append("  epsrel               = {} \n".format(self.epsrel))
+        return "".join(ret)
+
+    @property
+    def temperature(self) -> float:
+        """Length of a time step."""
+        return self._temperature
+
+    @property
+    def n_steps(self) -> float:
+        """Length of a time step."""
+        return self._n_steps
+
+    @property
+    def epsrel(self) -> float:
+        """The maximal relative error in the singular value truncation."""
+        return self._epsrel
+
+    @property
+    def subdiv_limit(self) -> int:
+        """The maximum number of subdivisions used during the adaptive
+        algorithm when integrating a time-dependent Liouvillian."""
+        return self._subdiv_limit
+
 
 class Tempo(BaseAPIClass):
     """
@@ -765,7 +724,7 @@ class Tempo(BaseAPIClass):
 #         return self._dynamics
 
 
-class GibbsTempo(BaseAPIClass):
+class GibbsTempo(BaseAPIClass):  ## warn about gammas
     """
     Class representing the entire TEMPO tensornetwork as introduced in
     [Strathearn2018].
@@ -794,7 +753,7 @@ class GibbsTempo(BaseAPIClass):
             self,
             system: System,
             bath: Bath,
-            parameters: TempoParameters,
+            parameters: GibbsParameters,
             backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
@@ -928,7 +887,7 @@ class GibbsTempo(BaseAPIClass):
         num_step = self._get_num_step(start_step, tmp_end_time) - 1
 
         progress = get_progress(progress_type)
-        title = "--> TEMPO computation:"
+        title = "--> GibbsTEMPO computation:"
         with progress(num_step, title) as prog_bar:
             for i in range(num_step):
                 prog_bar.update(i)

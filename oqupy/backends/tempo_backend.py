@@ -332,7 +332,7 @@ class TIBaseBackend:
             self._step = 1
         return self._step, self.data[-1]
 
-    def compute_step(self) -> Tuple[int, ndarray]:
+    def compute_step(self) -> Tuple[int, ndarray]:  ## make readout optional
         """
         Takes a step in the TEMPO tensor network computation.
 
