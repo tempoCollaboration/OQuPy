@@ -91,22 +91,8 @@ def generate_spin_boson_pt(name, pt_dir = PT_DIR_PATH):
       I ... epsrel       = 2**(-15)
 
       """
-      res = re.match('spinBoson_alpha([\d.]+)_zeta([\d.]+)_T([\d.]+)_cutoff([\d.]+)([a-z]+)_tcut([\d.]+)_dt([\d]+)_steps([\d]+)_epsrel([\d]+)_*(.*)', name)
-      if res is None:
-          raise ValueError(f"Invalid PT name '{name}'")
-      coupling = res[10] if res[10]!= '' else 'z'  
-      p = {
-            'alpha':float(res[1]),
-            'zeta':float(res[2]),
-            'T':float(res[3]),
-            'cutoff':float(res[4]),
-            'cutoffType':res[5],
-            'tcut':float(res[6]),
-            'dtExp':int(res[7]),
-            'stepsExp':int(res[8]),
-            'epsrelExp':int(res[9]),
-            'coupling':coupling,
-      }
+      p = parameters_from_name(name)
+      bath = bath_from_parameters(p)
 
       file_path = os.path.join(PT_DIR_PATH,f"{name}.hdf5")
 
@@ -115,19 +101,6 @@ def generate_spin_boson_pt(name, pt_dir = PT_DIR_PATH):
       epsrel = 2**(-p['epsrelExp'])
       end_time = 2**(p['stepsExp']-p['dtExp'])
 
-      cutoff_map = {'gss': 'gaussian', 'exp': 'exponential', 'hrd':'hard'}
-
-      try:
-          cutoff_type = cutoff_map[p['cutoffType']]
-      except KeyError:
-          raise ValueError(f"Cutoff Type {p['cutoffType']} not known.")
-
-      correlations = oqupy.PowerLawSD(alpha=p['alpha'],
-                                      zeta=p['zeta'],
-                                      cutoff=p['cutoff'],
-                                      cutoff_type=cutoff_type,
-                                      temperature=p['T'])
-      bath = oqupy.Bath(oqupy.operators.sigma(p['coupling'])/2.0, correlations)
       pt_tempo_parameters = oqupy.TempoParameters(dt=dt, tcut=p['tcut'], epsrel=epsrel)
 
       pt = oqupy.pt_tempo_compute(
