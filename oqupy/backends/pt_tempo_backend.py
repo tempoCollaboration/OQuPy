@@ -15,10 +15,14 @@
 Module for tensor network process tensor tempo backend.
 """
 
-from typing import Callable, Dict
+# pylint: disable=too-many-instance-attributes
+# Ignore the too many instance attributes 22/20 until code refactor
+
+from typing import Callable, Dict, Optional
 
 import numpy as np
-from numpy import ndarray
+from numpy import ndarray, zeros
+from numpy import max as numpy_max
 
 from oqupy.backends import node_array as na
 from oqupy.config import NpDtype
@@ -57,7 +61,10 @@ class PtTempoBackend:
             num_steps: int,
             dkmax: int,
             epsrel: float,
-            config: Dict):
+            config: Dict,
+            unique: Optional[bool] = False,
+            north_degeneracy_map: Optional[ndarray] = None,
+            west_degeneracy_map: Optional[ndarray] = None,):
         """Create a BasePtTempoBackend object. """
         self._dimension = dimension
         self._influence = influence
@@ -69,6 +76,14 @@ class PtTempoBackend:
         self._epsrel = epsrel
         self._config = config
         self._step = None
+        self._unique = unique
+        self._north_degeneracy_map = north_degeneracy_map
+        self._west_degeneracy_map = west_degeneracy_map
+        if unique:
+            assert north_degeneracy_map is not None, "north_degeneracy_map "\
+                "must be specified if unique."
+            assert west_degeneracy_map is not None, "west_degeneracy_map "\
+                "must be specified if unique."
 
         if "backend" in config:
             self._backend = config["backend"]
@@ -103,14 +118,35 @@ class PtTempoBackend:
 
         self._sum_north_scaled = self._sum_north * scale
 
+        if self._unique:
+            tmp_north_deg_num_vals = numpy_max(self._north_degeneracy_map)+1
+            tmp_west_deg_num_vals = numpy_max(self._west_degeneracy_map)+1
+
         influences_mpo = []
         influences_mps = []
         for i in range(self._num_infl):
             if i == 0:
                 infl = self._influence(i)
                 infl = infl / scale
-                infl_mpo = util.create_delta(infl, [1, 1, 0])
-                infl_mps = infl.T / scale
+                if self._unique:
+                    tmp_mpo = zeros((tmp_west_deg_num_vals,
+                                     self._dimension**2,
+                                     tmp_north_deg_num_vals),
+                                    dtype=complex)
+                    tmp_mps = zeros((self._dimension**2,
+                                     tmp_north_deg_num_vals),
+                                    dtype=complex)
+                    for i1 in range(self._dimension**2):
+                        tmp_mpo[self._west_degeneracy_map[i1]][i1]\
+                            [self._north_degeneracy_map[i1]] = \
+                            infl[self._north_degeneracy_map[i1]]
+                        tmp_mps[i1][self._north_degeneracy_map[i1]] = \
+                            infl[self._north_degeneracy_map[i1]]/ scale
+                    infl_mpo = tmp_mpo
+                    infl_mps = tmp_mps
+                else:
+                    infl_mpo = util.create_delta(infl, [1, 1, 0])
+                    infl_mps = infl.T / scale
             elif i == self._num_infl-1:
                 infl = self._influence(i)
                 infl_mpo = util.add_singleton(infl, 1)
