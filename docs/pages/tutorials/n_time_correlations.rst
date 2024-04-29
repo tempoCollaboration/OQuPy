@@ -293,18 +293,20 @@ To calculate :math:`R_{1,2,3,4}` as a function of the time delays
 
 .. code:: ipython3
 
-    times_1 = (start_time, dt*20)
-    times_2 = dt*20
-    times_3 = dt*20
-    times_4 = (dt*20, dt*40)
+    steps=20
+    
+    times_1 = slice(0, steps)
+    times_2 = slice(steps-1,steps)
+    times_3 = slice(steps-1,steps)
+    times_4 = slice(steps-1, 2*steps -1)
     
     ops_times = [times_1, times_2, times_3, times_4]
 
-As above, the time arguments can be given as a tuple of floats or a
-single float. They can alternatively be input as indices written as
-integers, slices, or lists of integers and slices. We can now calculate
-:math:`R_{1,2,3,4}`, adding the output for each correlation function in
-a list ``cors``:
+As above, the time arguments can be given as indices written as slices.
+They can alternatively be input as indices written as integers, lists of
+integers and slices, a tuple of floats or a single float. We can now
+calculate :math:`R_{1,2,3,4}`, adding the output for each correlation
+function in a list ``cors``:
 
 .. code:: ipython3
 
@@ -326,17 +328,17 @@ a list ``cors``:
 .. parsed-literal::
 
     --> Compute correlations:
-    100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.1s
-    --> Compute correlations:
-    100.0%   21 of   21 [########################################] 00:00:01
+    100.0%   20 of   20 [########################################] 00:00:01
     Elapsed time: 1.0s
     --> Compute correlations:
-    100.0%   21 of   21 [########################################] 00:00:01
+    100.0%   20 of   20 [########################################] 00:00:00
     Elapsed time: 1.0s
     --> Compute correlations:
-    100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.0s
+    100.0%   20 of   20 [########################################] 00:00:00
+    Elapsed time: 0.9s
+    --> Compute correlations:
+    100.0%   20 of   20 [########################################] 00:00:00
+    Elapsed time: 0.9s
 
 
 ``compute_correlations_nt`` outputs a list of length 2, where the first
@@ -352,11 +354,11 @@ element returns the times at which the operators were applied:
 .. parsed-literal::
 
     [array([0. , 0.2, 0.4, 0.6, 0.8, 1. , 1.2, 1.4, 1.6, 1.8, 2. , 2.2, 2.4,
-            2.6, 2.8, 3. , 3.2, 3.4, 3.6, 3.8, 4. ]),
-     array([4.]),
-     array([4.]),
-     array([4. , 4.2, 4.4, 4.6, 4.8, 5. , 5.2, 5.4, 5.6, 5.8, 6. , 6.2, 6.4,
-            6.6, 6.8, 7. , 7.2, 7.4, 7.6, 7.8, 8. ])]
+            2.6, 2.8, 3. , 3.2, 3.4, 3.6, 3.8]),
+     array([3.8]),
+     array([3.8]),
+     array([3.8, 4. , 4.2, 4.4, 4.6, 4.8, 5. , 5.2, 5.4, 5.6, 5.8, 6. , 6.2,
+            6.4, 6.6, 6.8, 7. , 7.2, 7.4, 7.6])]
 
 
 
@@ -373,7 +375,7 @@ the length of each time range:
 
 .. parsed-literal::
 
-    (21, 1, 1, 21)
+    (20, 1, 1, 20)
 
 
 
@@ -399,7 +401,7 @@ resolution in the frequency domain:
 
 .. code:: ipython3
 
-    pad=100
+    pad=101
     
     Rfs=[]
     for i in range (4):
@@ -434,11 +436,10 @@ appear in the same quadrant in frequency space:
 
 .. parsed-literal::
 
-    [<matplotlib.lines.Line2D at 0x7f6f54eb4460>]
+    [<matplotlib.lines.Line2D at 0x7f96882cdf40>]
 
 
 
 
 .. image:: n_time_correlations_files/n_time_correlations_32_1.png
-
 

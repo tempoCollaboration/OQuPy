@@ -739,6 +739,7 @@ def compute_correlations_nt(
     num_steps = len(schedule)
     title = "--> Compute correlations:"
     with progress(num_steps, title) as prog_bar:
+        prog_bar.update(0)
         for i in range(len(schedule)):
             prog_bar.update(i)
             first_times = schedule[i][0:-1]
@@ -751,7 +752,7 @@ def compute_correlations_nt(
                 continue
             ft_max = ft.max()
             if (ft_max > last_times).any():
-                lt = last_times[last_times > ft_max]
+                lt = last_times[last_times >= ft_max]
                 if len(lt) == 0:
                     continue
                 last_times = lt
@@ -906,6 +907,7 @@ def compute_correlations(
         operators = [operator_b, operator_a]
         ops_times = [times_b, times_a]
 
+
     corr = compute_correlations_nt(system = system,
                                    process_tensor = process_tensor,
                                    operators = operators,
@@ -914,7 +916,14 @@ def compute_correlations(
                                    initial_state = initial_state,
                                    start_time = start_time,
                                    dt = dt,
-                                   progress_type = "bar")
+                                   progress_type=progress_type)
+
+    if time_order == "anti":
+        for i in range (len(corr[0][0])):
+            for j in range (len(corr[0][1])):
+                if corr[0][0][i] == corr[0][1][j]:
+                    corr[-1][i][j] = np.NaN + 1.0j*np.NaN
+        corr = (corr[0][::-1], corr[-1].transpose())
     return corr
 
 #--------------------Parse times for correlations-----------------------

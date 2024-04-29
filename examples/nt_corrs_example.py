@@ -10,8 +10,7 @@ import sys
 sys.path.insert(0,'..')
 
 import oqupy
-#from oqupy.contractions import compute_correlations_nt
-import n_time_correlations as nt #with code implemented in oqupy, uncomment above and delete this import
+from oqupy.contractions import compute_correlations_nt
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
@@ -26,7 +25,6 @@ plt.rc('figure', titlesize=8)  # fontsize of the figure title
 from scipy.fft import fftfreq, fftshift, fft2, ifft
 import os
 
-os.chdir('/home/rmadw/Documents/OQuPy')
 PT_DIR_PATH = "./tests/data/process_tensors/"
 
 
@@ -138,8 +136,6 @@ x=2*np.pi*fftshift(fftfreq(t2.size+pad,dt))
 
 
 ######################Plot#########################################
-desired_folder = '/home/rmadw/Documents/OQuPy/examples'
-
 Rs = []
 for i in range (4):
     R = cors[i][1][:,0,0,:]
@@ -167,19 +163,12 @@ ax.set_aspect('equal', adjustable='box')
 ax.set_xlabel(r'$\omega_{detec}\,\, (ps^{-1})$')
 ax.set_ylabel(r'$\omega_{exc}\,\,(ps^{-1})$')
 ax.plot([0, 1], [0, 1], '--', color='gray', transform=ax.transAxes, linewidth=0.75)
-file_name = '2Dspectr_small_dt='+str(dt)+'_dkmax='+str(dkmax)+'_epsrel='+str(epsrel)+'_alph='+str(alpha)+'_temp='+str(np.round(temperature))+'omeg='+str(omeg)+'eps='+str(eps)+'wc='+str(omega_cutoff)+'t2='+str(0)+'.pdf'
-full_path = os.path.join(desired_folder, file_name)
-#plt.savefig(full_path, dpi=300, bbox_inches = "tight")
 
 fig2, ax2 = plt.subplots(1,1, figsize = (4/2.54, 3/2.54))
 ax2.plot(x, f, linewidth=1.5)
 ax2.set_xlim([-10.,25.])
 #ax2.set_ylim([-0.001,0.38])
 ax2.set(xlabel=r'$\omega\,(ps^{-1})$', ylabel=r'Linear absorption (arb. units)')
-file_name = '1Dspectr_small_dt='+str(dt)+'_dkmax='+str(dkmax)+'_epsrel='+str(epsrel)+'_alph='+str(alpha)+'_temp='+str(np.round(temperature))+'omeg='+str(omeg)+'eps='+str(eps)+'wc='+str(omega_cutoff)+'t2='+str(0)+'.pdf'
-full_path = os.path.join(desired_folder, file_name)
-#plt.savefig(full_path, dpi=300, bbox_inches = "tight")
-
 
 figs, axs = plt.subplots(2,1, figsize = (5/2.54, 7/2.54))
 axs[0].plot(x, f, linewidth=1.5)
@@ -200,6 +189,4 @@ sm.set_array([])
 divider = make_axes_locatable(axs[1])
 cax = divider.append_axes('right', size='5%', pad=0.05)
 fig.colorbar(sm, cax=cax, orientation='vertical')
-file_name = 'spectr_dt='+str(dt)+'_dkmax='+str(dkmax)+'_epsrel='+str(epsrel)+'_alph='+str(alpha)+'_temp='+str(np.round(temperature))+'omeg='+str(omeg)+'eps='+str(eps)+'wc='+str(omega_cutoff)+'t2='+str(0)+'.pdf'
-full_path = os.path.join(desired_folder, file_name)
-#plt.savefig(full_path, dpi=300, bbox_inches = "tight")
+

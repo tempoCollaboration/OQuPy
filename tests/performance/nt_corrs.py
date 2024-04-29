@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Performance tests for PT-TEBD computations.
+Performance tests for PT-TEMP multi-time correlations computations.
 """
 import sys
 sys.path.insert(0,'.')
@@ -86,12 +86,11 @@ def nt_corr_performance_A(process_tensor_name,
 
     dt = pt.dt
     start_t = 0.
-    end_time = dt * len(pt)
 
-    times_1 = (start_t, dt*N+dt)
-    times_2 = dt*N
-    times_3 = dt*N
-    times_4 = (dt*N, end_time)
+    times_1 = slice(0,N)
+    times_2 = slice(N-1,N)
+    times_3 = slice(N-1, N)
+    times_4 = slice(N-1, len(pt))
 
     ops_times = [times_1, times_2, times_3, times_4]
 
