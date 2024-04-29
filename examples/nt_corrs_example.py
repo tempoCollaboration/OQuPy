@@ -69,7 +69,7 @@ bath = oqupy.Bath(syst_int, correlations)
 pt_file_path = os.path.join(PT_DIR_PATH, "3ls_alpha0.1_zeta1.0_T13.09_cutoff3.04exp_tcut50.0_dt0.1_steps80_epsrel6.hdf5")
 process_tensor = oqupy.import_process_tensor(pt_file_path)
 
-######################define system + dipole operators#########################
+######################define system + operators#########################
 eps = 5.
 omeg= 2.
 reorg = 2.0*alpha*omega_cutoff
@@ -83,7 +83,7 @@ initial_state = np.array([[1., 0., 0.],
        [0., 0., 0.],[0., 0., 0.]], dtype=complex)
 
 ##########################Calculate four-time correlations###################
-dipole_ops = [dip_v, dip_v, dip_v, dip_v]
+operators = [dip_v, dip_v, dip_v, dip_v]
 
 order_1 = ["left", "right", "right", "left"]
 order_2 = ["right", "left", "right", "left"]
@@ -104,7 +104,7 @@ cors=[]
 for i in range (len(ops_orders)):
     cor = nt.compute_nt_correlations(system = system,
                                       process_tensor=process_tensor,
-                                      dipole_ops = dipole_ops,
+                                      operators = operators,
                                       ops_times=ops_times,
                                       ops_order=ops_orders[i],
                                       dt = dt,
@@ -120,7 +120,7 @@ times = [start_time, (start_time, end_time)]
 
 cor2 = nt.compute_nt_correlations(system = system,
                                   process_tensor=process_tensor,
-                                  dipole_ops = [dip_v, dip_v],
+                                  operators = [dip_v, dip_v],
                                   ops_times=times,
                                   ops_order=order,
                                   dt = dt,

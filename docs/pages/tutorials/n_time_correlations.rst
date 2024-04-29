@@ -176,10 +176,10 @@ independent from the system Hamiltonian :math:`H_S` and dipole operators
 correlation functions :math:`R_{1,2,3,4}`.
 
 First, we set the bath parameters :math:`\alpha=0.1`,
-:math:`\omega_{cutoff} = 3.04` ps\ :math:`^{-1}`, and :math:`T=100` K
+:math:`\omega_{cutoff} = 3.04\,\mathrm{ps}^{-1}`, and :math:`T=100` K
 :math:`=13.09 \frac{1}{\mathrm{ps \, k_B}}`. The PT-TEMPO computation
 furthermore relies on the following convergence parameters: the time
-step :math:`\delta t = 0.2`\ ps, the maximal memory cutoff
+step :math:`\delta t = 0.2\,\mathrm{ps}`, the maximal memory cutoff
 :math:`\Delta K_{max} = 200` time steps, and the maximal truncation
 error :math:`\epsilon_{rel} = 10^{-2}`.
 
@@ -233,15 +233,15 @@ process tensor:
 
     --> PT-TEMPO computation:
     100.0%   40 of   40 [########################################] 00:00:01
-    Elapsed time: 1.5s
+    Elapsed time: 1.3s
 
 
 2. Define the system and dipole operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Next we set the energies in :math:`H_S`
-(:math:`\epsilon = 5`\ ps\ :math:`^{-1}`,
-:math:`\Omega = 2`\ ps\ :math:`^{-1}`), and define a system object. We
+(:math:`\epsilon = 5\,\mathrm{ps}^{-1}`,
+:math:`\Omega = 2\,\mathrm{ps}^{-1}`), and define a system object. We
 furthermore define the dipole operator
 :math:`\hat{V}=\vert 0 \rangle \langle 2 \vert + h.c.` and the initial
 system state:
@@ -313,7 +313,7 @@ a list ``cors``:
     for i in range (len(ops_orders)):
         cor = compute_correlations_nt(system = system, 
                                           process_tensor=process_tensor, 
-                                          dipole_ops = dipole_ops, 
+                                          operators = dipole_ops, 
                                           ops_times=ops_times, 
                                           ops_order=ops_orders[i],
                                           dt = dt,
@@ -327,16 +327,16 @@ a list ``cors``:
 
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.3s
+    Elapsed time: 1.1s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.2s
+    Elapsed time: 1.0s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.2s
+    Elapsed time: 1.0s
     --> Compute correlations:
     100.0%   21 of   21 [########################################] 00:00:01
-    Elapsed time: 1.2s
+    Elapsed time: 1.0s
 
 
 ``compute_correlations_nt`` outputs a list of length 2, where the first
@@ -434,7 +434,7 @@ appear in the same quadrant in frequency space:
 
 .. parsed-literal::
 
-    [<matplotlib.lines.Line2D at 0x7f80d2022fa0>]
+    [<matplotlib.lines.Line2D at 0x7f6f54eb4460>]
 
 
 

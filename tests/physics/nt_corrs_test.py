@@ -74,7 +74,7 @@ for i in range(len(t_corr0)):
     g=correlations.correlation_2d_integral(delta=t_corr0[i],
                                            time_1=0.,shape="upper-triangle")
     g_t.append(g)
-    
+
 j_t=[]
 for i in range (len(t_corr0)):
     j_ind = np.exp(-g_t[i]-1j*((reorg + eps)*t_corr0[i]))
@@ -86,7 +86,7 @@ def test_nt_correlations_A():
     jt = np.array(j_t)
     j_t_num = compute_correlations_nt(system = system,
                                               process_tensor = process_tensor,
-                                              dipole_ops = [sigma_x, sigma_x],
+                                              operators = [sigma_x, sigma_x],
                                               ops_times = [0. , (0.,end_time)],
                                               ops_order = ["left", "left"],
                                               dt = dt,
@@ -94,35 +94,35 @@ def test_nt_correlations_A():
                                               start_time = start_time)
     jt_num = j_t_num[1][0]
     assert np.allclose(jt, jt_num, rtol = 1**(-6))
-    
-    
+
+
 
 def test_compute_correlations_nt_D():
     ops_times = [0., 0., 0., 0.,]
     time_order = ["left", "left", "left", "left"]
     start_time = 0.
-    dipole_ops = [sigma_x, sigma_x, sigma_x, sigma_x]
-    
+    operators = [sigma_x, sigma_x, sigma_x, sigma_x]
+
     system = oqupy.System(0.5 * eps * sigma_x)
-    
+
     correlations = oqupy.PowerLawSD(alpha=alpha,
                                     zeta=1.,
                                     cutoff=omega_cutoff,
                                     cutoff_type='exponential',
                                     temperature=temperature)
     bath = oqupy.Bath(0.5 * sigma_z, correlations)
-    
+
     tempo_parameters = oqupy.TempoParameters(dt=dt, dkmax=dkmax, epsrel=epsrel)
-    
+
     process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                             start_time=0.,
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
-    
-    cor = compute_correlations_nt(system = system, 
-                                      process_tensor=process_tensor, 
-                                      dipole_ops = dipole_ops, 
-                                      ops_times=ops_times, 
+
+    cor = compute_correlations_nt(system = system,
+                                      process_tensor=process_tensor,
+                                      operators = operators,
+                                      ops_times=ops_times,
                                       ops_order=time_order,
                                       dt = dt,
                                       initial_state = initial_state,
@@ -138,46 +138,46 @@ def test_compute_correlations_nt_C():
     ops_times = [0., 10 * dt]
     time_order = ["left", "left"]
     start_time = 0.
-    dipole_ops = [sigma_x, sigma_x]
-    
+    operators = [sigma_x, sigma_x]
+
     system = oqupy.System(0.5 * 5. * sigma_x)
-    
+
     correlations = oqupy.PowerLawSD(alpha=0.1,
                                     zeta=1.,
                                     cutoff=3.,
                                     cutoff_type='exponential',
                                     temperature=1.)
     bath = oqupy.Bath(0.5 * sigma_z, correlations)
-    
+
     tempo_parameters = oqupy.TempoParameters(dt=dt, dkmax=100, epsrel=10**(-4))
-    
+
     process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                             start_time=0.,
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
-    
-    cor = compute_correlations_nt(system = system, 
-                                      process_tensor=process_tensor, 
-                                      dipole_ops = dipole_ops, 
-                                      ops_times=ops_times, 
+
+    cor = compute_correlations_nt(system = system,
+                                      process_tensor=process_tensor,
+                                      operators = operators,
+                                      ops_times=ops_times,
                                       ops_order=time_order,
                                       dt = dt,
                                       initial_state = initial_state,
                                       start_time = start_time,
                                       progress_type = "bar")
-    
-    
+
+
     j_t = oqupy.compute_correlations(system = system,
                                               process_tensor = process_tensor,
                                               operator_a = sigma_x,
                                               operator_b = sigma_x,
-                                              times_a = 0.0, 
+                                              times_a = 0.0,
                                               times_b = dt*10,
                                               time_order = "ordered",
                                               dt = dt,
                                               initial_state = initial_state,
                                               start_time = 0.)
     assert np.isclose(cor[1][0], j_t[1][0])
-    
+
 
 

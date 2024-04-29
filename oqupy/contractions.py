@@ -621,7 +621,7 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
 def compute_correlations_nt(
         system: BaseSystem,
         process_tensor: BaseProcessTensor,
-        dipole_ops: List[ndarray],
+        operators: List[ndarray],
         ops_times: List[Union[Indices, float, Tuple[float, float]]],
         ops_order: List[Text],
         initial_state: Optional[ndarray] = None,
@@ -636,8 +636,8 @@ def compute_correlations_nt(
     specifying the start and end time. Indices may be integers, slices, or
     lists of integers and slices.
 
-    This code -- written for non-linear spectroscopy purposes -- assumes that
-    specified times are time-ordered; i.e. times_a <= times_b, etc.
+    This code assumes that specified times are time-ordered;
+    i.e. times_a <= times_b, etc.
 
     Parameters
     ---------------------------------------------------------------------------
@@ -645,8 +645,8 @@ def compute_correlations_nt(
         Object containing the system Hamiltonian.
     process_tensor: BaseProcessTensor
         A process tensor object.
-    dipole_ops: List[ndarray, ...]
-        System dipole transiton operators :math:`\hat{V}`.
+    operators: List[ndarray, ...]
+        System operators :math:`\hat{V}`.
     ops_times: Tuple[Union[Indices, float, Tuple[float, float]], ...]
         Time(s) at which dipole operators are applied.
     ops_order: List[Text]
@@ -680,8 +680,8 @@ def compute_correlations_nt(
     dim = system.dimension
     assert process_tensor.hilbert_space_dimension == dim
 
-    for i in range(len(dipole_ops)):
-        assert dipole_ops[i].shape == (dim,dim)
+    for i in range(len(operators)):
+        assert operators[i].shape == (dim,dim)
     assert isinstance(start_time, float)
 
     if dt is None:
@@ -700,7 +700,7 @@ def compute_correlations_nt(
         dt_ = dt
 
     #Check that lengths of the ops_order, ops_times and dip_ops lists are equal
-    assert len(dipole_ops) == len(ops_times) == len(ops_order), \
+    assert len(operators) == len(ops_times) == len(ops_order), \
         "Lengths of the lists ops_order, ops_times and dip_ops do not match."
 
 #Input parsing; ensures that specified times that are not an integer multiple
@@ -761,7 +761,7 @@ def compute_correlations_nt(
 
             corr = _compute_ordered_nt_correlations(first_times = first_times,
                                                     last_times = last_times,
-                                                    dipole_ops = dipole_ops,
+                                                    operators = operators,
                                                     ops_order = ops_order,
                                                     **parameters)
             ret_correlations[sch_indices[i]] = corr
@@ -771,7 +771,7 @@ def compute_correlations_nt(
 def _compute_ordered_nt_correlations(
         system: BaseSystem,
         process_tensor: BaseProcessTensor,
-        dipole_ops: List[ndarray],
+        operators: List[ndarray],
         first_times: Tuple[int, ...],
         last_times: ndarray,
         ops_order: List[Text],
@@ -787,11 +787,11 @@ def _compute_ordered_nt_correlations(
     """
 
     super_operators = []
-    for i in range(len(dipole_ops)):
+    for i in range(len(operators)):
         if ops_order[i] == "left":
-            super_operators.append(left_super(dipole_ops[i]))
+            super_operators.append(left_super(operators[i]))
         elif ops_order[i] == "right":
-            super_operators.append(right_super(dipole_ops[i]))
+            super_operators.append(right_super(operators[i]))
 
 
     max_step = last_times.max()
@@ -814,7 +814,7 @@ def _compute_ordered_nt_correlations(
         dt=dt,
         num_steps=max_step,
         progress_type='silent')
-    _, corr = dynamics.expectations(dipole_ops[-1])
+    _, corr = dynamics.expectations(operators[-1])
     ret_correlations = corr[last_times]
     return ret_correlations
 
@@ -899,16 +899,16 @@ def compute_correlations(
     #------call nt correlations------------------
     if time_order == "ordered":
         ops_order = ["left", "left"]
-        dipole_ops = [operator_a, operator_b]
+        operators = [operator_a, operator_b]
         ops_times = [times_a, times_b]
     if time_order == "anti":
         ops_order = ["right", "left"]
-        dipole_ops = [operator_b, operator_a]
+        operators = [operator_b, operator_a]
         ops_times = [times_b, times_a]
 
     corr = compute_correlations_nt(system = system,
                                    process_tensor = process_tensor,
-                                   dipole_ops = dipole_ops,
+                                   operators = operators,
                                    ops_times = ops_times,
                                    ops_order = ops_order,
                                    initial_state = initial_state,

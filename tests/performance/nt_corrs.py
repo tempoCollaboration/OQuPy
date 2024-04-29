@@ -81,7 +81,7 @@ def nt_corr_performance_A(process_tensor_name,
     # -- correlation computation --
     dip_v = np.array([[0., 0., 1.],
            [0., 0., 0.],[1., 0., 0.]], dtype=complex)
-    dipole_ops = [dip_v, dip_v, dip_v, dip_v]
+    operators = [dip_v, dip_v, dip_v, dip_v]
     ops_order = ["left", "right", "right", "left"]
 
     dt = pt.dt
@@ -101,7 +101,7 @@ def nt_corr_performance_A(process_tensor_name,
     start_time = time.time()
     cor = compute_correlations_nt(system = system,
                                       process_tensor=pt,
-                                      dipole_ops = dipole_ops,
+                                      operators = operators,
                                       ops_times=ops_times,
                                       ops_order=ops_order,
                                       dt = dt,
