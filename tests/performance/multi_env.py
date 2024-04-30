@@ -74,19 +74,19 @@ def multi_env_performance_A(process_tensor_names, initial_state_name):
 
 # Parameter set to compare equilibration with 1) cold bath, 2) hot bath, 3) cold and hot bath.
 parameters_A1 = [
-    [["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17"],
-     ["spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17"],
-     ["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17",
-      "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17"]
+    [["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17_z"],
+     ["spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17_x"],
+     ["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17_z",
+      "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17_x"]
     ],
     ['z+', 'z-'],                    # number_of_sites
 ]
 
 parameters_A2 = [
-    [["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15"],
-     ["spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15"],
-     ["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15",
-      "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15"]
+    [["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15_z"],
+     ["spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15_x"],
+     ["spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15_z",
+      "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15_x"]
     ],
     ['z+', 'z-'],                    # number_of_sites
 ]
@@ -98,8 +98,8 @@ ALL_TESTS = [
 ]
 
 REQUIRED_PTS = [
-    # "spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17",
-    # "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17",
-    "spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15",
-    "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15"
+    # "spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17_z",
+    # "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt04_steps08_epsrel17_x",
+    "spinBoson_alpha0.16_zeta1.0_T0.8_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15_z",
+    "spinBoson_alpha0.16_zeta1.0_T1.6_cutoff1.0exp_tcut4.0_dt03_steps09_epsrel15_x"
 ]

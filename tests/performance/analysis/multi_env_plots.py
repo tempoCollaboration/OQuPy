@@ -30,7 +30,6 @@ plt.style.use('./tests/performance/analysis/matplotlib_style.mplstyle')
 with open("./tests/data/performance_results/multi_env.pkl", 'rb') as f:
     all_results = dill.load(f)
 
-styles = ['-', '--', '-.', ':']
 
 # -----------------------------------------------------------------------------
 
