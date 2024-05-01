@@ -39,8 +39,7 @@ dt=0.05
 num_steps=int(t_end_J/dt)
     
 # Parameter at each time step
-x0 = np.ones(2*num_steps)
-x0=list(zip(x0))
+x0 = np.ones((2*num_steps,1))
 
 # Markovian dissipation
 gamma_J_1 = lambda t: 0.1 # with sigma minus

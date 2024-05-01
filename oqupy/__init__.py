@@ -27,6 +27,7 @@ __all__ = [
     'compute_correlations',
     'compute_dynamics',
     'compute_dynamics_with_field',
+    'compute_gradient_and_dynamics',
     'Control',
     'Dynamics',
     'FileProcessTensor',
@@ -39,12 +40,14 @@ __all__ = [
     'NumericsError',
     'NumericsWarning',
     'operators',
+    'ParameterizedSystem',
     'PowerLawSD',
     'PtTebd',
     'PtTebdParameters',
     'PtTempo',
     'pt_tempo_compute',
     'SimpleProcessTensor',
+    'state_gradient',
     'System',
     'SystemChain',
     'Tempo',
@@ -79,6 +82,9 @@ from oqupy.dynamics import MeanFieldDynamics
 from oqupy.exceptions import NumericsError
 from oqupy.exceptions import NumericsWarning
 
+from oqupy.gradient import state_gradient
+from oqupy.gradient import compute_gradient_and_dynamics
+
 from oqupy import helpers
 
 from oqupy.mps_mpo import AugmentedMPS
@@ -108,5 +114,3 @@ from oqupy.tempo import TempoParameters
 from oqupy.tempo import MeanFieldTempo
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import tempo_compute
-
-from oqupy.gradient import state_gradient

@@ -26,25 +26,8 @@ from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import BaseSystem, System, TimeDependentSystem, ParameterizedSystem
-from oqupy.system import MeanFieldSystem
-from oqupy.operators import left_super, right_super
-from oqupy.util import check_convert, check_isinstance, check_true
-from oqupy.util import get_progress
-
-from typing import List, Optional, Text, Tuple, Union, Callable
-
-import numpy as np
-from numpy import ndarray
-import tensornetwork as tn
-from oqupy.system import TimeDependentSystemWithField
-
-from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
-from oqupy.control import Control
-from oqupy.dynamics import Dynamics, MeanFieldDynamics
-from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import ParameterizedSystem, BaseSystem, System, TimeDependentSystem
-
+from oqupy.system import BaseSystem, System, TimeDependentSystem
+from oqupy.system import ParameterizedSystem
 from oqupy.system import MeanFieldSystem
 from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
@@ -500,7 +483,11 @@ def _compute_dynamics_input_parse(
     if with_field:
         check_isinstance(system, TimeDependentSystemWithField, "system")
     else:
-        check_isinstance(system, (System, TimeDependentSystem,ParameterizedSystem), "system")
+        check_isinstance(
+            system,
+            (System, TimeDependentSystem, ParameterizedSystem),
+            "system"
+        )
 
     hs_dim = system.dimension
 
@@ -600,7 +587,7 @@ def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
 
 
 def _get_pt_mpos_backprop(mpo_list:ndarray, step: int):
-    """same as above but swaps the system legs and internal bond legs
+    r"""same as above but swaps the system legs and internal bond legs
     before returning MPOs.
 
        [forwardprop]
@@ -633,11 +620,11 @@ def _get_pt_mpos_backprop(mpo_list:ndarray, step: int):
     """
     pt_mpos = mpo_list[step]
     pt_mpos_rev = []
-    for i,pt_mpo in enumerate(pt_mpos):
+    for pt_mpo in pt_mpos:
         # now swap axes so propagating upwards on the PT diagram propagates
         # *backwards* in time
-        pt_mpo = np.swapaxes(pt_mpo,0,1) # internal bond legs
-        pt_mpo = np.swapaxes(pt_mpo,2,3) # system propagator legs
+        pt_mpo = np.swapaxes(pt_mpo, 0, 1) # internal bond legs
+        pt_mpo = np.swapaxes(pt_mpo, 2, 3) # system propagator legs
         pt_mpos_rev.append(pt_mpo)
     return pt_mpos_rev
 
@@ -675,16 +662,16 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
             |        /
         |---------| /
         |         |/
-        |         |\       
-        |---------| \        
-            |        \     
+        |         |\
+        |---------| \
+            |        \
             |        [2]
             [0]
 
             [i]
             |
-            |        [-1]   
-            |          |       
+            |        [-1]
+            |          |
                        |
 
         after mpo application:
@@ -693,12 +680,12 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
             |        /
         |---------| /
         |         |/
-        |         |\       
-        |---------| \         
-            |        \        
+        |         |\
+        |---------| \
+            |        \
             |         []
-            |          |       
-                       | 
+            |          |
+                       |
     """
     for i, pt_mpo in enumerate(pt_mpos):
         if pt_mpo is None:
@@ -714,8 +701,9 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
     return current_node, current_edges
 
 def _apply_derivative_pt_mpos(current_node,current_edges,pt_mpos):
-    """
-    Apply MPO corresponding to the time-step of the propagators the derivative is being taken w.r.t.
+    r"""
+    Apply MPO corresponding to the time-step of the propagators the derivative
+    is being taken w.r.t.
 
         before mpo application:
             [1]
@@ -723,16 +711,16 @@ def _apply_derivative_pt_mpos(current_node,current_edges,pt_mpos):
             |        /
         |---------| /
         |         |/
-        |    i    |\       
-        |---------| \        
-            |        \     
+        |    i    |\
+        |---------| \
+            |        \
             |        [2]
             [0]
 
             [i]
             |
-            |        [-1]   
-            |          |       
+            |        [-1]
+            |          |
                        |
 
         after mpo application:
@@ -741,16 +729,16 @@ def _apply_derivative_pt_mpos(current_node,current_edges,pt_mpos):
             |        /
         |---------| /
         |         |/
-        |         |\       
-        |---------| \         
-            |        \        
+        |         |\
+        |---------| \
+            |        \
             |         [-2] pre_mpo_edge
             |
             |
             |
             |        [-3] prop_edge
-            |         |       
-                      | 
+            |         |
+                      |
     """
     prev_prop_edge = current_edges[-1]
     pt_mpo_node = tn.Node(pt_mpos[0])
@@ -780,20 +768,20 @@ def _apply_derivative_pt_mpos(current_node,current_edges,pt_mpos):
         post_mpo_edge = pt_mpo_node[3]
 
         new_bond_edge.name="bond edge "+str(i+1)
-        post_mpo_edge.name = "post mpo edge "+str(i+1)   
-  
+        post_mpo_edge.name = "post mpo edge "+str(i+1)
+
         current_edges[0] ^ pt_mpo_node[0]
 
         current_edges[-1]^pt_mpo_node[2]
 
         current_node = current_node @ pt_mpo_node
         current_edges = current_node[:]
-    
+
     current_edges[-1]=post_mpo_edge
     current_edges[-2]=pre_mpo_edge
     current_edges[-3]=prev_prop_edge
 
-    for i,mpo in enumerate(pt_mpos):
+    for i, _ in enumerate(pt_mpos):
         current_edges[i]=bond_edges[i]
 
     return current_node,current_edges

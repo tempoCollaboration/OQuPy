@@ -78,20 +78,18 @@ def test_multi_env_gradient():
     
     parameter_list = list(zip(np.ones(2*num_steps) * np.pi / (2*dt*num_steps)))
 
-    dyns = oqupy.compute_gradient_and_dynamics(
+    gradsA, dynA = oqupy.compute_gradient_and_dynamics(
                                   process_tensors=[pt,pt],
                                   initial_state=initial_state,
                                   target_derivative=target_deriv,
                                   dt=dt,
                                   system=parameterized_sys,
                                   parameters=parameter_list)
-    dyns2 = oqupy.compute_gradient_and_dynamics(process_tensors=[pt2],
+    gradsB, dynB = oqupy.compute_gradient_and_dynamics(process_tensors=[pt2],
                                 initial_state=initial_state,
                                 target_derivative=target_deriv,
                                 system=parameterized_sys,
                                 dt=dt,
                                 parameters=parameter_list)
     
-    grads = [grad.tensor for grad in dyns[0]]
-    grads2 = [grad.tensor for grad in dyns2[0]]
-    np.testing.assert_almost_equal(grads,grads2,decimal=5)
+    np.testing.assert_almost_equal(gradsA[0],gradsB[0],decimal=5)

@@ -33,8 +33,7 @@ def test_state_gradient():
     initial_state = oqupy.operators.spin_dm('x-')
     target_derivative = oqupy.operators.spin_dm('x+')
 
-    x0 = np.ones(2*num_steps)
-    x0=list(zip(x0))
+    x0 = np.ones((2*num_steps,1))
 
     def discrete_h_sys(hx):
         return 0.5*hx * oqupy.operators.sigma('x')
@@ -70,7 +69,7 @@ def test_state_gradient():
     # Check there are N+1 states
     assert len(grad_dict['dynamics']) == num_steps+1
     # Check the last element of the dynamics object is equal to the final state
-    assert np.allclose(grad_dict['dynamics'].states[-1],grad_dict['final state'])
+    assert np.allclose(grad_dict['dynamics'].states[-1],grad_dict['final_state'])
 
 
 def test_chain_rule():
@@ -96,7 +95,8 @@ def test_chain_rule():
                                             dprop_dparam=propagator_derivatives,
                                             propagators=propagators,
                                             num_steps=num_steps,
-                                            num_parameters=num_params)
+                                            num_parameters=num_params,
+                                            progress_type='silent')
     
     # Check the shapes of the derivatives and parameters are correct
     assert np.shape(tot_derivs) == (2*num_steps,num_params)
@@ -106,3 +106,65 @@ def test_chain_rule():
     assert callable(propagator_derivatives)
     # Check the tot_derivs is a numpy array
     assert isinstance(tot_derivs,ndarray)
+
+
+def test_compute_gradient_and_dynamics():
+    start_time=0
+    num_steps=2
+    dt=0.2
+    end_time=start_time+num_steps*dt
+    initial_state = oqupy.operators.spin_dm('x-')
+    target_derivative = oqupy.operators.spin_dm('x+').T
+
+    x0 = np.ones((2*num_steps,1))
+
+    def discrete_h_sys(hx):
+        return 0.5*hx * oqupy.operators.sigma('x')
+
+    system= oqupy.ParameterizedSystem(hamiltonian=discrete_h_sys)
+
+    correlations = oqupy.PowerLawSD(alpha=3,
+                                zeta=1,
+                                cutoff=1.0,
+                                cutoff_type='gaussian',
+                                temperature=0.0)
+    bath = oqupy.Bath(0.5 * oqupy.operators.sigma("x"), correlations)
+
+    tempo_params = oqupy.TempoParameters(dt=0.2,tcut=None,epsrel=10**(-7))
+    pt = oqupy.pt_tempo_compute(
+        bath,
+        start_time=start_time,
+        end_time=end_time,
+        parameters=tempo_params)
+    
+    grad_prop, dyn = oqupy.compute_gradient_and_dynamics(
+        system=system,
+        initial_state=initial_state,
+        target_derivative=target_derivative,
+        process_tensors=[pt],
+        parameters=x0,
+        progress_type='silent'
+        )
+    
+    # Check derivative list is the correct type
+    assert isinstance(grad_prop,list)
+    # Check there is 1 more state than derivatives
+    assert len(dyn.states) == 1 + len(grad_prop)
+    # Check times have been recorded correctly
+    assert np.isclose(np.min(dyn.times),start_time)
+    # Check the initial state is first element 
+    assert np.allclose(dyn.states[-1],initial_state)
+    # Check t=0 is recorded
+    assert len(dyn.times) == 1 + num_steps
+    # Check shape of adjoint tensors
+    assert np.shape(grad_prop[0]) == (4,4,4,4)
+    
+    # Wrong system type
+    with pytest.raises(TypeError):
+        oqupy.compute_gradient_and_dynamics(
+            system =oqupy.TimeDependentSystem(lambda t: 0.5 * t * np.eye(2)),
+            parameters=x0,
+            initial_state=np.eye(2),
+            target_derivative=target_derivative,
+            process_tensors=[pt]
+        )

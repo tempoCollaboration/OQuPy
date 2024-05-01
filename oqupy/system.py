@@ -22,15 +22,14 @@ from functools import lru_cache
 
 import numpy as np
 from numpy import ndarray
-
 from scipy.linalg import expm
 from scipy import integrate
+from numdifftools import Jacobian
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import NpDtype
-import oqupy.operators as opr
+from oqupy import operators as opr
 
-from numdifftools import Jacobian
 
 class BaseSystem(BaseAPIClass):
     """Base class for systems. """
@@ -57,7 +56,7 @@ class System(BaseSystem):
 
     .. math::
 
-        \frac{d}{dt}\rho(t) = &-i [\hat{H}, \rho(t)] \\
+        \frac{d}{dt}\rho(t) = -i [\hat{H}, \rho(t)] \\
             &+ \sum_n^N \gamma_n \left(
                 \hat{A}_n \rho(t) \hat{A}_n^\dagger
                 - \frac{1}{2} \hat{A}_n^\dagger \hat{A}_n \rho(t)
@@ -473,14 +472,15 @@ class TimeDependentSystemWithField(BaseSystem):
     def lindblad_operators(self) -> List[Callable[[float], ndarray]]:
         """List of lindblad operators. """
         return copy(self._lindblad_operators)
-    
+
 class ParameterizedSystem(BaseSystem):
     r"""
-    Represents a time discrete system with parameterized Hamiltonian H(u_i(t)) and 
-    time-dependent parameters u_i(t). It is also possible to include (also explicitly 
-    time-dependent) Lindblad terms in the Master equation. The equation of motion is
+    Represents a time discrete system with parameterized Hamiltonian H(u_i(t))
+    and time-dependent parameters u_i(t). It is also possible to include
+    (also explicitly time-dependent) Lindblad terms in the Master equation.
+    The equation of motion is
 
-        .. math::
+    .. math::
 
         \frac{d}{dt}\rho(t) = &-i [\hat{H}(u_i(t)), \rho(t)] \\
             &+ \sum_n^N \gamma_n \left(
@@ -488,28 +488,29 @@ class ParameterizedSystem(BaseSystem):
                 - \frac{1}{2} \hat{A}_n^\dagger \hat{A}_n \rho(t)
                 - \frac{1}{2} \rho(t) \hat{A}_n^\dagger \hat{A}_n \right)
 
-    with `parameterized hamiltionian` :math:`\hat{H}(u_i(t))`, the rates `gammas` :math:`\gamma_n` and
-    `linblad_operators` :math:`\hat{A}_n`.
+    with `parameterized hamiltionian` :math:`\hat{H}(u_i(t))`,
+    the rates `gammas` :math:`\gamma_n` and `linblad_operators`
+    :math:`\hat{A}_n`.
 
-    Parameters
-    ----------
-    hamiltonian: callable, accepts list(tuple) and returns ndarray
+    Parameters:
+    -----------
+    hamiltonian: Callable
         System-only Hamiltonian :math:`\hat{H}`.
-    gammas: list(callable): callable accepts list[tuple] and returns float
+    gammas: List[Callable]
         The rates :math:`\gamma_n`.
-    lindblad_operators: list(callable): callable accepts list(tuple) and returns ndarray
+    lindblad_operators: List[Callable]
         The Lindblad operators :math:`\hat{A}_n`.
     name: str
         An optional name for the system.
     description: str
         An optional description of the system.
-    
+
     """
     def __init__(
             self,
             hamiltonian: Callable[[Tuple], ndarray],
             gammas: \
-                Optional[List[Callable[[Tuple], float]]] = None, 
+                Optional[List[Callable[[Tuple], float]]] = None,
             lindblad_operators: \
                 Optional[List[Callable[[Tuple], ndarray]]] = None,
             propagator_derivatives: Callable[[float, Tuple], ndarray] = None,
@@ -526,7 +527,9 @@ class ParameterizedSystem(BaseSystem):
         self._dimension = dimension
         self._number_of_parameters = number_of_parameters
         self._hamiltonian = hamiltonian
-        self._gammas,self._lindblad_operators = _check_parameterized_gammas_lindblad_operators(gammas,lindblad_operators,number_of_parameters)
+        self._gammas,self._lindblad_operators = \
+            _check_parameterized_gammas_lindblad_operators(
+                gammas, lindblad_operators, number_of_parameters)
         self._propagator_derivatives = propagator_derivatives
         super().__init__(dimension, name, description)
 
@@ -536,19 +539,23 @@ class ParameterizedSystem(BaseSystem):
         """
         hamiltonian = self._hamiltonian(*parameters)
         gammas=[gamma(*parameters) for gamma in self._gammas]
-        lindblad_operators=[lop(*parameters) for lop in self._lindblad_operators]
+        lindblad_operators = \
+            [lop(*parameters) for lop in self._lindblad_operators]
         return _liouvillian(hamiltonian, gammas,lindblad_operators)
 
     def get_propagators(
             self,
             dt: float,
-            parameters: List[Tuple]) -> Callable[[int], Tuple[ndarray,ndarray]]: # This way simplifies extracting the parameters for a step
+            parameters: ndarray) -> Callable[[int], Tuple[ndarray,ndarray]]:
+        """
+        ToDo
+        """
         def propagators(step: int):
             """Create the system propagators (first and second half) for
             the time step `step`  """
 
-            pre_liou=self.liouvillian(*(parameters[2*step]))
-            post_liou=self.liouvillian(*(parameters[2*step+1]))
+            pre_liou=self.liouvillian(*(list(parameters[2*step][:])))
+            post_liou=self.liouvillian(*(list(parameters[2*step+1][:])))
             first_step = expm(pre_liou*dt/2.0)
             second_step = expm(post_liou*dt/2.0)
 
@@ -556,10 +563,11 @@ class ParameterizedSystem(BaseSystem):
         return propagators
 
     def halfstep_propagator_derivative(self,dt):
-        """Returns a function which takes a list of parameters
-        And returns the derivative of the half-step propagator for those parameters.
-        The return is a list r, such that the derivative of the propagator with respect to the
-        ith parameter is r[i].
+        """
+        Returns a function which takes a list of parameters and returns the
+        derivative of the half-step propagator for those parameters.
+        The return is a list r, such that the derivative of the propagator with
+        respect to the ith parameter is r[i].
         """
 
         def prop(parameterlist):
@@ -574,13 +582,16 @@ class ParameterizedSystem(BaseSystem):
             return [jac[:,i,:] for i in range(self._number_of_parameters)]
 
         return jacfun
-    
+
     def get_propagator_derivatives(
             self,
             dt: float,
-            parameters: List[Tuple]) -> Callable[[int],Tuple[ndarray,ndarray]]: 
+            parameters: ndarray) -> Callable[[int],Tuple[ndarray,ndarray]]:
+        """
+        ToDo
+        """
         if self._propagator_derivatives is not None:
-            def propagator_derivatives(step: int):
+            def propagator_derivatives_a(step: int):
                 pre_params=parameters[2*step]
                 post_params= parameters[2*step+1]
                 pre_prop_derivs = self._propagator_derivatives(dt, pre_params)
@@ -589,16 +600,16 @@ class ParameterizedSystem(BaseSystem):
                 #      the first half of time step `step` with respect to the
                 #      ith parameter.
                 return pre_prop_derivs, post_prop_derivs
-            return propagator_derivatives
-        else:
-            pd=self.halfstep_propagator_derivative(dt)
-            def propagator_derivatives(step: int): 
-                pre_params=parameters[2*step]
-                post_params= parameters[2*step+1]
-                pre_prop_derivs=pd(pre_params)
-                post_prop_derivs=pd(post_params)
-                return pre_prop_derivs,post_prop_derivs
-            return propagator_derivatives
+            return propagator_derivatives_a
+
+        pd=self.halfstep_propagator_derivative(dt)
+        def propagator_derivatives_b(step: int):
+            pre_params=parameters[2*step]
+            post_params= parameters[2*step+1]
+            pre_prop_derivs=pd(pre_params)
+            post_prop_derivs=pd(post_params)
+            return pre_prop_derivs,post_prop_derivs
+        return propagator_derivatives_b
 
     @property
     def number_of_parameters(self) -> Callable[[Tuple], ndarray]:
@@ -629,10 +640,10 @@ class MeanFieldSystem(BaseAPIClass):
 
     Parameters
     ----------
-    system_list: List[TimeDependentSystemWithField],
+    system_list: List[TimeDependentSystemWithField]
         List of `TimeDependentSystemWithField` objects interacting with
         a common field :math:`\langle a \rangle`.
-    field_eom: callable
+    field_eom: Callable
         Field equation of motion :math:`\partial_t
         \langle a \rangle(t, [\rho], \langle a \rangle)`
         where :math:`[\rho]` is a list of square matrices for the state
@@ -1065,17 +1076,19 @@ def _check_mean_field_system_list(system_list):
                 "TimeDependentSystemWithField object."
     return system_list
 
-def _check_parameterized_gammas_lindblad_operators(gammas,
-                                                   lindblad_operators,number_of_parameters):
+def _check_parameterized_gammas_lindblad_operators(
+        gammas,
+        lindblad_operators,number_of_parameters):
     """Input check for parameterized gammas and lindblad_operators"""
-    gammas, lindblad_operators = _check_dissipator_lists(gammas,lindblad_operators)
+    gammas, lindblad_operators = _check_dissipator_lists(gammas,
+                                                         lindblad_operators)
     gammalist=[]
     loplist=[]
     for gamma,lop in zip(gammas,lindblad_operators):
         try_gamma=gamma(*(list([0.5]*number_of_parameters)))
         try_lop=lop(*(list([0.5]*number_of_parameters)))
         gammalist.append(try_gamma)
-        loplist.append(try_lop)    
+        loplist.append(try_lop)
     _check_gammas_lindblad_operators(gammalist,loplist)
     return gammas, lindblad_operators
 

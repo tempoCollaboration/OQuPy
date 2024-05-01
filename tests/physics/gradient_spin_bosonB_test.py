@@ -40,7 +40,7 @@ num_steps=int(t_end_K/dt)
     
 # Parameter at each time step
 x0 = dt/2*np.arange(2*num_steps)
-x0=list(zip(x0))
+x0 = x0.reshape(-1,1)
 
 # Markovian dissipation
 gamma_K_1 = lambda t: 0.1*t # with sigma minus
@@ -96,13 +96,14 @@ def test_tempo_gradient_backend_K():
         end_time=t_end_K,
         parameters=tempo_params_K)
     
-    grad_prop,dyn = oqupy.compute_gradient_and_dynamics(system=system_K,
-                                                    parameters=x0,
-                                                    process_tensors=[pt],
-                                                    initial_state=initial_state_K,
-                                                    target_derivative=target_derivative_K
-                                                    )
-    
+    grad_prop, dyn = oqupy.compute_gradient_and_dynamics(
+        system=system_K,
+        parameters=x0,
+        process_tensors=[pt],
+        initial_state=initial_state_K,
+        target_derivative=target_derivative_K,
+        progress_type='silent'
+    )
 
     np.testing.assert_almost_equal(dyn.states[-1], rho_K, decimal=4)
 
@@ -116,13 +117,3 @@ def test_tempo_gradient_backend_K():
                                             num_parameters=1)
     
     np.testing.assert_almost_equal(grad_params.real,grad_params_K,decimal=4)
-
-    grad_prop2,dyn2 = oqupy.compute_gradient_and_dynamics(system=system_K,
-                                                parameters=x0,
-                                                process_tensors=[pt],
-                                                initial_state=initial_state_K,
-                                                target_derivative=target_derivative_K,
-                                                dynamics_only=True
-                                                )
-    
-    assert grad_prop2 == []

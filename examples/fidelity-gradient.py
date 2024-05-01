@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# Computation takes roughly 10 minutes.
+
 import sys
 sys.path.insert(0,'.')
-from IPython import embed
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,15 +19,15 @@ from scipy.optimize import minimize
 # parameters used in https://arxiv.org/abs/2303.16002
 
 # -- time steps --
-dt = 0.05 
+end_time = 2.5
 num_steps = 50
-timesteps = dt*np.arange(0,num_steps)
+dt = end_time / num_steps
 
 # -- bath --
 alpha =  0.126 
 omega_cutoff = 3.04 
 temperature = 5 * 0.1309 
-pt_dkmax =60 
+pt_dkmax = 60 
 pt_epsrel = 10**(-7) 
 
 # -- initial and target state --
@@ -35,11 +36,12 @@ target_derivative = op.spin_dm('x+').T
 
 # -- initial parameter guess, defined over half-timesteps --
 y0 = np.zeros(2*num_steps)
-z0 = np.ones(2*num_steps) * (np.pi) / (dt*num_steps)
+z0 = np.ones(2*num_steps) * (np.pi) / end_time
 x0 = np.zeros(2*num_steps)
 
-parameter_list = list(zip(x0,y0,z0))
-num_params = len(parameter_list[0])
+parameters = np.vstack((x0,y0,z0)).T
+num_params = parameters.shape[1]
+print(parameters.shape)
 
 # --- Compute process tensors -------------------------------------------------
 
@@ -57,9 +59,8 @@ pt_tempo_parameters = oqupy.TempoParameters(
 process_tensor = oqupy.pt_tempo_compute(
     bath=bath,
     start_time=0.0,
-    end_time=num_steps * dt,
-    parameters=pt_tempo_parameters,
-    progress_type='silent')
+    end_time=end_time,
+    parameters=pt_tempo_parameters)
 
 # --- Define parameterized system ----------------------------------------------
 
@@ -82,8 +83,7 @@ fidelity_dict = state_gradient(
         initial_state=initial_state,
         target_derivative=target_derivative,
         process_tensors=[process_tensor],
-        parameters=parameter_list,
-        time_steps=timesteps)
+        parameters=parameters)
 
 final_state = fidelity_dict['dynamics'].states[-1]
 v_final_state = np.reshape(final_state,hs_dim**2)
@@ -92,14 +92,12 @@ fidelity = v_target_derivative @ v_final_state
 
 print(f"the fidelity is {fidelity.real}")
 print(f"the fidelity gradient is {fidelity_dict['gradient'].real}")
-t, s_x = fidelity_dict['dynamics'].expectations(op.sigma("x"))
-t, s_y = fidelity_dict['dynamics'].expectations(op.sigma("y"))
-t, s_z = fidelity_dict['dynamics'].expectations(op.sigma("z"))
-
+t, s_x = fidelity_dict['dynamics'].expectations(op.sigma("x"), real=True)
+t, s_y = fidelity_dict['dynamics'].expectations(op.sigma("y"), real=True)
+t, s_z = fidelity_dict['dynamics'].expectations(op.sigma("z"), real=True)
 bloch_length = np.sqrt(s_x**2 +s_y**2 + s_z**2)
 
 plt.title("Pre-optimisation evolution of components")
-
 plt.plot(t,s_x,label='x')
 plt.plot(t,s_y,label='y')
 plt.plot(t,s_z,label='z')
@@ -119,15 +117,18 @@ def infidandgrad(paras):
     """
 
     # Reshape flat parameter list to form accepted by state_gradient: [[hx0,hz0],[hx1,hz1,]...]
-    reshapedparas=[i for i in (paras.reshape((-1,num_params))).tolist() for j in range(2)]
+    reshapedparas = [i for i in (paras.reshape((-1,num_params))).tolist() for j in range(2)]
+    reshapedparas = np.array(reshapedparas)
 
-    gradient_dict=oqupy.state_gradient(system=parametrized_system,
+    gradient_dict = oqupy.state_gradient(
+        system=parametrized_system,
         initial_state=initial_state,
         target_derivative=target_derivative,
         process_tensors=[process_tensor],
-        parameters=reshapedparas)
+        parameters=reshapedparas,
+        progress_type='silent')
     
-    fs=gradient_dict['final state']
+    fs=gradient_dict['final_state']
     gps=gradient_dict['gradient']
     fidelity=np.sum(fs*target_derivative.T)
 
@@ -212,4 +213,5 @@ plt.legend()
 
 # -----------------------------------------------------------------------------
 
-embed()
+plt.show()
+
