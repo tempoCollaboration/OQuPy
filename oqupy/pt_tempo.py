@@ -42,6 +42,7 @@ from typing import Dict, Optional, Text, Union
 from copy import copy
 
 import numpy as np
+from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
@@ -203,9 +204,12 @@ class PtTempo(BaseAPIClass):
                                 dtype=float)
             sum_west = np.ones(np.max(self._bath.west_degeneracy_map)+1,
                                dtype=float)
+            degeneracy_maps = [self._bath.north_degeneracy_map,
+                               self._bath.west_degeneracy_map]
         else:
             sum_north =  np.ones(self._dimension**2, dtype=float)
             sum_west = np.ones(self._dimension**2, dtype=float)
+            degeneracy_maps = None
         dkmax = self._parameters.dkmax
         if dkmax is None:
             dkmax = self._num_steps
@@ -219,29 +223,30 @@ class PtTempo(BaseAPIClass):
                 dkmax=dkmax,
                 epsrel=self._parameters.epsrel,
                 config=self._backend_config,
-                unique=self._unique,
-                north_degeneracy_map=self._bath.north_degeneracy_map,
-                west_degeneracy_map=self._bath.west_degeneracy_map,)
+                degeneracy_maps=degeneracy_maps)
 
-    def _influence(self, dk: int):
+    def _influence(self, dk: int) -> ndarray:
         """Create the influence functional matrix for a time step distance
         of dk. """
-        tmp_north_deg_positions = np.array([np.where( \
-            self._bath.north_degeneracy_map == i)[0][0] for i in \
-                range(np.max(self._bath.north_degeneracy_map)+1)])
-        tmp_west_deg_positions = np.array([np.where( \
-            self._bath.west_degeneracy_map == i)[0][0] for i in \
-                range(np.max(self._bath.west_degeneracy_map)+1)])
+        if self._unique:
+            tmp_north_deg_positions = np.array([np.where( \
+                self._bath.north_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(self._bath.north_degeneracy_map)+1)])
+            tmp_west_deg_positions = np.array([np.where( \
+                self._bath.west_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(self._bath.west_degeneracy_map)+1)])
+            tmp_deg_positions = [tmp_north_deg_positions,
+                                 tmp_west_deg_positions]
+        else:
+            tmp_deg_positions = None
 
         return influence_matrix(
             dk,
             parameters=self._parameters,
             correlations=self._correlations,
-            coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm,
-            unique=self._unique,
-            north_deg_positions=tmp_north_deg_positions,
-            west_deg_positions=tmp_west_deg_positions)
+            coupling_acomm=self._bath.coupling_acomm,
+            coupling_comm=self._bath.coupling_comm,
+            deg_positions=tmp_deg_positions)
 
     @property
     def dimension(self) -> np.ndarray:

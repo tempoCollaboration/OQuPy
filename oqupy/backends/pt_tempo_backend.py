@@ -15,10 +15,7 @@
 Module for tensor network process tensor tempo backend.
 """
 
-# pylint: disable=too-many-instance-attributes
-# Ignore the too many instance attributes 22/20 until code refactor
-
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, List
 
 import numpy as np
 from numpy import ndarray, zeros
@@ -39,17 +36,24 @@ class PtTempoBackend:
     influence: callable(int) -> ndarray
         Callable that takes an integer `step` and returns the influence super
         operator of that `step`.
-    unitary_transform: ndarray
-        ToDo
+    process_tensor: BaseProcessTensor
+        Todo
     sum_north: ndarray
         The summing vector for the north leggs.
     sum_west: ndarray
         The summing vector for the west leggs.
+    num_steps: int
+        Todo
     dkmax: int
         Number of influences to include. If ``dkmax == None`` then all
         influences are included.
     epsrel: float
         Maximal relative SVD truncation error.
+    config: Dict
+        Todo
+    degeneracy_maps: Optional[List[ndarray]] (default None)
+        List of two arrays to invert the degeneracy in the north and west
+        directions (respectively). If None then no degeneracy checks are used.
     """
     def __init__(
             self,
@@ -62,9 +66,7 @@ class PtTempoBackend:
             dkmax: int,
             epsrel: float,
             config: Dict,
-            unique: Optional[bool] = False,
-            north_degeneracy_map: Optional[ndarray] = None,
-            west_degeneracy_map: Optional[ndarray] = None,):
+            degeneracy_maps: Optional[List[ndarray]] = None):
         """Create a BasePtTempoBackend object. """
         self._dimension = dimension
         self._influence = influence
@@ -76,14 +78,7 @@ class PtTempoBackend:
         self._epsrel = epsrel
         self._config = config
         self._step = None
-        self._unique = unique
-        self._north_degeneracy_map = north_degeneracy_map
-        self._west_degeneracy_map = west_degeneracy_map
-        if unique:
-            assert north_degeneracy_map is not None, "north_degeneracy_map "\
-                "must be specified if unique."
-            assert west_degeneracy_map is not None, "west_degeneracy_map "\
-                "must be specified if unique."
+        self._degeneracy_maps = degeneracy_maps
 
         if "backend" in config:
             self._backend = config["backend"]
@@ -118,9 +113,10 @@ class PtTempoBackend:
 
         self._sum_north_scaled = self._sum_north * scale
 
-        if self._unique:
-            tmp_north_deg_num_vals = numpy_max(self._north_degeneracy_map)+1
-            tmp_west_deg_num_vals = numpy_max(self._west_degeneracy_map)+1
+        if self._degeneracy_maps is not None:
+            north_degeneracy_map, west_degeneracy_map = self._degeneracy_maps
+            tmp_north_deg_num_vals = numpy_max(north_degeneracy_map)+1
+            tmp_west_deg_num_vals = numpy_max(west_degeneracy_map)+1
 
         influences_mpo = []
         influences_mps = []
@@ -128,7 +124,7 @@ class PtTempoBackend:
             if i == 0:
                 infl = self._influence(i)
                 infl = infl / scale
-                if self._unique:
+                if self._degeneracy_maps is not None:
                     tmp_mpo = zeros((tmp_west_deg_num_vals,
                                      self._dimension**2,
                                      tmp_north_deg_num_vals),
@@ -137,11 +133,11 @@ class PtTempoBackend:
                                      tmp_north_deg_num_vals),
                                     dtype=complex)
                     for i1 in range(self._dimension**2):
-                        tmp_mpo[self._west_degeneracy_map[i1]][i1]\
-                            [self._north_degeneracy_map[i1]] = \
-                            infl[self._north_degeneracy_map[i1]]
-                        tmp_mps[i1][self._north_degeneracy_map[i1]] = \
-                            infl[self._north_degeneracy_map[i1]]/ scale
+                        tmp_mpo[west_degeneracy_map[i1]][i1]\
+                            [north_degeneracy_map[i1]] = \
+                            infl[north_degeneracy_map[i1]]
+                        tmp_mps[i1][north_degeneracy_map[i1]] = \
+                            infl[north_degeneracy_map[i1]]/ scale
                     infl_mpo = tmp_mpo
                     infl_mps = tmp_mps
                 else:

@@ -298,12 +298,17 @@ class Tempo(BaseAPIClass):
     def _influence(self, dk: int) -> ndarray:
         """Create the influence functional matrix for a time step distance
         of dk. """
-        tmp_north_deg_positions = np.array([np.where( \
-            self._bath.north_degeneracy_map == i)[0][0] for i in \
-                range(np.max(self._bath.north_degeneracy_map)+1)])
-        tmp_west_deg_positions = np.array([np.where( \
-            self._bath.west_degeneracy_map == i)[0][0] for i in \
-                range(np.max(self._bath.west_degeneracy_map)+1)])
+        if self._unique:
+            tmp_north_deg_positions = np.array([np.where( \
+                self._bath.north_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(self._bath.north_degeneracy_map)+1)])
+            tmp_west_deg_positions = np.array([np.where( \
+                self._bath.west_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(self._bath.west_degeneracy_map)+1)])
+            tmp_deg_positions = [tmp_north_deg_positions,
+                                 tmp_west_deg_positions]
+        else:
+            tmp_deg_positions = None
 
         return influence_matrix(
             dk,
@@ -311,9 +316,7 @@ class Tempo(BaseAPIClass):
             correlations=self._correlations,
             coupling_acomm=self._bath.coupling_acomm,
             coupling_comm=self._bath.coupling_comm,
-            unique=self._unique,
-            north_deg_positions=tmp_north_deg_positions,
-            west_deg_positions=tmp_west_deg_positions)
+            deg_positions=tmp_deg_positions)
 
     def _time(self, step: int) -> float:
         """Return the time that corresponds to the time step `step`. """
@@ -349,9 +352,12 @@ class Tempo(BaseAPIClass):
                                 dtype=float)
             sum_west = np.ones(np.max(self._bath.west_degeneracy_map)+1,
                                dtype=float)
+            degeneracy_maps = [self._bath.north_degeneracy_map,
+                               self._bath.west_degeneracy_map]
         else:
             sum_north = np.ones(dim**2, dtype=float)
             sum_west = np.ones(dim**2, dtype=float)
+            degeneracy_maps = None
         dkmax = self._parameters.dkmax
         epsrel = self._parameters.epsrel
         self._backend_instance = TempoBackend(
@@ -364,9 +370,7 @@ class Tempo(BaseAPIClass):
                 dkmax,
                 epsrel,
                 config=self._backend_config,
-                unique=self._unique,
-                north_degeneracy_map = self._bath.north_degeneracy_map,
-                west_degeneracy_map = self._bath.west_degeneracy_map,
+                degeneracy_maps=degeneracy_maps,
                 dim=dim)
 
     def _init_dynamics(self):
@@ -565,14 +569,15 @@ class MeanFieldTempo(BaseAPIClass):
             sum_west_list = [np.ones(np.max(bath.west_degeneracy_map)+1,
                                       dtype=float)
                 for bath in self._parsed_parameters_dict["bath"]]
+            degeneracy_maps_list = [[bath.north_degeneracy_map,
+                                     bath.west_degeneracy_map]
+                for bath in self._parsed_parameters_dict["bath"]]
         else:
             sum_north_list = [np.ones(dim**2, dtype=float)
                     for dim in self._parsed_parameters_dict["hs_dim"]]
             sum_west_list = [np.ones(dim**2, dtype=float)
                     for dim in self._parsed_parameters_dict["hs_dim"]]
-        north_degeneracy_list = [bath.north_degeneracy_map
-                for bath in self._parsed_parameters_dict["bath"]]
-        west_degeneracy_list = [bath.west_degeneracy_map
+            degeneracy_maps_list = [None
                 for bath in self._parsed_parameters_dict["bath"]]
         # N.B. For now all baths constrained to have same memory length
         dkmax = self._parameters.dkmax
@@ -590,9 +595,7 @@ class MeanFieldTempo(BaseAPIClass):
                 dkmax,
                 epsrel,
                 config=self._backend_config,
-                unique=self._unique,
-                north_degeneracy_list=north_degeneracy_list,
-                west_degeneracy_list=west_degeneracy_list,
+                degeneracy_maps_list=degeneracy_maps_list,
                 dim_list=hs_dim_list,
                 )
 
@@ -607,12 +610,17 @@ class MeanFieldTempo(BaseAPIClass):
     def _get_influence(self, bath) -> Callable[[int], ndarray]:
         """Create function that calculates the influence functional
         matrix for a bath. """
-        tmp_north_deg_positions = np.array([np.where( \
-            bath.north_degeneracy_map == i)[0][0] for i in \
-                range(np.max(bath.north_degeneracy_map)+1)])
-        tmp_west_deg_positions = np.array([np.where( \
-            bath.west_degeneracy_map == i)[0][0] for i in \
-                range(np.max(bath.west_degeneracy_map)+1)])
+        if self._unique:
+            tmp_north_deg_positions = np.array([np.where( \
+                bath.north_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(bath.north_degeneracy_map)+1)])
+            tmp_west_deg_positions = np.array([np.where( \
+                bath.west_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(bath.west_degeneracy_map)+1)])
+            tmp_deg_positions = [tmp_north_deg_positions,
+                                 tmp_west_deg_positions]
+        else:
+            tmp_deg_positions = None
         def influence(dk: int) -> ndarray:
             return influence_matrix(
                 dk,
@@ -620,9 +628,7 @@ class MeanFieldTempo(BaseAPIClass):
                 correlations=bath.correlations,
                 coupling_acomm=bath.coupling_acomm,
                 coupling_comm=bath.coupling_comm,
-                unique=self._unique,
-                north_deg_positions=tmp_north_deg_positions,
-                west_deg_positions=tmp_west_deg_positions)
+                deg_positions=tmp_deg_positions)
         return influence
 
     def _compute_field(self, step:int, state_list: List[ndarray],
@@ -733,9 +739,7 @@ def influence_matrix(
         correlations: BaseCorrelations,
         coupling_acomm: ndarray,
         coupling_comm: ndarray,
-        unique: Optional[bool] = False,
-        north_deg_positions: Optional[ndarray] = None,
-        west_deg_positions: Optional[ndarray] = None):
+        deg_positions: Optional[List[ndarray]] = None):
     """Compute the influence functional matrix. """
     dt = parameters.dt
     dkmax = parameters.dkmax
@@ -770,12 +774,14 @@ def influence_matrix(
     if dk == 0:
         infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
                                         + 1j*eta_dk.imag*op_p)))
-        if unique:
+        if deg_positions is not None:
+            north_deg_positions = deg_positions[0]
             infl = np.diag(infl)[north_deg_positions]
     else:
         infl = np.exp(-np.outer(eta_dk.real*op_m \
                                 + 1j*eta_dk.imag*op_p, op_m))
-        if unique:
+        if deg_positions is not None:
+            north_deg_positions, west_deg_positions = deg_positions
             infl=(infl[north_deg_positions].T)[west_deg_positions].T
 
     return infl
