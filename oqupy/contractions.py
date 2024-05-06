@@ -922,10 +922,6 @@ def compute_correlations(
                                    progress_type=progress_type)
 
     if time_order == "anti":
-        for i in range (len(corr[0][0])):
-            for j in range (len(corr[0][1])):
-                if corr[0][0][i] == corr[0][1][j]:
-                    corr[-1][i][j] = np.NaN + 1.0j*np.NaN
         corr = (corr[0][::-1], corr[-1].transpose())
     return corr
 
@@ -959,7 +955,8 @@ def _parse_times(times, max_step, dt, start_time):
         if index_end < 0 or index_end > max_step:
             raise IndexError("Specified end time is out of bound.")
         direction = 1 if index_start <= index_end else -1
-        ret_times = np.arange(max_step + 1)[index_start:index_end+direction:direction]
+        ret_times = np.arange(
+                max_step + 1)[index_start:index_end+direction:direction]
     else:
         raise TypeError("Parameters `times_a` and `times_b` must be either " \
             + "int, slice, list, or tuple.")
