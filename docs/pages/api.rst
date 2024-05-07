@@ -134,6 +134,11 @@ function :func:`oqupy.contractions.compute_dynamics_with_field`
   :class:`oqupy.system.MeanFieldSystem` and list of
   :class:`oqupy.control.Control` objects and list of
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
+  
+function :func:`oqupy.contractions.compute_correlations_nt`
+  Compute ordered multi-time correlations for given
+  :class:`oqupy.system.BaseSystem` and
+  :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 
 function :func:`oqupy.contractions.compute_correlations`
   Compute two time correlations for given
