@@ -48,13 +48,10 @@ class BaseTempoBackend:
         influences are included.
     epsrel: float
         Maximal relative SVD truncation error.
-    unique: Optional[bool]
-        Whether to use degeneracy checks
-    north_degeneracy_map: Optional[ndarray]
-        Array to invert the degeneracy in north direction
-    west_degeneracy_map: Optional[ndarray]
-        Array to invert the degeneracy in west direction
-    dim: Optional[int]
+    degeneracy_maps: Optional[List[ndarray]] (default None)
+        List of two arrays to invert the degeneracy in the north and west
+        direction. If None no degeneracy checks are used.
+    dim: Optional[int] (default None)
         Hilbert space dimension, needed if unique is True
     """
     def __init__(
@@ -67,9 +64,7 @@ class BaseTempoBackend:
             dkmax: int,
             epsrel: float,
             config: Optional[Dict] = None,
-            unique: Optional[bool] = False,
-            north_degeneracy_map: Optional[ndarray] = None,
-            west_degeneracy_map: Optional[ndarray] = None,
+            degeneracy_maps: Optional[List[ndarray]] = None,
             dim: Optional[int] = None):
         """Create a TempoBackend object. """
         self._initial_state = initial_state
@@ -87,17 +82,8 @@ class BaseTempoBackend:
         self._super_u = None
         self._super_u_dagg = None
         self._sum_north_na = None
-        self._unique = unique
-        self._north_degeneracy_map = north_degeneracy_map
-        self._west_degeneracy_map = west_degeneracy_map
+        self._degeneracy_maps = degeneracy_maps
         self._dim = dim
-        if unique:
-            assert north_degeneracy_map is not None, "north_degeneracy_map "\
-                    "must be specified if unique."
-            assert west_degeneracy_map is not None, "west_degeneracy_map "\
-                    "must be specified if unique."
-            assert dim is not None, "dim "\
-                    "must be specified if unique."
 
     @property
     def step(self) -> int:
@@ -125,22 +111,23 @@ class BaseTempoBackend:
         else:
             dkmax_pre_compute = self._dkmax + 1
 
-        if self._unique:
-            tmp_north_deg_num_vals = numpy_max(self._north_degeneracy_map)+1
-            tmp_west_deg_num_vals = numpy_max(self._west_degeneracy_map)+1
+        if self._degeneracy_maps is not None:
+            north_degeneracy_map, west_degeneracy_map =\
+                    self._degeneracy_maps
+            tmp_north_deg_num_vals = numpy_max(north_degeneracy_map)+1
+            tmp_west_deg_num_vals = numpy_max(west_degeneracy_map)+1
+
         for i in range(dkmax_pre_compute):
             infl = self._influence(i)
-
-
             if i == 0:
-                if self._unique:
+                if self._degeneracy_maps is not None:
                     tmp=zeros((tmp_west_deg_num_vals,self._dim**2,
                                tmp_north_deg_num_vals,self._dim**2),
                               dtype=complex)
                     for i1 in range(self._dim**2):
-                        tmp[self._west_degeneracy_map[i1]][i1] \
-                            [self._north_degeneracy_map[i1]][i1]= \
-                                infl[self._north_degeneracy_map[i1]]
+                        tmp[west_degeneracy_map[i1]][i1] \
+                            [north_degeneracy_map[i1]][i1]= \
+                                infl[north_degeneracy_map[i1]]
                     infl_four_legs = tmp
                 else:
                     infl_four_legs = create_delta(infl, [1, 0, 0, 1])
@@ -317,9 +304,7 @@ class TempoBackend(BaseTempoBackend):
             dkmax: int,
             epsrel: float,
             config: Optional[Dict] = None,
-            unique: Optional[bool] = False,
-            north_degeneracy_map: Optional[ndarray] = None,
-            west_degeneracy_map: Optional[ndarray] = None,
+            degeneracy_maps: Optional[List[ndarray]] = None,
             dim: Optional[int] = None):
         """Create a TempoBackend object. """
         super().__init__(
@@ -331,9 +316,7 @@ class TempoBackend(BaseTempoBackend):
             dkmax,
             epsrel,
             config,
-            unique,
-            north_degeneracy_map,
-            west_degeneracy_map,
+            degeneracy_maps,
             dim)
         self._propagators = propagators
 
@@ -401,14 +384,14 @@ class MeanFieldTempoBackend():
         Maximal relative SVD truncation error. Applies to all systems.
     unique: Optional[bool]
         Whether to use degeneracy checks.
-    north_degeneracy_list: Optional[List[ndarray]]
-        List of arrays to invert the degeneracy in north direction for each
-        system's environment.
-    west_degeneracy_list: Optional[List[ndarray]]
-        List of arrays to invert the degeneracy in west direction for each
-        system's environment.
+    degeneracy_maps_list: Optional[List[List[ndarray]]]
+        List of degeneracy maps for the systems. If specified, each degeneracy
+        map is a list of two arrays to invert the degeneracy in north and
+        west directions (respectively). If None, no degeneracy checking is
+        used.
     dim_list: Optional[List[int]]
-        Hilbert space dimension of each system, needed if unique is True.
+        Hilbert space dimension of each system, required is
+        degeneracy_maps_list is not None.
     """
     def __init__(
             self,
@@ -427,9 +410,7 @@ class MeanFieldTempoBackend():
             dkmax: int,
             epsrel: float,
             config: Dict,
-            unique: Optional[bool] = False,
-            north_degeneracy_list: Optional[List[ndarray]] = None,
-            west_degeneracy_list: Optional[List[ndarray]] = None,
+            degeneracy_maps_list: Optional[List[List[ndarray]]] = None,
             dim_list: Optional[List[ndarray]] = None,
             ):
         """Create a MeanFieldTempoBackend object. """
@@ -441,8 +422,7 @@ class MeanFieldTempoBackend():
         self._state_list = initial_state_list
         self._step = None
         self._propagators_list = propagators_list
-        self._north_degeneracy_list = north_degeneracy_list
-        self._west_degeneracy_list = west_degeneracy_list
+        self._degeneracy_map_list = degeneracy_maps_list
         # List of BaseTempoBackends use to calculate each system dynamics
         self._backend_list = [BaseTempoBackend(initial_state,
                          influence,
@@ -452,16 +432,14 @@ class MeanFieldTempoBackend():
                          dkmax,
                          epsrel,
                          config,
-                         unique,
-                         north_degeneracy_map,
-                         west_degeneracy_map,
+                         degeneracy_maps,
                          dim)
                          for initial_state, influence, unitary_transform,
-                         sum_north, sum_west, north_degeneracy_map,
-                         west_degeneracy_map, dim in zip(initial_state_list,
+                         sum_north, sum_west, degeneracy_maps,
+                         dim in zip(initial_state_list,
                              influence_list, unitary_transform_list,
                              sum_north_list, sum_west_list,
-                             north_degeneracy_list, west_degeneracy_list,
+                             degeneracy_maps_list,
                              dim_list)]
 
     @property
