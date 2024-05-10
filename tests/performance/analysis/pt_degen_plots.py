@@ -15,15 +15,15 @@
 Skript to plot the PT-TEBD performance analysis results.
 """
 
-import sys
-sys.path.insert(0,'.')
-
-import numpy as np
-import matplotlib.pyplot as plt
-import dill
-
-import oqupy
 import oqupy.operators as op
+import oqupy
+from operator import itemgetter
+import dill
+import matplotlib.pyplot as plt
+import numpy as np
+import sys
+sys.path.insert(0, '.')
+
 
 plt.style.use('./tests/performance/analysis/matplotlib_style.mplstyle')
 
@@ -37,3 +37,38 @@ styles = ['-', '--', '-.', ':']
 # PLOT
 # -----------------------------------------------------------------------------
 
+result_list = all_results[0]
+
+unique_wall_times = []
+unique_spin_array = []
+non_unique_wall_times = []
+non_unique_spin_array = []
+
+for results in result_list:
+
+    unique_wall_times.extend(list(map(itemgetter('walltime'),
+                                      filter(itemgetter('unique'),
+                                             results))))
+    unique_spin_array.extend(list(map(itemgetter('spin_size'),
+                                      filter(itemgetter('unique'),
+                                             results))))
+    non_unique_wall_times.extend(list(map(itemgetter('walltime'),
+                                          filter(lambda x: not x.get('unique'),
+                                                 results))))
+    non_unique_spin_array.extend(list(map(itemgetter('spin_size'),
+                                          filter(lambda x: not x.get('unique'),
+                                                 results))))
+
+fig, ax = plt.subplots()
+ax.plot(unique_spin_array, unique_wall_times, label="on")
+ax.plot(non_unique_spin_array, non_unique_wall_times, label="off")
+ax.legend(title="Unique")
+ax.set_yscale('log')
+ax.set_ylabel("Walltime (s)")
+ax.set_xlabel("Spin size")
+fig.savefig("./tests/data/plots/pt-degen-results.pdf")
+
+# -----------------------------------------------------------------------------
+
+
+plt.show()
