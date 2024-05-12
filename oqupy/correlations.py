@@ -24,6 +24,7 @@ from scipy import integrate
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.util import check_true
 
 #np.seterr(all='warn')
 # --- spectral density classes ------------------------------------------------
@@ -456,7 +457,8 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             self,
             tau: ArrayLike,
             epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> ArrayLike:
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            matsubara: Optional[bool] = False) -> ArrayLike:
         r"""
         Auto-correlation function associated to the spectral density at the
         given temperature :math:`T`
@@ -485,12 +487,13 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         # real and imaginary part of the integrand
-
+        if matsubara:
+            tau = -1j * tau
         # convention is tau.imag < 0
         if self.temperature == 0.0:
+            check_true(matsubara == False, 'Matsubara correlations only defined for temperature > 0')
             integrand = lambda w: self._spectral_density(w) * np.exp(-1j * w * tau)
         else:
-
             integrand = lambda w: self._spectral_density(w) \
                                   * (np.exp(-1j * tau * w) + np.exp(-(1 / self.temperature * w - 1j * tau * w))) \
                                   / (1 - np.exp(-w / self.temperature))
@@ -507,7 +510,8 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
                                           b=np.inf,
                                           epsrel=epsrel,
                                           limit=subdiv_limit)
-
+        if matsubara:
+            integral = integral.real
         return integral
 
     @functools.cache
@@ -515,7 +519,8 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             self,
             tau: ArrayLike,
             epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> ArrayLike:
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            matsubara: Optional[bool] = False) -> ArrayLike:
         r"""
         Auto-correlation function associated to the spectral density at the
         given temperature :math:`T`
@@ -544,27 +549,23 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         # real and imaginary part of the integrand
-
+        if matsubara:
+            tau = -1j * tau
         # convention is tau.imag < 0
         if self.temperature == 0.0:
-            # integrand = lambda w: self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+            check_true(matsubara == False, 'Matsubara correlations only defined for temperature > 0')
             def integrand(w):
                 return self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
         else:
-            #print(1 / self.temperature)
-            def integrand(w): # change of variable tau -> 1j*tau can give minus
-                if w/self.temperature < 1e2:
+            def integrand(w):
+                if w / self.temperature < 1e2:  # this is to stop overflow, error is order exp(-100)
                     inte = self._spectral_density(w) / w ** 2 * (
-                                  ((np.exp(-1j*tau * w) + np.exp(-(1 / self.temperature * w - 1j*tau * w)))
+                                  ((np.exp(-1j*tau * w) + np.exp(-(w / self.temperature - 1j*tau * w)))
                                    - np.exp(- w / self.temperature) - 1) / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
                 else:
                     #print('except')
                     inte = self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
                 return inte
-
-            # integrand = lambda w: self._spectral_density(w) / w ** 2 * (
-            #                       ((np.exp(-1j*tau * w) + np.exp(-(1 / self.temperature * w - 1j*tau * w)))
-            #                        - np.exp(- w / self.temperature) - 1) / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
 
         integral = _complex_integral(integrand,
                                      a=0.0,
@@ -581,9 +582,6 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
 
         return -integral
 
-    # Assuming perfect numerical integration over omega,
-    # this should give results identical to CustomSD
-    # without having to refer to INTEGRAND_DICT
     def correlation_2d_integral(
             self,
             delta: float,
@@ -637,21 +635,28 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             :math:`\eta_\mathrm{shape}`.
         """
         # real and imaginary part of the integrand
-        if time_2 == None:
-             time_2 = time_1
-        if matsubara: 
-            time_1 = -1j * time_1
-            time_2 = -1j * time_2 # only needed for nonstationary baths
-            delta = -1j * delta
+        print(time_1, time_2)
+        if shape == ('square' or 'upper-triangle'):
+            time_2 = time_1
 
-        if time_1 == 0.0:
-            integral = self.eta_function(delta, epsrel=epsrel, subdiv_limit=subdiv_limit)
+        kwargs = {'epsrel': epsrel, 'subdiv_limit': subdiv_limit, 'matsubara': matsubara}
 
-        else:
-            integral = self.eta_function(time_1 + delta, epsrel=epsrel, subdiv_limit=subdiv_limit) \
-                     - 2 * self.eta_function(time_1, epsrel=epsrel, subdiv_limit=subdiv_limit) \
-                    + self.eta_function(time_1 - delta, epsrel=epsrel, subdiv_limit=subdiv_limit)
+        if time_1 == 0.0 or shape == 'upper-triangle':
+            integral = self.eta_function(delta, **kwargs)
+        # else:
+        #     integral = self.eta_function(time_1 + delta, **kwargs) \
+        #              - 2 * self.eta_function(time_1, **kwargs) \
+        #             + self.eta_function(time_1 - delta, **kwargs)
+        else:  # make rectangle work
+            print(shape)
+            print(time_1, time_2)
+            integral = self.eta_function(time_1 + delta, **kwargs) \
+                     - self.eta_function(time_1, **kwargs) \
+                    - self.eta_function(time_2, **kwargs) \
+                    + self.eta_function(time_2 - delta, **kwargs)
 
+        if matsubara:
+            integral = integral.real
         return integral
 
 
