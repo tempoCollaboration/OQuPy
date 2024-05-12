@@ -45,6 +45,13 @@ def test_gibbs_tempo():
                               bath=bath,
                               parameters=gibbs_param)
 
+    system = oqupy.System(0.5 * oqupy.operators.sigma("x"), gammas=[1], lindblad_operators=[0.5 * oqupy.operators.sigma("x")])
+
+    with pytest.raises(Warning):
+        gibbs_sys = tempo.GibbsTempo(system=system,
+                                     bath=bath,
+                                     parameters=gibbs_param)
+
     assert gibbs_sys.dimension == 2
     assert gibbs_sys.temperature == temperature
 
@@ -69,18 +76,20 @@ def test_gibbs_tempo_bad_input():
 
     dim = 2
     good_system = oqupy.System(0.5 * oqupy.operators.spin_x(dim))
-    bad_system = oqupy.System(0.5 * oqupy.operators.spin_x(dim + 1))
+    bad_system_value = oqupy.System( 0.5 * oqupy.operators.spin_x(dim + 1))
+    bad_system_type = oqupy.TimeDependentSystem(lambda t: 0.5 * oqupy.operators.spin_x(dim))
 
     good_bath = oqupy.Bath(0.5 * oqupy.operators.spin_z(dim), correlations)
     bad_bath = oqupy.Bath(0.5 * oqupy.operators.spin_z(dim + 1), correlations)
 
     good_parameters = tempo.GibbsParameters(tmp,8, 1.0e-5, name="name", description="desc")
-    bad_parameters = tempo.GibbsParameters(tmp + 1, 8, 1.0e-5, name="name", description="desc")
+    bad_parameters_value = tempo.GibbsParameters(tmp + 1, 8, 1.0e-5, name="name", description="desc")
+    bad_parameters_type = tempo.TempoParameters(0.1, 1.0e-5, name="name", description="desc")
 
     keys = ['system', 'bath', 'parameters']
     good_inputs = [good_system, good_bath, good_parameters]
-    bad_types = ['x', 'x', 'x']
-    bad_values = [bad_system, bad_bath, bad_parameters]
+    bad_types = [bad_system_type, 'x', bad_parameters_type]
+    bad_values = [bad_system_value, bad_bath, bad_parameters_value]
 
     for k, t, v in zip(keys, bad_types, bad_values):
         input = dict(zip(keys, good_inputs))

@@ -503,7 +503,7 @@ class Tempo(BaseAPIClass):
         return self._dynamics
 
 
-class GibbsTempo(BaseAPIClass):  ## warn about gammas
+class GibbsTempo(BaseAPIClass):
     """
     Class representing the entire TEMPO tensornetwork as introduced in
     [Strathearn2018].
@@ -540,6 +540,8 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
         super().__init__(name, description)
 
         check_isinstance(system, System, name='system')
+        if len(system.gammas) > 0:
+            raise Warning('Markovian decay ignored for GibbsTempo')
         check_isinstance(bath, Bath, name='bath')
         check_isinstance(parameters, GibbsParameters, name='parameters')
 

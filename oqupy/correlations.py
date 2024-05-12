@@ -579,7 +579,8 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
                                           b=np.inf,
                                           epsrel=epsrel,
                                           limit=subdiv_limit)
-
+        if matsubara:
+            integral = integral.real
         return -integral
 
     def correlation_2d_integral(
@@ -634,8 +635,6 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
-        # real and imaginary part of the integrand
-        print(time_1, time_2)
         if shape == ('square' or 'upper-triangle'):
             time_2 = time_1
 
@@ -643,13 +642,7 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
 
         if time_1 == 0.0 or shape == 'upper-triangle':
             integral = self.eta_function(delta, **kwargs)
-        # else:
-        #     integral = self.eta_function(time_1 + delta, **kwargs) \
-        #              - 2 * self.eta_function(time_1, **kwargs) \
-        #             + self.eta_function(time_1 - delta, **kwargs)
-        else:  # make rectangle work
-            print(shape)
-            print(time_1, time_2)
+        else:
             integral = self.eta_function(time_1 + delta, **kwargs) \
                      - self.eta_function(time_1, **kwargs) \
                     - self.eta_function(time_2, **kwargs) \
