@@ -174,7 +174,7 @@ print("The maximal fidelity was found to be : ",1-optimization_result.fun)
 print("The Jacobian was found to be : ",optimization_result.jac)
 
 optimized_params = optimization_result.x
-reshapedparas=[i for i in (optimized_params.reshape((-1,num_params))).tolist() for j in range(2)]
+reshapedparas=np.array([i for i in (optimized_params.reshape((-1,num_params))).tolist() for j in range(2)])
 
 # Input optimized controls into state_gradient to show dynamics of system under optimized fields
 optimized_dynamics = state_gradient(
@@ -182,15 +182,14 @@ optimized_dynamics = state_gradient(
         initial_state=initial_state,
         target_derivative=target_derivative,
         process_tensors=[process_tensor],
-        parameters=reshapedparas,
-        time_steps=timesteps)
+        parameters=reshapedparas)
 
 fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1) 
 fig.suptitle("Optimisation results")
 
 field_labels = ["x","y","z"]
 for i in range(0,num_params):
-    ax1.plot(timesteps,optimization_result['x'][i::num_params],label=field_labels[i])
+     ax1.plot(t[:-1],optimization_result['x'][i::num_params],label=field_labels[i])
 ax1.set_ylabel(r"$h_i$",rotation=0,fontsize=16)
 ax1.set_xlabel("t")
 ax1.legend()
@@ -210,8 +209,7 @@ ax2.set_ylabel(r"$\langle \sigma \rangle$",rotation=0,fontsize=16)
 ax2.set_xlabel("t")
 
 plt.legend()
+plt.show()
 
 # -----------------------------------------------------------------------------
-
-plt.show()
 

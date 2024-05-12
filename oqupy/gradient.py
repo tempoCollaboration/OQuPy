@@ -70,7 +70,7 @@ def state_gradient(
     --------
     return_dict: Dict
         The return dictionary has the fields:
-        'final state' : the final state after evolving the initial state
+        'final_state' : the final state after evolving the initial state
         'gradprop' : derivatives of Z with respect to half-step propagators
         'gradient' : derivatives of Z with respect to the parameters
         'dynamics' : the dynamics of the system
@@ -217,8 +217,13 @@ def compute_gradient_and_dynamics(
 
     Returns:
     --------
-    propagator_deriviatives: List[ndarray]
-        ToDo ???
+    propagator_derivatives: List[ndarray]
+        List of (4,4,4,4)-tuples of length N. The nth entry corresponds to the derivative of the objective function
+        with respect to a propagator at the nth time-step. The axis are ordered as follows:
+            * [0] : output leg of 2nd half-propagator from step (n-1)
+            * [1] : input system leg of MPO from step n
+            * [2] : output system leg of MPO from step n
+            * [3] : input lef of 1st half-propagator from step (n+1)
     dynamics: Dynamics
         The system dynamics for the given system Hamiltonian
         (accounting for the interaction with the environment).
@@ -418,8 +423,12 @@ def compute_gradient_and_dynamics(
 
         deriv = deriv_forwardprop_tensor @ backprop_tensor
 
-        # combined_deriv_list.append(tn.replicate_nodes([deriv])[0])
-        combined_deriv_list.append(deriv.get_tensor()) # ???
+        combined_deriv_list.append(deriv.get_tensor()) 
+        # ordering of axis:
+        # deriv[0] : output leg of 2nd half-propagator from step (n-1)
+        # deriv[1] : input system leg of MPO from step n
+        # deriv[2] : output system leg of MPO from step n
+        # deriv[3] : input lef of 1st half-propagator from step (n+1)
 
     propagator_derivatives = list(reversed(combined_deriv_list))
 
