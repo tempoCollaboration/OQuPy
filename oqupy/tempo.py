@@ -50,7 +50,6 @@ from oqupy.backends.tempo_backend import TIBaseBackend
 from oqupy.util import check_convert, check_isinstance, check_true,\
         get_progress
 
-
 class TempoParameters(BaseAPIClass):
     r"""
     Parameters for the TEMPO computation.
@@ -221,7 +220,7 @@ class TempoParameters(BaseAPIClass):
 #
 class GibbsParameters(BaseAPIClass):
     r"""
-    Parameters for the TEMPO computation.
+    Parameters for the GibbsTEMPO computation.
 
     Parameters
     ----------
@@ -267,48 +266,22 @@ class GibbsParameters(BaseAPIClass):
             temperature: float,
             n_steps: int,
             epsrel: float,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
-        """Create a TempoParameters object."""
+        """Create a GibbsParameters object."""
 
-        try:
-            tmp_temp = float(temperature)
-        except Exception as e:
-            raise TypeError("Argument 'dt' must be float.") from e
-        if tmp_temp <= 0.0:
-            raise ValueError("Argument 'dt' must be positive.")
-        self._temperature = tmp_temp
+        check_isinstance(temperature, (float, int), name='temperature')
+        check_isinstance(n_steps, int, name='n_steps')
+        check_isinstance(epsrel, (float, int), name='epsrel')
 
-        try:
-            tmp_n = int(n_steps)
-        except Exception as e:
-            raise TypeError("Argument 'n_steps' must be integer.") from e
-        if tmp_n <= 0:
-            raise ValueError("Argument 'n_steps' must be positive.")
-        self._temperature = tmp_temp
+        check_true(temperature > 0.0, "Argument 'temperature' must be positive.")
+        check_true(n_steps > 1, "Argument 'n_steps' must be greater than 1.")
+        check_true(epsrel > 0.0, "Argument 'epsrel' must be positive.")
 
-        try:
-            tmp_epsrel = float(epsrel)
-        except Exception as e:
-            raise TypeError("Argument 'epsrel' must be float.") from e
-        if tmp_epsrel <= 0.0:
-            raise ValueError("Argument 'epsrel' must be positive.")
-        self._epsrel = tmp_epsrel
-
-        try:
-            if subdiv_limit is None:
-                tmp_subdiv_limit = None
-            else:
-                tmp_subdiv_limit = int(subdiv_limit)
-        except Exception as e:
-            raise TypeError("Argument 'subdiv_limit' must be int or "\
-                    "None.") from e
-        if tmp_subdiv_limit is not None and tmp_subdiv_limit < 0:
-            raise ValueError(
-            "Argument 'subdiv_limit' must be non-negative or None.")
-        self._subdiv_limit = tmp_subdiv_limit
-
+        self._temperature = temperature
+        self._n_steps = n_steps
+        self._dt = 1 / (temperature * n_steps)
+        self._epsrel = epsrel
 
         super().__init__(name, description)
 
@@ -317,29 +290,29 @@ class GibbsParameters(BaseAPIClass):
         ret.append(super().__str__())
         ret.append("  temperature          = {} \n".format(self.temperature))
         ret.append("  nsteps               = {}  \n".format(self.n_steps))
+        ret.append("  dt                   = {}  \n".format(self.dt))
         ret.append("  epsrel               = {} \n".format(self.epsrel))
         return "".join(ret)
 
     @property
     def temperature(self) -> float:
-        """Length of a time step."""
+        """Temperature."""
         return self._temperature
 
     @property
-    def n_steps(self) -> float:
-        """Length of a time step."""
+    def n_steps(self) -> int:
+        """Number of timesteps."""
         return self._n_steps
+
+    @property
+    def dt(self) -> float:
+        """Length of a time step."""
+        return self._dt
 
     @property
     def epsrel(self) -> float:
         """The maximal relative error in the singular value truncation."""
         return self._epsrel
-
-    @property
-    def subdiv_limit(self) -> int:
-        """The maximum number of subdivisions used during the adaptive
-        algorithm when integrating a time-dependent Liouvillian."""
-        return self._subdiv_limit
 
 
 class Tempo(BaseAPIClass):
@@ -528,200 +501,6 @@ class Tempo(BaseAPIClass):
         """Returns the instance of Dynamics associated with the Tempo object.
         """
         return self._dynamics
-#
-# class New_Tempo(BaseAPIClass):
-#     """
-#     Class representing the entire TEMPO tensornetwork as introduced in
-#     [Strathearn2018].
-#
-#     Parameters
-#     ----------
-#     system: System or TimeDependentSystem
-#         The system.
-#     bath: Bath
-#         The Bath (includes the coupling operator to the system).
-#     parameters: TempoParameters
-#         The parameters for the TEMPO computation.
-#     initial_state: ndarray
-#         The initial density matrix of the system.
-#     start_time: float
-#         The start time.
-#     backend_config: dict (default = None)
-#         The configuration of the backend. If `backend_config` is
-#         ``None`` then the default backend configuration is used.
-#     name: str (default = None)
-#         An optional name for the tempo object.
-#     description: str (default = None)
-#         An optional description of the tempo object.
-#     """
-#     def __init__(
-#             self,
-#             system: Union[System, TimeDependentSystem],
-#             bath: Bath,
-#             parameters: TempoParameters,
-#             initial_state: ndarray,
-#             start_time: float,
-#             backend_config: Optional[Dict] = None,
-#             name: Optional[Text] = None,
-#             description: Optional[Text] = None) -> None:
-#         """Create a Tempo object. """
-#         super().__init__(name, description)
-#
-#         assert isinstance(bath, Bath), \
-#             "Argument 'bath' must be an instance of Bath."
-#         self._bath = bath
-#         self._system, self._initial_state, self._bath, self._dimension = \
-#                 _tempo_physical_input_parse(False, system, initial_state, bath)
-#
-#         self._correlations = self._bath.correlations
-#
-#         assert isinstance(parameters, TempoParameters), \
-#             "Argument 'parameters' must be an instance of TempoParameters."
-#         self._parameters = parameters
-#
-#         try:
-#             tmp_start_time = float(start_time)
-#         except Exception as e:
-#             raise TypeError("Start time must be a float.") from e
-#         self._start_time = tmp_start_time
-#
-#         if backend_config is None:
-#             self._backend_config = TEMPO_BACKEND_CONFIG
-#         else:
-#             self._backend_config = backend_config
-#
-#         tmp_coupling_comm = commutator(self._bath._coupling_operator)
-#         tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
-#         self._coupling_comm = tmp_coupling_comm.diagonal()
-#         self._coupling_acomm = tmp_coupling_acomm.diagonal()
-#
-#         self._dynamics = None
-#         self._backend_instance = None
-#         self._equilibration_backend_instance = None
-#
-#         assert self._system.dimension == self._dimension, \
-#                "Hilbertspace dimensions are unequal: " \
-#             + "system ({}), ".format(self._system.dimension) \
-#             + "initial state ({}), ".format(self._dimension) \
-#             + "and bath coupling ({}), ".format(self._bath.dimension)
-#
-#         self._prepare_backend()
-#
-#     def _influence(self, dk: int) -> ndarray:
-#         """Create the influence functional matrix for a time step distance
-#         of dk. """
-#         return influence_matrix2(
-#             dk,
-#             parameters=self._parameters,
-#             correlations=self._correlations,
-#             coupling_acomm=self._coupling_acomm,
-#             coupling_comm=self._coupling_comm,
-#             matsubara=True)
-#
-#     def _time(self, step: int) -> float:
-#         """Return the time that corresponds to the time step `step`. """
-#         return self._start_time + float(step)*self._parameters.dt
-#
-#     def _get_num_step(self,
-#             start_step: int,
-#             end_time: float) -> Tuple[int, int]:
-#         """Return the number of steps required from start_step to reach
-#         end_time"""
-#         print(self._parameters.dt)
-#         print(end_time)
-#         end_step = int((end_time - self._start_time)/self._parameters.dt)
-#         num_step = max(0, end_step - start_step)
-#         return num_step
-#
-#     @property
-#     def dimension(self) -> ndarray:
-#         """Hilbert space dimension. """
-#         return copy(self._dimension)
-#
-#     def _prepare_backend(self):
-#         """Create and initialize the TEMPO backend. """
-#         dim = self._dimension
-#         initial_state = self._initial_state.reshape(dim**2)
-#         influence = self._influence
-#         unitary_transform = self._bath.unitary_transform
-#         propagators = self._system.get_imaginary_propagators(
-#                 self._parameters.dt,
-#                 self._start_time,
-#                 self._parameters.subdiv_limit,
-#                 self._parameters.liouvillian_epsrel)
-#         sum_north = np.array([1.0]*(dim**2))
-#         sum_west = np.array([1.0]*(dim**2))
-#         dkmax = self._parameters.dkmax
-#         epsrel = self._parameters.epsrel
-#         self._backend_instance = TempoBackend(
-#                 initial_state,
-#                 influence,
-#                 unitary_transform,
-#                 propagators,
-#                 sum_north,
-#                 sum_west,
-#                 dkmax,
-#                 epsrel,
-#                 config=self._backend_config)
-#
-#     def _init_dynamics(self):
-#         """Create a Dynamics object with metadata from the Tempo object. """
-#         name = None
-#         description = "computed from '{}' tempo".format(self.name)
-#         self._dynamics = Dynamics(name=name,
-#                                   description=description)
-#
-#     def compute(
-#             self,
-#             end_time: float,
-#             progress_type: Text = None) -> Dynamics:
-#         """
-#         Propagate (or continue to propagate) the TEMPO tensor network to
-#         time `end_time`.
-#
-#         Parameters
-#         ----------
-#         end_time: float
-#             The time to which the TEMPO should be computed.
-#         progress_type: str (default = None)
-#             The progress report type during the computation. Types are:
-#             {``'silent'``, ``'simple'``, ``'bar'``}. If `None` then
-#             the default progress type is used.
-#
-#         Returns
-#         -------
-#         dynamics: Dynamics
-#             The instance of Dynamics associated with the TEMPO object.
-#         """
-#         tmp_end_time = _check_time(end_time)
-#
-#         dim = self._dimension
-#         if self._backend_instance.step is None:
-#             step, state = self._backend_instance.initialize()
-#             self._init_dynamics()
-#             self._dynamics.add(self._time(step), state.reshape(dim, dim))
-#
-#         start_step = self._backend_instance.step
-#         num_step = self._get_num_step(start_step, tmp_end_time)
-#         print(start_step)
-#         print(num_step)
-#
-#
-#         progress = get_progress(progress_type)
-#         title = "--> TEMPO computation:"
-#         with progress(num_step, title) as prog_bar:
-#             for i in range(num_step):
-#                 prog_bar.update(i)
-#                 step, state = self._backend_instance.compute_step()
-#                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
-#             prog_bar.update(num_step)
-#
-#         return self._dynamics
-#
-#     def get_dynamics(self) -> Dynamics:
-#         """Returns the instance of Dynamics associated with the Tempo object.
-#         """
-#         return self._dynamics
 
 
 class GibbsTempo(BaseAPIClass):  ## warn about gammas
@@ -760,21 +539,19 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
         """Create a Tempo object. """
         super().__init__(name, description)
 
-        assert isinstance(bath, Bath), \
-            "Argument 'bath' must be an instance of Bath."
-        self._bath = bath
+        check_isinstance(system, System, name='system')
+        check_isinstance(bath, Bath, name='bath')
+        check_isinstance(parameters, GibbsParameters, name='parameters')
+
+        check_true(bath.correlations.temperature == parameters.temperature,
+                   "Bath temperature and parameters temperature must be equal") # this is annoying
+
         self._system, self._initial_state, self._bath, self._dimension = \
-                _tempo_physical_input_parse(False, system, None, bath)
+            _tempo_physical_input_parse(False, system, None, bath)
 
-        self._correlations = self._bath.correlations
-
-        assert self._correlations.temperature > 0, \
-        "Temperature must be greater than zero"
-        self._temperature = self._correlations.temperature
-
-        assert isinstance(parameters, TempoParameters), \
-            "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
+        self._correlations = self._bath.correlations
+        self._temperature = self._correlations.temperature
 
         if backend_config is None:
             self._backend_config = TEMPO_BACKEND_CONFIG
@@ -783,29 +560,12 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
 
         self._dynamics = None
         self._backend_instance = None
-        self._start_time = 0
-        self._end_time = 1 / self._temperature
-
-        assert self._system.dimension == self._dimension, \
-               "Hilbertspace dimensions are unequal: " \
-            + "system ({}), ".format(self._system.dimension) \
-            + "initial state ({}), ".format(self._dimension) \
-            + "and bath coupling ({}), ".format(self._bath.dimension)
 
         self._prepare_backend()
 
     def _time(self, step: int) -> float:
         """Return the time that corresponds to the time step `step`. """
-        return self._start_time + float(step)*self._parameters.dt
-
-    def _get_num_step(self,
-            start_step: int,
-            end_time: float) -> Tuple[int, int]:
-        """Return the number of steps required from start_step to reach
-        end_time"""
-        end_step = int((end_time - self._start_time)/self._parameters.dt)
-        num_step = max(0, end_step - start_step)
-        return num_step
+        return float(step)*self._parameters.dt
 
     @property
     def dimension(self) -> ndarray:
@@ -826,13 +586,14 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
                 self._parameters.dt,
                 k * self._parameters.dt, matsubara=True)
 
-        operators = (-self._bath._coupling_operator.diagonal(), self._bath._coupling_operator.diagonal(), np.zeros((dim,)))
+        operators = (-self._bath._coupling_operator.diagonal(),
+                     self._bath._coupling_operator.diagonal(),
+                     np.zeros((dim,)))
 
         unitary_transform = self._bath.unitary_transform
 
         epsrel = self._parameters.epsrel
-        max_step = int(self._end_time / self._parameters.dt)
-        self._parameters._dt = self._end_time / max_step  ## NOT IDEAL
+        max_step = self._parameters.n_steps
         propagators = self._system.get_unitary_propagators(
             - 1j * self._parameters.dt, 0, 0, 0)
         self._backend_instance = TIBaseBackend(
@@ -844,7 +605,6 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
                 max_step=max_step,
                 config=self._backend_config)
 
-
     def _init_dynamics(self):
         """Create a Dynamics object with metadata from the Tempo object. """
         name = None
@@ -852,7 +612,7 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
         self._dynamics = Dynamics(name=name,
                                   description=description)
 
-    def compute_dynamics(
+    def compute(
             self,
             progress_type: Text = None) -> Dynamics:
         """
@@ -873,229 +633,38 @@ class GibbsTempo(BaseAPIClass):  ## warn about gammas
         dynamics: Dynamics
             The instance of Dynamics associated with the TEMPO object.
         """
-        tmp_end_time = self._end_time
 
-        dim = self._dimension
         if self._backend_instance.step is None:
-            step, state = self._backend_instance.initialise()
+            step, state = self._backend_instance.initialise()  # initialising precomputes two steps
             self._init_dynamics()
-            for ii, d in enumerate(self._backend_instance.data):
-                self._dynamics.add(self._time(ii), d)
-            #self._dynamics.add(self._time(step), state)
+            for ii, state in enumerate(self._backend_instance.data):
+                self._dynamics.add(self._time(ii), state)
+            #  dynamics now has three entries including initial state
 
-        start_step = self._backend_instance.step
-        num_step = self._get_num_step(start_step, tmp_end_time) - 1
+        num_step = self._parameters.n_steps - 2
 
         progress = get_progress(progress_type)
         title = "--> GibbsTEMPO computation:"
-        with progress(num_step, title) as prog_bar:
+        with progress(num_step + 2, title) as prog_bar:
             for i in range(num_step):
-                prog_bar.update(i)
+                prog_bar.update(i + 2)
                 step, state = self._backend_instance.compute_step()
                 self._dynamics.add(self._time(step+1), state)
-            prog_bar.update(num_step)
+            prog_bar.update(num_step + 2)
 
         return self._dynamics
 
     def get_dynamics(self) -> Dynamics:
-        """Returns the instance of Dynamics associated with the Tempo object.
+        """Returns the instance of Dynamics associated with the GibbsTempo object.
         """
         return self._dynamics
 
     def get_state(self) -> ndarray:
-        """Returns the instance of Dynamics associated with the Tempo object.
+        """Returns the Gibbs state associated with the GibbsTempo object.
         """
-        return self._dynamics.states[-1]
-
-#
-# class ThermalState(ThermalBase):
-#     """
-#     Class representing the entire TEMPO tensornetwork as introduced in
-#     [Strathearn2018].
-#
-#     Parameters
-#     ----------
-#     system: System or TimeDependentSystem
-#         The system.
-#     bath: Bath
-#         The Bath (includes the coupling operator to the system).
-#     parameters: TempoParameters
-#         The parameters for the TEMPO computation.
-#     initial_state: ndarray
-#         The initial density matrix of the system.
-#     start_time: float
-#         The start time.
-#     backend_config: dict (default = None)
-#         The configuration of the backend. If `backend_config` is
-#         ``None`` then the default backend configuration is used.
-#     name: str (default = None)
-#         An optional name for the tempo object.
-#     description: str (default = None)
-#         An optional description of the tempo object.
-#     """
-#
-#     def __init__(
-#             self,
-#             system: Union[System, TimeDependentSystem],
-#             bath: ThermalBath,  # REPLACE THERMALBATH -> BATH
-#             parameters: TempoParameters,
-#             start_time: float,
-#             initial_state: Optional[ndarray] = None,
-#             backend_config: Optional[Dict] = None,
-#             name: Optional[Text] = None,
-#             description: Optional[Text] = None) -> None:
-#         """Create a Tempo object. """
-#         super().__init__(name, description)
-#
-#         assert isinstance(bath, Bath), \
-#             "Argument 'bath' must be an instance of Bath."
-#         self._bath = bath
-#         self._system, self._initial_state, self._bath, self._dimension = \
-#             _tempo_physical_input_parse(False, system, initial_state, bath)
-#
-#         self._correlations = self._bath.correlations
-#
-#         assert isinstance(parameters, TempoParameters), \
-#             "Argument 'parameters' must be an instance of TempoParameters."
-#         self._parameters = parameters
-#
-#         try:
-#             tmp_start_time = float(start_time)
-#         except Exception as e:
-#             raise TypeError("Start time must be a float.") from e
-#         self._start_time = tmp_start_time
-#
-#         if backend_config is None:
-#             self._backend_config = TEMPO_BACKEND_CONFIG
-#         else:
-#             self._backend_config = backend_config
-#
-#         self._dynamics = None
-#         self._backend_instance = None
-#
-#         assert self._system.dimension == self._dimension, \
-#             "Hilbertspace dimensions are unequal: " \
-#             + "system ({}), ".format(self._system.dimension) \
-#             + "initial state ({}), ".format(self._dimension) \
-#             + "and bath coupling ({}), ".format(self._bath.dimension)
-#
-#         self._prepare_backend()
-#
-#     def _influence(self, dk: int) -> ndarray:  #########################################
-#         """Create the influence functional matrix for a time step distance
-#         of dk. """
-#         return influence_matrix(
-#             dk,
-#             parameters=self._parameters,
-#             correlations=self._correlations,
-#             coupling_acomm=self._coupling_acomm,
-#             coupling_comm=self._coupling_comm)
-#
-#     def _time(self, step: int) -> float:
-#         """Return the time that corresponds to the time step `step`. """
-#         return self._start_time + float(step) * self._parameters.dt
-#
-#     def _get_num_step(self,
-#                       start_step: int,
-#                       end_time: float) -> Tuple[int, int]:
-#         """Return the number of steps required from start_step to reach
-#         end_time"""
-#         end_step = int((end_time - self._start_time) / self._parameters.dt)
-#         num_step = max(0, end_step - start_step)
-#         return num_step
-#
-#     @property
-#     def dimension(self) -> ndarray:
-#         """Hilbert space dimension. """
-#         return copy(self._dimension)
-#
-#     @property
-#     def temperature(self) -> float:
-#         """Hilbert space dimension. """
-#         return copy(self._bath.temperature())
-#
-#     def _prepare_backend(self):
-#         """Create and initialize the TEMPO backend. """
-#         dim = self._dimension
-#         if self._initial_state is not None:
-#             initial_state = self._initial_state.reshape(dim ** 2)
-#         influence = self._influence
-#         unitary_transform = self._bath.unitary_transform
-#         propagators = self._system.get_propagators(
-#             self._parameters.dt,
-#             self._start_time,
-#             self._parameters.subdiv_limit,
-#             self._parameters.liouvillian_epsrel)
-#         sum_north = np.array([1.0] * (dim ** 2))
-#         sum_west = np.array([1.0] * (dim ** 2))
-#         dkmax = self._parameters.dkmax
-#         epsrel = self._parameters.epsrel
-#         self._backend_instance = TempoBackend(
-#             influence,
-#             unitary_transform,
-#             propagators,
-#             sum_north,
-#             sum_west,
-#             dkmax,
-#             epsrel,
-#             initial_state,
-#             config=self._backend_config)
-#
-#     def _init_dynamics(self):
-#         """Create a Dynamics object with metadata from the Tempo object. """
-#         name = None
-#         description = "computed from '{}' tempo".format(self.name)
-#         self._dynamics = Dynamics(name=name,
-#                                   description=description)
-#
-#     def compute(
-#             self,
-#             end_time: float,
-#             progress_type: Text = None) -> Dynamics:
-#         """
-#         Propagate (or continue to propagate) the TEMPO tensor network to
-#         time `end_time`.
-#
-#         Parameters
-#         ----------
-#         end_time: float
-#             The time to which the TEMPO should be computed.
-#         progress_type: str (default = None)
-#             The progress report type during the computation. Types are:
-#             {``'silent'``, ``'simple'``, ``'bar'``}. If `None` then
-#             the default progress type is used.
-#
-#         Returns
-#         -------
-#         dynamics: Dynamics
-#             The instance of Dynamics associated with the TEMPO object.
-#         """
-#         tmp_end_time = _check_time(end_time)
-#
-#         dim = self._dimension
-#         if self._backend_instance.step is None:
-#             step, state = self._backend_instance.initialize()
-#             self._init_dynamics()
-#             self._dynamics.add(self._time(step), state.reshape(dim, dim))
-#
-#         start_step = self._backend_instance.step
-#         num_step = self._get_num_step(start_step, tmp_end_time)
-#
-#         progress = get_progress(progress_type)
-#         title = "--> TEMPO computation:"
-#         with progress(num_step, title) as prog_bar:
-#             for i in range(num_step):
-#                 prog_bar.update(i)
-#                 step, state = self._backend_instance.compute_step()
-#                 self._dynamics.add(self._time(step), state.reshape(dim, dim))
-#             prog_bar.update(num_step)
-#
-#         return self._dynamics
-#
-#     def get_dynamics(self) -> Dynamics:
-#         """Returns the instance of Dynamics associated with the Tempo object.
-#         """
-#         return self._dynamics
+        state = self._dynamics.states[-1]
+        state = state / state.trace()
+        return state
 
 class MeanFieldTempo(BaseAPIClass):
     r"""
@@ -1408,56 +977,56 @@ def influence_matrix(
 
     return infl
 
-def influence_matrix2(
-        dk: int,
-        parameters: TempoParameters,
-        correlations: BaseCorrelations,
-        coupling_acomm: ndarray,
-        coupling_comm: ndarray,
-        matsubara: Optional[bool] = False):
-    """Compute the influence functional matrix. """
-    dt = parameters.dt
-    dkmax = parameters.dkmax
-
-    if dk == 0:
-        time_1 = 0.0
-        time_2 = None
-        shape = "upper-triangle"
-    elif dk < 0:
-        time_1 = float(dkmax) * dt
-        if parameters.add_correlation_time is not None:
-            time_2 = float(dkmax) * dt \
-                + np.min([float(-dk) * dt,
-                            1.0*dt + parameters.add_correlation_time])
-        else:
-            return None
-        shape = "rectangle"
-    else:
-        time_1 = float(dk) * dt
-        time_2 = None
-        shape = "square"
-
-    eta_dk = correlations.correlation_2d_integral( \
-        delta=dt,
-        time_1=time_1,
-        time_2=time_2,
-        shape=shape,
-        epsrel=parameters.epsrel,
-        matsubara=matsubara)
-    op_p = coupling_acomm
-    if matsubara:
-        op_m = -coupling_acomm
-    else:
-        op_m = coupling_comm
-
-    if dk == 0:
-        infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
-                                        + 1j*eta_dk.imag*op_p)))
-    else:
-        infl = np.exp(-np.outer(eta_dk.real*op_m \
-                                + 1j*eta_dk.imag*op_p, op_m))
-
-    return infl
+# def influence_matrix2(
+#         dk: int,
+#         parameters: TempoParameters,
+#         correlations: BaseCorrelations,
+#         coupling_acomm: ndarray,
+#         coupling_comm: ndarray,
+#         matsubara: Optional[bool] = False):
+#     """Compute the influence functional matrix. """
+#     dt = parameters.dt
+#     dkmax = parameters.dkmax
+#
+#     if dk == 0:
+#         time_1 = 0.0
+#         time_2 = None
+#         shape = "upper-triangle"
+#     elif dk < 0:
+#         time_1 = float(dkmax) * dt
+#         if parameters.add_correlation_time is not None:
+#             time_2 = float(dkmax) * dt \
+#                 + np.min([float(-dk) * dt,
+#                             1.0*dt + parameters.add_correlation_time])
+#         else:
+#             return None
+#         shape = "rectangle"
+#     else:
+#         time_1 = float(dk) * dt
+#         time_2 = None
+#         shape = "square"
+#
+#     eta_dk = correlations.correlation_2d_integral( \
+#         delta=dt,
+#         time_1=time_1,
+#         time_2=time_2,
+#         shape=shape,
+#         epsrel=parameters.epsrel,
+#         matsubara=matsubara)
+#     op_p = coupling_acomm
+#     if matsubara:
+#         op_m = -coupling_acomm
+#     else:
+#         op_m = coupling_comm
+#
+#     if dk == 0:
+#         infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
+#                                         + 1j*eta_dk.imag*op_p)))
+#     else:
+#         infl = np.exp(-np.outer(eta_dk.real*op_m \
+#                                 + 1j*eta_dk.imag*op_p, op_m))
+#
+#     return infl
 
 
 def _analyse_correlation(
@@ -1717,13 +1286,12 @@ def _tempo_physical_input_parse(
             "Initial sate must be a square matrix of " \
                 + f"dimension {hs_dim}x{hs_dim}.")
 
-    assert isinstance(bath, Bath), \
-        "Argument 'bath' must be an instance of Bath."
+    check_isinstance(bath, Bath, 'bath')
 
-    assert bath.dimension == hs_dim, \
+    check_true(bath.dimension == hs_dim,
             "Hilbertspace dimensions are unequal: " \
             + "system ({}), ".format(hs_dim) \
-            + "and bath coupling ({}).".format(bath.dimension)
+            + "and bath coupling ({}).".format(bath.dimension))
 
     parameters = (system, initial_state, bath, hs_dim)
     return parameters

@@ -18,55 +18,76 @@ Tests for the TempoParameters module.
 import pytest
 import numpy as np
 
-import oqupy as tempo
+
+from oqupy import tempo
 
 def test_gibbs_parameters():
-    gibbs_param = tempo.GibbsParameters(0.1, 22, 1.0e-5, "rough", "bla")
+    temperature = 0.1
+    n_steps = 22
+    epsrel = 1.0e-5
+    gibbs_param = tempo.GibbsParameters(temperature, n_steps, epsrel, "rough", "bla")
     str(gibbs_param)
-    assert gibbs_param.temperature == 0.1
-    assert gibbs_param.n_steps == 22
-    assert gibbs_param.epsrel == 1.0e-5
 
-    with pytest.raises(AttributeError):
-        gibbs_param.temperature = 0.05
-    with pytest.raises(AttributeError):
-        del gibbs_param.temperature
-    with pytest.raises(AttributeError):
-        gibbs_param.n_steps = 6
-    with pytest.raises(AttributeError):
-        del gibbs_param.nsteps
-    with pytest.raises(AttributeError):
-        gibbs_param.epsrel = 1.0e-6
-    with pytest.raises(AttributeError):
-        del gibbs_param.epsrel
-    with pytest.raises(AttributeError):
-        gibbs_param.subdiv_limit = 256
-    with pytest.raises(AttributeError):
-        del gibbs_param.subdiv_limit
-    with pytest.raises(AttributeError):
-        gibbs_param.liouvillian_epsrel = 2.0e-6
-    with pytest.raises(AttributeError):
-        del gibbs_param.liouvillian_epsrel
+    properties = ['temperature', 'n_steps', 'epsrel', 'dt']
+    values = [temperature, n_steps, epsrel, 1 / (temperature * n_steps)]
 
-def test_tempo_parameters_bad_input():
-    with pytest.raises(TypeError):
-        tempo.TempoParameters("x", 1.0e-5, 4.2, None, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(TypeError):
-        tempo.TempoParameters(0.1, "x", 4.2, None, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(TypeError):
-        tempo.TempoParameters(0.1, 1.0e-05, "x", None, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(ValueError):
-        tempo.TempoParameters(0.1, 1.0e-05, -.5, None, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(TypeError):
-        tempo.TempoParameters(0.1, 1.0e-05,  None, "x",  None, 2.0e-6, "rough", "bla")
-    with pytest.raises(ValueError):
-        tempo.TempoParameters(0.1, 1.0e-05, None, -5, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(AssertionError):
-        tempo.TempoParameters(0.1, 1.0e-05, 1.0, 1, None, None, 2.0e-6, "rough", "bla")
-    with pytest.raises(TypeError):
-        tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, "x", None, 2.0e-6, "rough", "bla")
-    with pytest.raises(TypeError):
-        tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, None,  "x", 2.0e-6, "rough", "bla")
-    with pytest.raises(TypeError):
-        tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, None, None, "x", "rough", "bla")
+    for p, v in zip(properties, values):
+        assert getattr(gibbs_param, p) == v
+        with pytest.raises(AttributeError):
+            setattr(gibbs_param, p, v + 1)
+        with pytest.raises(AttributeError):
+            delattr(gibbs_param, p)
+
+    # assert gibbs_param.temperature == 0.1
+    # assert gibbs_param.n_steps == 22
+    # assert gibbs_param.epsrel == 1.0e-5
+    # assert gibbs_param.dt == 1 / (temperature * n_steps)
+    #
+    #
+    # with pytest.raises(AttributeError):
+    #     gibbs_param.temperature = 0.05
+    # with pytest.raises(AttributeError):
+    #     del gibbs_param.temperature
+    # with pytest.raises(AttributeError):
+    #     gibbs_param.n_steps = 6
+    # with pytest.raises(AttributeError):
+    #     del gibbs_param.n_steps
+    # with pytest.raises(AttributeError):
+    #     gibbs_param.epsrel = 1.0e-6
+    # with pytest.raises(AttributeError):
+    #     del gibbs_param.epsrel
+    # with pytest.raises(AttributeError):
+    #     gibbs_param.dt = 12
+    # with pytest.raises(AttributeError):
+    #     del gibbs_param.dt
+
+def test_gibbs_parameters_bad_input():
+    keys = ['temperature', 'n_steps', 'epsrel']
+    good_inputs = [0.1, 10, 2.0e-6]
+    bad_inputs = [0, 1, -2.0e-6]
+    for k, b in zip(keys, bad_inputs):
+        input = dict(zip(keys, good_inputs))
+        with pytest.raises(TypeError):
+            input[k] = 'x'
+            tempo.GibbsParameters(**input, name="rough", description="bla")
+        with pytest.raises(ValueError):
+            input[k] = b
+            tempo.GibbsParameters(**input, name="rough", description="bla")
+
+
+
+
+    # with pytest.raises(TypeError):
+    #     tempo.GibbsParameters("x", 10, 2.0e-6, "rough", "bla")
+    # with pytest.raises(ValueError):
+    #     tempo.GibbsParameters(0, 10, 2.0e-6, "rough", "bla")
+    # with pytest.raises(TypeError):
+    #     tempo.GibbsParameters(0.1, "x", 2.0e-6, "rough", "bla")
+    # with pytest.raises(ValueError):
+    #     tempo.GibbsParameters(0.1, 1, 2.0e-6, "rough", "bla")
+    # with pytest.raises(TypeError):
+    #     tempo.GibbsParameters(0.1, 10, "x", "rough", "bla")
+    # with pytest.raises(ValueError):
+    #     tempo.GibbsParameters(0.1, 10, -2.0e-6, "rough", "bla")
+
 
