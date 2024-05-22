@@ -14,6 +14,8 @@
 """
 Skript to plot the PT-TEBD performance analysis results.
 """
+import sys
+sys.path.insert(0, '.')
 
 import oqupy.operators as op
 import oqupy
@@ -21,8 +23,6 @@ from operator import itemgetter
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
-sys.path.insert(0, '.')
 
 
 plt.style.use('./tests/performance/analysis/matplotlib_style.mplstyle')
