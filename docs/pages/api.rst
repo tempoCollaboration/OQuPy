@@ -26,17 +26,20 @@ Systems
 class :class:`oqupy.system.BaseSystem`
   Abstract class representing a quantum system of interest.
 
-  class :class:`oqupy.system.System`
-    Encodes system Hamiltonian and possibly some additional Markovian decay.
+class :class:`oqupy.system.System`
+  Encodes system Hamiltonian and possibly some additional Markovian decay.
 
-  class :class:`oqupy.system.TimeDependentSystem`
-    Encodes a time dependent system Hamiltonian and possibly some additional
-    time dependent Markovian decay.
+class :class:`oqupy.system.TimeDependentSystem`
+  Encodes a time dependent system Hamiltonian and possibly some additional
+  time dependent Markovian decay.
 
-  class :class:`oqupy.system.TimeDependentSystemWithField`
-    Encodes a system Hamiltonian (and possibly some additional time dependent
-    Markovian decay) that depends on both time and the expectation value of
-    a field (a complex scalar) to which the system couples.
+class :class:`oqupy.system.TimeDependentSystemWithField`
+  Encodes a system Hamiltonian (and possibly some additional time dependent
+  Markovian decay) that depends on both time and the expectation value of
+  a field (a complex scalar) to which the system couples.
+
+class :class:`oqupy.system.ParametrizedSystem`
+  Encodes a system Hamiltonian that depends on a set of parameters.
 
 class :class:`oqupy.system.MeanFieldSystem`
   Encodes a collection of time dependent systems that couple to a common
@@ -111,7 +114,7 @@ PT-TEMPO
 ********
 (Process Tensor - Time Evolving Matrix Product Operator)
 
-class :class:`oqupy.pt_tempo.PtTempo`
+class :class:`oqupy.pt_tempo.PtTempo`function oqupy.gradient.state_gradient()
   Class to facilitate a PT-TEMPO computation.
 
   method :meth:`oqupy.pt_tempo.PtTempo.compute`
@@ -156,6 +159,9 @@ class :class:`oqupy.bath_dynamics.TwoTimeBathCorrelations`
     Function to calculate two-time correlation function between two
     frequency bands of a bath.
 
+function :func:`oqupy.gradient.state_gradient`
+  Compute the dynamics and gradient with respect to some objective function for
+  a given :class:`oqupy.system.ParametrizedSystem`. 
 
 PT-TEBD
 *******

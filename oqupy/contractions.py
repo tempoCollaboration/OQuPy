@@ -28,6 +28,7 @@ from oqupy.control import Control
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem, System, TimeDependentSystem
+from oqupy.system import ParameterizedSystem
 from oqupy.system import MeanFieldSystem
 from oqupy.operators import left_super, right_super
 from oqupy.util import check_convert, check_isinstance, check_true
@@ -482,7 +483,11 @@ def _compute_dynamics_input_parse(
     if with_field:
         check_isinstance(system, TimeDependentSystemWithField, "system")
     else:
-        check_isinstance(system, (System, TimeDependentSystem), "system")
+        check_isinstance(
+            system,
+            (System, TimeDependentSystem, ParameterizedSystem),
+            "system"
+        )
 
     hs_dim = system.dimension
 
@@ -581,6 +586,49 @@ def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
     return pt_mpos
 
 
+def _get_pt_mpos_backprop(mpo_list:ndarray, step: int):
+    r"""same as above but swaps the system legs and internal bond legs
+    before returning MPOs.
+
+       [forwardprop]
+         [1]
+          |       [3]
+          |      /
+    |---------| /
+    |         |/
+    |         |\       propagate
+    |---------| \         ^
+          |      \        |
+          |       [2]
+         [0]
+
+          |
+          |
+         \ /
+          v
+       [backprop]
+         [0]
+          |       [3]
+          |      /
+    |---------| /
+    |         |/
+    |         |\       propagate
+    |---------| \         ^
+          |      \        |
+          |       [2]
+         [1]
+    """
+    pt_mpos = mpo_list[step]
+    pt_mpos_rev = []
+    for pt_mpo in pt_mpos:
+        # now swap axes so propagating upwards on the PT diagram propagates
+        # *backwards* in time
+        pt_mpo = np.swapaxes(pt_mpo, 0, 1) # internal bond legs
+        pt_mpo = np.swapaxes(pt_mpo, 2, 3) # system propagator legs
+        pt_mpos_rev.append(pt_mpo)
+    return pt_mpos_rev
+
+
 def _apply_system_superoperator(current_node, current_edges, sup_op):
     """ToDo """
     if sup_op is None:
@@ -605,7 +653,40 @@ def _apply_caps(current_node, current_edges, caps):
 
 
 def _apply_pt_mpos(current_node, current_edges, pt_mpos):
-    """ToDo """
+    """
+    Apply MPO for forward propagation step
+
+        before mpo application:
+            [1]
+            |        [3]
+            |        /
+        |---------| /
+        |         |/
+        |         |\
+        |---------| \
+            |        \
+            |        [2]
+            [0]
+
+            [i]
+            |
+            |        [-1]
+            |          |
+                       |
+
+        after mpo application:
+            [0] bond edge
+            |         [-1] system edge
+            |        /
+        |---------| /
+        |         |/
+        |         |\
+        |---------| \
+            |        \
+            |         []
+            |          |
+                       |
+    """
     for i, pt_mpo in enumerate(pt_mpos):
         if pt_mpo is None:
             continue
@@ -619,7 +700,94 @@ def _apply_pt_mpos(current_node, current_edges, pt_mpos):
         current_edges[-1] = new_sys_edge
     return current_node, current_edges
 
-#--------------------------Compute n-time correlations-------------------
+def _apply_derivative_pt_mpos(current_node,current_edges,pt_mpos):
+    r"""
+    Apply MPO corresponding to the time-step of the propagators the derivative
+    is being taken w.r.t.
+
+        before mpo application:
+            [1]
+            |        [3]
+            |        /
+        |---------| /
+        |         |/
+        |    i    |\
+        |---------| \
+            |        \
+            |        [2]
+            [0]
+
+            [i]
+            |
+            |        [-1]
+            |          |
+                       |
+
+        after mpo application:
+            [i]
+            |         [-1] post_mpo_edge
+            |        /
+        |---------| /
+        |         |/
+        |         |\
+        |---------| \
+            |        \
+            |         [-2] pre_mpo_edge
+            |
+            |
+            |
+            |        [-3] prop_edge
+            |         |
+                      |
+    """
+    prev_prop_edge = current_edges[-1]
+    pt_mpo_node = tn.Node(pt_mpos[0])
+    pre_mpo_edge = pt_mpo_node[2]
+    new_bond_edge=pt_mpo_node[1]
+    post_mpo_edge = pt_mpo_node[3]
+
+    prev_prop_edge.name = "prop edge"
+    pre_mpo_edge.name = "pre mpo edge 0"
+    new_bond_edge.name="bond edge 0"
+    post_mpo_edge.name = "post mpo edge 0"
+
+    current_edges[0] ^ pt_mpo_node[0]
+    current_node = current_node @ pt_mpo_node
+    current_edges = current_node[:]
+
+    bond_edges=[new_bond_edge]
+
+    for i,pt_mpo in enumerate(pt_mpos[1:]):
+        if pt_mpo is None:
+            continue
+
+        pt_mpo_node=tn.Node(pt_mpo)
+
+        new_bond_edge = pt_mpo_node[1]
+        bond_edges.append(new_bond_edge)
+        post_mpo_edge = pt_mpo_node[3]
+
+        new_bond_edge.name="bond edge "+str(i+1)
+        post_mpo_edge.name = "post mpo edge "+str(i+1)
+
+        current_edges[0] ^ pt_mpo_node[0]
+
+        current_edges[-1]^pt_mpo_node[2]
+
+        current_node = current_node @ pt_mpo_node
+        current_edges = current_node[:]
+
+    current_edges[-1]=post_mpo_edge
+    current_edges[-2]=pre_mpo_edge
+    current_edges[-3]=prev_prop_edge
+
+    for i, _ in enumerate(pt_mpos):
+        current_edges[i]=bond_edges[i]
+
+    return current_node,current_edges
+
+
+# -- compute n-time correlations ----------------------------------------------
 
 def compute_correlations_nt(
         system: BaseSystem,
