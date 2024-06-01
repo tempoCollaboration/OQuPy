@@ -14,12 +14,13 @@
 """
 Performance test for degeneracy checking in process tensor generation
 """
-import oqupy
-from time import perf_counter
-import numpy as np
-import os
 import sys
-sys.path.insert(0, '.')
+from time import perf_counter
+sys.path.insert(0,'.')
+
+import numpy as np
+
+import oqupy
 
 
 def pt_degen_performance_A(spin_size, unique):
@@ -66,3 +67,5 @@ parameters_non_unique = [[0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5],
 
 ALL_TESTS = [(pt_degen_performance_A, [parameters_unique, parameters_non_unique]),
              ]
+
+REQUIRED_PTS = []
