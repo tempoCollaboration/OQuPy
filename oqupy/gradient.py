@@ -218,8 +218,9 @@ def compute_gradient_and_dynamics(
     Returns:
     --------
     propagator_derivatives: List[ndarray]
-        List of (4,4,4,4)-tuples of length N. The nth entry corresponds to the derivative of the objective function
-        with respect to a propagator at the nth time-step. The axis are ordered as follows:
+        List of 4-rank tensors. The nth entry corresponds to the derivative of
+        the objective function with respect to a propagator at the nth
+        time step. The axis are ordered as follows:
             * [0] : output leg of 2nd half-propagator from step (n-1)
             * [1] : input system leg of MPO from step n
             * [2] : output system leg of MPO from step n
@@ -423,7 +424,7 @@ def compute_gradient_and_dynamics(
 
         deriv = deriv_forwardprop_tensor @ backprop_tensor
 
-        combined_deriv_list.append(deriv.get_tensor()) 
+        combined_deriv_list.append(deriv.get_tensor())
         # ordering of axis:
         # deriv[0] : output leg of 2nd half-propagator from step (n-1)
         # deriv[1] : input system leg of MPO from step n
