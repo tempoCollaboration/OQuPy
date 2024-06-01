@@ -53,7 +53,8 @@ pt_tempo_parameters = oqupy.TempoParameters(
 process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                         start_time=0.0,
                                         end_time=end_time,
-                                        parameters=pt_tempo_parameters)
+                                        parameters=pt_tempo_parameters,
+                                        unique=True)
 control = None 
 
 mean_field_dynamics = oqupy.compute_dynamics_with_field(

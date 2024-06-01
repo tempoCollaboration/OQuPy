@@ -177,6 +177,44 @@ bath_D = oqupy.Bath(coupling_operator_D,
                     correlations_D,
                     name="electronic bath")
 # -----------------------------------------------------------------------------
+# -- Test E: Collective Ising chain PT -------------------------------------------
+
+# Initial state:
+initial_state_E = np.array([[1.0,0.0,0.0],
+                            [0.0,0.0,0.0],
+                            [0.0,0.0,0.0]])
+
+# System operator
+j_value = -1.0
+h = 1.0
+s_z = np.array([[1.0,0.0,0.0],
+                [0.0,0.0,0.0],
+                [0.0,0.0,-1.0]])
+s_x = np.array([[0.0,1.0,0.0],
+                [1.0,0.0,1.0],
+                [0.0,1.0,0.0]])
+h_sys_E = (j_value/2) * s_z @ s_z + h * s_x
+
+# Ohmic spectral density with exponential cutoff
+coupling_operator_E = s_z
+alpha_E = 0.3
+cutoff_E = 5.0
+temperature_E = 0.2
+
+# end time
+t_end_E = 1.0
+
+correlations_E = oqupy.PowerLawSD(alpha=alpha_E,
+                                  zeta=1.0,
+                                  cutoff=cutoff_E,
+                                  cutoff_type="exponential",
+                                  temperature=temperature_E,
+                                  name="ohmic")
+bath_E = oqupy.Bath(coupling_operator_E,
+                    correlations_E,
+                    name="phonon bath")
+system_E = oqupy.System(h_sys_E)
+
 
 def test_degeneracy_exact():
     tempo_params_A = oqupy.TempoParameters(
@@ -276,5 +314,32 @@ def test_mean_field_degeneracy_compare():
     np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
                                    decimal=4)
     np.testing.assert_almost_equal(field_unique, field_non_unique,
+                                   decimal=4)
+    
+def test_pt_tempo_degeneracy_compare():
+    tempo_params_E = oqupy.TempoParameters(
+        dt=0.05,
+        tcut=None,
+        epsrel=10**(-7))
+    pt_unique = oqupy.pt_tempo_compute(
+        bath = bath_E,
+        parameters=tempo_params_E,
+        start_time=0.0,
+        end_time=t_end_E,
+        unique=True)
+    pt_non_unique = oqupy.pt_tempo_compute(
+        bath = bath_E,
+        parameters=tempo_params_E,
+        start_time=0.0,
+        end_time=t_end_E,
+        unique=False)
+    
+    dyn_unique = oqupy.compute_dynamics(system=system_E, 
+                           initial_state=initial_state_E,
+                           process_tensor=pt_unique)
+    dyn_non_unique = oqupy.compute_dynamics(system=system_E, 
+                           initial_state=initial_state_E,
+                           process_tensor=pt_non_unique)
+    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
                                    decimal=4)
 # -----------------------------------------------------------------------------
