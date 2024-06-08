@@ -20,7 +20,6 @@ import numpy as np
 
 import oqupy
 from oqupy import tempo
-from oqupy import process_tensor
 
 
 # -----------------------------------------------------------------------------
@@ -72,7 +71,6 @@ bath_B = oqupy.Bath(coupling_operator_B,
 system_A = oqupy.System(h_sys_A)
 
 gibbs_params_A = tempo.GibbsParameters(
-        temperature=temperature_A,
         n_steps=100,
         epsrel=10**(-11))
 # -----------------------------------------------------------------------------
@@ -84,8 +82,6 @@ def test_gibbs_backend_A():
         gibbs_params_A)
     tempo_A.compute()
     gibbs_A = tempo_A.get_state()
-    print('A', gibbs_A)
-    print('A', rho_A)
     np.testing.assert_almost_equal(gibbs_A, rho_A(0), decimal=8)
 
 def test_gibbs_backend_B():
@@ -95,7 +91,6 @@ def test_gibbs_backend_B():
         gibbs_params_A)
     tempo_B.compute()
     gibbs_B = tempo_B.get_state()
-    print(gibbs_B)
     np.testing.assert_almost_equal(gibbs_B, rho_A(alpha_B), decimal=8)
 
 # -----------------------------------------------------------------------------

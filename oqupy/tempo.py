@@ -39,7 +39,7 @@ from oqupy.base_api import BaseAPIClass
 from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
-from oqupy.correlations import BaseCorrelations
+from oqupy.correlations import BaseCorrelations, CustomSD
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.operators import commutator, acommutator
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
@@ -238,25 +238,19 @@ class GibbsParameters(BaseAPIClass):
     """
     def __init__(
             self,
-            temperature: float,
             n_steps: int,
             epsrel: float,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a GibbsParameters object."""
 
-        check_isinstance(temperature, (float, int), name='temperature')
         check_isinstance(n_steps, int, name='n_steps')
         check_isinstance(epsrel, (float, int), name='epsrel')
 
-        check_true(
-            temperature > 0.0, "Argument 'temperature' must be positive.")
         check_true(n_steps > 1, "Argument 'n_steps' must be greater than 1.")
         check_true(epsrel > 0.0, "Argument 'epsrel' must be positive.")
 
-        self._temperature = temperature
         self._n_steps = n_steps
-        self._dt = 1 / (temperature * n_steps)
         self._epsrel = epsrel
 
         super().__init__(name, description)
@@ -264,16 +258,10 @@ class GibbsParameters(BaseAPIClass):
     def __str__(self) -> Text:
         ret = []
         ret.append(super().__str__())
-        ret.append("  temperature          = {} \n".format(self.temperature))
         ret.append("  nsteps               = {}  \n".format(self.n_steps))
-        ret.append("  dt                   = {}  \n".format(self.dt))
         ret.append("  epsrel               = {} \n".format(self.epsrel))
         return "".join(ret)
 
-    @property
-    def temperature(self) -> float:
-        """Temperature."""
-        return self._temperature
 
     @property
     def n_steps(self) -> int:
@@ -281,15 +269,13 @@ class GibbsParameters(BaseAPIClass):
         return self._n_steps
 
     @property
-    def dt(self) -> float:
-        """Length of a time step."""
-        return self._dt
-
-    @property
     def epsrel(self) -> float:
         """The maximal relative error in the singular value truncation."""
         return self._epsrel
 
+    def time_step_length(self, temperature: float) -> float:
+        """Length of a time step given a specific temperature."""
+        return 1 / (temperature * self._n_steps)
 
 class Tempo(BaseAPIClass):
     """
@@ -516,12 +502,8 @@ class GibbsTempo(BaseAPIClass):
         if len(system.gammas) > 0:
             raise Warning('Markovian decay ignored for GibbsTempo')
         check_isinstance(bath, Bath, name='bath')
+        check_isinstance(bath.correlations, CustomSD, name='bath.correlations')
         check_isinstance(parameters, GibbsParameters, name='parameters')
-
-        # ToDo: Find a different structure such that there is no dublicate
-        #       temperature.
-        check_true(bath.correlations.temperature == parameters.temperature,
-                   "Bath temperature and parameters temperature must be equal")
 
         self._system, self._initial_state, self._bath, self._dimension = \
             _tempo_physical_input_parse(False, system, None, bath)
@@ -529,6 +511,7 @@ class GibbsTempo(BaseAPIClass):
         self._parameters = parameters
         self._correlations = self._bath.correlations
         self._temperature = self._correlations.temperature
+        self._dt = self._parameters.time_step_length(self._temperature)
 
         if backend_config is None:
             self._backend_config = TEMPO_BACKEND_CONFIG
@@ -540,10 +523,6 @@ class GibbsTempo(BaseAPIClass):
 
         self._prepare_backend()
 
-    def _time(self, step: int) -> float:
-        """Return the time that corresponds to the time step `step`. """
-        return float(step)*self._parameters.dt
-
     @property
     def dimension(self) -> ndarray:
         """Hilbert space dimension. """
@@ -551,8 +530,12 @@ class GibbsTempo(BaseAPIClass):
 
     @property
     def temperature(self) -> float:
-        """Hilbert space dimension. """
+        """Temperature of the bath. """
         return copy(self._temperature)
+
+    def _time(self, step: int) -> float:
+        """Return the time that corresponds to the time step `step`. """
+        return float(step)*self._dt
 
     def _prepare_backend(self):
         """Create and initialize the TEMPO backend. """
@@ -561,8 +544,7 @@ class GibbsTempo(BaseAPIClass):
         def coeffs(k):
             shape = "upper-triangle" if k==0 else "square"
             return self._correlations.correlation_2d_integral(
-                self._parameters.dt,
-                k * self._parameters.dt, shape=shape, matsubara=True)
+                self._dt, k * self._dt, shape=shape, matsubara=True)
 
         operators = (-self._bath.coupling_operator.diagonal(),
                      self._bath.coupling_operator.diagonal(),
@@ -575,7 +557,7 @@ class GibbsTempo(BaseAPIClass):
         epsrel = self._parameters.epsrel
         max_step = self._parameters.n_steps
         propagators = self._system.get_unitary_propagators(
-            - 1j * self._parameters.dt, 0, 0, 0)
+            - 1j * self._dt, 0, 0, 0)
         self._backend_instance = TIBaseBackend(
                 dim,
                 epsrel,

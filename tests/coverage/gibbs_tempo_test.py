@@ -39,7 +39,7 @@ def test_gibbs_tempo():
 
     bath = oqupy.Bath(0.5 * oqupy.operators.sigma("z"), correlations)
 
-    gibbs_param = tempo.GibbsParameters(temperature, steps, 1.0e-5, name="rough-A")
+    gibbs_param = tempo.GibbsParameters(steps, 1.0e-5, name="rough-A")
 
     gibbs_sys = tempo.GibbsTempo(system=system,
                               bath=bath,
@@ -102,6 +102,7 @@ def test_gibbs_tempo_bad_input():
     aa, tmp, wc, nu = 0.2, 0.1, 5, 1
     jw = lambda w: 2 * aa * w ** nu / (wc ** (nu - 1))
     correlations  = oqupy.CustomSD(jw, wc, cutoff_type='exponential', temperature=tmp)
+    correlations_corr  = oqupy.CustomCorrelations(jw)
 
     dim = 2
     good_system = oqupy.System(0.5 * spin_x(dim))
@@ -109,23 +110,22 @@ def test_gibbs_tempo_bad_input():
     bad_system_type = oqupy.TimeDependentSystem(lambda t: 0.5 * spin_x(dim))
 
     good_bath = oqupy.Bath(0.5 * spin_z(dim), correlations)
-    bad_bath = oqupy.Bath(0.5 * spin_z(dim + 1), correlations)
+    bad_bath_value = oqupy.Bath(0.5 * spin_z(dim + 1), correlations)
+    bad_bath_type = oqupy.Bath(0.5 * spin_z(dim), correlations_corr)
 
-    good_parameters = tempo.GibbsParameters(tmp,8, 1.0e-5, name="name", description="desc")
-    bad_parameters_value = tempo.GibbsParameters(tmp + 1, 8, 1.0e-5, name="name", description="desc")
+    good_parameters = tempo.GibbsParameters(8, 1.0e-5, name="name", description="desc")
     bad_parameters_type = tempo.TempoParameters(0.1, 1.0e-5, name="name", description="desc")
 
-    keys = ['system', 'bath', 'parameters']
-    good_inputs = [good_system, good_bath, good_parameters]
-    bad_types = [bad_system_type, 'x', bad_parameters_type]
-    bad_values = [bad_system_value, bad_bath, bad_parameters_value]
+    tempo.GibbsTempo(good_system, good_bath, good_parameters)
 
-    for k, t, v in zip(keys, bad_types, bad_values):
-        input = dict(zip(keys, good_inputs))
-        input[k] = t
-        with pytest.raises(TypeError):
-            gibbs_sys = tempo.GibbsTempo(**input)
-        input[k] = v
-        with pytest.raises(ValueError):
-            gibbs_sys = tempo.GibbsTempo(**input)
+    with pytest.raises(ValueError):
+        tempo.GibbsTempo(bad_system_value, good_bath, good_parameters)
+    with pytest.raises(ValueError):
+        tempo.GibbsTempo(good_system, bad_bath_value, good_parameters)
 
+    with pytest.raises(TypeError):
+        tempo.GibbsTempo(bad_system_type, good_bath, good_parameters)
+    with pytest.raises(TypeError):
+        tempo.GibbsTempo(good_system, bad_bath_type, good_parameters)
+    with pytest.raises(TypeError):
+        tempo.GibbsTempo(good_system, good_bath, bad_parameters_type)
