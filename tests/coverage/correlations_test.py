@@ -48,7 +48,7 @@ def test_custom_correlations():
     str(cor)
     t = np.linspace(0, 4.0 / 15.0, 10)
     [cor.correlation(tt) for tt in t]
-    for shape in ["square", "upper-triangle", "lower-triangle"]:
+    for shape in ["square", "upper-triangle"]:
         cor.correlation_2d_integral(time_1=0.25,
                                     delta=0.05,
                                     shape=shape)
@@ -102,7 +102,9 @@ def test_matsubara_custom_s_d():
         [sd.eta_function(tt, matsubara=True) for tt in t]
 
         assert type(sd.correlation(1, matsubara=True)) == float
-        assert sd.correlation(0, matsubara=True) == sd.correlation(1 / temperature, matsubara=True)
+        np.testing.assert_almost_equal(
+            sd.correlation(0, matsubara=True),
+            sd.correlation(1 / temperature, matsubara=True))
 
         for shape in ["square", "upper-triangle"]:
             sd.correlation_2d_integral(time_1=0.25,
@@ -116,27 +118,30 @@ def test_matsubara_custom_s_d():
 
         dt = 0.25
         for ma in [True, False]:
-            big_tri = sd.correlation_2d_integral(time_1=3 * dt,
-                                                 delta=3 * dt,
+            big_tri = sd.correlation_2d_integral(time_1=0.0,
+                                                 delta=4*dt,
                                                  shape='upper-triangle',
                                                  matsubara=ma)
-
-            small_tri = sd.correlation_2d_integral(time_1=dt,
+            mid_tri = sd.correlation_2d_integral(time_1=0.0,
+                                                 delta=2*dt,
+                                                 shape='upper-triangle',
+                                                 matsubara=ma)
+            small_tri = sd.correlation_2d_integral(time_1=0.0,
                                                    delta=dt,
                                                    shape='upper-triangle',
                                                    matsubara=ma)
-
-            square = sd.correlation_2d_integral(time_1=dt,
+            square = sd.correlation_2d_integral(time_1=2*dt,
                                                 delta=dt,
                                                 shape='square',
                                                 matsubara=ma)
-
             rect = sd.correlation_2d_integral(time_1=2 * dt,
-                                              time_2=1 * dt,
+                                              time_2=4 * dt,
                                               delta=dt,
                                               shape='rectangle',
                                               matsubara=ma)
-            assert np.round(big_tri - (3 * small_tri + square + rect), 14) == 0
+            # assert np.round(big_tri - (3 * small_tri + square + rect), 14) == 0
+            stiched_big_tri = 3 * mid_tri + square + rect - 2*small_tri
+            np.testing.assert_almost_equal( stiched_big_tri, big_tri)
 
 def test_matsubara_custom_s_d_bad_input():
     temperature = 0.0

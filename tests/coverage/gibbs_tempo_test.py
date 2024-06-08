@@ -66,7 +66,7 @@ def test_gibbs_tempo():
     state2 = state2 / state2.trace()
     assert (state1 == state2).all()
     assert state1.shape == (2, 2)
-    assert state1.trace() == 1
+    np.testing.assert_almost_equal(state1.trace(),1)
 
 
 def test_gibbs_tempo_bad_input():

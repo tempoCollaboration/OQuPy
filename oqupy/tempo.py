@@ -584,9 +584,10 @@ class GibbsTempo(BaseAPIClass):
         dim = self._dimension
 
         def coeffs(k):
+            shape = "upper-triangle" if k==0 else "square"
             return self._correlations.correlation_2d_integral(
                 self._parameters.dt,
-                k * self._parameters.dt, matsubara=True)
+                k * self._parameters.dt, shape=shape, matsubara=True)
 
         operators = (-self._bath._coupling_operator.diagonal(),
                      self._bath._coupling_operator.diagonal(),

@@ -492,11 +492,17 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
         # convention is tau.imag < 0
         if self.temperature == 0.0:
             check_true(matsubara == False, 'Matsubara correlations only defined for temperature > 0')
-            integrand = lambda w: self._spectral_density(w) * np.exp(-1j * w * tau)
+            def integrand(w):
+                return self._spectral_density(w) * np.exp(-1j * w * tau)
         else:
-            integrand = lambda w: self._spectral_density(w) \
+            def integrand(w):
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:  # this is to stop overflow
+                    inte = self._spectral_density(w) \
                                   * (np.exp(-1j * tau * w) + np.exp(-(1 / self.temperature * w - 1j * tau * w))) \
                                   / (1 - np.exp(-w / self.temperature))
+                else:
+                    inte = self._spectral_density(w) * np.exp(-1j * w * tau)
+                return inte
 
         integral = _complex_integral(integrand,
                                      a=0.0,
@@ -555,16 +561,16 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
         if self.temperature == 0.0:
             check_true(matsubara == False, 'Matsubara correlations only defined for temperature > 0')
             def integrand(w):
-                return self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+                return self._spectral_density(w) / w ** 2 * (
+                    (np.exp(-1j * w * tau) - 1) + 1j * w * tau)
         else:
             def integrand(w):
-                if w / self.temperature < 1e2:  # this is to stop overflow, error is order exp(-100)
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:  # this is to stop overflow
                     inte = self._spectral_density(w) / w ** 2 * (
                                   ((np.exp(-1j*tau * w) + np.exp(-(w / self.temperature - 1j*tau * w)))
                                    - np.exp(- w / self.temperature) - 1) / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
                 else:
-                    #print('except')
-                    inte = self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 - 1j * w * tau)
+                    inte = self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 + 1j * w * tau)
                 return inte
 
         integral = _complex_integral(integrand,
@@ -640,13 +646,21 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
 
         kwargs = {'epsrel': epsrel, 'subdiv_limit': subdiv_limit, 'matsubara': matsubara}
 
-        if time_1 == 0.0 or shape == 'upper-triangle':
-            integral = self.eta_function(delta, **kwargs)
-        else:
+
+        if shape == 'upper-triangle':
             integral = self.eta_function(time_1 + delta, **kwargs) \
-                     - self.eta_function(time_1, **kwargs) \
-                    - self.eta_function(time_2, **kwargs) \
-                    + self.eta_function(time_2 - delta, **kwargs)
+                       - self.eta_function(time_1, **kwargs)
+        elif shape == 'square':
+            integral = self.eta_function(time_1 + delta, **kwargs) \
+                       - 2.0 * self.eta_function(time_1, **kwargs) \
+                       + self.eta_function(time_1 - delta, **kwargs)
+        elif shape == 'rectangle':
+            integral = self.eta_function(time_2, **kwargs) \
+                       - self.eta_function(time_1, **kwargs) \
+                       - self.eta_function(time_2 - delta, **kwargs) \
+                       + self.eta_function(time_1 - delta, **kwargs)
+        else:
+            raise NotImplementedError("Shape '{shape}' not implemented.")
 
         if matsubara:
             integral = integral.real
