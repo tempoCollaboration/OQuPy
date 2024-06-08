@@ -2,6 +2,8 @@
 *.tempoDynamics
 *.processTensor
 *.hdf5
+*.pkl
+*.pdf
 
 # local development
 local_dev/

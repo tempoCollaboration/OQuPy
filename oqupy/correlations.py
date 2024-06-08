@@ -17,7 +17,7 @@ Module for environment correlations.
 
 from typing import Callable, Optional, Text
 from typing import Any as ArrayLike
-import functools
+from functools import lru_cache
 
 import numpy as np
 from scipy import integrate
@@ -202,7 +202,7 @@ class CustomCorrelations(BaseCorrelations):
         """
         return self.correlation_function(tau)
 
-    @functools.lru_cache(maxsize=2 ** 10, typed=False)
+    @lru_cache(maxsize=2 ** 10, typed=False)
     def correlation_2d_integral(
             self,
             delta: float,
@@ -514,7 +514,7 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             integral = integral.real
         return integral
 
-    @functools.cache
+    @lru_cache(maxsize=None)
     def eta_function(
             self,
             tau: ArrayLike,

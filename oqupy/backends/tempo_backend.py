@@ -26,7 +26,7 @@ from numpy import ndarray, moveaxis, dot, expand_dims, eye, exp, outer,\
     diag, array, kron, ones, ascontiguousarray, swapaxes, reshape, amax, argmax
 from scipy.linalg import svd
 from scipy.linalg import block_diag, LinAlgError
-from functools import cache
+from functools import lru_cache
 from numpy.linalg import svd as nsvd
 from oqupy import operators
 from oqupy.config import TEMPO_BACKEND_CONFIG
@@ -172,7 +172,7 @@ class TIBaseBackend:
         assert k > len(self._mps), 'kmax needs to be greater than current step'
         self._kmax = k
 
-    @cache
+    @lru_cache(maxsize=2**10)
     def _influence_tensor(self, k):
         """Creates rank 4 influence tensor from rank 2 influence matrix"""
         c = self._coefficients(k + 1)
