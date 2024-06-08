@@ -30,6 +30,9 @@ __all__ = [
     'Control',
     'Dynamics',
     'FileProcessTensor',
+    'GibbsParameters',
+    'GibbsTempo',
+    'gibbs_tempo_compute',
     'guess_tempo_parameters',
     'helpers',
     'import_process_tensor',
@@ -104,6 +107,9 @@ from oqupy.pt_tempo import pt_tempo_compute
 
 from oqupy.tempo import Tempo
 from oqupy.tempo import TempoParameters
+from oqupy.tempo import GibbsTempo
+from oqupy.tempo import GibbsParameters
 from oqupy.tempo import MeanFieldTempo
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import tempo_compute
+from oqupy.tempo import gibbs_tempo_compute

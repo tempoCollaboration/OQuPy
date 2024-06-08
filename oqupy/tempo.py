@@ -1159,6 +1159,49 @@ def tempo_compute(
     tempo.compute(end_time, progress_type=progress_type)
     return tempo.get_dynamics()
 
+
+def gibbs_tempo_compute(
+        system: BaseSystem,
+        bath: Bath,
+        parameters: Optional[GibbsParameters] = None,
+        backend_config: Optional[Dict] = None,
+        progress_type: Optional[Text] = None,
+        name: Optional[Text] = None,
+        description: Optional[Text] = None) -> Dynamics:
+    """
+    Shortcut for creating a GibbsTempo object and running the computation.
+
+    Parameters
+    ----------
+    system: System
+        The system.
+    bath: Bath
+        The Bath, initiated with a CustomSD or derived (such as PowerLawSD)
+        correlations object.
+    parameters: GibbsParameters
+        The parameters for the GibbsTEMPO computation.
+    backend_config: dict (default = None)
+        The configuration of the backend. If `backend_config` is
+        ``None`` then the default backend configuration is used.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``'silent'``, ``'simple'``, ``'bar'``}.  If `None` then
+        the default progress type is used.
+    name: str (default = None)
+        An optional name for the tempo object.
+    description: str (default = None)
+        An optional description of the tempo object.
+    """
+    gibbs_tempo = GibbsTempo(
+        system,
+        bath,
+        parameters,
+        backend_config,
+        name,
+        description)
+    gibbs_tempo.compute(progress_type=progress_type)
+    return gibbs_tempo.get_state()
+
 def _parameter_memory_input_parse(tcut, dkmax, dt):
     """Parse tcut and dkmax parameters"""
     if tcut is not None and dkmax is not None:

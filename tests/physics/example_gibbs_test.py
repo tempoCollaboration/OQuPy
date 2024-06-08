@@ -19,7 +19,6 @@ import pytest
 import numpy as np
 
 import oqupy
-from oqupy import tempo
 
 
 # -----------------------------------------------------------------------------
@@ -70,13 +69,13 @@ bath_B = oqupy.Bath(coupling_operator_B,
                     name="phonon bath")
 system_A = oqupy.System(h_sys_A)
 
-gibbs_params_A = tempo.GibbsParameters(
+gibbs_params_A = oqupy.GibbsParameters(
         n_steps=100,
         epsrel=10**(-11))
 # -----------------------------------------------------------------------------
 
 def test_gibbs_backend_A():
-    tempo_A = tempo.GibbsTempo(
+    tempo_A = oqupy.GibbsTempo(
         system_A,
         bath_A,
         gibbs_params_A)
@@ -85,12 +84,10 @@ def test_gibbs_backend_A():
     np.testing.assert_almost_equal(gibbs_A, rho_A(0), decimal=8)
 
 def test_gibbs_backend_B():
-    tempo_B = tempo.GibbsTempo(
+    gibbs_B = oqupy.gibbs_tempo_compute(
         system_A,
         bath_B,
         gibbs_params_A)
-    tempo_B.compute()
-    gibbs_B = tempo_B.get_state()
     np.testing.assert_almost_equal(gibbs_B, rho_A(alpha_B), decimal=8)
 
 # -----------------------------------------------------------------------------
