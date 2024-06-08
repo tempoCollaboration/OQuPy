@@ -6,7 +6,7 @@ sys.path.insert(0,'.')
 
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython import embed
+#from IPython import embed
 
 import oqupy
 import oqupy.operators as op
@@ -33,6 +33,8 @@ correlations = oqupy.PowerLawSD(alpha=alpha,
                                 cutoff=omega_cutoff,
                                 cutoff_type='gaussian',
                                 temperature=temperature)
+print('type=',type(correlations))
+print(issubclass(type(correlations), oqupy.correlations.BaseCorrelations))
 bath = oqupy.Bath(op.sigma("z")/2.0, correlations)
 
 

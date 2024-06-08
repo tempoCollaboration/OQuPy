@@ -39,15 +39,15 @@ from oqupy.base_api import BaseAPIClass
 from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE, MAX_SYS_SAMPLES
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
-from oqupy.correlations import BaseCorrelations
+from oqupy.correlations import BaseCorrelations, CustomSD
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField, MeanFieldSystem
 from oqupy.backends.tempo_backend import TempoBackend
 from oqupy.backends.tempo_backend import MeanFieldTempoBackend
+from oqupy.backends.tempo_backend import TIBaseBackend
 from oqupy.util import check_convert, check_isinstance, check_true,\
         get_progress
-
 
 class TempoParameters(BaseAPIClass):
     r"""
@@ -183,6 +183,8 @@ class TempoParameters(BaseAPIClass):
         """The maximal relative error in the singular value truncation."""
         return self._epsrel
 
+    # epsrel is error tolerance for both correlation omega integration and svds
+
     @property
     def tcut(self) -> float:
         """Length of non-Markovian memory"""
@@ -212,6 +214,67 @@ class TempoParameters(BaseAPIClass):
         """The relative error tolerance for integrating a time-dependent
         system Liouvillian. """
         return self._liouvillian_epsrel
+
+    # lio epsrel for dynamics time integrals only
+#
+class GibbsParameters(BaseAPIClass):
+    r"""
+    Parameters for the GibbsTEMPO computation.
+
+    Parameters
+    ----------
+    n_steps: int
+        Number of imaginary time steps to take towards the final temperature.
+    epsrel: float
+        The maximal relative error in the singular value truncation (done
+        in the underlying tensor network algorithm). - It must be small enough
+        such that the numerical compression (using tensor network algorithms)
+        does not truncate relevant correlations.
+    name: str (default = None)
+        An optional name for the GibbsParameters object.
+    description: str (default = None)
+        An optional description of the GibbsParameters object.
+    """
+    def __init__(
+            self,
+            n_steps: int,
+            epsrel: float,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a GibbsParameters object."""
+
+        check_isinstance(n_steps, int, name='n_steps')
+        check_isinstance(epsrel, (float, int), name='epsrel')
+
+        check_true(n_steps > 1, "Argument 'n_steps' must be greater than 1.")
+        check_true(epsrel > 0.0, "Argument 'epsrel' must be positive.")
+
+        self._n_steps = n_steps
+        self._epsrel = epsrel
+
+        super().__init__(name, description)
+
+    def __str__(self) -> Text:
+        ret = []
+        ret.append(super().__str__())
+        ret.append("  nsteps               = {}  \n".format(self.n_steps))
+        ret.append("  epsrel               = {} \n".format(self.epsrel))
+        return "".join(ret)
+
+
+    @property
+    def n_steps(self) -> int:
+        """Number of timesteps."""
+        return self._n_steps
+
+    @property
+    def epsrel(self) -> float:
+        """The maximal relative error in the singular value truncation."""
+        return self._epsrel
+
+    def time_step_length(self, temperature: float) -> float:
+        """Length of a time step given a specific temperature."""
+        return 1 / (temperature * self._n_steps)
 
 class Tempo(BaseAPIClass):
     """
@@ -428,6 +491,172 @@ class Tempo(BaseAPIClass):
         """Returns the instance of Dynamics associated with the Tempo object.
         """
         return self._dynamics
+
+
+class GibbsTempo(BaseAPIClass):
+    """
+    Class representing the entire TEMPO tensornetwork as introduced in
+    [Strathearn2018].
+
+    Parameters
+    ----------
+    system: System
+        The system.
+    bath: Bath
+        The Bath, initiated with a CustomSD or derived (such as PowerLawSD)
+        correlations object.
+    parameters: GibbsParameters
+        The parameters for the GibbsTEMPO computation.
+    backend_config: dict (default = None)
+        The configuration of the backend. If `backend_config` is
+        ``None`` then the default backend configuration is used.
+    name: str (default = None)
+        An optional name for the tempo object.
+    description: str (default = None)
+        An optional description of the tempo object.
+    """
+    def __init__(
+            self,
+            system: System,
+            bath: Bath,
+            parameters: GibbsParameters,
+            backend_config: Optional[Dict] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Create a Tempo object. """
+        super().__init__(name, description)
+
+        check_isinstance(system, System, name='system')
+        if len(system.gammas) > 0:
+            raise Warning('Markovian decay ignored for GibbsTempo')
+        check_isinstance(bath, Bath, name='bath')
+        check_isinstance(bath.correlations, CustomSD, name='bath.correlations')
+        check_isinstance(parameters, GibbsParameters, name='parameters')
+
+        self._system, self._initial_state, self._bath, self._dimension = \
+            _tempo_physical_input_parse(False, system, None, bath)
+
+        self._parameters = parameters
+        self._correlations = self._bath.correlations
+        self._temperature = self._correlations.temperature
+        self._dt = self._parameters.time_step_length(self._temperature)
+
+        if backend_config is None:
+            self._backend_config = TEMPO_BACKEND_CONFIG
+        else:
+            self._backend_config = backend_config
+
+        self._dynamics = None
+        self._backend_instance = None
+
+        self._prepare_backend()
+
+    @property
+    def dimension(self) -> ndarray:
+        """Hilbert space dimension. """
+        return copy(self._dimension)
+
+    @property
+    def temperature(self) -> float:
+        """Temperature of the bath. """
+        return copy(self._temperature)
+
+    def _time(self, step: int) -> float:
+        """Return the time that corresponds to the time step `step`. """
+        return float(step)*self._dt
+
+    def _prepare_backend(self):
+        """Create and initialize the TEMPO backend. """
+        dim = self._dimension
+
+        def coeffs(k):
+            shape = "upper-triangle" if k==0 else "square"
+            return self._correlations.correlation_2d_integral(
+                self._dt, k * self._dt, shape=shape, matsubara=True)
+
+        operators = (-self._bath.coupling_operator.diagonal(),
+                     self._bath.coupling_operator.diagonal(),
+                     np.zeros((dim,)))
+
+        # ToDo: Unitary transform is not used. Check that GibbsTempo also works
+        #       with non-diagonal coupling operators!!!
+        # unitary_transform = self._bath.unitary_transform
+
+        epsrel = self._parameters.epsrel
+        max_step = self._parameters.n_steps
+        propagators = self._system.get_unitary_propagators(
+            - 1j * self._dt, 0, 0, 0)
+        self._backend_instance = TIBaseBackend(
+                dim,
+                epsrel,
+                propagators(1)[0],
+                coeffs,
+                operators,
+                max_step=max_step,
+                config=self._backend_config)
+
+    def _init_dynamics(self):
+        """Create a Dynamics object with metadata from the Tempo object. """
+        name = None
+        description = "computed from '{}' tempo".format(self.name)
+        self._dynamics = Dynamics(name=name,
+                                  description=description)
+
+    def compute(
+            self,
+            progress_type: Text = None) -> Dynamics:
+        """
+        Propagate (or continue to propagate) the TEMPO tensor network to
+        time `end_time`.
+
+        Parameters
+        ----------
+        end_time: float
+            The time to which the TEMPO should be computed.
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``'silent'``, ``'simple'``, ``'bar'``}. If `None` then
+            the default progress type is used.
+
+        Returns
+        -------
+        dynamics: Dynamics
+            The instance of Dynamics associated with the TEMPO object.
+        """
+
+        if self._backend_instance.step is None:
+            # initialising precomputes two steps
+            step, state = self._backend_instance.initialise()
+            self._init_dynamics()
+            for ii, state in enumerate(self._backend_instance.data):
+                self._dynamics.add(self._time(ii), state)
+            #  dynamics now has three entries including initial state
+
+        num_step = self._parameters.n_steps - 2
+
+        progress = get_progress(progress_type)
+        title = "--> GibbsTEMPO computation:"
+        with progress(num_step + 2, title) as prog_bar:
+            for i in range(num_step):
+                prog_bar.update(i + 2)
+                step, state = self._backend_instance.compute_step()
+                self._dynamics.add(self._time(step+1), state)
+            prog_bar.update(num_step + 2)
+
+        return self._dynamics
+
+    def get_dynamics(self) -> Dynamics:
+        """
+        Returns the instance of Dynamics associated with the GibbsTempo object.
+        """
+        return self._dynamics
+
+    def get_state(self) -> ndarray:
+        """Returns the Gibbs state associated with the GibbsTempo object.
+        """
+        state = self._dynamics.states[-1]
+        state = state / state.trace()
+        return state
 
 class MeanFieldTempo(BaseAPIClass):
     r"""
@@ -786,7 +1015,6 @@ def influence_matrix(
 
     return infl
 
-
 GUESS_WARNING_MSG = "Estimating TEMPO parameters. " \
     + "No guarantee subsequent dynamics calculations are converged. " \
     + "Please refer to the TEMPO documentation and check convergence by " \
@@ -976,6 +1204,49 @@ def tempo_compute(
     tempo.compute(end_time, progress_type=progress_type)
     return tempo.get_dynamics()
 
+
+def gibbs_tempo_compute(
+        system: BaseSystem,
+        bath: Bath,
+        parameters: Optional[GibbsParameters] = None,
+        backend_config: Optional[Dict] = None,
+        progress_type: Optional[Text] = None,
+        name: Optional[Text] = None,
+        description: Optional[Text] = None) -> Dynamics:
+    """
+    Shortcut for creating a GibbsTempo object and running the computation.
+
+    Parameters
+    ----------
+    system: System
+        The system.
+    bath: Bath
+        The Bath, initiated with a CustomSD or derived (such as PowerLawSD)
+        correlations object.
+    parameters: GibbsParameters
+        The parameters for the GibbsTEMPO computation.
+    backend_config: dict (default = None)
+        The configuration of the backend. If `backend_config` is
+        ``None`` then the default backend configuration is used.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``'silent'``, ``'simple'``, ``'bar'``}.  If `None` then
+        the default progress type is used.
+    name: str (default = None)
+        An optional name for the tempo object.
+    description: str (default = None)
+        An optional description of the tempo object.
+    """
+    gibbs_tempo = GibbsTempo(
+        system,
+        bath,
+        parameters,
+        backend_config,
+        name,
+        description)
+    gibbs_tempo.compute(progress_type=progress_type)
+    return gibbs_tempo.get_state()
+
 def _parameter_memory_input_parse(tcut, dkmax, dt):
     """Parse tcut and dkmax parameters"""
     if tcut is not None and dkmax is not None:
@@ -1010,19 +1281,19 @@ def _tempo_physical_input_parse(
             system, (System, TimeDependentSystem), "system")
     hs_dim = system.dimension
 
-    check_isinstance(initial_state, ndarray, "initial_state")
-    check_true(
-        initial_state.shape == (hs_dim, hs_dim),
-        "Initial sate must be a square matrix of " \
-            + f"dimension {hs_dim}x{hs_dim}.")
+    if initial_state is not None:  # initial state is None for Gibbs Tempo
+        check_isinstance(initial_state, ndarray, "initial_state")
+        check_true(
+            initial_state.shape == (hs_dim, hs_dim),
+            "Initial sate must be a square matrix of " \
+                + f"dimension {hs_dim}x{hs_dim}.")
 
-    assert isinstance(bath, Bath), \
-        "Argument 'bath' must be an instance of Bath."
+    check_isinstance(bath, Bath, 'bath')
 
-    assert bath.dimension == hs_dim, \
+    check_true(bath.dimension == hs_dim,
             "Hilbertspace dimensions are unequal: " \
             + "system ({}), ".format(hs_dim) \
-            + "and bath coupling ({}).".format(bath.dimension)
+            + "and bath coupling ({}).".format(bath.dimension))
 
     parameters = (system, initial_state, bath, hs_dim)
     return parameters

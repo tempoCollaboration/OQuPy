@@ -130,6 +130,16 @@ class System(BaseSystem):
             return first_step, second_step
         return propagators
 
+    def get_unitary_propagators(self, dt, start_time, subdiv_limit, epsrel):
+        """Prepare propagator functions for the system. """
+        first_step = expm(-1j*self._hamiltonian*dt/2.0)
+        second_step = expm(-1j*self._hamiltonian*dt/2.0)
+        def propagators(step: int):
+            """Create the system propagators (first and second half) for
+            the time step `step`  """
+            return first_step, second_step
+        return propagators
+
     @property
     def hamiltonian(self) -> ndarray:
         """The system Hamiltonian."""
@@ -1115,6 +1125,13 @@ def _liouvillian(hamiltonian, gammas, lindblad_operators):
         op_dagger = op.conjugate().T
         liouvillian += gamma * (opr.left_right_super(op, op_dagger) \
                                 - 0.5 * opr.acommutator(np.dot(op_dagger, op)))
+    return liouvillian
+
+def _imaginary_liouvillian(hamiltonian, gammas, lindblad_operators):
+    """Lindbladian for a specific Hamiltonian, gammas and lindblad_operators.
+    """
+    liouvillian = - opr.acommutator(hamiltonian)
+
     return liouvillian
 
 def _create_density_matrix(dim, seed=1):

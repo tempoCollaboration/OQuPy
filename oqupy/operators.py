@@ -124,7 +124,6 @@ def destroy(n: int) -> ndarray:
     """
     return np.diag(np.sqrt(range(1, n), dtype=NpDtype), 1)
 
-
 # -- superoperators ----------------------------------------------------------
 
 def commutator(operator: ndarray) -> ndarray:

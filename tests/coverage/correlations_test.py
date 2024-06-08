@@ -23,7 +23,8 @@ from oqupy.correlations import CustomCorrelations
 from oqupy.correlations import CustomSD
 from oqupy.correlations import PowerLawSD
 
-square_function = lambda w: 0.1 * w**2
+square_function = lambda w: 0.1 * w ** 2
+
 
 def test_base_correlations():
     cor = BaseCorrelations()
@@ -40,19 +41,21 @@ def test_base_correlations():
                                         delta=None,
                                         shape=shape)
 
+
 def test_custom_correlations():
-    correlation_fun = lambda w: (np.cos(w)+1j*np.sin(w*0.7)) * np.exp(-w/2)
+    correlation_fun = lambda w: (np.cos(w) + 1j * np.sin(w * 0.7)) * np.exp(-w / 2)
     cor = CustomCorrelations(correlation_fun)
     str(cor)
-    t = np.linspace(0, 4.0/15.0, 10)
+    t = np.linspace(0, 4.0 / 15.0, 10)
     [cor.correlation(tt) for tt in t]
-    for shape in ["square", "upper-triangle", "lower-triangle"]:
+    for shape in ["square", "upper-triangle"]:
         cor.correlation_2d_integral(time_1=0.25,
                                     delta=0.05,
                                     shape=shape)
         cor.correlation_2d_integral(time_1=0.25,
                                     delta=0.05,
                                     shape=shape)
+
 
 def test_custom_correlations_bad_input():
     with pytest.raises(AssertionError):
@@ -67,17 +70,96 @@ def test_custom_s_d():
                           temperature=temperature,
                           cutoff_type=cutoff_type)
             str(sd)
-            w = np.linspace(0, 8.0*sd.cutoff, 10)
+            w = np.linspace(0, 8.0 * sd.cutoff, 10)
             y = sd.spectral_density(w)
-            t = np.linspace(0, 4.0/sd.cutoff, 10)
+            t = np.linspace(0, 4.0 / sd.cutoff, 10)
             [sd.correlation(tt) for tt in t]
-            for shape in ["square", "upper-triangle", "lower-triangle"]:
+            for shape in ["square", "upper-triangle"]:
                 sd.correlation_2d_integral(time_1=0.25,
                                            delta=0.05,
                                            shape=shape)
                 sd.correlation_2d_integral(time_1=0.25,
                                            delta=0.05,
                                            shape=shape)
+
+
+def test_matsubara_custom_s_d():
+    for cutoff_type in ["hard", "exponential", "gaussian"]:
+        temperature = 2.0
+        cutoff = 2.0
+        j_function = square_function
+        sd = CustomSD(j_function,
+                      cutoff=cutoff,
+                      temperature=temperature,
+                      cutoff_type=cutoff_type)
+
+
+        str(sd)
+        w = np.linspace(0, 8.0 * sd.cutoff, 10)
+        y = sd.spectral_density(w)
+        t = np.linspace(0, 4.0 / sd.cutoff, 10)
+        [sd.correlation(tt, matsubara=True) for tt in t]
+        [sd.eta_function(tt, matsubara=True) for tt in t]
+
+        assert type(sd.correlation(1, matsubara=True)) == float
+        np.testing.assert_almost_equal(
+            sd.correlation(0, matsubara=True),
+            sd.correlation(1 / temperature, matsubara=True))
+
+        for shape in ["square", "upper-triangle"]:
+            sd.correlation_2d_integral(time_1=0.25,
+                                       delta=0.05,
+                                       shape=shape,
+                                       matsubara=True)
+            sd.correlation_2d_integral(time_1=0.25,
+                                       delta=0.05,
+                                       shape=shape,
+                                       matsubara=True)
+
+        dt = 0.25
+        for ma in [True, False]:
+            big_tri = sd.correlation_2d_integral(time_1=0.0,
+                                                 delta=4*dt,
+                                                 shape='upper-triangle',
+                                                 matsubara=ma)
+            mid_tri = sd.correlation_2d_integral(time_1=0.0,
+                                                 delta=2*dt,
+                                                 shape='upper-triangle',
+                                                 matsubara=ma)
+            small_tri = sd.correlation_2d_integral(time_1=0.0,
+                                                   delta=dt,
+                                                   shape='upper-triangle',
+                                                   matsubara=ma)
+            square = sd.correlation_2d_integral(time_1=2*dt,
+                                                delta=dt,
+                                                shape='square',
+                                                matsubara=ma)
+            rect = sd.correlation_2d_integral(time_1=2 * dt,
+                                              time_2=4 * dt,
+                                              delta=dt,
+                                              shape='rectangle',
+                                              matsubara=ma)
+            # assert np.round(big_tri - (3 * small_tri + square + rect), 14) == 0
+            stiched_big_tri = 3 * mid_tri + square + rect - 2*small_tri
+            np.testing.assert_almost_equal( stiched_big_tri, big_tri)
+
+def test_matsubara_custom_s_d_bad_input():
+    temperature = 0.0
+    correlations = CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", temperature=temperature)
+    with pytest.raises(ValueError):
+        correlations.correlation(1, matsubara=True)
+    with pytest.raises(ValueError):
+        correlations.eta_function(1, matsubara=True)
+    for shape in ['square', 'upper-triangle', 'rectangle']:
+        with pytest.raises(ValueError):
+            correlations.correlation_2d_integral(time_1=2,
+                                                  time_2=1,
+                                                  delta=0.1,
+                                                  shape=shape,
+                                                  matsubara=True)
+
+
+
 
 def test_custom_s_d_bad_input():
     with pytest.raises(AssertionError):
@@ -104,18 +186,19 @@ def test_power_law_s_d():
                         cutoff_type=cutoff_type,
                         temperature=2.0)
         str(sd)
-        w = np.linspace(0, 8.0*sd.cutoff, 10)
+        w = np.linspace(0, 8.0 * sd.cutoff, 10)
         y = sd.spectral_density(w)
-        t = np.linspace(0, 4.0/sd.cutoff, 10)
+        t = np.linspace(0, 4.0 / sd.cutoff, 10)
         [sd.correlation(tt) for tt in t]
         [sd.correlation(tt) for tt in t]
-        for shape in ["square", "upper-triangle", "lower-triangle"]:
+        for shape in ["square", "upper-triangle"]:
             sd.correlation_2d_integral(time_1=0.25,
                                        delta=0.05,
                                        shape=shape)
             sd.correlation_2d_integral(time_1=0.25,
                                        delta=0.05,
                                        shape=shape)
+
 
 def test_power_law_s_d_bad_input():
     with pytest.raises(AssertionError):
