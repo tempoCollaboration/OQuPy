@@ -19,8 +19,9 @@ import pytest
 import numpy as np
 
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
-        TimeDependentSystemWithField, MeanFieldSystem
+        TimeDependentSystemWithField, MeanFieldSystem, ParameterizedSystem
 from oqupy import operators
+from typing import Callable
 
 # -----------------------------------------------------------------------------
 # -- test-examples ------------------------------------------------------------
@@ -250,4 +251,51 @@ def test_mean_field_system():
     tsys = TimeDependentSystem(lambda t: t * np.eye(2))
     with pytest.raises(AssertionError):
         MeanFieldSystem([tsys], fieldEomGood)
+    with pytest.raises(AssertionError): 
+        # empty system list
+        meansysField = MeanFieldSystem([],
+                                       fieldEomGood,
+                                       name="mean-field sys")
 
+
+def test_parameterized_system():
+    # good construction
+    def hamiltonianParameterizedGood(x, y, z):
+        h = np.zeros((2,2), dtype='complex128')
+        for var, var_name in zip([x,y,z], ["x", "y", "z"]):
+            h += var*operators.sigma(var_name)
+        return h
+    
+    hamiltonianParameterizedBad = operators.sigma("x")
+    hamiltonianParameterizedBad2 = operators.sigma("x").flatten()
+
+    dt = 0.01
+    xv = [0.0, 0.1, 0.2, 0.3]
+    yv = [0.0, 0.0, 0.0, 0.0]
+    zv = [1.0, 0.9, 0.8, 0.7]
+    params = list(zip(xv,yv,zv))
+
+    param_sys = ParameterizedSystem(hamiltonianParameterizedGood)
+    assert param_sys.number_of_parameters == 3
+
+    assert isinstance(param_sys.liouvillian(0.0,0.1,1.0),np.ndarray)
+
+    props=param_sys.get_propagators(dt, (xv,yv,zv))
+    prop_derivs=param_sys.get_propagator_derivatives(dt, (xv,yv,zv))
+
+    with pytest.raises(TypeError):
+        ParameterizedSystem(hamiltonianParameterizedBad)
+    with pytest.raises(TypeError):
+        ParameterizedSystem(hamiltonianParameterizedBad2)
+    with pytest.raises(TypeError):
+        param_sys.liouvillian()
+    with pytest.raises(TypeError):
+        param_sys.liouvillian(0.1)
+    with pytest.raises(TypeError):
+        props[0]
+    with pytest.raises(TypeError):
+        prop_derivs[0]
+
+    assert isinstance(param_sys.hamiltonian,Callable)
+    assert isinstance(param_sys.lindblad_operators,list)
+    assert isinstance(param_sys.gammas,list)

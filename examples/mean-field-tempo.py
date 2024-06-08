@@ -52,7 +52,8 @@ tempo_sys = oqupy.MeanFieldTempo(mean_field_system=mean_field_system,
                         initial_state_list=[initial_state],
                         initial_field=initial_field,
                         start_time=0.0,
-                        parameters=tempo_parameters)
+                        parameters=tempo_parameters,
+                        unique=True)
 mean_field_dynamics = tempo_sys.compute(end_time=end_time)
 system_dynamics = mean_field_dynamics.system_dynamics[0]
 

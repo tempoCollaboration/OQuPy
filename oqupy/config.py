@@ -42,9 +42,12 @@ TEMPO_BACKEND_CONFIG = {}
 # maximal dkmax for tempo parameter guessing function
 MAX_DKMAX = 256
 
-# default tolerance for tempo parameter guessing function
-DEFAULT_TOLERANCE = 3.9e-3
+# max number of samples for parameter guessing function to determine max
+# system frequency
+MAX_SYS_SAMPLES = 5000
 
+# default tolerances for tempo parameter guessing function
+DEFAULT_TOLERANCE = 3.9e-3
 
 # -- PT_TEMPO -----------------------------------------------------------------
 
@@ -65,3 +68,10 @@ PT_TEBD_DEFAULT_ORDER = 2
 
 # Default relative singular value truncation tolerance
 PT_TEBD_DEFAULT_EPSREL = 1.0e-5
+
+
+# -- BATH --------------------------------------------------------------------
+
+
+# default tolerance for degeneracy checking (how many decimals to round to)
+DEFAULT_TOLERANCE_DEGENERACY = 12

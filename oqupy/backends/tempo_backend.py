@@ -21,7 +21,8 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 from numpy import ndarray, moveaxis, expand_dims, eye, exp, outer,\
-    diag, array, kron, swapaxes, reshape, amax, argmax
+    diag, array, kron, swapaxes, reshape, amax, argmax, dot, zeros
+from numpy import max as numpy_max
 from scipy.linalg import svd, LinAlgError
 
 from oqupy import operators as op
@@ -334,6 +335,11 @@ class BaseTempoBackend:
         influences are included.
     epsrel: float
         Maximal relative SVD truncation error.
+    degeneracy_maps: Optional[List[ndarray]] (default None)
+        List of two arrays to invert the degeneracy in the north and west
+        direction. If None no degeneracy checks are used.
+    dim: Optional[int] (default None)
+        Hilbert space dimension, needed if unique is True
     """
 
     def __init__(
@@ -345,7 +351,9 @@ class BaseTempoBackend:
             sum_west: ndarray,
             dkmax: int,
             epsrel: float,
-            config: Optional[Dict] = None):
+            config: Optional[Dict] = None,
+            degeneracy_maps: Optional[List[ndarray]] = None,
+            dim: Optional[int] = None):
         """Create a TempoBackend object. """
         self._initial_state = initial_state
         self._influence = influence
@@ -362,6 +370,8 @@ class BaseTempoBackend:
         self._super_u = None
         self._super_u_dagg = None
         self._sum_north_na = None
+        self._degeneracy_maps = degeneracy_maps
+        self._dim = dim
 
     @property
     def step(self) -> int:
@@ -389,15 +399,34 @@ class BaseTempoBackend:
         else:
             dkmax_pre_compute = self._dkmax + 1
 
+        if self._degeneracy_maps is not None:
+            north_degeneracy_map, west_degeneracy_map =\
+                    self._degeneracy_maps
+            tmp_north_deg_num_vals = numpy_max(north_degeneracy_map)+1
+            tmp_west_deg_num_vals = numpy_max(west_degeneracy_map)+1
+
         for i in range(dkmax_pre_compute):
             infl = self._influence(i)
-            infl_four_legs = create_delta(infl, [1, 0, 0, 1])
             if i == 0:
-                tmp = np.dot(moveaxis(infl_four_legs, 1, -1),
-                          self._super_u_dagg)
+                if self._degeneracy_maps is not None:
+                    tmp=zeros((tmp_west_deg_num_vals,self._dim**2,
+                               tmp_north_deg_num_vals,self._dim**2),
+                              dtype=complex)
+                    for i1 in range(self._dim**2):
+                        tmp[west_degeneracy_map[i1]][i1] \
+                            [north_degeneracy_map[i1]][i1]= \
+                                infl[north_degeneracy_map[i1]]
+                    infl_four_legs = tmp
+                else:
+                    infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+                tmp = dot(moveaxis(infl_four_legs, 1, -1),
+                        self._super_u_dagg)
                 tmp = moveaxis(tmp, -1, 1)
                 tmp = np.dot(tmp, self._super_u.T)
                 infl_four_legs = tmp
+            else:
+                infl_four_legs = create_delta(infl, [1, 0, 0, 1])
+
             influences.append(infl_four_legs)
 
         self._mps = na.NodeArray([self._initial_state],
@@ -563,7 +592,9 @@ class TempoBackend(BaseTempoBackend):
             sum_west: ndarray,
             dkmax: int,
             epsrel: float,
-            config: Optional[Dict] = None):
+            config: Optional[Dict] = None,
+            degeneracy_maps: Optional[List[ndarray]] = None,
+            dim: Optional[int] = None):
         """Create a TempoBackend object. """
         super().__init__(
             initial_state,
@@ -573,7 +604,9 @@ class TempoBackend(BaseTempoBackend):
             sum_west,
             dkmax,
             epsrel,
-            config)
+            config,
+            degeneracy_maps,
+            dim)
         self._propagators = propagators
 
     def initialize(self) -> Tuple[int, ndarray]:
@@ -638,6 +671,16 @@ class MeanFieldTempoBackend():
         are included. Applies to all systems.
     epsrel: float
         Maximal relative SVD truncation error. Applies to all systems.
+    unique: Optional[bool]
+        Whether to use degeneracy checks.
+    degeneracy_maps_list: Optional[List[List[ndarray]]]
+        List of degeneracy maps for the systems. If specified, each degeneracy
+        map is a list of two arrays to invert the degeneracy in north and
+        west directions (respectively). If None, no degeneracy checking is
+        used.
+    dim_list: Optional[List[int]]
+        Hilbert space dimension of each system, required is
+        degeneracy_maps_list is not None.
     """
 
     def __init__(
@@ -656,7 +699,10 @@ class MeanFieldTempoBackend():
             sum_west_list: List[ndarray],
             dkmax: int,
             epsrel: float,
-            config: Dict):
+            config: Dict,
+            degeneracy_maps_list: Optional[List[List[ndarray]]] = None,
+            dim_list: Optional[List[ndarray]] = None,
+            ):
         """Create a MeanFieldTempoBackend object. """
         self._initial_state_list = initial_state_list
         self._initial_field = initial_field
@@ -666,18 +712,25 @@ class MeanFieldTempoBackend():
         self._state_list = initial_state_list
         self._step = None
         self._propagators_list = propagators_list
+        self._degeneracy_map_list = degeneracy_maps_list
         # List of BaseTempoBackends use to calculate each system dynamics
         self._backend_list = [BaseTempoBackend(initial_state,
-                                                influence,
-                                                unitary_transform,
-                                                sum_north,
-                                                sum_west,
-                                                dkmax,
-                                                epsrel,
-                                                config)
-        for initial_state, influence, unitary_transform, sum_north, sum_west \
-            in zip(initial_state_list, influence_list, unitary_transform_list, \
-                   sum_north_list, sum_west_list)]
+                         influence,
+                         unitary_transform,
+                         sum_north,
+                         sum_west,
+                         dkmax,
+                         epsrel,
+                         config,
+                         degeneracy_maps,
+                         dim)
+                         for initial_state, influence, unitary_transform,
+                         sum_north, sum_west, degeneracy_maps,
+                         dim in zip(initial_state_list,
+                             influence_list, unitary_transform_list,
+                             sum_north_list, sum_west_list,
+                             degeneracy_maps_list,
+                             dim_list)]
 
     @property
     def step(self) -> int:

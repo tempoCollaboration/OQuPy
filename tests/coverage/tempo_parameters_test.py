@@ -54,8 +54,12 @@ def test_tempo_parameters():
 def test_tempo_parameters_bad_input():
     with pytest.raises(TypeError):
         tempo.TempoParameters("x", 1.0e-5, 4.2, None, None, None, 2.0e-6, "rough", "bla")
+    with pytest.raises(ValueError):
+        tempo.TempoParameters(-0.1, 1.0e-05, None, None, None, None, 2.0e-6, "rough", "bla")
     with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, "x", 4.2, None, None, None, 2.0e-6, "rough", "bla")
+    with pytest.raises(ValueError):
+        tempo.TempoParameters(0.1, -1.0e-10, 4.2, None, None, None, 2.0e-6, "rough", "bla")
     with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 1.0e-05, "x", None, None, None, 2.0e-6, "rough", "bla")
     with pytest.raises(ValueError):
@@ -68,8 +72,14 @@ def test_tempo_parameters_bad_input():
         tempo.TempoParameters(0.1, 1.0e-05, 1.0, 1, None, None, 2.0e-6, "rough", "bla")
     with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, "x", None, 2.0e-6, "rough", "bla")
+    with pytest.raises(ValueError):
+        tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, -99, None, 2.0e-6, "rough", "bla")
     with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, None,  "x", 2.0e-6, "rough", "bla")
+    with pytest.raises(ValueError):
+        tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, None, -1000, 2.0e-6, "rough", "bla")
     with pytest.raises(TypeError):
         tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, None, None, "x", "rough", "bla")
+    with pytest.raises(ValueError):
+        tempo.TempoParameters(0.1, 1.0e-05, 4.2, None, None, None, -2.0e-6, "rough", "bla")
 
