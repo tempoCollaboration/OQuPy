@@ -124,34 +124,6 @@ def destroy(n: int) -> ndarray:
     """
     return np.diag(np.sqrt(range(1, n), dtype=NpDtype), 1)
 
-
-def spin_z(n: int) -> ndarray:
-    sz = [n / 2]
-    while len(sz) < n + 1:
-        sz.append(sz[-1] - 1)
-    sz = np.diag(sz)
-    return sz
-
-def spin_ladder_up(n: int) -> ndarray:
-    sp = np.zeros((n + 1, n + 1))
-    for jj in range(len(sp) - 1):
-        sp[jj][jj + 1] = 0.5 * np.sqrt(
-            0.5 * n * (0.5 * n + 1)
-            - (0.5 * n - jj) * (0.5 * n - jj - 1))
-    return sp
-
-def spin_ladder_down(n: int) -> ndarray:
-    return spin_ladder_up(n).T
-
-def spin_x(n: int) -> ndarray:
-    return spin_ladder_up(n) + spin_ladder_down(n)
-
-def spin_y(n: int) -> ndarray:
-    return 1j*(spin_ladder_up(n) - spin_ladder_down(n))
-
-def spin_operators(n: int) -> list:
-    return [np.eye(n+1), spin_x(n), spin_y(n), spin_z(n)]
-
 # -- superoperators ----------------------------------------------------------
 
 def commutator(operator: ndarray) -> ndarray:

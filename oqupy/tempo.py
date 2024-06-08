@@ -224,42 +224,17 @@ class GibbsParameters(BaseAPIClass):
 
     Parameters
     ----------
-    dt: float
-        Length of a time step :math:`\delta t`. - It should be small enough
-        such that a trotterisation between the system Hamiltonian and the
-        environment it valid, and the environment auto-correlation function
-        is reasonably well sampled.
+    n_steps: int
+        Number of imaginary time steps to take towards the final temperature.
     epsrel: float
         The maximal relative error in the singular value truncation (done
         in the underlying tensor network algorithm). - It must be small enough
         such that the numerical compression (using tensor network algorithms)
         does not truncate relevant correlations.
-    tcut: float (default = None)
-        Length of time :math:`t_\mathrm{cut}` included in the non-Markovian
-        memory. - This should be large enough to capture all non-Markovian
-        effects of the environment. If set to None no finite memory
-        approximation is made. Note only one of tcut, dkmax should be
-        specified.
-    dkmax: int (default = None)
-        Length of non-Markovian memory in number of timesteps i.e.
-        :math:`t_\mathrm{cut}=K\in\mathbb{N}`. If set to None no finite
-        approximation is made. Note only one of tcut, dkmax should be
-        specified.
-    add_correlation_time: float
-        Additional correlation time to include in the last influence
-        functional as explained in [Strathearn2017].
-    subdiv_limit: int (default = config.SUBDIV_LIMIT)
-        The maximum number of subdivisions used during the adaptive
-        algorithm when integrating a time-dependent Liouvillian. If
-        None then the Liouvillian is not integrated but sampled twice
-        to construct the system propagators at a timestep.
-    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
-        The relative error tolerance for the adaptive algorithm
-        when integrating a time-dependent Liouvillian.
     name: str (default = None)
-        An optional name for the tempo parameters object.
+        An optional name for the GibbsParameters object.
     description: str (default = None)
-        An optional description of the tempo parameters object.
+        An optional description of the GibbsParameters object.
     """
     def __init__(
             self,
@@ -274,7 +249,8 @@ class GibbsParameters(BaseAPIClass):
         check_isinstance(n_steps, int, name='n_steps')
         check_isinstance(epsrel, (float, int), name='epsrel')
 
-        check_true(temperature > 0.0, "Argument 'temperature' must be positive.")
+        check_true(
+            temperature > 0.0, "Argument 'temperature' must be positive.")
         check_true(n_steps > 1, "Argument 'n_steps' must be greater than 1.")
         check_true(epsrel > 0.0, "Argument 'epsrel' must be positive.")
 
@@ -376,8 +352,8 @@ class Tempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        tmp_coupling_comm = commutator(self._bath._coupling_operator)
-        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
+        tmp_coupling_comm = commutator(self._bath.coupling_operator)
+        tmp_coupling_acomm = acommutator(self._bath.coupling_operator)
         self._coupling_comm = tmp_coupling_comm.diagonal()
         self._coupling_acomm = tmp_coupling_acomm.diagonal()
 
@@ -510,16 +486,13 @@ class GibbsTempo(BaseAPIClass):
 
     Parameters
     ----------
-    system: System or TimeDependentSystem
+    system: System
         The system.
     bath: Bath
-        The Bath (includes the coupling operator to the system).
-    parameters: TempoParameters
-        The parameters for the TEMPO computation.
-    initial_state: ndarray
-        The initial density matrix of the system.
-    start_time: float
-        The start time.
+        The Bath, initiated with a CustomSD or derived (such as PowerLawSD)
+        correlations object.
+    parameters: GibbsParameters
+        The parameters for the GibbsTEMPO computation.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -545,8 +518,10 @@ class GibbsTempo(BaseAPIClass):
         check_isinstance(bath, Bath, name='bath')
         check_isinstance(parameters, GibbsParameters, name='parameters')
 
+        # ToDo: Find a different structure such that there is no dublicate
+        #       temperature.
         check_true(bath.correlations.temperature == parameters.temperature,
-                   "Bath temperature and parameters temperature must be equal") # this is annoying
+                   "Bath temperature and parameters temperature must be equal")
 
         self._system, self._initial_state, self._bath, self._dimension = \
             _tempo_physical_input_parse(False, system, None, bath)
@@ -589,11 +564,13 @@ class GibbsTempo(BaseAPIClass):
                 self._parameters.dt,
                 k * self._parameters.dt, shape=shape, matsubara=True)
 
-        operators = (-self._bath._coupling_operator.diagonal(),
-                     self._bath._coupling_operator.diagonal(),
+        operators = (-self._bath.coupling_operator.diagonal(),
+                     self._bath.coupling_operator.diagonal(),
                      np.zeros((dim,)))
 
-        unitary_transform = self._bath.unitary_transform
+        # ToDo: Unitary transform is not used. Check that GibbsTempo also works
+        #       with non-diagonal coupling operators!!!
+        # unitary_transform = self._bath.unitary_transform
 
         epsrel = self._parameters.epsrel
         max_step = self._parameters.n_steps
@@ -638,7 +615,8 @@ class GibbsTempo(BaseAPIClass):
         """
 
         if self._backend_instance.step is None:
-            step, state = self._backend_instance.initialise()  # initialising precomputes two steps
+            # initialising precomputes two steps
+            step, state = self._backend_instance.initialise()
             self._init_dynamics()
             for ii, state in enumerate(self._backend_instance.data):
                 self._dynamics.add(self._time(ii), state)
@@ -658,7 +636,8 @@ class GibbsTempo(BaseAPIClass):
         return self._dynamics
 
     def get_dynamics(self) -> Dynamics:
-        """Returns the instance of Dynamics associated with the GibbsTempo object.
+        """
+        Returns the instance of Dynamics associated with the GibbsTempo object.
         """
         return self._dynamics
 
@@ -979,57 +958,6 @@ def influence_matrix(
                                 + 1j*eta_dk.imag*op_p, op_m))
 
     return infl
-
-# def influence_matrix2(
-#         dk: int,
-#         parameters: TempoParameters,
-#         correlations: BaseCorrelations,
-#         coupling_acomm: ndarray,
-#         coupling_comm: ndarray,
-#         matsubara: Optional[bool] = False):
-#     """Compute the influence functional matrix. """
-#     dt = parameters.dt
-#     dkmax = parameters.dkmax
-#
-#     if dk == 0:
-#         time_1 = 0.0
-#         time_2 = None
-#         shape = "upper-triangle"
-#     elif dk < 0:
-#         time_1 = float(dkmax) * dt
-#         if parameters.add_correlation_time is not None:
-#             time_2 = float(dkmax) * dt \
-#                 + np.min([float(-dk) * dt,
-#                             1.0*dt + parameters.add_correlation_time])
-#         else:
-#             return None
-#         shape = "rectangle"
-#     else:
-#         time_1 = float(dk) * dt
-#         time_2 = None
-#         shape = "square"
-#
-#     eta_dk = correlations.correlation_2d_integral( \
-#         delta=dt,
-#         time_1=time_1,
-#         time_2=time_2,
-#         shape=shape,
-#         epsrel=parameters.epsrel,
-#         matsubara=matsubara)
-#     op_p = coupling_acomm
-#     if matsubara:
-#         op_m = -coupling_acomm
-#     else:
-#         op_m = coupling_comm
-#
-#     if dk == 0:
-#         infl = np.diag(np.exp(-op_m*(eta_dk.real*op_m \
-#                                         + 1j*eta_dk.imag*op_p)))
-#     else:
-#         infl = np.exp(-np.outer(eta_dk.real*op_m \
-#                                 + 1j*eta_dk.imag*op_p, op_m))
-#
-#     return infl
 
 
 def _analyse_correlation(

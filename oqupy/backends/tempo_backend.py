@@ -14,77 +14,24 @@
 """
 Module for tempo and mean-field tempo backend.
 """
-
-from typing import Callable, Dict, List, Optional, Tuple
-from copy import copy, deepcopy
-
 import os
-os.environ['NUMPY_EXPERIMENTAL_ARRAY_FUNCTION'] = '0'
-import numpy as np
-
-from numpy import ndarray, moveaxis, dot, expand_dims, eye, exp, outer,\
-    diag, array, kron, ones, ascontiguousarray, swapaxes, reshape, amax, argmax
-from scipy.linalg import svd
-from scipy.linalg import block_diag, LinAlgError
+from copy import copy, deepcopy
 from functools import lru_cache
-from numpy.linalg import svd as nsvd
-from oqupy import operators
+from typing import Callable, Dict, List, Optional, Tuple
+
+import numpy as np
+from numpy import ndarray, moveaxis, expand_dims, eye, exp, outer,\
+    diag, array, kron, swapaxes, reshape, amax, argmax
+from scipy.linalg import svd, LinAlgError
+
+from oqupy import operators as op
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.backends import node_array as na
 from oqupy.util import create_delta
-import numpy as np
-from numba import jit
-# import jax.numpy as jnp
 
-# def signif(x, p):
-#     x = np.asarray(x)
-#     x_positive = np.where(np.isfinite(x) & (x != 0), np.abs(x), 10**(p-1))
-#     mags = 10 ** (p - 1 - np.floor(np.log10(x_positive)))
-#     return np.round(x * mags) / mags
-# def _scipy_svd(theta, precision):
-#     """ static svd truncation method using scipy.linalg.svd"""
-#     try:
-#         u, singular_values, v_dagger = svd(theta, full_matrices=False, lapack_driver='gesvd')
-#     except LinAlgError:
-#         u, singular_values, v_dagger = svd(theta, full_matrices=False, lapack_driver='gesdd')
-#     #u, singular_values, v_dagger = svd(theta, full_matrices=False, lapack_driver='gesvd')
-#     #u, singular_values, v_dagger = np.linalg.svd(theta)
-#     chi = argmax(singular_values/amax(singular_values) < precision)
-#     if not chi:
-#         chi = len(singular_values)
-#
-#     return u[:, 0:chi], singular_values[0:chi], v_dagger[0:chi, :]
+os.environ['NUMPY_EXPERIMENTAL_ARRAY_FUNCTION'] = '0'
 
-# @jit(nopython=True)
-# def _numpy_svd(theta, precision):
-#     u, s, vd = np.linalg.svd(theta)
-#     chi = np.argmax(s / np.amax(s) < precision)
-#     if not chi:
-#         chi = len(s)
-#     return u[:, 0:chi], s[0:chi], vd[0:chi, :]
-#
-# def numpy_svd(theta, precision):
-#     u, s, vd = np.linalg.svd(theta)
-#     chi = np.argmax(s / np.amax(s) < precision)
-#     if not chi:
-#         chi = len(s)
-#     return u[:, 0:chi], s[0:chi], vd[0:chi, :]
-# from time import time
-# mat = np.random.rand(1000, 1000)
-# t0 = time()
-# r1 = _numpy_svd(mat, 10**(-9))
-# print(time()-t0)
-# t0 = time()
-# r1 = _numpy_svd(mat, 10**(-9))
-# print(time()-t0)
-# t0 = time()
-# r1 = numpy_svd(mat, 10**(-9))
-# print(time()-t0)
-# t0 = time()
-# r1 = _scipy_svd(mat, 10**(-9))
-# print(time()-t0)
-# exit()
-class TIBaseBackend:
+class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
     """
     Backend class for TEMPO.
 
@@ -125,17 +72,15 @@ class TIBaseBackend:
         self._ops = operators
         self._prop = propagator
 
-        self._max_step = max_step if max_step is None else max_step  # need oqupy default max?
+        self._max_step = max_step if max_step is None else max_step
         self._kmax = max_step if max_mps_length is None else max_mps_length
-        self._initial_data = eye(self._dim) if initial_data is None else initial_data
+        self._initial_data = \
+            eye(self._dim) if initial_data is None else initial_data
         self._config = TEMPO_BACKEND_CONFIG if config is None else config
 
         self._h_ind, self._h_proj = self._unique(self._ops[0])
         self._v_ind, self._v_proj = self._unique(zip(*self._ops[1:]))
         self._v_dim, self._h_dim, = len(self._v_ind), len(self._h_ind)
-
-        # self._v_dim, self._v_ind, self._v_proj = self._dim, list(range(self._dim)), eye(self._dim)
-        # self._h_dim, self._h_ind, self._h_proj = self._dim, list(range(self._dim)), eye(self._dim)
 
         self._cap = expand_dims(eye(self._dim), -1)
         self._step = None
@@ -183,14 +128,17 @@ class TIBaseBackend:
         if k == 0:
             c0 = self._coefficients(0)
             o0_2 = c0.real * self._ops[1] - 1j * c0.imag * self._ops[2]
-            tensor = exp(outer(o_2, o_1)) * dot(prop, prop).T * exp(o_1 * o0_2)
-            tensor = dot(kron(self._v_proj, self._h_proj), diag(tensor.flatten()))
-            tensor = reshape(tensor, (self._v_dim, self._h_dim, self._dim, self._dim))
-            tensor = tensor # * dot(prop, prop).T * exp(o_1 * o0_2)
+            tensor = exp(outer(o_2, o_1)) * np.dot(prop, prop).T \
+                * exp(o_1 * o0_2)
+            tensor = np.dot(
+                kron(self._v_proj, self._h_proj), diag(tensor.flatten()))
+            tensor = reshape(
+                tensor, (self._v_dim, self._h_dim, self._dim, self._dim))
             tensor = moveaxis(swapaxes(tensor, 2, 3), 0, 2)
         else:
             tensor = diag(exp(kron(o_2[self._v_ind], o_1[self._h_ind])))
-            tensor = reshape(tensor, (self._v_dim, self._h_dim, self._v_dim, self._h_dim))
+            tensor = reshape(
+                tensor, (self._v_dim, self._h_dim, self._v_dim, self._h_dim))
             tensor = swapaxes(tensor, 0, 3)
         return tensor
 
@@ -198,45 +146,52 @@ class TIBaseBackend:
     def _contract(self, k) -> List:
         """
         Contracts k'th mps site with rank-4 influence tensor
-        this contracts mps site with an mpo site to give another mps site with larger bond dims
-                                    |
-            MPO site        mpo_w --O-- mpo_e
-                                    |                                    |
-                                             ---->     (mpo_w * mps_w) --O-- (mpo_e * mps_e)
-                                    |
-            MPS site        mps_w --O-- mps_e
+        this contracts mps site with an mpo site to give another mps site with
+        larger bond dims
+                            |
+         MPO site   mpo_w --O-- mpo_e
+                            |                                    |
+                                     ----> (mpo_w * mps_w) --O-- (mpo_e * mps_e)
+                            |
+         MPS site   mps_w --O-- mps_e
 
         """
-        # self._mps[k] = block_diag(*[v * swapaxes(self._mps[k] , 1, 2) for v in mat.T])
         tens = self._influence_tensor(len(self._mps) - 1 - k)
         if k == 0:
-            tens = expand_dims(tens.sum(0), 0)  # sum over mpo_w and create new leg with mpo_w=1
+            # sum over mpo_w and create new leg with mpo_w=1
+            tens = expand_dims(tens.sum(0), 0)
 
-        mps_w, mps_n, mps_e = self._mps[k].shape
-        mpo_w, mpo_e, mpo_n, mpo_s = tens.shape
+        mps_w, _, mps_e = self._mps[k].shape
+        mpo_w, mpo_e, mpo_n, _ = tens.shape
 
-        tmp = dot(tens, self._mps[k])  # new shape (oW, oE, oN, sW, sE)
+        tmp = np.dot(tens, self._mps[k])  # new shape (oW, oE, oN, sW, sE)
         tmp = tmp.swapaxes(1, 3)  # new shape (oW, sW, oN, oE, sE)
-        tmp = tmp.reshape((mpo_w * mps_w, mpo_n, mpo_e * mps_e))  # new shape (oW * sW, oN, oE * sE)
+        # new shape (oW * sW, oN, oE * sE)
+        tmp = tmp.reshape((mpo_w * mps_w, mpo_n, mpo_e * mps_e))
 
         self._mps[k] = tmp
         return self._mps[k].shape
 
     def _truncate_right(self, k) -> int:
-        """ Perform svd on kth mps site and truncate the bond with (k+1)'th site"""
+        """ Perform svd on kth mps site and truncate the bond with (k+1)'th
+        site."""
         west, north, east = self._mps[k].shape
-        u, s, v_dag = self._scipy_svd(reshape(self._mps[k], (west * north, east)), self._precision)
-        self._mps[k] = reshape(u, (west, north, len(s)))  # (self._mps[k].shape[0], -1, len(s) )
-        self._mps[k + 1] = dot((s * v_dag.T).T, swapaxes(self._mps[k + 1], 0, 1))
+        u, s, v_dag = self._scipy_svd(
+            reshape(self._mps[k], (west * north, east)), self._precision)
+        self._mps[k] = reshape(u, (west, north, len(s)))
+        self._mps[k + 1] = np.dot(
+            (s * v_dag.T).T, swapaxes(self._mps[k + 1], 0, 1))
         return len(s)
 
     def _truncate_left(self, k) -> int:
-        """ Perform svd on kth mps site and truncate the bond with (k+1)'th site"""
+        """ Perform svd on kth mps site and truncate the bond with (k+1)'th
+        site."""
         self._mps[k] = self._mps[k].T
         east, north, west = self._mps[k].shape
-        u, s, v_dag = self._scipy_svd(reshape(self._mps[k], (east * north, west)), self._precision)
-        self._mps[k] = reshape(u, (east, north, len(s))).T  # (self._mps[k].shape[0], -1, len(s) )
-        self._mps[k - 1] = dot(self._mps[k - 1], v_dag.T * s)
+        u, s, v_dag = self._scipy_svd(
+            reshape(self._mps[k], (east * north, west)), self._precision)
+        self._mps[k] = reshape(u, (east, north, len(s))).T
+        self._mps[k - 1] = np.dot(self._mps[k - 1], v_dag.T * s)
         return len(s)
 
 
@@ -246,19 +201,22 @@ class TIBaseBackend:
             self._mps = mps
             self._step = step
         else:
-            c_real, c_imag = self._coefficients(0).real, self._coefficients(0).imag
+            c_real, c_imag = \
+                self._coefficients(0).real, self._coefficients(0).imag
             o_1 = self._ops[0]
             o_2 = c_real * self._ops[1] - 1j * c_imag * self._ops[2]
-            tensor = dot(self._initial_data, self._prop.T * exp(o_1 * o_2))  # shape ( e, n, s)
-            self.data.append(dot(tensor, self._prop.T))
-            tensor = dot(self._influence_tensor(0), tensor.T) # contains whole timestep freeprop!
+            # shape ( e, n, s)
+            tensor = np.dot(self._initial_data, self._prop.T * exp(o_1 * o_2))
+            self.data.append(np.dot(tensor, self._prop.T))
+            # contains whole timestep freeprop!
+            tensor = np.dot(self._influence_tensor(0), tensor.T)
             tensor = swapaxes(tensor.sum(0), 0, 2)
             self._mps = [tensor, self._cap]
             self.data.append(self.readout())
             self._step = 1
         return self._step, self.data[-1]
 
-    def compute_step(self) -> Tuple[int, ndarray]:  ## make readout optional
+    def compute_step(self) -> Tuple[int, ndarray]: # ToDo: make readout optional
         """
         Takes a step in the TEMPO tensor network computation.
 
@@ -280,11 +238,6 @@ class TIBaseBackend:
         bond dimensions: list
             list of the dimensions of mps sites
         """
-        # if not self._step:
-        #     self.initialise()
-        # if self._step >= self._max_step + 2:
-        #     print('max step reached')
-        #     return [s.shape for s in self._mps]
 
         first = 0  # index for the first mps site
         mid = int(len(self._mps) / 2)   # index for the middle mps site
@@ -293,38 +246,29 @@ class TIBaseBackend:
         self._contract(first)
         self._contract(last)
 
-        for jj in range(last - 1, mid - 1, -1):  # contract in new tensors, right to middle
+        # contract in new tensors, right to middle
+        for jj in range(last - 1, mid - 1, -1):
             self._contract(jj)
             self._truncate_left(jj + 1)
-        for jj in range(first + 1, mid):  # contract in new tensors, left to middle
+        # contract in new tensors, left to middle
+        for jj in range(first + 1, mid):
             self._contract(jj)
             self._truncate_right(jj - 1)
-        for jj in range(first, last):  # svd sweep left to right: mps now canonical
+        # svd sweep left to right: mps now canonical
+        for jj in range(first, last):
             self._truncate_right(jj)
-        for jj in range(last, first, -1):  # svd sweep right to left
+        # svd sweep right to left
+        for jj in range(last, first, -1):
             self._truncate_left(jj)
 
-        # for jj in range(first + 1, mid):  # contract in new tensors, left to middle
-        #     self._contract(jj)
-        #     self._truncate_right(jj - 1)
-        # for jj in range(last - 1, mid - 1, -1):  # contract in new tensors, right to middle
-        #     self._contract(jj)
-        #     self._truncate_left(jj + 1)
-        # for jj in range(last - 1, first, -1):  # svd sweep right to left
-        #     self._truncate_left(jj + 1)
-        # for jj in range(first, last):  # svd sweep left to right: mps now canonical
-        #     self._truncate_right(jj)
-        #
-        # for jj in range(last, first, -1):  # svd sweep left to right: mps now canonical
-        #     self._truncate_left(jj)
-        # for jj in range(first, last):  # svd sweep left to right: mps now canonical
-        #     self._truncate_right(jj)
+        # turn east leg at last site into north leg at new last site
+        self._mps.append(self._cap)
 
-        self._mps.append(self._cap)  # turn east leg at last site into north leg at new last site
-
-        if len(self._mps) > self._kmax + 1:  ## check this
-            end = self._mps.pop(0).sum(1)  # remove first site, turn into matrix
-            self._mps[0] = dot(end, swapaxes(self._mps[0], 0, 1))  # dot into new first site
+        if len(self._mps) > self._kmax + 1:  # ToDo: check this
+            # remove first site, turn into matrix
+            end = self._mps.pop(0).sum(1)
+            # np.dot into new first site
+            self._mps[0] = np.dot(end, swapaxes(self._mps[0], 0, 1))
 
         self._step += 1
         self.data.append(self.readout())
@@ -349,10 +293,12 @@ class TIBaseBackend:
     def _scipy_svd(theta, precision):
         """ static svd truncation method using scipy.linalg.svd"""
         try:
-            u, singular_values, v_dagger = svd(theta, full_matrices=False, lapack_driver='gesvd')
+            u, singular_values, v_dagger = \
+                svd(theta, full_matrices=False, lapack_driver='gesvd')
         except LinAlgError:
             print('svd except')
-            u, singular_values, v_dagger = svd(theta, full_matrices=False, lapack_driver='gesdd')
+            u, singular_values, v_dagger = \
+                svd(theta, full_matrices=False, lapack_driver='gesdd')
         chi = argmax(singular_values/amax(singular_values) < precision)
         if not chi:
             chi = len(singular_values)
@@ -426,10 +372,10 @@ class BaseTempoBackend:
         """ToDo"""
         self._initial_state = copy(self._initial_state).reshape(-1)
 
-        self._super_u = operators.left_right_super(
+        self._super_u = op.left_right_super(
             self._unitary_transform,
             self._unitary_transform.conjugate().T)
-        self._super_u_dagg = operators.left_right_super(
+        self._super_u_dagg = op.left_right_super(
             self._unitary_transform.conjugate().T,
             self._unitary_transform)
 
@@ -447,10 +393,10 @@ class BaseTempoBackend:
             infl = self._influence(i)
             infl_four_legs = create_delta(infl, [1, 0, 0, 1])
             if i == 0:
-                tmp = dot(moveaxis(infl_four_legs, 1, -1),
+                tmp = np.dot(moveaxis(infl_four_legs, 1, -1),
                           self._super_u_dagg)
                 tmp = moveaxis(tmp, -1, 1)
-                tmp = dot(tmp, self._super_u.T)
+                tmp = np.dot(tmp, self._super_u.T)
                 infl_four_legs = tmp
             influences.append(infl_four_legs)
 
@@ -722,17 +668,16 @@ class MeanFieldTempoBackend():
         self._propagators_list = propagators_list
         # List of BaseTempoBackends use to calculate each system dynamics
         self._backend_list = [BaseTempoBackend(initial_state,
-                                               influence,
-                                               unitary_transform,
-                                               sum_north,
-                                               sum_west,
-                                               dkmax,
-                                               epsrel,
-                                               config)
-                              for initial_state, influence, unitary_transform,
-                              sum_north, sum_west in zip(initial_state_list,
-                                                         influence_list, unitary_transform_list,
-                                                         sum_north_list, sum_west_list)]
+                                                influence,
+                                                unitary_transform,
+                                                sum_north,
+                                                sum_west,
+                                                dkmax,
+                                                epsrel,
+                                                config)
+        for initial_state, influence, unitary_transform, sum_north, sum_west \
+            in zip(initial_state_list, influence_list, unitary_transform_list, \
+                   sum_north_list, sum_west_list)]
 
     @property
     def step(self) -> int:
@@ -757,13 +702,15 @@ class MeanFieldTempoBackend():
             current_step, current_state_list, current_field)
         # N.B. propagators use current_field & current_field_derivative
         # this is how field dependence enters in each system dynamics
-        prop_tuple_list = [propagators(current_step, current_field,
-                                       current_field_derivative) for propagators, state
-                           in zip(self._propagators_list, current_state_list)]
+        prop_tuple_list = [
+            propagators(current_step, current_field, current_field_derivative) \
+                for propagators, state in \
+                    zip(self._propagators_list, current_state_list)]
         # Use tempo tensor network to compute each system state
-        next_state_list = [backend.compute_system_step(next_step,
-                                                       *prop_tuple) for backend, prop_tuple
-                           in zip(self._backend_list, prop_tuple_list)]
+        next_state_list = [
+            backend.compute_system_step(next_step, *prop_tuple) \
+                for backend, prop_tuple in \
+                    zip(self._backend_list, prop_tuple_list)]
         # Use field evolution function to compute next field
         next_field = self._compute_field(current_step,
                                          current_state_list, current_field,

@@ -85,14 +85,11 @@ class BaseCorrelations(BaseAPIClass):
             \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta_\mathrm{lower-triangle} =
-            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
-
             \eta_\mathrm{rectangle} =
             \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
         for `shape` either ``'square'``, ``'upper-triangle'``,
-        ``'lower-triangle'``, or ``'rectangle'``.
+        or ``'rectangle'``.
 
         Parameters
         ----------
@@ -105,7 +102,7 @@ class BaseCorrelations(BaseAPIClass):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'lower-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int
@@ -222,14 +219,11 @@ class CustomCorrelations(BaseCorrelations):
             \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta_\mathrm{lower-triangle} =
-            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
-
             \eta_\mathrm{rectangle} =
             \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
         for `shape` either ``'square'``, ``'upper-triangle'``,
-        ``'lower-triangle'``, or ``'rectangle'``.
+        or ``'rectangle'``.
 
         Parameters
         ----------
@@ -242,7 +236,7 @@ class CustomCorrelations(BaseCorrelations):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int
@@ -266,11 +260,9 @@ class CustomCorrelations(BaseCorrelations):
 
         lower_boundary = {'square': lambda x: 0.0,
                           'upper-triangle': lambda x: 0.0,
-                          'lower-triangle': lambda x: x - time_1,
                           'rectangle': lambda x: 0.0}
         upper_boundary = {'square': lambda x: delta,
                           'upper-triangle': lambda x: x - time_1,
-                          'lower-triangle': lambda x: delta,
                           'rectangle': lambda x: delta, }
 
         int_real = integrate.dblquad(func=c_real,
@@ -338,10 +330,10 @@ def _complex_integral(
 
     return re_int + 1j * im_int
 
-class CustomSD(BaseCorrelations):  #### Temperature assigned here
+class CustomSD(BaseCorrelations):
     r"""
-    Correlations corresponding to a custom spectral density for a thermal system with known temperature.
-    The resulting spectral density is
+    Correlations corresponding to a custom spectral density for a thermal
+    system with known temperature. The resulting spectral density is
 
     .. math::
 
@@ -491,15 +483,20 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             tau = -1j * tau
         # convention is tau.imag < 0
         if self.temperature == 0.0:
-            check_true(matsubara == False, 'Matsubara correlations only defined for temperature > 0')
+            check_true(
+                matsubara is False,
+                'Matsubara correlations only defined for temperature > 0')
             def integrand(w):
                 return self._spectral_density(w) * np.exp(-1j * w * tau)
         else:
             def integrand(w):
-                if np.exp(-w / self.temperature) > np.finfo(float).eps:  # this is to stop overflow
+                # this is to stop overflow
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:
                     inte = self._spectral_density(w) \
-                                  * (np.exp(-1j * tau * w) + np.exp(-(1 / self.temperature * w - 1j * tau * w))) \
-                                  / (1 - np.exp(-w / self.temperature))
+                        * (np.exp(-1j * tau * w)
+                           + np.exp(-(1 / self.temperature * w \
+                                      - 1j * tau * w))) \
+                        / (1 - np.exp(-w / self.temperature))
                 else:
                     inte = self._spectral_density(w) * np.exp(-1j * w * tau)
                 return inte
@@ -520,7 +517,7 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             integral = integral.real
         return integral
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=2 ** 10, typed=False)
     def eta_function(
             self,
             tau: ArrayLike,
@@ -559,18 +556,24 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             tau = -1j * tau
         # convention is tau.imag < 0
         if self.temperature == 0.0:
-            check_true(matsubara == False, 'Matsubara correlations only defined for temperature > 0')
+            check_true(
+                matsubara is False,
+                'Matsubara correlations only defined for temperature > 0')
             def integrand(w):
                 return self._spectral_density(w) / w ** 2 * (
                     (np.exp(-1j * w * tau) - 1) + 1j * w * tau)
         else:
             def integrand(w):
-                if np.exp(-w / self.temperature) > np.finfo(float).eps:  # this is to stop overflow
-                    inte = self._spectral_density(w) / w ** 2 * (
-                                  ((np.exp(-1j*tau * w) + np.exp(-(w / self.temperature - 1j*tau * w)))
-                                   - np.exp(- w / self.temperature) - 1) / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
+                # this is to stop overflow
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:
+                    inte = self._spectral_density(w) / w ** 2 \
+                        * (((np.exp(-1j*tau * w) \
+                             + np.exp(-(w / self.temperature - 1j*tau * w))) \
+                            - np.exp(- w / self.temperature) - 1) \
+                        / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
                 else:
-                    inte = self._spectral_density(w) / w ** 2 * (np.exp(-1j * w * tau) - 1 + 1j * w * tau)
+                    inte = self._spectral_density(w) / w ** 2 \
+                        * (np.exp(-1j * w * tau) - 1 + 1j * w * tau)
                 return inte
 
         integral = _complex_integral(integrand,
@@ -609,14 +612,11 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta_\mathrm{lower-triangle} =
-            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
-
             \eta_\mathrm{rectangle} =
             \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
         for `shape` either ``'square'``, ``'upper-triangle'``,
-        ``'lower-triangle'``, or ``'rectangle'``.
+        or ``'rectangle'``.
 
         Parameters
         ----------
@@ -629,7 +629,7 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int
@@ -641,11 +641,10 @@ class CustomSD(BaseCorrelations):  #### Temperature assigned here
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
-        if shape == ('square' or 'upper-triangle'):
-            time_2 = time_1
-
-        kwargs = {'epsrel': epsrel, 'subdiv_limit': subdiv_limit, 'matsubara': matsubara}
-
+        kwargs = {
+            'epsrel': epsrel,
+            'subdiv_limit': subdiv_limit,
+            'matsubara': matsubara}
 
         if shape == 'upper-triangle':
             integral = self.eta_function(time_1 + delta, **kwargs) \

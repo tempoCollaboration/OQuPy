@@ -68,6 +68,35 @@ def test_gibbs_tempo():
     assert state1.shape == (2, 2)
     np.testing.assert_almost_equal(state1.trace(),1)
 
+# -- operators for testing purposes --
+def spin_z(n: int) -> np.ndarray:
+    sz = [n / 2]
+    while len(sz) < n + 1:
+        sz.append(sz[-1] - 1)
+    sz = np.diag(sz)
+    return sz
+
+def spin_ladder_up(n: int) -> np.ndarray:
+    sp = np.zeros((n + 1, n + 1))
+    for jj in range(len(sp) - 1):
+        sp[jj][jj + 1] = 0.5 * np.sqrt(
+            0.5 * n * (0.5 * n + 1)
+            - (0.5 * n - jj) * (0.5 * n - jj - 1))
+    return sp
+
+def spin_ladder_down(n: int) -> np.ndarray:
+    return spin_ladder_up(n).T
+
+def spin_x(n: int) -> np.ndarray:
+    return spin_ladder_up(n) + spin_ladder_down(n)
+
+def spin_y(n: int) -> np.ndarray:
+    return 1j*(spin_ladder_up(n) - spin_ladder_down(n))
+
+def spin_operators(n: int) -> list:
+    return [np.eye(n+1), spin_x(n), spin_y(n), spin_z(n)]
+
+# ------
 
 def test_gibbs_tempo_bad_input():
     aa, tmp, wc, nu = 0.2, 0.1, 5, 1
@@ -75,12 +104,12 @@ def test_gibbs_tempo_bad_input():
     correlations  = oqupy.CustomSD(jw, wc, cutoff_type='exponential', temperature=tmp)
 
     dim = 2
-    good_system = oqupy.System(0.5 * oqupy.operators.spin_x(dim))
-    bad_system_value = oqupy.System( 0.5 * oqupy.operators.spin_x(dim + 1))
-    bad_system_type = oqupy.TimeDependentSystem(lambda t: 0.5 * oqupy.operators.spin_x(dim))
+    good_system = oqupy.System(0.5 * spin_x(dim))
+    bad_system_value = oqupy.System( 0.5 * spin_x(dim + 1))
+    bad_system_type = oqupy.TimeDependentSystem(lambda t: 0.5 * spin_x(dim))
 
-    good_bath = oqupy.Bath(0.5 * oqupy.operators.spin_z(dim), correlations)
-    bad_bath = oqupy.Bath(0.5 * oqupy.operators.spin_z(dim + 1), correlations)
+    good_bath = oqupy.Bath(0.5 * spin_z(dim), correlations)
+    bad_bath = oqupy.Bath(0.5 * spin_z(dim + 1), correlations)
 
     good_parameters = tempo.GibbsParameters(tmp,8, 1.0e-5, name="name", description="desc")
     bad_parameters_value = tempo.GibbsParameters(tmp + 1, 8, 1.0e-5, name="name", description="desc")
