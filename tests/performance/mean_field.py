@@ -11,21 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# """
-# Performance tests for PT-TEBD computations.
-# """
+"""
+Performance tests for mean field TEMPO computations.
+"""
 import sys
 sys.path.insert(0,'.')
 import os
 
-import dill
-import itertools
 import numpy as np
 import time
 
-
 import oqupy
-import oqupy.operators as op
 
 
 PT_DIR_PATH = "./tests/data/process_tensors/"

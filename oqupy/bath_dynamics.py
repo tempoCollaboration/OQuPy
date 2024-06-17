@@ -29,7 +29,7 @@ from oqupy.process_tensor import BaseProcessTensor
 from oqupy.bath import Bath
 from oqupy.system import BaseSystem
 from oqupy.config import NpDtype
-from oqupy.contractions import compute_correlations
+from oqupy.system_dynamics import compute_correlations
 
 
 class TwoTimeBathCorrelations(BaseAPIClass):

@@ -20,7 +20,7 @@ import pytest
 import numpy as np
 
 from oqupy.bath import Bath
-from oqupy.correlations import PowerLawSD
+from oqupy.bath_correlations import PowerLawSD
 from oqupy import operators
 
 def test_bath():

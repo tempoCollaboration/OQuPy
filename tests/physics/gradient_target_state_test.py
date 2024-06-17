@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the compute_gradient_and_dynamics and chain_rule functions in gradient.py
+Tests for the compute_gradient_and_dynamics and chain_rule functions.
 """
 
 import pytest
 import numpy as np
 
 import oqupy
-from oqupy import process_tensor
 
 
 # -----------------------------------------------------------------------------

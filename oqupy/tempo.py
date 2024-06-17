@@ -39,7 +39,7 @@ from oqupy.base_api import BaseAPIClass
 from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE, MAX_SYS_SAMPLES
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
-from oqupy.correlations import BaseCorrelations, CustomSD
+from oqupy.bath_correlations import BaseCorrelations, CustomSD
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
     TimeDependentSystemWithField, MeanFieldSystem
@@ -578,7 +578,7 @@ class GibbsTempo(BaseAPIClass):
                      self._bath.coupling_operator.diagonal(),
                      np.zeros((dim,)))
 
-        
+
         unitary_transform = self._bath.unitary_transform
         # ToDo: Unitary transform is not used. Check that GibbsTempo also works
         #       with non-diagonal coupling operators!!!

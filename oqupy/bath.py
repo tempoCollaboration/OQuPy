@@ -22,7 +22,7 @@ from numpy import ndarray
 
 from oqupy.config import NpDtype
 from oqupy.config import DEFAULT_TOLERANCE_DEGENERACY
-from oqupy.correlations import BaseCorrelations
+from oqupy.bath_correlations import BaseCorrelations
 from oqupy.base_api import BaseAPIClass
 from oqupy.operators import commutator, acommutator
 

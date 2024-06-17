@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test for the time_evovling_mpo.process_tensor module multiple environment
-functionality.
+Test for multiple environments.
 """
 
 import numpy as np

@@ -12,15 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the oqupy.tempo modules.
+Tests degeneracy checking with mean field TEMPO.
 """
 
 import pytest
 import numpy as np
 
 import oqupy
-from oqupy import process_tensor
-
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------

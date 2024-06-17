@@ -25,6 +25,7 @@ __all__ = [
     'CustomCorrelations',
     'CustomSD',
     'compute_correlations',
+    'compute_correlations_nt',
     'compute_dynamics',
     'compute_dynamics_with_field',
     'compute_gradient_and_dynamics',
@@ -40,8 +41,6 @@ __all__ = [
     'MeanFieldDynamics',
     'MeanFieldSystem',
     'MeanFieldTempo',
-    'NumericsError',
-    'NumericsWarning',
     'operators',
     'ParameterizedSystem',
     'PowerLawSD',
@@ -68,22 +67,20 @@ from oqupy.bath import Bath
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
-from oqupy.contractions import compute_correlations
-from oqupy.contractions import compute_dynamics
-from oqupy.contractions import compute_dynamics_with_field
+from oqupy.system_dynamics import compute_correlations
+from oqupy.system_dynamics import compute_correlations_nt
+from oqupy.system_dynamics import compute_dynamics
+from oqupy.system_dynamics import compute_dynamics_with_field
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
 
-from oqupy.correlations import CustomCorrelations
-from oqupy.correlations import CustomSD
-from oqupy.correlations import PowerLawSD
+from oqupy.bath_correlations import CustomCorrelations
+from oqupy.bath_correlations import CustomSD
+from oqupy.bath_correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
 from oqupy.dynamics import MeanFieldDynamics
-
-from oqupy.exceptions import NumericsError
-from oqupy.exceptions import NumericsWarning
 
 from oqupy.gradient import state_gradient
 from oqupy.gradient import compute_gradient_and_dynamics

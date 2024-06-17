@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0,'..')
 
 import oqupy
-from oqupy.contractions import compute_correlations_nt
+from oqupy.system_dynamics import compute_correlations_nt
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
@@ -100,15 +100,16 @@ ops_times = [times_1, times_2, times_3, times_4]
 cors=[]
 
 for i in range (len(ops_orders)):
-    cor = nt.compute_nt_correlations(system = system,
-                                      process_tensor=process_tensor,
-                                      operators = operators,
-                                      ops_times=ops_times,
-                                      ops_order=ops_orders[i],
-                                      dt = dt,
-                                      initial_state = initial_state,
-                                      start_time = start_time,
-                                      progress_type = "bar")
+    cor = compute_correlations_nt(
+        system = system,
+        process_tensor=process_tensor,
+        operators = operators,
+        ops_times=ops_times,
+        ops_order=ops_orders[i],
+        dt = dt,
+        initial_state = initial_state,
+        start_time = start_time,
+        progress_type = "bar")
     cors.append(cor)
 
 ##########################Calculate two-time correlations###################
@@ -116,7 +117,7 @@ order = ["left", "left"]
 
 times = [start_time, (start_time, end_time)]
 
-cor2 = nt.compute_nt_correlations(system = system,
+cor2 = compute_correlations_nt(system = system,
                                   process_tensor=process_tensor,
                                   operators = [dip_v, dip_v],
                                   ops_times=times,

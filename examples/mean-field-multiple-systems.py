@@ -6,7 +6,7 @@ sys.path.insert(0,'.')
 import oqupy
 import numpy as np
 import matplotlib.pyplot as plt
-from oqupy import contractions
+from oqupy import system_dynamics
 
 alpha = 0.2
 nuc = 0.15
@@ -62,7 +62,7 @@ process_tensor = oqupy.pt_tempo_compute(bath=bath,
                                         parameters=tempo_parameters)
 control_list = [oqupy.Control(subsystem_1.dimension), oqupy.Control(subsystem_2.dimension)]
 mean_field_dynamics_process = \
-        contractions.compute_dynamics_with_field(mean_field_system,
+        system_dynamics.compute_dynamics_with_field(mean_field_system,
                 initial_field=initial_field, 
                 initial_state_list=initial_state_list, 
                 start_time=start_time,

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Performance tests for PT-TEMP multi-time correlations computations.
+Performance tests for multi-time correlation computations.
 """
 import sys
 sys.path.insert(0,'.')
@@ -22,9 +22,7 @@ import numpy as np
 import time
 
 import oqupy
-import oqupy.operators as op
 
-from oqupy.contractions import compute_correlations_nt
 
 PT_DIR_PATH = "./tests/data/process_tensors/"
 
@@ -98,15 +96,16 @@ def nt_corr_performance_A(process_tensor_name,
     result = dict.fromkeys(keys, None)
 
     start_time = time.time()
-    cor = compute_correlations_nt(system = system,
-                                      process_tensor=pt,
-                                      operators = operators,
-                                      ops_times=ops_times,
-                                      ops_order=ops_order,
-                                      dt = dt,
-                                      initial_state = initial_state,
-                                      start_time = start_t,
-                                      progress_type = "bar")
+    cor = oqupy.compute_correlations_nt(
+        system = system,
+        process_tensor=pt,
+        operators = operators,
+        ops_times=ops_times,
+        ops_order=ops_order,
+        dt = dt,
+        initial_state = initial_state,
+        start_time = start_t,
+        progress_type = "bar")
 
     result['corrs'] = cor[1][:,0,0,:]
     result['walltime'] = time.time()-start_time

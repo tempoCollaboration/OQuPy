@@ -19,7 +19,7 @@ import pytest
 import numpy as np
 
 import oqupy
-from oqupy.contractions import compute_correlations_nt
+from oqupy.system_dynamics import compute_correlations_nt
 
 
 def test_compute_dynamics_with_field():

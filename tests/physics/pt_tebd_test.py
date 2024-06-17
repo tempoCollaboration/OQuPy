@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.backends.tensor_network modules.
+Tests for PT-TEBD.
 """
 import sys
 sys.path.insert(0,'.')

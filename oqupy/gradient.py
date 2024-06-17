@@ -21,7 +21,7 @@ import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 
-from oqupy.contractions import _compute_dynamics_input_parse, \
+from oqupy.system_dynamics import _compute_dynamics_input_parse, \
     _apply_system_superoperator, _apply_derivative_pt_mpos, _get_pt_mpos, \
     _get_pt_mpos_backprop, _get_caps, _apply_caps, _apply_pt_mpos
 from oqupy.control import Control

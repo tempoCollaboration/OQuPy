@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the compute_gradient_and_dynamics and chain_rule functions in gradient.py
+Tests for the compute_gradient_and_dynamics and chain_rule functions.
 """
 
 import pytest
@@ -23,7 +23,8 @@ from oqupy import process_tensor
 
 
 # -----------------------------------------------------------------------------
-# -- Test K: Spin-Boson model gradient (time-dependent system, functional target state) -------------------------------------------------
+# -- Test K: Spin-Boson model gradient (time-dep. sys., functional target state)
+# ---------------------------- -------------------------------------------------
 
 # Target derivative : e.g. derivative of the purity
 target_derivative_K=lambda rho: 2*rho.T

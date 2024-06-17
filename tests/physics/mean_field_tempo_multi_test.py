@@ -2,7 +2,7 @@ import numpy as np
 import oqupy
 
 """
-Test dynamics with multiple identical mean-field systems are consistent
+Test dynamics with multiple identical mean-field systems are consistent.
 """
 
 number_of_systems = 3

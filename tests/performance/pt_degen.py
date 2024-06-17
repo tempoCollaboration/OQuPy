@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Performance test for degeneracy checking in process tensor generation
+Performance test for degeneracy checking in PT-TEMPO generation.
 """
 import sys
 from time import perf_counter
