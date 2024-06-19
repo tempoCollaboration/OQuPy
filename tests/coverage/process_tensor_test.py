@@ -55,6 +55,8 @@ pt2 = oqupy.pt_tempo_compute(
     start_time=0.0,
     end_time=0.3,
     parameters=tempo_params)
+pt1.name = "PT1"
+pt2.name = "PT2"
 pt1.export(TEMP_FILE_1, overwrite=True)
 pt2.export(TEMP_FILE_2, overwrite=True)
 del pt1
@@ -70,4 +72,5 @@ def test_process_tensor():
 
     pt2 = oqupy.import_process_tensor(TEMP_FILE_2, process_tensor_type="file")
     str(pt2)
+    assert pt2.name == "PT2"
     pt2.get_bond_dimensions()

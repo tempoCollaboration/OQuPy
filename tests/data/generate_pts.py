@@ -110,6 +110,8 @@ def generate_spin_boson_pt(name, pt_dir = PT_DIR_PATH):
             parameters=pt_tempo_parameters,
             process_tensor_file=file_path,
             overwrite=True,
+            description=f"automatically generated from name: '{name}'."
       )
+      pt.name = "spin boson model"
 
       pt.close()

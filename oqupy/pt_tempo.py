@@ -107,6 +107,8 @@ class PtTempo(BaseAPIClass):
         self._dimension = self._bath.dimension
         self._correlations = self._bath.correlations
 
+        super().__init__(name, description)
+
         try:
             tmp_start_time = float(start_time)
         except Exception as e:
@@ -142,8 +144,6 @@ class PtTempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        super().__init__(name, description)
-
         self._coupling_comm = self._bath._coupling_comm
         self._coupling_acomm = self._bath._coupling_acomm
 
@@ -171,7 +171,9 @@ class PtTempo(BaseAPIClass):
             hilbert_space_dimension=self._dimension,
             dt=self._parameters.dt,
             transform_in=transform_in,
-            transform_out=transform_out)
+            transform_out=transform_out,
+            name=self.name,
+            description=self.description)
 
     def _init_file_process_tensor(self, filename, overwrite):
         """ToDo. """
@@ -195,7 +197,9 @@ class PtTempo(BaseAPIClass):
             hilbert_space_dimension=self._dimension,
             dt=self._parameters.dt,
             transform_in=transform_in,
-            transform_out=transform_out)
+            transform_out=transform_out,
+            name=self.name,
+            description=self.description)
 
     def _init_pt_tempo_backend(self):
         """Create and initialize the pt-tempo backend. """
