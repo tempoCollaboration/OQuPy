@@ -34,7 +34,7 @@ styles = ['-', '--', '-.', ':']
 
 # -----------------------------------------------------------------------------
 
-fig, (ax1,ax2) = plt.subplots(1,2,figsize=(6,4), tight_layout=True)
+fig, (ax1,ax2) = plt.subplots(1,2,figsize=(5.6,4))
 for i in range(4):
     result = all_results[0][1][i]
     for site, dynamics in result['dynamics'].items():
@@ -44,8 +44,9 @@ for i in range(4):
             color=f"C{site}", linestyle=styles[i],
             label=label)
 ax1.legend(labelspacing=0.1, fontsize=10, handletextpad=0.3, borderpad=0.2)
-ax1.set_xlabel(r"time $t$")
-ax1.set_ylabel(r"$\rho^{(n)}_{\uparrow\uparrow}$")
+ax1.set_xlim(0.0,4.0)
+ax1.set_xlabel(r"$t\quad[\mathrm{ps}]$")
+ax1.set_ylabel(r"$\langle\uparrow|\rho^{(n)}|\uparrow\rangle$")
 
 for i in range(4):
     result = all_results[0][1][i]
@@ -57,6 +58,7 @@ for i in range(4):
 ax2.legend(loc=8)
 ax2.set_yscale('log')
 ax2.set_ylim(1,200)
+ax2.set_xticks(bonds)
 ax2.set_xlabel("bond")
 ax2.set_ylabel("bond dimension")
 fig.savefig("./tests/data/plots/pt-tebd-results.pdf")

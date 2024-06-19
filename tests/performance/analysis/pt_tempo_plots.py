@@ -28,10 +28,8 @@ import oqupy.operators as op
 
 plt.style.use('./tests/performance/analysis/matplotlib_style.mplstyle')
 
-with open("./tests/data/performance_results/pt_tempo_E.pkl", 'rb') as f:
+with open("./tests/data/performance_results/pt_tempo.pkl", 'rb') as f:
     all_results = dill.load(f)
-
-# styles = ['-', '--', '-.', ':']
 
 # -----------------------------------------------------------------------------
 
@@ -71,28 +69,34 @@ axs["deg"].semilogy((spin_dims-1)/2, walltimeA, label="without deg. checking",
                     c='k', marker="+", linestyle='none')
 axs["deg"].semilogy((spin_dims-1)/2, walltimeB, label="with deg. checking",
                     c='k', marker="*", linestyle='none')
+axs["deg"].set_xticks([0.5,1.0,1.5,2.0,2.5,3.0])
+axs["deg"].set_xticklabels(['1/2', '1', '3/2', '2', '5/2', '3'])
 axs["deg"].set_xlabel("spin size")
-axs["deg"].set_ylabel("computation time")
+axs["deg"].set_ylabel("comp. time  [s]")
 axs["deg"].set_ylim(top=1.0e3)
 axs["deg"].legend(loc='upper center')
 
 
-axs["pt"].semilogy(alphas, walltimePT, label="generation of PT-MPO",
+axs["pt"].semilogy(alphas, walltimePT, label="construction of PT-MPO",
                    c='k', marker="d", linestyle='none')
 axs["pt"].semilogy(alphas, walltimeDN, label="application of PT-MPO",
                    c='k', marker="x", linestyle='none')
+axs["pt"].set_xticks(alphas)
 axs["pt"].set_xlabel(r"coupling strength $\alpha$")
-axs["pt"].set_ylabel("computation time")
+axs["pt"].set_ylabel("comp. time  [s]")
 axs["pt"].set_ylim(bottom=1.0e-1, top=1.0e4)
 axs["pt"].legend(loc='upper center')
 
 
 for alpha, dyn in zip(alphas, dynamics):
-    axs["dyn"].plot(*dyn.expectations(op.sigma('z'), real=True),label=f"$\\alpha = {alpha}$")
-axs["dyn"].set_xlabel(r"$t\,/\mathrm{ps}$")
+    t, sz = dyn.expectations(op.sigma('z'), real=True)
+    axs["dyn"].plot(t, sz,label=f"$\\alpha = {alpha}$")
+axs["dyn"].hlines(0.0, t[0], t[-1], color='k', linestyle=":")
+axs["dyn"].set_xlabel(r"$t\quad[\mathrm{ps}]$")
 axs["dyn"].set_ylabel(r"$\langle\hat{\sigma}_z\rangle$")
 axs["dyn"].set_ylim(-1.1,1.1)
-axs["dyn"].legend()
+axs["dyn"].set_xlim(0.0,16.0)
+axs["dyn"].legend(loc='lower right', frameon=False, bbox_to_anchor=(1.0, -0.05))
 
 # -----------------------------------------------------------------------------
 

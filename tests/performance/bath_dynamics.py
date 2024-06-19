@@ -70,7 +70,7 @@ def bath_dynamics_performance_A(process_tensor_name,
     # -- ?? --
     w_start = 1.0
     w_stop = 3.0
-    w_step = 0.02
+    w_step = 0.05
     # w2index = int((2.0-w_start)/w_inc)
 
     ws = np.arange(w_start, w_stop, w_step)
@@ -109,7 +109,7 @@ def bath_dynamics_performance_A(process_tensor_name,
 
 # Parameter set intended to check convergence with PTs epsrel.
 parameters_A1 = [
-    ["spinBoson_alpha0.05_zeta1.0_T1.0_cutoff10.0exp_tcut1.0_dt04_steps09_epsrel15"], # process_tensor_name
+    ["spinBoson_alpha0.05_zeta1.0_T1.0_cutoff10.0exp_tcut1.0_dt03_steps08_epsrel15"], # process_tensor_name
     [2.0],                # epsilon
     [1.0],                # Omega
 ]

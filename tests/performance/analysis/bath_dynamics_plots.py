@@ -52,18 +52,20 @@ print(generate_correlations_time)
 
 # -----------------------------------------------------------------------------
 
-fig, (ax1,ax2) = plt.subplots(2,1, figsize=(6,4), tight_layout=False, sharex=True)
+fig, (ax1,ax2) = plt.subplots(2,1, figsize=(5.5,3.6), tight_layout=False, sharex=True)
 
-ax1.plot(ts,energies[w_index], color='k', linestyle=':')
-ax1.plot(ts,energiesEnvelope[w_index], color='k')
+ax1.plot(ts,energies[w_index]*1.0e3, color='k', linestyle=':')
+ax1.plot(ts,energiesEnvelope[w_index]*1.0e3, color='k')
 # ax1.set_xlabel(r'$t$')
-ax1.set_ylabel(r'$\Delta Q (\epsilon, t)$')
+ax1.set_ylabel(r'$\Delta Q (\epsilon, t)\: [10^{-3}/\mathrm{ps}]$     ')
 
-pcm = ax2.pcolormesh(ts, ws, energiesEnvelope, shading="nearest", cmap="coolwarm")
+pcm = ax2.pcolormesh(ts, ws, energiesEnvelope*1.0e3, shading="nearest", cmap="coolwarm")
 ax2.hlines(epsilon, ts[0], ts[-1], color='k', linestyle='-.')
-ax2.set_xlabel(r'$t$')
-ax2.set_ylabel(r'$\omega$')
-fig.colorbar(pcm, ax=ax2)
+ax2.set_xlabel(r'$t\quad[\mathrm{ps}]$')
+ax2.set_ylabel(r'$\omega\quad[1/\mathrm{ps}]$')
+fig.text(0.0,1.0,"(a)",fontsize=14,verticalalignment='top', horizontalalignment='left')
+fig.text(0.0,0.53,"(b)",fontsize=14,verticalalignment='top', horizontalalignment='left')
+fig.colorbar(pcm, label=r'$[10^{-3}/\mathrm{ps}]$', ax=ax2)
 
 fig.savefig("./tests/data/plots/bath-dynamics-results.pdf")
 

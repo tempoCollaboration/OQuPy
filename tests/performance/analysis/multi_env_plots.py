@@ -36,18 +36,18 @@ with open("./tests/data/performance_results/multi_env.pkl", 'rb') as f:
 results = all_results[0][0]
 
 
-fig, ax = plt.subplots(1,1)
+fig, ax = plt.subplots(1,1,figsize=(4,2.6))
 
-for res in results[0:2]:
-    ax.plot(*res['dynamics'].expectations(op.sigma('z'), real=True), color='C0', label="cold")
+colors = ['C0','C0','C3','C3','C2','C2']
+linestyles = ['-','-',':',':','--','--']
+labels = ['cold', None, 'hot', None, 'cold & hot', None]
 
-for res in results[2:4]:
-    ax.plot(*res['dynamics'].expectations(op.sigma('z'), real=True), color='C3', label="warm")
+for i, res in enumerate(results[0:6]):
+    t, sz = res['dynamics'].expectations(op.sigma('z'), real=True)
+    ax.plot(t, sz, color=colors[i], label=labels[i], linestyle=linestyles[i])
 
-for res in results[4:6]:
-    ax.plot(*res['dynamics'].expectations(op.sigma('z'), real=True), color='C2', label="cold & warm")
-
-ax.set_xlabel(r'$t$')
+ax.set_xlim(left=t[0], right=t[-1])
+ax.set_xlabel(r'$t\quad[\mathrm{ps}]$')
 ax.set_ylabel(r'$\langle \sigma_z(t)\rangle$')
 ax.legend()
 
