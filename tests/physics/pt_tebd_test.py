@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.backends.tensor_network modules.
+Tests for PT-TEBD.
 """
 import sys
 sys.path.insert(0,'.')
@@ -104,8 +104,8 @@ dynamics_sites=list(range(N))
 
 # -----------------------------------------------------------------------------
 
-correct_F1_rhos = np.load("tests/data/example_F1_rhos.npy")
-correct_F2_rhos = np.load("tests/data/example_F2_rhos.npy")
+correct_F1_rhos = np.load("tests/data/correct_results/example_F1_rhos.npy")
+correct_F2_rhos = np.load("tests/data/correct_results/example_F2_rhos.npy")
 
 # -----------------------------------------------------------------------------
 

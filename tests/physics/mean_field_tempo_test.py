@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.backends.tensor_network modules.
+Tests for MeanFieldTempo.
 """
 import numpy as np
 
 import oqupy
-from oqupy import process_tensor
 from oqupy import operators
 
 # -- Test G: Dicke model --

@@ -17,15 +17,16 @@ Module for environment correlations.
 
 from typing import Callable, Optional, Text
 from typing import Any as ArrayLike
-import functools
+from functools import lru_cache
 
 import numpy as np
 from scipy import integrate
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.util import check_true
 
-
+#np.seterr(all='warn')
 # --- spectral density classes ------------------------------------------------
 
 class BaseCorrelations(BaseAPIClass):
@@ -84,14 +85,11 @@ class BaseCorrelations(BaseAPIClass):
             \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta_\mathrm{lower-triangle} =
-            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
-
             \eta_\mathrm{rectangle} =
             \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
         for `shape` either ``'square'``, ``'upper-triangle'``,
-        ``'lower-triangle'``, or ``'rectangle'``.
+        or ``'rectangle'``.
 
         Parameters
         ----------
@@ -104,7 +102,7 @@ class BaseCorrelations(BaseAPIClass):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'lower-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int
@@ -157,7 +155,7 @@ class CustomCorrelations(BaseCorrelations):
             complex(tmp_correlation_function(1.0))
         except Exception as e:
             raise AssertionError("Correlation function must be vectorizable " \
-                + "and must return float.") from e
+                                 + "and must return float.") from e
         self.correlation_function = tmp_correlation_function
 
         super().__init__(name, description)
@@ -201,7 +199,7 @@ class CustomCorrelations(BaseCorrelations):
         """
         return self.correlation_function(tau)
 
-    @functools.lru_cache(maxsize=2**10, typed=False)
+    @lru_cache(maxsize=2 ** 10, typed=False)
     def correlation_2d_integral(
             self,
             delta: float,
@@ -221,14 +219,11 @@ class CustomCorrelations(BaseCorrelations):
             \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta_\mathrm{lower-triangle} =
-            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
-
             \eta_\mathrm{rectangle} =
             \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
         for `shape` either ``'square'``, ``'upper-triangle'``,
-        ``'lower-triangle'``, or ``'rectangle'``.
+        or ``'rectangle'``.
 
         Parameters
         ----------
@@ -241,7 +236,7 @@ class CustomCorrelations(BaseCorrelations):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int
@@ -253,8 +248,8 @@ class CustomCorrelations(BaseCorrelations):
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
-        c_real = lambda y, x: np.real(self.correlation(x-y))
-        c_imag = lambda y, x: np.imag(self.correlation(x-y))
+        c_real = lambda y, x: np.real(self.correlation(x - y))
+        c_imag = lambda y, x: np.imag(self.correlation(x - y))
 
         if time_2 is None:
             time_2 = time_1 + delta
@@ -265,12 +260,10 @@ class CustomCorrelations(BaseCorrelations):
 
         lower_boundary = {'square': lambda x: 0.0,
                           'upper-triangle': lambda x: 0.0,
-                          'lower-triangle': lambda x: x-time_1,
                           'rectangle': lambda x: 0.0}
         upper_boundary = {'square': lambda x: delta,
-                          'upper-triangle': lambda x: x-time_1,
-                          'lower-triangle': lambda x: delta,
-                          'rectangle': lambda x: delta,}
+                          'upper-triangle': lambda x: x - time_1,
+                          'rectangle': lambda x: delta, }
 
         int_real = integrate.dblquad(func=c_real,
                                      a=time_1,
@@ -284,7 +277,7 @@ class CustomCorrelations(BaseCorrelations):
                                      gfun=lower_boundary[shape],
                                      hfun=upper_boundary[shape],
                                      epsrel=epsrel)[0]
-        return int_real+1.0j*int_imag
+        return int_real + 1.0j * int_imag
 
 
 # === CORRELATIONS FROM SPECTRAL DENSITIES ====================================
@@ -296,193 +289,51 @@ def _hard_cutoff(omega: ArrayLike, omega_c: float) -> ArrayLike:
     """Hard cutoff function."""
     return np.heaviside(omega_c - omega, 0)
 
+
 def _exponential_cutoff(omega: ArrayLike, omega_c: float) -> ArrayLike:
     """Exponential cutoff function."""
-    return np.exp(-omega/omega_c)
+    return np.exp(-omega / omega_c)
+
 
 def _gaussian_cutoff(omega: ArrayLike, omega_c: float) -> ArrayLike:
     """Gaussian cutoff function."""
-    return np.exp(-(omega/omega_c)**2)
+    return np.exp(-(omega / omega_c) ** 2)
+
 
 # dictionary for the various cutoffs in the form:
 #   'cutoff_name': cutoff_function
 CUTOFF_DICT = {
-    'hard':_hard_cutoff,
-    'exponential':_exponential_cutoff,
-    'gaussian':_gaussian_cutoff,
-    }
-
-# --- 2d integrals ------------------------------------------------------------
-
-def _2d_square_integrand_real(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of square 2D time integral at zero
-    temperature without J(omega). """
-    return 1.0/omega**2 * 2 * np.cos(time_1*omega) * (1 - np.cos(delta*omega))
-
-def _2d_square_integrand_real_t(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of square 2D time integral at finite
-    temperature without J(omega). """
-    integrand = 1.0/omega**2 * 2 * np.cos(time_1*omega) \
-                * (1 - np.cos(delta*omega))
-    return integrand / np.tanh(omega/(2*temperature))
-
-def _2d_square_integrand_imag(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for imaginary part of square 2D time integral without
-    J(omega). """
-    return -1.0/omega**2 * 2 * np.sin(time_1*omega) * (1 - np.cos(delta*omega))
-
-def _2d_upper_triangle_integrand_real(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of upper triangle 2D time integral at zero
-    temperature without J(omega). """
-    return 1.0/omega**2 * (np.cos(omega*time_1) \
-                           - np.cos(omega*(time_1+delta)) \
-                           - omega * delta * np.sin(omega*time_1))
-
-def _2d_upper_triangle_integrand_real_t(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of upper triangle 2D time integral at finite
-    temperature without J(omega). """
-    return 1.0/omega**2 * (np.cos(omega*time_1) \
-                           - np.cos(omega*(time_1+delta)) \
-                           - omega * delta * np.sin(omega*time_1)) \
-                        / np.tanh(omega/(2*temperature))
-
-def _2d_upper_triangle_integrand_imag(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for imaginary part of upper triangle 2D time integral without
-    J(omega). """
-    return -1.0/omega**2 * (np.sin(omega*time_1) \
-                            - np.sin(omega*(time_1+delta)) \
-                            + omega * delta * np.cos(omega*time_1))
-
-def _2d_lower_triangle_integrand_real(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of lower triangle 2D time integral at zero
-    temperature without J(omega). """
-    return 1.0/omega**2 * (np.cos(omega*time_1) \
-                           - np.cos(omega*(time_1-delta)) \
-                           + omega * delta * np.sin(omega*time_1))
-
-def _2d_lower_triangle_integrand_real_t(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of lower triangle 2D time integral at finite
-    temperature without J(omega). """
-    return 1.0/omega**2 * (np.cos(omega*time_1) \
-                           - np.cos(omega*(time_1-delta)) \
-                           + omega * delta * np.sin(omega*time_1)) \
-                        / np.tanh(omega/(2*temperature))
-
-def _2d_lower_triangle_integrand_imag(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for imaginary part of lower triangle 2D time integral without
-    J(omega). """
-    return -1.0/omega**2 * (np.sin(omega*time_1)
-                            - np.sin(omega*(time_1-delta))
-                            - omega * delta * np.cos(omega*time_1))
-
-def _2d_rectangle_integrand_real(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of rectangle 2D time integral at zero
-    temperature without J(omega). """
-    return 1.0/omega**2 * (np.cos((time_2 - delta) * omega)
-                           - np.cos((time_1 - delta) * omega)
-                           - np.cos(time_2 * omega)
-                           + np.cos(time_1 * omega))
-
-def _2d_rectangle_integrand_real_t(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for real part of rectangle 2D time integral at finite
-    temperature without J(omega). """
-    integrand = 1.0/omega**2 * (np.cos((time_2 - delta) * omega)
-                                - np.cos((time_1 - delta) * omega)
-                                - np.cos(time_2 * omega)
-                                + np.cos(time_1 * omega))
-    return integrand / np.tanh(omega/(2*temperature))
-
-def _2d_rectangle_integrand_imag(
-        omega: ArrayLike,
-        delta: float,
-        time_1: float,
-        time_2: Optional[float] = None,
-        temperature: Optional[float] = None) -> ArrayLike:
-    """Integrand for imaginary part of rectangle 2D time integral without
-    J(omega). """
-    return -1.0/omega**2 * (np.sin((time_2 - delta) * omega)
-                            - np.sin((time_1 - delta) * omega)
-                            - np.sin(time_2 * omega)
-                            + np.sin(time_1 * omega))
-
-# dictionary for the various integrands for the 2d time integral
-INTEGRAND_DICT = {
-    'square': (_2d_square_integrand_real,
-               _2d_square_integrand_real_t,
-               _2d_square_integrand_imag),
-    'upper-triangle': (_2d_upper_triangle_integrand_real,
-                       _2d_upper_triangle_integrand_real_t,
-                       _2d_upper_triangle_integrand_imag),
-    'lower-triangle': (_2d_lower_triangle_integrand_real,
-                       _2d_lower_triangle_integrand_real_t,
-                       _2d_lower_triangle_integrand_imag),
-    'rectangle': (_2d_rectangle_integrand_real,
-                  _2d_rectangle_integrand_real_t,
-                  _2d_rectangle_integrand_imag),
-    }
+    'hard': _hard_cutoff,
+    'exponential': _exponential_cutoff,
+    'gaussian': _gaussian_cutoff,
+}
 
 
 # --- the spectral density classes --------------------------------------------
 
+def _complex_integral(
+        integrand: Callable[[float], complex],
+        a: Optional[float] = 0.0,
+        b: Optional[float] = 1.0,
+        epsrel: Optional[float] = INTEGRATE_EPSREL,
+        limit: Optional[int] = SUBDIV_LIMIT) -> complex:
+    re_int = integrate.quad(lambda x: np.real(integrand(x)),
+                            a=a,
+                            b=b,
+                            epsrel=epsrel,
+                            limit=limit)[0]
+    im_int = integrate.quad(lambda x: np.imag(integrand(x)),
+                            a=a,
+                            b=b,
+                            epsrel=epsrel,
+                            limit=limit)[0]
+
+    return re_int + 1j * im_int
+
 class CustomSD(BaseCorrelations):
     r"""
-    Correlations corresponding to a custom spectral density. The resulting
-    spectral density is
+    Correlations corresponding to a custom spectral density for a thermal
+    system with known temperature. The resulting spectral density is
 
     .. math::
 
@@ -535,7 +386,7 @@ class CustomSD(BaseCorrelations):
             float(tmp_j_function(1.0))
         except Exception as e:
             raise AssertionError("Spectral density must be vectorizable " \
-                + "and must return float.") from e
+                                 + "and must return float.") from e
         self.j_function = tmp_j_function
 
         # check input: cutoff
@@ -598,7 +449,8 @@ class CustomSD(BaseCorrelations):
             self,
             tau: ArrayLike,
             epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> ArrayLike:
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            matsubara: Optional[bool] = False) -> ArrayLike:
         r"""
         Auto-correlation function associated to the spectral density at the
         given temperature :math:`T`
@@ -627,38 +479,119 @@ class CustomSD(BaseCorrelations):
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         # real and imaginary part of the integrand
+        if matsubara:
+            tau = -1j * tau
+        # convention is tau.imag < 0
         if self.temperature == 0.0:
-            re_integrand = lambda w: self._spectral_density(w) * np.cos(w*tau)
+            check_true(
+                matsubara is False,
+                'Matsubara correlations only defined for temperature > 0')
+            def integrand(w):
+                return self._spectral_density(w) * np.exp(-1j * w * tau)
         else:
-            re_integrand = lambda w: self._spectral_density(w) * np.cos(w*tau) \
-                        / np.tanh(w/(2.0*self.temperature))
-        im_integrand = lambda w: -1.0 * self._spectral_density(w) \
-                                      * np.sin(w*tau)
-        # real and imaginary part of the integral
-        re_int = integrate.quad(re_integrand,
-                                a=0.0,
-                                b=self.cutoff,
-                                epsrel=epsrel,
-                                limit=subdiv_limit)[0]
-        im_int = integrate.quad(im_integrand,
-                                a=0.0,
-                                b=self.cutoff,
-                                epsrel=epsrel,
-                                limit=subdiv_limit)[0]
-        if self.cutoff_type != "hard":
-            re_int += integrate.quad(re_integrand,
-                                     a=self.cutoff,
-                                     b=np.inf,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)[0]
-            im_int += integrate.quad(im_integrand,
-                                     a=self.cutoff,
-                                     b=np.inf,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)[0]
-        return re_int+1j*im_int
+            def integrand(w):
+                # this is to stop overflow
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:
+                    inte = self._spectral_density(w) \
+                        * (np.exp(-1j * tau * w)
+                           + np.exp(-(1 / self.temperature * w \
+                                      - 1j * tau * w))) \
+                        / (1 - np.exp(-w / self.temperature))
+                else:
+                    inte = self._spectral_density(w) * np.exp(-1j * w * tau)
+                return inte
 
-    @functools.lru_cache(maxsize=2**10, typed=False)
+        integral = _complex_integral(integrand,
+                                     a=0.0,
+                                     b=self.cutoff,
+                                     epsrel=epsrel,
+                                     limit=subdiv_limit)
+
+        if self.cutoff_type != "hard":
+            integral += _complex_integral(integrand,
+                                          a=self.cutoff,
+                                          b=np.inf,
+                                          epsrel=epsrel,
+                                          limit=subdiv_limit)
+        if matsubara:
+            integral = integral.real
+        return integral
+
+    @lru_cache(maxsize=2 ** 10, typed=False)
+    def eta_function(
+            self,
+            tau: ArrayLike,
+            epsrel: Optional[float] = INTEGRATE_EPSREL,
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            matsubara: Optional[bool] = False) -> ArrayLike:
+        r"""
+        Auto-correlation function associated to the spectral density at the
+        given temperature :math:`T`
+
+        .. math::
+
+            C(\tau) = \int_0^{\infty} J(\omega) \
+                       \left[ \cos(\omega \tau) \
+                              \coth\left( \frac{\omega}{2 T}\right) \
+                              - i \sin(\omega \tau) \right] \mathrm{d}\omega .
+
+        with time difference `tau` :math:`\tau`.
+
+        Parameters
+        ----------
+        tau : ndarray
+            Time difference :math:`\tau`
+        epsrel : float
+            Relative error tolerance.
+        subdiv_limit: int
+            Maximal number of interval subdivisions for numerical integration.
+
+        Returns
+        -------
+        correlation : ndarray
+            The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
+        """
+        # real and imaginary part of the integrand
+        if matsubara:
+            tau = -1j * tau
+        # convention is tau.imag < 0
+        if self.temperature == 0.0:
+            check_true(
+                matsubara is False,
+                'Matsubara correlations only defined for temperature > 0')
+            def integrand(w):
+                return self._spectral_density(w) / w ** 2 * (
+                    (np.exp(-1j * w * tau) - 1) + 1j * w * tau)
+        else:
+            def integrand(w):
+                # this is to stop overflow
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:
+                    inte = self._spectral_density(w) / w ** 2 \
+                        * (((np.exp(-1j*tau * w) \
+                             + np.exp(-(w / self.temperature - 1j*tau * w))) \
+                            - np.exp(- w / self.temperature) - 1) \
+                        / (1 - np.exp(-w / self.temperature)) + 1j*tau * w)
+                else:
+                    inte = self._spectral_density(w) / w ** 2 \
+                        * (np.exp(-1j * w * tau) - 1 + 1j * w * tau)
+                return inte
+
+        integral = _complex_integral(integrand,
+                                     a=0.0,
+                                     b=self.cutoff,
+                                     epsrel=epsrel,
+                                     limit=subdiv_limit)
+
+        if self.cutoff_type != "hard":
+            integral += _complex_integral(integrand,
+                                          a=self.cutoff,
+                                          b=np.inf,
+                                          epsrel=epsrel,
+                                          limit=subdiv_limit)
+        if matsubara:
+            integral = integral.real
+        return -integral
+
     def correlation_2d_integral(
             self,
             delta: float,
@@ -666,7 +599,8 @@ class CustomSD(BaseCorrelations):
             time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
             epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> complex:
+            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            matsubara: Optional[bool] = False) -> complex:
         r"""
         2D integrals of the correlation function
 
@@ -678,14 +612,11 @@ class CustomSD(BaseCorrelations):
             \eta_\mathrm{upper-triangle} =
             \int_{t_1}^{t_1+\Delta} \int_{0}^{t'-t_1} C(t'-t'') dt'' dt'
 
-            \eta_\mathrm{lower-triangle} =
-            \int_{t_1}^{t_1+\Delta} \int_{t'-t_1}^{\Delta} C(t'-t'') dt'' dt'
-
             \eta_\mathrm{rectangle} =
             \int_{t_1}^{t_2} \int_{0}^{\Delta} C(t'-t'') dt'' dt'
 
         for `shape` either ``'square'``, ``'upper-triangle'``,
-        ``'lower-triangle'``, or ``'rectangle'``.
+        or ``'rectangle'``.
 
         Parameters
         ----------
@@ -698,7 +629,7 @@ class CustomSD(BaseCorrelations):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'lower-triangle'``}
+            ``'upper-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int
@@ -710,54 +641,29 @@ class CustomSD(BaseCorrelations):
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
-        # real and imaginary part of the integrand
-        if self.temperature == 0.0:
-            re_integrand = lambda w: \
-                    self._spectral_density(w) \
-                    * INTEGRAND_DICT[shape][0](w,
-                                               delta,
-                                               time_1,
-                                               time_2,
-                                               self.temperature)
-        else:
-            re_integrand = lambda w: \
-                    self._spectral_density(w) \
-                    * INTEGRAND_DICT[shape][1](w,
-                                               delta,
-                                               time_1,
-                                               time_2,
-                                               self.temperature)
-        im_integrand = lambda w: \
-                    self._spectral_density(w) \
-                    * INTEGRAND_DICT[shape][2](w,
-                                               delta,
-                                               time_1,
-                                               time_2,
-                                               self.temperature)
-        # real and imaginary part of the integral
-        re_int = integrate.quad(re_integrand,
-                                a=0.0,
-                                b=self.cutoff,
-                                epsrel=epsrel,
-                                limit=subdiv_limit)[0]
-        im_int = integrate.quad(im_integrand,
-                                a=0.0,
-                                b=self.cutoff,
-                                epsrel=epsrel,
-                                limit=subdiv_limit)[0]
-        if self.cutoff_type != "hard":
-            re_int += integrate.quad(re_integrand,
-                                     a=self.cutoff,
-                                     b=np.inf,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)[0]
-            im_int += integrate.quad(im_integrand,
-                                     a=self.cutoff,
-                                     b=np.inf,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)[0]
+        kwargs = {
+            'epsrel': epsrel,
+            'subdiv_limit': subdiv_limit,
+            'matsubara': matsubara}
 
-        return re_int+1j*im_int
+        if shape == 'upper-triangle':
+            integral = self.eta_function(time_1 + delta, **kwargs) \
+                       - self.eta_function(time_1, **kwargs)
+        elif shape == 'square':
+            integral = self.eta_function(time_1 + delta, **kwargs) \
+                       - 2.0 * self.eta_function(time_1, **kwargs) \
+                       + self.eta_function(time_1 - delta, **kwargs)
+        elif shape == 'rectangle':
+            integral = self.eta_function(time_2, **kwargs) \
+                       - self.eta_function(time_1, **kwargs) \
+                       - self.eta_function(time_2 - delta, **kwargs) \
+                       + self.eta_function(time_1 - delta, **kwargs)
+        else:
+            raise NotImplementedError("Shape '{shape}' not implemented.")
+
+        if matsubara:
+            integral = integral.real
+        return integral
 
 
 class PowerLawSD(CustomSD):
@@ -836,8 +742,8 @@ class PowerLawSD(CustomSD):
         self.cutoff = tmp_cutoff
 
         # use parent class for all the rest.
-        j_function = lambda w: 2.0 * self.alpha * w**self.zeta \
-                                    * self.cutoff**(1-zeta)
+        j_function = lambda w: 2.0 * self.alpha * w ** self.zeta \
+                               * self.cutoff ** (1 - zeta)
 
         super().__init__(j_function,
                          cutoff=cutoff,

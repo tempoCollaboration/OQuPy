@@ -25,26 +25,31 @@ __all__ = [
     'CustomCorrelations',
     'CustomSD',
     'compute_correlations',
+    'compute_correlations_nt',
     'compute_dynamics',
     'compute_dynamics_with_field',
+    'compute_gradient_and_dynamics',
     'Control',
     'Dynamics',
     'FileProcessTensor',
+    'GibbsParameters',
+    'GibbsTempo',
+    'gibbs_tempo_compute',
     'guess_tempo_parameters',
     'helpers',
     'import_process_tensor',
     'MeanFieldDynamics',
     'MeanFieldSystem',
     'MeanFieldTempo',
-    'NumericsError',
-    'NumericsWarning',
     'operators',
+    'ParameterizedSystem',
     'PowerLawSD',
     'PtTebd',
     'PtTebdParameters',
     'PtTempo',
     'pt_tempo_compute',
     'SimpleProcessTensor',
+    'state_gradient',
     'System',
     'SystemChain',
     'Tempo',
@@ -62,22 +67,23 @@ from oqupy.bath import Bath
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
 
-from oqupy.contractions import compute_correlations
-from oqupy.contractions import compute_dynamics
-from oqupy.contractions import compute_dynamics_with_field
+from oqupy.system_dynamics import compute_correlations
+from oqupy.system_dynamics import compute_correlations_nt
+from oqupy.system_dynamics import compute_dynamics
+from oqupy.system_dynamics import compute_dynamics_with_field
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
 
-from oqupy.correlations import CustomCorrelations
-from oqupy.correlations import CustomSD
-from oqupy.correlations import PowerLawSD
+from oqupy.bath_correlations import CustomCorrelations
+from oqupy.bath_correlations import CustomSD
+from oqupy.bath_correlations import PowerLawSD
 
 from oqupy.dynamics import Dynamics
 from oqupy.dynamics import MeanFieldDynamics
 
-from oqupy.exceptions import NumericsError
-from oqupy.exceptions import NumericsWarning
+from oqupy.gradient import state_gradient
+from oqupy.gradient import compute_gradient_and_dynamics
 
 from oqupy import helpers
 
@@ -98,12 +104,16 @@ from oqupy.system import SystemChain
 from oqupy.system import TimeDependentSystem
 from oqupy.system import TimeDependentSystemWithField
 from oqupy.system import MeanFieldSystem
+from oqupy.system import ParameterizedSystem
 
 from oqupy.pt_tempo import PtTempo
 from oqupy.pt_tempo import pt_tempo_compute
 
 from oqupy.tempo import Tempo
 from oqupy.tempo import TempoParameters
+from oqupy.tempo import GibbsTempo
+from oqupy.tempo import GibbsParameters
 from oqupy.tempo import MeanFieldTempo
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import tempo_compute
+from oqupy.tempo import gibbs_tempo_compute

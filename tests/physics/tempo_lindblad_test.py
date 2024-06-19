@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.backends.tensor_network modules.
+Tests for TEMPO and PT-TEMPO with finite temperature and Lindblad dissipators.
 """
 
 import pytest
 import numpy as np
 
 import oqupy
-from oqupy import process_tensor
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------

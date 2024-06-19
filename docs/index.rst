@@ -23,6 +23,7 @@ systems [3-5]. This includes methods to compute ...
 - the dynamics of a chain of non-Markovian open quantum systems [8].
 - the dynamics of an open many-body system with one-to-all light-matter
   coupling [9].
+- higher order multi-time correlations (e.g. for 2D electronic spectroscopy).
 
 Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
 
@@ -87,6 +88,8 @@ Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
    pages/tutorials/bath_dynamics
    pages/tutorials/pt_tebd
    pages/tutorials/mf_tempo
+   pages/tutorials/n_time_correlations
+   pages/tutorials/parameters
 
 .. toctree::
    :maxdepth: 1

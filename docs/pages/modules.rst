@@ -65,6 +65,13 @@ oqupy.exceptions
     :members:
 
 
+oqupy.gradient
+--------------
+
+.. automodule:: oqupy.gradient
+    :members:
+
+
 oqupy.helpers
 -------------
 

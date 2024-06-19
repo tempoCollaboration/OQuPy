@@ -1,7 +1,10 @@
 # TEMPO file formats
-*.tempoDynamics
-*.processTensor
+tests/data/temp/
+tests/data/performance_results/
+tests/data/plots/
 *.hdf5
+*.pkl
+*.pdf
 
 # local development
 local_dev/

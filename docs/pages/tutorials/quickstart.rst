@@ -100,7 +100,8 @@ the job - just to have an idea where we are going:
                                    initial_state=up_density_matrix,
                                    start_time=0.0,
                                    end_time=15.0,
-                                   parameters=tempo_parameters)
+                                   parameters=tempo_parameters,
+                                   unique=False)
     t, s_z = dynamics.expectations(0.5*sigma_z, real=True)
     
     plt.plot(t, s_z, label=r'$\alpha=0.3$')
@@ -225,7 +226,8 @@ to :math:`t=5\,\Omega^{-1}`
                                        initial_state=up_density_matrix,
                                        start_time=0.0,
                                        end_time=5.0,
-                                       tolerance=0.01)
+                                       tolerance=0.01,
+                                       unique=False)
 
 
 .. parsed-literal::
@@ -267,7 +269,14 @@ and plot the result:
 
 Yay! This looks like the plot in figure 2a [Strathearn2018].
 
-Let’s have a look at the above warning. It said:
+**Note:** with the option `unique=True` an attempt is made to simplify the
+calculation by checking for degeneracies in the eigensystem of the bath
+coupling operator. This may greatly decrease the computation time without
+significant loss of accuracy. This feature is currently in testing, so if
+used we recommend checking results against those obtained with `unqiue=False`
+(the default).
+
+We should also address the warning that was given in the above computation:
 
 ::
 
@@ -413,7 +422,8 @@ without having to start over. For this we start with creating a
                           bath=bath,
                           parameters=tempo_parameters,
                           initial_state=up_density_matrix,
-                          start_time=0.0)
+                          start_time=0.0,
+                          unique=False)
 
 We can start by computing the dynamics up to time
 :math:`5.0\,\Omega^{-1}`,

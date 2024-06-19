@@ -17,7 +17,7 @@ Tests for the oqupy.bath_dynamics module.
 import numpy as np
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
-from oqupy.correlations import PowerLawSD
+from oqupy.bath_correlations import PowerLawSD
 from oqupy import TempoParameters, System, Bath, PtTempo
 from oqupy.config import NpDtype
 

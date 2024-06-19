@@ -20,7 +20,7 @@ import pytest
 import numpy as np
 
 from oqupy.bath import Bath
-from oqupy.correlations import PowerLawSD
+from oqupy.bath_correlations import PowerLawSD
 from oqupy import operators
 
 def test_bath():
@@ -48,6 +48,10 @@ def test_bath():
     np.testing.assert_equal(bath_A.coupling_operator, coupling_operator)
     assert bath_A.dimension == 2
     assert bath_A.correlations.zeta == 1.0
+    assert max(bath_A.west_degeneracy_map) == 2
+    assert max(bath_A.north_degeneracy_map) == 3
+    assert len(bath_A.west_degeneracy_map) == 4
+    assert len(bath_A.north_degeneracy_map) == 4
     del bath_A.name
     del bath_A.description
     del bath_A.description_dict
@@ -70,6 +74,12 @@ def test_bath():
     op = bath_B.coupling_operator
     assert np.allclose(coupling_op, \
             u @ op @ u.conjugate().T)
+    
+    # try 1 dimensional coupling degeneracies
+    coupling_op = np.array([[1.0,0.0],[0.0,1.0]])
+    bath_C = Bath(coupling_op, correlations)
+    assert np.array_equal(bath_C.west_degeneracy_map,[0,0,0,0])
+    assert np.array_equal(bath_C.north_degeneracy_map,[0,0,0,0])
 
 def test_bath_bad_input():
     wc = 4.0

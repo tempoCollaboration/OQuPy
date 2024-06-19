@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for the time_evovling_mpo.backends.tensor_network modules.
+Tests TEMPO and PT-TEMPO with superohmic spectral density.
 """
 
 import pytest
 import numpy as np
 
 import oqupy
-from oqupy import process_tensor
 
 # -----------------------------------------------------------------------------
 # -- Test E: Superohmic independent spin boson model --------------------------

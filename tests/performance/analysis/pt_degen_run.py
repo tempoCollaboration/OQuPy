@@ -1,4 +1,4 @@
-# Copyright 2022 The TEMPO Collaboration
+# Copyright 2024 The TEMPO Collaboration
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Custom TEMPO Warnings and Errors.
+Script to run the PT performance analysis.
 """
 
-class NumericsError(Exception):
-    """Custom TEMPO Error class to indicate numerical issues. """
-    pass
+import sys
+sys.path.insert(0,'.')
 
-class NumericsWarning(UserWarning):
-    """Custom TEMPO Warning class to indicate numerical issues. """
-    pass
+import dill
+
+from tests.performance.run_all import run_all
+from tests.performance.pt_degen import ALL_TESTS
+
+# -- computation --------------------------------------------------------------
+
+all_results = run_all(ALL_TESTS)
+with open('./tests/data/performance_results/pt_degen.pkl', 'wb') as f:
+    dill.dump(all_results, f)
+
+print("... all done.")

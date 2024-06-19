@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test for the time_evovling_mpo.process_tensor module multiple environment
-functionality.
+Test for multiple environments.
 """
 
 import numpy as np
@@ -25,6 +24,11 @@ import oqupy
 
 system = oqupy.System(oqupy.operators.sigma("x"))
 initial_state = oqupy.operators.spin_dm("z+")
+
+def discrete_hamiltonian(hx):
+    return oqupy.operators.sigma('x') * 0.5 * hx
+parameterized_sys = oqupy.ParameterizedSystem(discrete_hamiltonian)
+
 correlations = oqupy.PowerLawSD(alpha=0.05,
                                 zeta=1.0,
                                 cutoff=5.0,
@@ -64,3 +68,27 @@ def test_multi_env_dynamics():
                                    process_tensor=[pt2],
                                    initial_state=initial_state)
     np.testing.assert_almost_equal(dyns.states,dyns2.states,decimal=5)
+
+
+def test_multi_env_gradient():
+    target_deriv = oqupy.operators.spin_dm('z-').T
+    num_steps = pt.__len__()
+    dt=0.1
+    
+    parameter_list = list(zip(np.ones(2*num_steps) * np.pi / (2*dt*num_steps)))
+
+    gradsA, dynA = oqupy.compute_gradient_and_dynamics(
+                                  process_tensors=[pt,pt],
+                                  initial_state=initial_state,
+                                  target_derivative=target_deriv,
+                                  dt=dt,
+                                  system=parameterized_sys,
+                                  parameters=parameter_list)
+    gradsB, dynB = oqupy.compute_gradient_and_dynamics(process_tensors=[pt2],
+                                initial_state=initial_state,
+                                target_derivative=target_deriv,
+                                system=parameterized_sys,
+                                dt=dt,
+                                parameters=parameter_list)
+    
+    np.testing.assert_almost_equal(gradsA[0],gradsB[0],decimal=5)

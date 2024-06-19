@@ -42,6 +42,7 @@ from typing import Dict, Optional, Text, Union
 from copy import copy
 
 import numpy as np
+from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
@@ -54,7 +55,6 @@ from oqupy.backends.pt_tempo_backend import PtTempoBackend
 from oqupy.tempo import TempoParameters
 from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import influence_matrix
-from oqupy.operators import commutator, acommutator
 from oqupy.operators import left_right_super
 from oqupy.util import get_progress
 
@@ -75,6 +75,11 @@ class PtTempo(BaseAPIClass):
         The parameters for the PT-TEMPO computation.
     start_time: float
         The start time.
+    unique: bool (default = False),
+        Whether to use degeneracy checking. If True reduces dimension of
+        bath tensors in case of degeneracies in sums ('west') and
+        sums,differences ('north') of the bath coupling operator.
+        See bath:north_degeneracy_map, bath:west_degeneracy_map.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -89,6 +94,7 @@ class PtTempo(BaseAPIClass):
             start_time: float,
             end_time: float,
             parameters: TempoParameters,
+            unique: Optional[bool] = False,
             process_tensor_file: Optional[Union[Text, bool]] = None,
             overwrite: Optional[bool] = False,
             backend_config: Optional[Dict] = None,
@@ -100,6 +106,8 @@ class PtTempo(BaseAPIClass):
         self._bath = bath
         self._dimension = self._bath.dimension
         self._correlations = self._bath.correlations
+
+        super().__init__(name, description)
 
         try:
             tmp_start_time = float(start_time)
@@ -117,6 +125,10 @@ class PtTempo(BaseAPIClass):
             "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
 
+        assert isinstance(unique, bool), \
+            "Argument 'unique' must be a boolean."
+        self._unique = unique
+
         self._process_tensor = None
         if process_tensor_file or isinstance(process_tensor_file, Text):
             if isinstance(process_tensor_file, Text):
@@ -132,12 +144,8 @@ class PtTempo(BaseAPIClass):
         else:
             self._backend_config = backend_config
 
-        super().__init__(name, description)
-
-        tmp_coupling_comm = commutator(self._bath._coupling_operator)
-        tmp_coupling_acomm = acommutator(self._bath._coupling_operator)
-        self._coupling_comm = tmp_coupling_comm.diagonal()
-        self._coupling_acomm = tmp_coupling_acomm.diagonal()
+        self._coupling_comm = self._bath._coupling_comm
+        self._coupling_acomm = self._bath._coupling_acomm
 
         tmp_num_steps = int((end_time - self._start_time)/self._parameters.dt)
         assert tmp_num_steps >= 2, \
@@ -163,7 +171,9 @@ class PtTempo(BaseAPIClass):
             hilbert_space_dimension=self._dimension,
             dt=self._parameters.dt,
             transform_in=transform_in,
-            transform_out=transform_out)
+            transform_out=transform_out,
+            name=self.name,
+            description=self.description)
 
     def _init_file_process_tensor(self, filename, overwrite):
         """ToDo. """
@@ -187,12 +197,23 @@ class PtTempo(BaseAPIClass):
             hilbert_space_dimension=self._dimension,
             dt=self._parameters.dt,
             transform_in=transform_in,
-            transform_out=transform_out)
+            transform_out=transform_out,
+            name=self.name,
+            description=self.description)
 
     def _init_pt_tempo_backend(self):
         """Create and initialize the pt-tempo backend. """
-        sum_north = np.array([1.0]*(self._dimension**2))
-        sum_west = np.array([1.0]*(self._dimension**2))
+        if self._unique:
+            sum_north = np.ones(np.max(self._bath.north_degeneracy_map)+1,
+                                dtype=float)
+            sum_west = np.ones(np.max(self._bath.west_degeneracy_map)+1,
+                               dtype=float)
+            degeneracy_maps = [self._bath.north_degeneracy_map,
+                               self._bath.west_degeneracy_map]
+        else:
+            sum_north =  np.ones(self._dimension**2, dtype=float)
+            sum_west = np.ones(self._dimension**2, dtype=float)
+            degeneracy_maps = None
         dkmax = self._parameters.dkmax
         if dkmax is None:
             dkmax = self._num_steps
@@ -205,17 +226,31 @@ class PtTempo(BaseAPIClass):
                 num_steps=self._num_steps,
                 dkmax=dkmax,
                 epsrel=self._parameters.epsrel,
-                config=self._backend_config)
+                config=self._backend_config,
+                degeneracy_maps=degeneracy_maps)
 
-    def _influence(self, dk: int):
+    def _influence(self, dk: int) -> ndarray:
         """Create the influence functional matrix for a time step distance
         of dk. """
+        if self._unique:
+            tmp_north_deg_positions = np.array([np.where( \
+                self._bath.north_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(self._bath.north_degeneracy_map)+1)])
+            tmp_west_deg_positions = np.array([np.where( \
+                self._bath.west_degeneracy_map == i)[0][0] for i in \
+                    range(np.max(self._bath.west_degeneracy_map)+1)])
+            tmp_deg_positions = [tmp_north_deg_positions,
+                                 tmp_west_deg_positions]
+        else:
+            tmp_deg_positions = None
+
         return influence_matrix(
             dk,
             parameters=self._parameters,
             correlations=self._correlations,
-            coupling_acomm=self._coupling_acomm,
-            coupling_comm=self._coupling_comm)
+            coupling_acomm=self._bath.coupling_acomm,
+            coupling_comm=self._bath.coupling_comm,
+            deg_positions=tmp_deg_positions)
 
     @property
     def dimension(self) -> np.ndarray:
@@ -278,6 +313,7 @@ def pt_tempo_compute(
         start_time: float,
         end_time: float,
         parameters: Optional[TempoParameters] = None,
+        unique: Optional[bool] = False,
         tolerance: Optional[float] = PT_DEFAULT_TOLERANCE,
         process_tensor_file: Optional[Union[Text, bool]] = None,
         overwrite: Optional[bool] = False,
@@ -299,6 +335,11 @@ def pt_tempo_compute(
         The time to which the PT-TEMPO should be computed.
     parameters: TempoParameters
         The parameters for the PT-TEMPO computation.
+    unique: bool (default = False),
+        Whether to use degeneracy checking. If True reduces dimension of
+        bath tensors in case of degeneracies in sums ('west') and
+        sums,differences ('north') of the bath coupling operator.
+        See bath:north_degeneracy_map, bath:west_degeneracy_map.
     tolerance: float
         Tolerance for the parameter estimation (only applicable if
         `parameters` is None).
@@ -326,6 +367,7 @@ def pt_tempo_compute(
                   start_time,
                   end_time,
                   parameters,
+                  unique,
                   process_tensor_file,
                   overwrite,
                   backend_config,

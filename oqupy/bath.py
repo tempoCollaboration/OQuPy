@@ -21,8 +21,10 @@ import numpy as np
 from numpy import ndarray
 
 from oqupy.config import NpDtype
-from oqupy.correlations import BaseCorrelations
+from oqupy.config import DEFAULT_TOLERANCE_DEGENERACY
+from oqupy.bath_correlations import BaseCorrelations
 from oqupy.base_api import BaseAPIClass
+from oqupy.operators import commutator, acommutator
 
 
 class Bath(BaseAPIClass):
@@ -78,6 +80,16 @@ class Bath(BaseAPIClass):
                 self._unitary @ self._coupling_operator \
                 @ self._unitary.conjugate().T)
 
+        # identify degeneracies in eigensystem of coupling operator
+        tmp_coupling_comm = commutator(self._coupling_operator)
+        tmp_coupling_acomm = acommutator(self._coupling_operator)
+        self._coupling_comm = tmp_coupling_comm.diagonal()
+        self._coupling_acomm = tmp_coupling_acomm.diagonal()
+
+        self._north_degeneracy_map = _row_degeneracy([self._coupling_comm,
+                                                      self._coupling_acomm])
+        self._west_degeneracy_map = _row_degeneracy([self._coupling_comm])
+
         # input check for correlations.
         if not isinstance(correlations, BaseCorrelations):
             raise AssertionError(
@@ -113,3 +125,42 @@ class Bath(BaseAPIClass):
     def correlations(self) -> BaseCorrelations:
         """The correlations of the bath. """
         return copy(self._correlations)
+
+    @property
+    def coupling_acomm(self) -> np.ndarray:
+        """Diagonal elements of the anti-commutator of the coupling
+        operator. """
+        return self._coupling_acomm.copy()
+
+    @property
+    def coupling_comm(self) -> np.ndarray:
+        """Diagonal elements of the commutator of the coupling
+        operator. """
+        return self._coupling_comm.copy()
+
+    @property
+    def north_degeneracy_map(self) -> np.ndarray:
+        """Map to minimal set of indices for influence tensors in
+        north-south direction according to simultaneous degeneracies in
+        sums & differences of eigenvalues of coupling operator (minimal
+        dimension is number of unique values in this map).
+        Used by a Tempo computation if unique==True only. """
+        return copy(self._north_degeneracy_map)
+
+    @property
+    def west_degeneracy_map(self) -> np.ndarray:
+        """Map to minimal set of indices for influence tensors in
+        west-east direction according to degeneracies in sums of
+        eigenvalues of coupling operator (minimal dimension is number
+        of unique values in this map).
+        Used by a Tempo computation if unique==True only. """
+        return copy(self._west_degeneracy_map)
+
+
+def _row_degeneracy(matrix):
+    """Finds the row degeneracy of matrix. Returns array of
+    indices mapping full space to non-degenerate rows (repeated
+    indices indicate row degeneracy in the original matrix)."""
+    mat = np.array(matrix).round(decimals=DEFAULT_TOLERANCE_DEGENERACY)
+    return_map = np.unique(mat.T,return_inverse=True,axis=0)[1]
+    return return_map
