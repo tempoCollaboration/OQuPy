@@ -103,8 +103,6 @@ resource. After initialising a new repository in an empty directory with `git in
 ```bash
 $ #if you use ssh:
 $ git remote add upstream git@github.com:tempoCollaboration/OQuPy.git
-$ #if you use https
-$ git remote add upstream https://github.com/tempoCollaboration/OQuPy.git
 
 $ git fetch upstream
 $ git checkout main
@@ -121,7 +119,7 @@ $ git push origin main
 ```
 
 ### 4. Setup your local environment
-As a development environment you will need `git`, `python3.6`, `pip3` and `tox`
+As a development environment you will need `git`, `python3.10`, `pip3` and `tox`
 installed.
 
 You need `git` to
@@ -130,7 +128,7 @@ changes to the repository, while `tox` allows you to run tests on the package
 in an virtual environment (to avoid that the result of the tests depends on the
 local setup). If you are unfamiliar with `git`,
 [this](https://swcarpentry.github.io/git-novice/) is a good place to start
-learning about it. Currently the code is tested against `python3.6`, which makes it
+learning about it. Currently the code is tested against `python3.10`, which makes it
 necessary to have this version of the python interpreter installed in the
 development environment.
 
@@ -176,8 +174,6 @@ added to the project, namely:
 
 * execute the tests that check the functionality of the package (with `pytest`)
 * test the coding style (with `pylint`)
-* check that the documentation can be generated (with `sphinx`)
-
 
 #### 7.1 test all
 You can run all three tests by simply running `tox` in your local clone of the repository:
@@ -187,20 +183,19 @@ $ tox
 This performs a bunch of tests. If they all pass, it will finish with something
 like:
 ```bash
-  py36: commands succeeded
-  style: commands succeeded
-  docs: commands succeeded
-  congratulations :)
+  pytest: OK (136.95=setup[30.37]+cmd[106.58] seconds)
+  pylint: OK (51.52=setup[25.93]+cmd[25.59] seconds)
+  congratulations :) (188.56 seconds)
 ```
 
 #### 7.2 test pytest only
-You can run the pytests on python3.6 with:
+You can run the pytests on python3.10 with:
 ```bash
-$ tox -e py36
+$ tox -e pytest
 ```
 or you can pick a specific test in `./tests` to run with:
 ```bash
-$ tox -e py36 coverage/api_test.py
+$ tox -e pytest coverage/api_test.py
 ```
 Here `coverage/api_test.py` is the path of the test file *relative to the tests
 directory* and the command must be run from the *base directory of the repository.*
@@ -209,18 +204,20 @@ directory* and the command must be run from the *base directory of the repositor
 This checks the code [code style](https://www.python.org/dev/peps/pep-0008/)
 with pylint:
 ```bash
-$ tox -e style
+$ tox -e pylint
 ```
 or you can check the style of a specific file in `./oqupy` with:
 ```bash
-$ tox -e style base_api.py
+$ tox -e pylint base_api.py
 ```
 where `base_api.py` is the path of the file *relative to the oqupy
 directory* and again this command must be run from the base directory 
 of the repository.
-[comment]: # (The reason for this is that tox prepends the path you pass as an argument with './oqupy/' when using the style command, and './tests/' when using the py36 command)
+[comment]: # (The reason for this is that tox prepends the path you pass as an
+argument with './oqupy/' when using the style command, and './tests/' when 
+using the py36 command)
 
-#### 7.4 test sphinx only
+#### 7.4 build the documentation
 This invokes a sphinx-build to build the HTML documentation
 ```bash
 $ tox -e docs
