@@ -348,7 +348,7 @@ def compute_tebd_propagator(
 class AugmentedMPS(BaseAPIClass):
     """
     An augmented matrix product state (as introduced in the supplemental
-    material of [Fux2022]).
+    material of [Fux2023]).
 
     The full gamma tensors (one for each site) have the following axis:
     (L = left bond leg, P = physical leg, R = right bond leg,

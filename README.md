@@ -1,43 +1,45 @@
-**_NOTE:_**  The former package **TimeEvolvingMPO** is now integrated into **OQuPy**.
 
 # OQuPy: Open Quantum Systems in Python
 
 **A Python 3 package to efficiently compute non-Markovian open quantum systems.**
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
-[![Build Status](https://app.travis-ci.com/tempoCollaboration/OQuPy.svg?branch=main)](https://app.travis-ci.com/tempoCollaboration/OQuPy)
-[![codecov](https://codecov.io/gh/tempoCollaboration/OQuPy/branch/main/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/OQuPy)
+[![Tests status](https://github.com/tempoCollaboration/OQuPy/actions/workflows/python-package-tests.yml/badge.svg)](https://github.com/tempoCollaboration/OQuPy/actions/workflows/python-package-tests.yml)
+[![Codecov](https://codecov.io/gh/tempoCollaboration/OQuPy/branch/main/graph/badge.svg)](https://codecov.io/gh/tempoCollaboration/OQuPy)
 [![Documentation Status](https://readthedocs.org/projects/oqupy/badge/?version=latest)](https://oqupy.readthedocs.io/en/latest/?badge=latest)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](https://github.com/tempoCollaboration/OQuPy/blob/main/CODE_OF_CONDUCT.md)
 [![DOI](https://www.zenodo.org/badge/244404030.svg)](https://www.zenodo.org/badge/latestdoi/244404030)
 
 [![Unitary Fund](https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge)](http://unitary.fund)
 
-This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to structured environments. It allows to conveniently apply several numerical methods related to the time evolving matrix product operator (TEMPO) [1-2] and the process tensor (PT) approach to open quantum
-systems [3-5]. This includes methods to compute ...
+This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to structured environments. It facilitates the convenient application of several numerical methods that combine the conceptional advantages of the process tensor framework [1], with the numerical efficiency of tensor networks.
 
-- the dynamics of a quantum system strongly coupled to a bosonic environment [1-2].
-- the process tensor of a quantum system strongly coupled to a bosonic environment [3-4].
-- optimal control procedures for non-Markovian open quantum systems [5].
-- the dynamics of a strongly coupled bosonic environment [6].
-- the dynamics of a quantum system coupled to multiple non-Markovian environments [7].
-- the dynamics of a chain of non-Markovian open quantum systems [8].
-- the dynamics of an open many-body system with one-to-all light-matter coupling [9].
-- compute higher order multi-time correlations (e.g. for 2D electronic spectroscopy).
+OQuPy includes numerically exact methods (i.e. employing only numerically well controlled approximations) for the non-Markovian dynamics and multi-time correlations of ...
+- quantum systems coupled to a single environment [2-4],
+- quantum systems coupled to multiple environments [5],
+- interacting chains of non-Markovian open quantum systems [6], and
+- ensembles of open many-body systems with many-to-one coupling to some common central system [7].
 
-Up to versions 0.1.x this package was called *TimeEvolvingMPO*.
+Furthermore, OQuPy implements methods to ...
+- optimize control protocols for non-Markovian open quantum systems [8,9],
+- compute the dynamics of an non-Markovian environment [10], and
+- obtain the thermal state of a quantum system strongly coupled to a structured environment [11].
 
 ![OQuPy - overview](docs/graphics/overview.png)
 
-- **[1]** Strathearn et al., [New J. Phys. 19(9), p.093009](http://dx.doi.org/10.1088/1367-2630/aa8744) (2017).
-- **[2]** Strathearn et al., [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3) (2018).
-- **[3]** Pollock et al., [Phys. Rev. A 97, 012127](http://dx.doi.org/10.1103/PhysRevA.97.012127) (2018).
-- **[4]** Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
-- **[5]** Fux et al., [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
-- **[6]** Gribben et al., [arXiv:20106.0412](http://arxiv.org/abs/2106.04212) (2021).
-- **[7]** Gribben et al., [PRX Quantum 3, 10321](https://link.aps.org/doi/10.1103/PRXQuantum.3.010321) (2022).
-- **[8]** Fux et al., [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
-- **[9]** Fowler-Wright at al., [Phys. Rev. Lett. 129, 173001](https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
+- **[1]** Pollock et al., [Phys. Rev. A 97, 012127](https://doi.org/10.1103/PhysRevA.97.012127) (2018).
+- **[2]** Strathearn et al., [New J. Phys. 19(9), p.093009](https://doi.org/10.1088/1367-2630/aa8744) (2017).
+- **[3]** Strathearn et al., [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3)
+  (2018).
+- **[4]** Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602](https://doi.org/10.1103/PhysRevLett.123.240602) (2019).
+- **[5]** Gribben et al., [PRX Quantum 3, 10321](https://doi.org/10.1103/PRXQuantum.3.010321) (2022).
+- **[6]** Fux et al., [Phys. Rev. Research 5, 033078 ](https://doi.org/10.1103/PhysRevResearch.5.033078}) (2023).
+- **[7]** Fowler-Wright et al., [Phys. Rev. Lett. 129, 173001](https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
+- **[8]** Fux et al., [Phys. Rev. Lett. 126, 200401](https://doi.org/10.1103/PhysRevLett.126.200401) (2021).
+- **[9]** Butler et al., [Phys. Rev. Lett. 132, 060401 ](https://doi.org/10.1103/PhysRevLett.132.060401}) (2024).
+- **[10]** Gribben et al., [Quantum, 6, 847](https://doi.org/10.22331/q-2022-10-25-847) (2022).
+- **[11]** Chiu et al., [Phys. Rev. A 106, 012204](https://doi.org/10.1103/PhysRevA.106.012204}) (2022).
+
 
 -------------------------------------------------------------------------------
 

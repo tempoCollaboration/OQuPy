@@ -13,9 +13,9 @@
 # limitations under the License.
 """
 Module for the process tensor approach to time evolving block decimation.
-This module is based on [Fux2022].
+This module is based on [Fux2023].
 
-**[Fux2022]**
+**[Fux2023]**
 G. E. Fux, D. Kilda, B. W. Lovett, and J. Keeling, *Thermalization of a
 spin chain strongly coupled to its environment*, arXiv:2201.05529 (2022).
 

@@ -7,9 +7,9 @@
    viewBox="0 0 329.37499 128.29167"
    version="1.1"
    id="svg307204"
-   inkscape:version="1.1.2 (1:1.1+202202050950+0a00cf5339)"
+   inkscape:version="1.2.2 (1:1.2.2+202212051550+b0a8486541)"
    sodipodi:docname="overview.svg"
-   inkscape:export-filename="/data/git/OQuPyAdmin/docs/graphics/overview.png"
+   inkscape:export-filename="overview.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -31,21 +31,22 @@
      fit-margin-right="-2"
      fit-margin-bottom="-2"
      inkscape:zoom="0.58281018"
-     inkscape:cx="568.79583"
-     inkscape:cy="464.13054"
+     inkscape:cx="308.84841"
+     inkscape:cy="467.56218"
      inkscape:window-width="1920"
      inkscape:window-height="968"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer9"
+     inkscape:current-layer="layer1"
      showguides="false"
      lock-margins="true"
      inkscape:showpageshadow="true"
      showborder="true"
      inkscape:snap-object-midpoints="true"
      inkscape:snap-text-baseline="true"
-     borderlayer="true">
+     borderlayer="true"
+     inkscape:deskcolor="#d1d1d1">
     <inkscape:grid
        type="xygrid"
        id="grid314818"
@@ -175,9 +176,9 @@
        style="font-size:109.333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;white-space:pre;shape-inside:url(#rect322230-7);display:inline;fill:#02284b;fill-opacity:1"><tspan
          x="310"
          y="186.73408"
-         id="tspan38428"><tspan
+         id="tspan545"><tspan
            style="font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal'"
-           id="tspan38426">OQuPy</tspan></tspan></text>
+           id="tspan543">OQuPy</tspan></tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -188,36 +189,36 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
-       x="274.1835"
+       x="266.6835"
        y="36.331238"
        id="text43075"><tspan
          sodipodi:role="line"
          id="tspan9399"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
-         x="274.1835"
-         y="36.331238">Multiple Environments [7]:</tspan></text>
+         x="266.6835"
+         y="36.331238">Multiple Environments:</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.264583px;word-spacing:0px;text-anchor:end;stroke-width:0.264583"
-       x="142.9261"
+       x="140.4261"
        y="91.331238"
        id="text103593"><tspan
          sodipodi:role="line"
          id="tspan13757"
-         x="143.0584"
+         x="140.5584"
          y="91.331238"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle">Chain of Open Quantum Systems [8]:</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle">Chain of Open Quantum Systems:</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:'EB Garamond';-inkscape-font-specification:'EB Garamond, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:end;letter-spacing:0.264583px;word-spacing:0px;text-anchor:end;display:inline;stroke-width:0.264583"
-       x="250.64801"
+       x="248.14801"
        y="89.801849"
        id="text103593-3"><tspan
          sodipodi:role="line"
          id="tspan13757-6"
-         x="250.7803"
+         x="248.2803"
          y="89.801849"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle">Mean-Field Dynamics [9]:</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;font-family:Roboto;-inkscape-font-specification:Roboto;text-align:center;text-anchor:middle">Mean-Field Dynamics:</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;stroke-width:0.264583"
@@ -228,7 +229,7 @@
          x="109.30768"
          y="36.331238"
          style="font-size:6.35px"
-         id="tspan27456">Sys. and Env. Dynamics [1-6]:</tspan></text>
+         id="tspan27456">Sys. and Env. Dynamics:</tspan></text>
     <g
        id="g33883"
        transform="translate(130,-83)">

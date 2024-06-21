@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for calculating bath dynamics as outlined in [Gribben2021].
+Module for calculating bath dynamics as outlined in [Gribben2022b].
 
-**[Gribben2021]**
+**[Gribben2022b]**
 D. Gribben, A. Strathearn, G. E. Fux, P. Kirton, and B. W. Lovett,
 *Using the Environment to Understand non-Markovian Open Quantum Systems*,
 arXiv:2106.04212 [quant-ph] (2021).
