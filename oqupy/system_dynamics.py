@@ -16,6 +16,7 @@ Module for various applications involving contractions of the process tensor.
 """
 
 from typing import List, Optional, Text, Tuple, Union
+import warnings
 
 from itertools import product
 import numpy as np
@@ -862,12 +863,12 @@ def compute_correlations_nt(
         dt_ = process_tensor.dt
     else:
         if (process_tensor.dt is not None) and (process_tensor.dt != dt):
-            UserWarning("Specified time step `dt` does not match `dt` " \
+            warnings.warn("Specified time step `dt` does not match `dt` " \
                 + "stored in the given process tensor " \
                 + f"({dt}!={process_tensor.dt}). " \
                 + "Using specified `dt`. " \
                 + "Don't specify `dt` to use the time step stored in the " \
-                + "process tensor.")
+                + "process tensor.", UserWarning)
         dt_ = dt
 
     #Check that lengths of the ops_order, ops_times and dip_ops lists are equal
@@ -892,7 +893,7 @@ def compute_correlations_nt(
 
     ret_correlations = np.empty(times_length, dtype=NpDtype)
     #This array will contain all correlations
-    ret_correlations[:] = np.NaN + 1.0j*np.NaN
+    ret_correlations[:] = np.nan + 1.0j*np.nan
 
 
     parameters = {

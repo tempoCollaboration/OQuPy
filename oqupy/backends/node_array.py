@@ -112,7 +112,7 @@ class NodeArray:
 
     def get_verbose_string(self):
         """Returns a verbose desciption of the NodeArray. """
-        ret = [self.__str__()]
+        ret = [str(self)]
         ret.append("\n")
         ret.append(f" rank = {self.rank}\n")
         ret.append(f" len = {len(self)}\n")

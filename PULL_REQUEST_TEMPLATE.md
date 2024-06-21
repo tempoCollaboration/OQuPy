@@ -2,7 +2,7 @@
 
 This checklist serves as a guide for contributors and maintainers to assess
 whether a contribution can be merged into the main branch and thus serves
-to guarantee the quality of the package. Please also read the
+to guarantee the quality of the package. Please read the
 [contribution guideline](https://github.com/tempoCollaboration/OQuPy/blob/main/CONTRIBUTING.md).
 
 Before you submit a pull request, please go through this checklist once
@@ -18,13 +18,10 @@ type of your contribution.
 * [ ] The automated test are all positive:
   - [ ] `tox -e py36` (to run `pytest`) the code tests.
   - [ ] `tox -e style` (to run `pylint`) the [code style](https://www.python.org/dev/peps/pep-0008/) tests.
-  - [ ] `tox -e docs` (to run `sphinx`) generate the documentation.
 * [ ] Added test for changed/added code.
-* [ ] API code contributions include input checks (defensive code).
-* [ ] API code contributions include helpful error messages.
 * [ ] The documentation has been updated:
   - [ ] docstring for all new functions/methods/classes/modules.
   - [ ] consistent style of all docstrings.
   - [ ] for new modules: `/docs/pages/modules.rst` has been updated.
-  - [ ] for api contributions: `/docs/pages/api.rst` has been updated.
-  - [ ] for api contributions: tutorials and examples have been updated.
+  - [ ] for new functionality: `/docs/pages/api.rst` has been updated.
+  - [ ] for new functionality: tutorials and examples have been updated.

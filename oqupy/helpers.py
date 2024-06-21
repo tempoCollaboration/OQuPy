@@ -41,7 +41,7 @@ def plot_correlations_with_parameters(
     if parameters.add_correlation_time is None:
         add_time = 0.0
         infinity = False
-    elif parameters.add_correlation_time == np.infty:
+    elif parameters.add_correlation_time == np.inf:
         add_time = 0.0
         infinity = True
     else:

@@ -45,7 +45,7 @@ setup(
     url='http://github.com/tempoCollaboration/OQuPy',
     author='TEMPO Collaboration',
     author_email='tempo.collaboration@gmail.com',
-    python_requires=('>=3.6.0'),
+    python_requires=('>=3.10.0'),
     install_requires=requirements,
     license='Apache 2.0',
     description=short_description,
@@ -59,7 +59,7 @@ setup(
     packages=find_packages(exclude=['tests']),
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ]

@@ -70,7 +70,7 @@ def test_tensor_network_tempo_backend_E():
         dt=0.4,
         dkmax=2,
         epsrel=1.0e-5,
-        add_correlation_time=np.infty)
+        add_correlation_time=np.inf)
     tempo_E = oqupy.Tempo(
         system_E,
         bath_E,
@@ -87,7 +87,7 @@ def test_tensor_network_pt_tempo_backend_E():
         dt=0.4,
         dkmax=2,
         epsrel=1.0e-5,
-        add_correlation_time=np.infty)
+        add_correlation_time=np.inf)
     pt = oqupy.pt_tempo_compute(
         bath_E,
         start_time=t_start_E,
