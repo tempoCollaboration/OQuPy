@@ -14,14 +14,12 @@ correlations of ...
 - quantum systems coupled to a single environment [2-4],
 - quantum systems coupled to multiple environments [5],
 - interacting chains of non-Markovian open quantum systems [6], and
-- ensembles of open many-body systems with many-to-one coupling to some common
-  central system [7].
+- ensembles of open many-body systems with many-to-one coupling [7].
 
 Furthermore, OQuPy implements methods to ...
 - optimize control protocols for non-Markovian open quantum systems [8,9],
 - compute the dynamics of an non-Markovian environment [10], and
-- obtain the thermal state of a quantum system strongly coupled to a structured
-  environment [11].
+- obtain the thermal state of a strongly couled quantum system [11].
 
 [1]  Pollock et al., [Phys. Rev. A 97, 012127]
      (https://doi.org/10.1103/PhysRevA.97.012127) (2018).

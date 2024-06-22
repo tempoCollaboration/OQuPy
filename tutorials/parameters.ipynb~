@@ -4,7 +4,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "# Computational parameters\n",
+    "# Computational parameters and convergence\n",
     "\n",
     "Discussion of the computational parameters in a TEMPO or PT-TEMPO computation and establishing convergence of results\n",
     "\n",

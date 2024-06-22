@@ -38,7 +38,7 @@ class :class:`oqupy.system.TimeDependentSystemWithField`
   Markovian decay) that depends on both time and the expectation value of
   a field (a complex scalar) to which the system couples.
 
-class :class:`oqupy.system.ParametrizedSystem`
+class :class:`oqupy.system.ParameterizedSystem`
   Encodes a system Hamiltonian that depends on a set of parameters.
 
 class :class:`oqupy.system.MeanFieldSystem`
@@ -62,21 +62,21 @@ class :class:`oqupy.control.ChainControl`
 Environment
 ***********
 
-class :class:`oqupy.correlations.BaseCorrelations`
+class :class:`oqupy.bath_correlations.BaseCorrelations`
   Abstract class representing the environments auto-correlations.
 
-  class :class:`oqupy.correlations.CustomCorrelations`
+  class :class:`oqupy.bath_correlations.CustomCorrelations`
     Encode an explicitly given environment auto-correlation function.
 
-  class :class:`oqupy.correlations.CustomSD`
+  class :class:`oqupy.bath_correlations.CustomSD`
     Encodes the auto-correlations for a given spectral density.
 
-  class :class:`oqupy.correlations.PowerLawSD`
+  class :class:`oqupy.bath_correlations.PowerLawSD`
     Encodes the auto-correlations for a given spectral density of a power law
     form.
 
 class :class:`oqupy.bath.Bath`
-  Bundles a :class:`oqupy.correlations.BaseCorrelations` object
+  Bundles a :class:`oqupy.bath_correlations.BaseCorrelations` object
   together with a coupling operator.
 
 
@@ -114,7 +114,7 @@ PT-TEMPO
 ********
 (Process Tensor - Time Evolving Matrix Product Operator)
 
-class :class:`oqupy.pt_tempo.PtTempo`function oqupy.gradient.state_gradient()
+class :class:`oqupy.pt_tempo.PtTempo`
   Class to facilitate a PT-TEMPO computation.
 
   method :meth:`oqupy.pt_tempo.PtTempo.compute`
@@ -125,25 +125,25 @@ class :class:`oqupy.pt_tempo.PtTempo`function oqupy.gradient.state_gradient()
 Process Tensor Applications
 ***************************
 
-function :func:`oqupy.contractions.compute_dynamics`
+function :func:`oqupy.system_dynamics.compute_dynamics`
   Compute a :class:`oqupy.dynamics.Dynamics` object for given
   :class:`oqupy.system.System` or
   :class:`oqupy.system.TimeDependentSystem` and
   :class:`oqupy.control.Control` and
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 
-function :func:`oqupy.contractions.compute_dynamics_with_field`
+function :func:`oqupy.system_dynamics.compute_dynamics_with_field`
   Compute a :class:`oqupy.dynamics.MeanFieldDynamics` object for given
   :class:`oqupy.system.MeanFieldSystem` and list of
   :class:`oqupy.control.Control` objects and list of
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
-  
-function :func:`oqupy.contractions.compute_correlations_nt`
+
+function :func:`oqupy.system_dynamics.compute_correlations_nt`
   Compute ordered multi-time correlations for given
   :class:`oqupy.system.BaseSystem` and
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
 
-function :func:`oqupy.contractions.compute_correlations`
+function :func:`oqupy.system_dynamics.compute_correlations`
   Compute two time correlations for given
   :class:`oqupy.system.BaseSystem` and
   :class:`oqupy.process_tensor.BaseProcessTensor` objects.
@@ -161,7 +161,7 @@ class :class:`oqupy.bath_dynamics.TwoTimeBathCorrelations`
 
 function :func:`oqupy.gradient.state_gradient`
   Compute the dynamics and gradient with respect to some objective function for
-  a given :class:`oqupy.system.ParametrizedSystem`. 
+  a given :class:`oqupy.system.ParameterizedSystem`.
 
 PT-TEBD
 *******

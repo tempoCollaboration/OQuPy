@@ -102,7 +102,7 @@ class BaseCorrelations(BaseAPIClass):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'rectangle'``}
+            ``'upper-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int

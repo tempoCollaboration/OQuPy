@@ -35,7 +35,7 @@ def test_base_correlations():
         cor.correlation(None)
     with pytest.raises(NotImplementedError):
         cor.correlation(None)
-    for shape in ["square", "upper-triangle", "lower-triangle"]:
+    for shape in ["square", "upper-triangle"]:
         with pytest.raises(NotImplementedError):
             cor.correlation_2d_integral(time_1=None,
                                         delta=None,

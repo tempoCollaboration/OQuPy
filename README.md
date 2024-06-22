@@ -1,7 +1,8 @@
 
 # OQuPy: Open Quantum Systems in Python
 
-**A Python 3 package to efficiently compute non-Markovian open quantum systems.**
+**A Python package to efficiently simulate non-Markovian open quantum systems
+with process tensors.**
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
 [![Tests status](https://github.com/tempoCollaboration/OQuPy/actions/workflows/python-package-tests.yml/badge.svg)](https://github.com/tempoCollaboration/OQuPy/actions/workflows/python-package-tests.yml)
@@ -18,12 +19,12 @@ OQuPy includes numerically exact methods (i.e. employing only numerically well c
 - quantum systems coupled to a single environment [2-4],
 - quantum systems coupled to multiple environments [5],
 - interacting chains of non-Markovian open quantum systems [6], and
-- ensembles of open many-body systems with many-to-one coupling to some common central system [7].
+- ensembles of open many-body systems with many-to-one coupling [7].
 
 Furthermore, OQuPy implements methods to ...
 - optimize control protocols for non-Markovian open quantum systems [8,9],
 - compute the dynamics of an non-Markovian environment [10], and
-- obtain the thermal state of a quantum system strongly coupled to a structured environment [11].
+- obtain the thermal state of a strongly couled quantum system [11].
 
 ![OQuPy - overview](docs/graphics/overview.png)
 

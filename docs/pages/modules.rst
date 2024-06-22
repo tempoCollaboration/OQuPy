@@ -9,10 +9,10 @@ oqupy.base_api
     :members:
 
 
-oqupy.bath
-----------
+oqupy.bath_correlations
+-----------------------
 
-.. automodule:: oqupy.bath
+.. automodule:: oqupy.bath_correlations
     :show-inheritance:
     :members:
 
@@ -25,10 +25,10 @@ oqupy.bath_dynamics
     :members:
 
 
-oqupy.contractions
-------------------
+oqupy.bath
+----------
 
-.. automodule:: oqupy.contractions
+.. automodule:: oqupy.bath
     :show-inheritance:
     :members:
 
@@ -41,14 +41,6 @@ oqupy.control
     :members:
 
 
-oqupy.correlations
-------------------
-
-.. automodule:: oqupy.correlations
-    :show-inheritance:
-    :members:
-
-
 oqupy.dynamics
 --------------
 
@@ -57,18 +49,11 @@ oqupy.dynamics
     :members:
 
 
-oqupy.exceptions
-----------------
-
-.. automodule:: oqupy.exceptions
-    :show-inheritance:
-    :members:
-
-
 oqupy.gradient
 --------------
 
 .. automodule:: oqupy.gradient
+    :show-inheritance:
     :members:
 
 
@@ -98,27 +83,31 @@ oqupy.process_tensor
 --------------------
 
 .. automodule:: oqupy.process_tensor
-
-    .. autoclass:: oqupy.process_tensor.BaseProcessTensor
-        :show-inheritance:
-        :members:
-
-    .. autoclass:: oqupy.process_tensor.FileProcessTensor
-        :show-inheritance:
-
-    .. autoclass:: oqupy.process_tensor.SimpleProcessTensor
-        :show-inheritance:
-
-    .. autoclass:: oqupy.process_tensor.TrivialProcessTensor
-        :show-inheritance:
-
-    .. autofunction:: oqupy.process_tensor.import_process_tensor
+    :show-inheritance:
+    :members:
 
 
 oqupy.pt_tebd
---------------------
+-------------
 
 .. automodule:: oqupy.pt_tebd
+    :show-inheritance:
+    :members:
+
+
+oqupy.pt_tmpo
+-------------
+
+.. automodule:: oqupy.pt_tempo
+    :show-inheritance:
+    :members:
+
+
+oqupy.system_dynamics
+---------------------
+
+.. automodule:: oqupy.system_dynamics
+    :show-inheritance:
     :members:
 
 
@@ -126,14 +115,6 @@ oqupy.system
 ------------
 
 .. automodule:: oqupy.system
-    :show-inheritance:
-    :members:
-
-
-oqupy.pt_tempo
---------------
-
-.. automodule:: oqupy.pt_tempo
     :show-inheritance:
     :members:
 
