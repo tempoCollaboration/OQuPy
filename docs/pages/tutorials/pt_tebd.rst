@@ -5,7 +5,7 @@ An introduction on how to use the OQuPy package to compute the dynamics
 of a chain of open quantum systems using the process tensor approach to
 time evolving block decimation (PT-TEBD). We illustrate this by applying
 PT-TEBD to a 5-site XYZ Heisenberg spin chain. This method and example
-is explained in detail in [Fux2022] (`arXiv:2201.05529 <https://arxiv.org/abs/2201.05529>`__).
+is explained in detail in [Fux2023] (`arXiv:2201.05529 <https://arxiv.org/abs/2201.05529>`__).
 
 -  `launch
    binder <https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/HEAD?labpath=tutorials%2Fpt_tebd.ipynb>`__
@@ -74,7 +74,7 @@ Example - Heisenberg spin chain
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let’s calculate the dynamics of a short XYZ Heisenberg spin chain with
-the same parameters as in [Fux2022]. Before we include any environment
+the same parameters as in [Fux2023]. Before we include any environment
 coupling we first consider the closed chain with the Hamiltonian
 
 .. math::
@@ -130,7 +130,7 @@ parameters:
 3. The relative singular value truncation tolerance ``epsrel``.
 
 We describe details of the computation parameters in the supplemental
-material of [Fux2022].
+material of [Fux2023].
 
 .. code:: ipython3
 

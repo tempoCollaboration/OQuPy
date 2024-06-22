@@ -1,5 +1,3 @@
-# Copyright 2022 The TEMPO Collaboration
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -35,7 +33,7 @@ def test_base_correlations():
         cor.correlation(None)
     with pytest.raises(NotImplementedError):
         cor.correlation(None)
-    for shape in ["square", "upper-triangle", "lower-triangle"]:
+    for shape in ["square", "upper-triangle"]:
         with pytest.raises(NotImplementedError):
             cor.correlation_2d_integral(time_1=None,
                                         delta=None,

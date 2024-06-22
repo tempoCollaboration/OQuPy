@@ -1,5 +1,3 @@
-# Copyright 2022 The TEMPO Collaboration
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -348,7 +346,7 @@ def compute_tebd_propagator(
 class AugmentedMPS(BaseAPIClass):
     """
     An augmented matrix product state (as introduced in the supplemental
-    material of [Fux2022]).
+    material of [Fux2023]).
 
     The full gamma tensors (one for each site) have the following axis:
     (L = left bond leg, P = physical leg, R = right bond leg,

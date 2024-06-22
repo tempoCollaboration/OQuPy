@@ -1,5 +1,3 @@
-# Copyright 2020 The TEMPO Collaboration
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,9 +12,9 @@
 """
 Module for Process Tensor Time Evolving Block Decimation (PT-TEBD) backend.
 The algorithms in this module are explained in the supplemental material
-of [Fux2022].
+of [Fux2023].
 
-**[Fux2022]**
+**[Fux2023]**
 G. E. Fux, D. Kilda, B. W. Lovett, and J. Keeling, *Thermalization of a
 spin chain strongly coupled to its environment*, arXiv:2201.05529 (2022).
 
@@ -280,7 +278,7 @@ class PtTebdBackend:
         """
         Trace out the bath correlations of the augmented MPS to yield a
         canonical MPS. See Fig. S2(k-l) in the supplemental material of
-        [Fux2022].
+        [Fux2023].
         """
         node_dict, edge_dict = tn.copy(self._gammas)
         self._bath_trace_gammas = []
@@ -297,7 +295,7 @@ class PtTebdBackend:
     def _compute_full_trace_gammas(self):
         """
         Compute all local traces over the gamma matrices as shown at the top of
-        Fig. S1(d) in the supplemental material of [Fux2022].
+        Fig. S1(d) in the supplemental material of [Fux2023].
         """
         assert self._bath_trace_gammas is not None
 
@@ -442,7 +440,7 @@ def apply_nn_gate(input_data):
     Apply a nearest neighbor gate to the augmented MPS.
 
     This algorithm is shown in the Figs. S2(c-h) in the supplemental material
-    of [Fux2022].
+    of [Fux2023].
     """
     return _apply_nn_gate(*input_data)
 
@@ -460,7 +458,7 @@ def _apply_nn_gate(
     Apply a nearest neighbor gate to the augmented MPS.
 
     This algorithm is shown in the Figs. S2(c-h) in the supplemental material
-    of [Fux2022].
+    of [Fux2023].
     """
 
     # -- compute inverted left and right lambdas --

@@ -3,24 +3,55 @@ Bibliography
 
 The code in this project is based on ideas from the following publications:
 
-- **[Strathearn2017]** Strathearn et al., *Efficient real-time path integrals for non-Markovian spin-boson models*. [New J. Phys. 19(9), p.093009](http://dx.doi.org/10.1088/1367-2630/aa8744) (2017).
+- **[Strathearn2017]** Strathearn et al., *Efficient real-time path integrals for non-Markovian spin-boson models*. [New J. Phys. 19(9), p.093009](https://doi.org/10.1088/1367-2630/aa8744) (2017).
 - **[Strathearn2018]** Strathearn et al., *Efficient non-Markovian quantum dynamics using time-evolving matrix product operators*, [Nat. Commun. 9, 3322](https://doi.org/10.1038/s41467-018-05617-3)
   (2018).
-- **[Pollock2018]** Pollock et al., *Non-Markovian quantum processes: Complete framework and efficient characterization*, [Phys. Rev. A 97, 012127](http://dx.doi.org/10.1103/PhysRevA.97.012127) (2018).
-- **[Jorgensen2019]** Jørgensen and Pollock, *Exploiting the causal tensor network structure of quantum processes to efficiently simulate non-Markovian path integrals*, [Phys. Rev. Lett. 123, 240602](http://dx.doi.org/10.1103/PhysRevLett.123.240602) (2019).
-- **[Strathearn2019]** Strathearn, *Modelling Non-Markovian Quantum Systems Using Tensor Networks*, [Springer Theses](http://link.springer.com/10.1007/978-3-030-54975-6) (2020).
-- **[Fux2020]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://link.aps.org/doi/10.1103/PhysRevLett.126.200401) (2021).
-- **[Gribben2021]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*,  [arXiv:20106.0412](http://arxiv.org/abs/2106.04212) (2021).
-- **[Gribben2022]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [PRX Quantum 3, 10321](https://link.aps.org/doi/10.1103/PRXQuantum.3.010321) (2021).
+- **[Pollock2018]** Pollock et al., *Non-Markovian quantum processes: Complete framework and efficient characterization*, [Phys. Rev. A 97, 012127](https://doi.org/10.1103/PhysRevA.97.012127) (2018).
+- **[Jorgensen2019]** Jørgensen and Pollock, *Exploiting the causal tensor network structure of quantum processes to efficiently simulate non-Markovian path integrals*, [Phys. Rev. Lett. 123, 240602](https://doi.org/10.1103/PhysRevLett.123.240602) (2019).
+- **[Strathearn2019]** Strathearn, *Modelling Non-Markovian Quantum Systems Using Tensor Networks*, [Springer Theses](https://doi.org/10.1007/978-3-030-54975-6) (2020).
+- **[Fux2021]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://doi.org/10.1103/PhysRevLett.126.200401) (2021).
+- **[Gribben2022a]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [PRX Quantum 3, 10321](https://doi.org/10.1103/PRXQuantum.3.010321) (2022).
+- **[Gribben2022b]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*,  [Quantum, 6, 847](https://doi.org/10.22331/q-2022-10-25-847) (2022).
+- **[Chiu2022]** Chiu et al., *Numerical evaluation and robustness of the quantum mean-force Gibbs state*, [Phys. Rev. A 106, 012204](https://doi.org/10.1103/PhysRevA.106.012204}) (2022).
 - **[FowlerWright2022]** Fowler-Wright et al., *Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons*, [Phys. Rev. Lett. 129, 173001](https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
-- **[Fux2022]** Fux et al., *Thermalization of a spin chain strongly coupled to its environment*, [arXiv:2201.05529](http://arxiv.org/abs/2201.05529) (2022).
+- **[Fux2023]** Fux et al., *Tensor network simulation of chains of non-Markovian open quantum systems*, [Phys. Rev. Research 5, 033078 ](https://doi.org/10.1103/PhysRevResearch.5.033078}) (2023).
+- **[Butler2024]** Butler et al., *Optimizing Performance of Quantum Operations with Non-Markovian Decoherence: The Tortoise or the Hare?*, [Phys. Rev. Lett. 132, 060401 ](https://doi.org/10.1103/PhysRevLett.132.060401}) (2024).
 
 
 BibTeX:
 -------
 
-
 ```
+@article{Butler2024,
+  title = {Optimizing Performance of Quantum Operations with Non-Markovian Decoherence: The Tortoise or the Hare?},
+  author = {Butler, Eoin P. and Fux, Gerald E. and Ortega-Taberner, Carlos and Lovett, Brendon W. and Keeling, Jonathan and Eastham, Paul R.},
+  journal = {Phys. Rev. Lett.},
+  volume = {132},
+  issue = {6},
+  pages = {060401},
+  numpages = {7},
+  year = {2024},
+  month = {Feb},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.132.060401},
+  url = {https://doi.org/10.1103/PhysRevLett.132.060401}
+}
+
+@article{Chiu2022,
+  title = {Numerical evaluation and robustness of the quantum mean-force Gibbs state},
+  author = {Chiu, Yiu-Fung and Strathearn, Aidan and Keeling, Jonathan},
+  journal = {Phys. Rev. A},
+  volume = {106},
+  issue = {1},
+  pages = {012204},
+  numpages = {8},
+  year = {2022},
+  month = {Jul},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevA.106.012204},
+  url = {https://doi.org/10.1103/PhysRevA.106.012204}
+}
+
 @article{FowlerWright2022,
   title = {Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons},
   author = {Fowler-Wright, Piper and Lovett, Brendon W. and Keeling, Jonathan},
@@ -48,30 +79,25 @@ BibTeX:
   month = {May},
   publisher = {American Physical Society},
   doi = {10.1103/PhysRevLett.126.200401},
-  url = {https://link.aps.org/doi/10.1103/PhysRevLett.126.200401}
+  url = {https://doi.org/10.1103/PhysRevLett.126.200401}
 }
 
-@article{Fux2022,
-  title = {{Thermalization of a spin chain strongly coupled to its environment}},
+@article{Fux2023,
+  title = {Tensor network simulation of chains of non-Markovian open quantum systems},
   author = {Fux, Gerald E. and Kilda, Dainius and Lovett, Brendon W. and Keeling, Jonathan},
-  archivePrefix = {arXiv},
-  arxivId = {2201.05529},
-  eprint = {2201.05529},
-  url = {http://arxiv.org/abs/2201.05529},
-  year = {2022}
+  journal = {Phys. Rev. Res.},
+  volume = {5},
+  issue = {3},
+  pages = {033078},
+  numpages = {14},
+  year = {2023},
+  month = {Aug},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevResearch.5.033078},
+  url = {https://doi.org/10.1103/PhysRevResearch.5.033078}
 }
 
-@article{Gribben2021,
-  title = {{Using the Environment to Understand non-Markovian Open Quantum Systems}},
-  author = {Gribben, Dominic and Strathearn, Aidan and Fux, Gerald E. and Kirton, Peter and Lovett, Brendon W.},
-  archivePrefix = {arXiv},
-  arxivId = {2106.04212},
-  eprint = {2106.04212},
-  url = {http://arxiv.org/abs/2106.04212},
-  year = {2021}
-}
-
-@article{Gribben2022,
+@article{Gribben2022a,
   title = {Exact Dynamics of Nonadditive Environments in Non-Markovian Open Quantum Systems},
   author = {Gribben, Dominic and Rouse, Dominic M. and Iles-Smith, Jake and Strathearn, Aidan and Maguire, Henry and Kirton, Peter and Nazir, Ahsan and Gauger, Erik M. and Lovett, Brendon W.},
   journal = {PRX Quantum},
@@ -83,7 +109,21 @@ BibTeX:
   month = {Feb},
   publisher = {American Physical Society},
   doi = {10.1103/PRXQuantum.3.010321},
-  url = {https://link.aps.org/doi/10.1103/PRXQuantum.3.010321}
+  url = {https://doi.org/10.1103/PRXQuantum.3.010321}
+}
+
+@article{Gribben2022b,
+  doi = {10.22331/q-2022-10-25-847},
+  url = {https://doi.org/10.22331/q-2022-10-25-847},
+  title = {Using the {E}nvironment to {U}nderstand non-{M}arkovian {O}pen {Q}uantum {S}ystems},
+  author = {Gribben, Dominic and Strathearn, Aidan and Fux, Gerald E. and Kirton, Peter and Lovett, Brendon W.},
+  journal = {{Quantum}},
+  issn = {2521-327X},
+  publisher = {{Verein zur F{\"{o}}rderung des Open Access Publizierens in den Quantenwissenschaften}},
+  volume = {6},
+  pages = {847},
+  month = oct,
+  year = {2022}
 }
 
 @article{Jorgensen2019,
@@ -99,7 +139,7 @@ BibTeX:
   month = {Dec},
   publisher = {American Physical Society},
   doi = {10.1103/PhysRevLett.123.240602},
-  url = {https://link.aps.org/doi/10.1103/PhysRevLett.123.240602}
+  url = {https://doi.org/10.1103/PhysRevLett.123.240602}
 }
 
 @misc{OQuPy,
@@ -123,9 +163,7 @@ BibTeX:
   pages = {012127},
   title = {{Non-Markovian quantum processes: Complete framework and
             efficient characterization}},
-  url = {https://link.aps.org/doi/10.1103/PhysRevA.97.012127
-         http://arxiv.org/abs/1512.00589
-         http://dx.doi.org/10.1103/PhysRevA.97.012127},
+  url = {https://doi.org/10.1103/PhysRevA.97.012127},
   volume = {97},
   year = {2018}
 }
@@ -169,7 +207,7 @@ BibTeX:
   publisher = {Springer International Publishing},
   series = {Springer Theses},
   title = {{Modelling Non-Markovian Quantum Systems Using Tensor Networks}},
-  url = {http://link.springer.com/10.1007/978-3-030-54975-6},
+  url = {https://doi.org/10.1007/978-3-030-54975-6},
   year = {2020}
 }
 

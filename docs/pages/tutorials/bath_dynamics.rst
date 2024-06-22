@@ -33,7 +33,7 @@ and define the necessary spin matrices for convenience
 Example - Heat transfer in a biased spin-boson model
 ----------------------------------------------------
 
-Let’s try and recreate a line cut of Figure 2 from [Gribben2021]
+Let’s try and recreate a line cut of Figure 2 from [Gribben2022b]
 (`arXiv:2106.04212 <https://arxiv.org/abs/2106.04212>`__). This tells us
 how much heat has been emitted into or absorbed from the bath by the
 system and how this transfer is distributed over the bath modes.
@@ -167,7 +167,7 @@ behaves as well.
 3. Bath dynamics
 ~~~~~~~~~~~~~~~~
 
-In [Gribben2021]
+In [Gribben2022b]
 (`arXiv:2106.04212 <https://arxiv.org/abs/2106.04212>`__) we can see
 that for linearly coupled Gaussian environments the bath dynamics can be
 calculated through relatively simple transformations of system

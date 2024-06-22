@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'OQuPy'
-copyright = '2022, TEMPO Collaboration'
+copyright = '2024, TEMPO Collaboration'
 author = 'TEMPO Collaboration'
 
 # The full version, including alpha/beta/rc tags

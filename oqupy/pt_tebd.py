@@ -1,5 +1,3 @@
-# Copyright 2022 The TEMPO Collaboration
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,9 +11,9 @@
 # limitations under the License.
 """
 Module for the process tensor approach to time evolving block decimation.
-This module is based on [Fux2022].
+This module is based on [Fux2023].
 
-**[Fux2022]**
+**[Fux2023]**
 G. E. Fux, D. Kilda, B. W. Lovett, and J. Keeling, *Thermalization of a
 spin chain strongly coupled to its environment*, arXiv:2201.05529 (2022).
 

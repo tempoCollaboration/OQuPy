@@ -1,5 +1,3 @@
-# Copyright 2022 The TEMPO Collaboration
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -102,7 +100,7 @@ class BaseCorrelations(BaseAPIClass):
             ``'rectangle'``.
         shape : str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
-            ``'upper-triangle'``, ``'lower-triangle'``, ``'rectangle'``}
+            ``'upper-triangle'``, ``'rectangle'``}
         epsrel : float
             Relative error tolerance.
         subdiv_limit: int

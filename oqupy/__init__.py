@@ -1,19 +1,49 @@
 """
-A Python 3 package to efficiently compute non-Markovian open quantum systems.
+A Python package to efficiently simulate non-Markovian open quantum systems
+with process tensors.
 
 This open source project aims to facilitate versatile numerical tools to
 efficiently compute the dynamics of quantum systems that are possibly strongly
-coupled to a structured environment. It allows to conveniently apply the so
-called time evolving matrix product operator method (TEMPO) [1], as well as
-the process tensor TEMPO method (PT-TEMPO) [2].
+coupled to structured environments. It facilitates the convenient application
+of several numerical methods that combine the conceptional advantages of the
+process tensor framework [1], with the numerical efficiency of tensor networks.
 
-[1] A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
-    B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
-    time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
-[2] G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
-    J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-    optimal control of non-Markovian open quantum systems*, arXiv2101.?????
-    (2021).
+OQuPy includes numerically exact methods (i.e. employing only numerically well
+controlled approximations) for the non-Markovian dynamics and multi-time
+correlations of ...
+- quantum systems coupled to a single environment [2-4],
+- quantum systems coupled to multiple environments [5],
+- interacting chains of non-Markovian open quantum systems [6], and
+- ensembles of open many-body systems with many-to-one coupling [7].
+
+Furthermore, OQuPy implements methods to ...
+- optimize control protocols for non-Markovian open quantum systems [8,9],
+- compute the dynamics of an non-Markovian environment [10], and
+- obtain the thermal state of a strongly couled quantum system [11].
+
+[1]  Pollock et al., [Phys. Rev. A 97, 012127]
+     (https://doi.org/10.1103/PhysRevA.97.012127) (2018).
+[2]  Strathearn et al., [New J. Phys. 19(9), p.093009]
+     (https://doi.org/10.1088/1367-2630/aa8744) (2017).
+[3]  Strathearn et al., [Nat. Commun. 9, 3322]
+     (https://doi.org/10.1038/s41467-018-05617-3) (2018).
+[4]  Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602]
+     (https://doi.org/10.1103/PhysRevLett.123.240602) (2019).
+[5]  Gribben et al., [PRX Quantum 3, 10321]
+     (https://doi.org/10.1103/PRXQuantum.3.010321) (2022).
+[6]  Fux et al., [Phys. Rev. Research 5, 033078 ]
+     (https://doi.org/10.1103/PhysRevResearch.5.033078}) (2023).
+[7]  Fowler-Wright et al., [Phys. Rev. Lett. 129, 173001]
+     (https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
+[8]  Fux et al., [Phys. Rev. Lett. 126, 200401]
+     (https://doi.org/10.1103/PhysRevLett.126.200401) (2021).
+[9]  Butler et al., [Phys. Rev. Lett. 132, 060401 ]
+     (https://doi.org/10.1103/PhysRevLett.132.060401}) (2024).
+[10] Gribben et al., [Quantum, 6, 847]
+     (https://doi.org/10.22331/q-2022-10-25-847) (2022).
+[11] Chiu et al., [Phys. Rev. A 106, 012204]
+     (https://doi.org/10.1103/PhysRevA.106.012204}) (2022).
+
 """
 from oqupy.version import __version__
 
