@@ -51,7 +51,7 @@ publications:
 BibTeX:
 -------
 
-.. code-block:: bibtex
+.. code-block:: 
 
    @article{Butler2024,
      title = {Optimizing Performance of Quantum Operations with Non-Markovian Decoherence: The Tortoise or the Hare?},

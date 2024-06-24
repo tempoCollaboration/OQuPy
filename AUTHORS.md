@@ -45,5 +45,5 @@ Acknowledgements
 **Other Collaborators:**
 - Kristín Arnardóttir (*University of Southern Denmark*)
 - [Erik Gauger](https://github.com/erikgauger) (*Heriot-Watt University*)
-- [Thibaut Lacroix](https://github.com/tfmlaX) (*University of St Andrews*)
+- [Thibaut Lacroix](https://github.com/tfmlaX) (*University of Ulm*)
 
