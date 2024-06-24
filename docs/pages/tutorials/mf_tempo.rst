@@ -49,7 +49,7 @@ in version **0.3.0** and revised in its current format in **0.4.0.**
 
 .. parsed-literal::
 
-    '0.4.0'
+    '0.5.0'
 
 
 

@@ -60,7 +60,7 @@ and check what version of tempo we are using.
 
 .. parsed-literal::
 
-    '0.4.0'
+    '0.5.0'
 
 
 
