@@ -2,6 +2,8 @@
 A Python package to efficiently simulate non-Markovian open quantum systems
 with process tensors.
 
+--> see ArXiv:2406.16650 (https://doi.org/10.48550/arXiv.2406.16650)
+
 This open source project aims to facilitate versatile numerical tools to
 efficiently compute the dynamics of quantum systems that are possibly strongly
 coupled to structured environments. It facilitates the convenient application

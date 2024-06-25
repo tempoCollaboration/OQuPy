@@ -1,8 +1,7 @@
-OQuPy - Open Quantum Systems in Python
-======================================
+OQuPy: Open Quantum Systems in Python
+=====================================
 
-**A Python package to efficiently simulate non-Markovian open quantum systems
-with process tensors.**
+`ArXiv:2406.16650 <https://doi.org/10.48550/arXiv.2406.16650>`__ - **A Python package to efficiently simulate non-Markovian open quantum systems with process tensors.**
 
 .. image:: https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge
  :target: http://unitary.fund

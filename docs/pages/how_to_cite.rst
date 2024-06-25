@@ -1,17 +1,18 @@
 How to Cite this Project
 ========================
 
-Citing the Code
----------------
+If you publish work using OQuPy, please cite the paper
 
--  **[OQuPy]** The TEMPO collaboration, *OQuPy: A Python 3 package to
-   efficiently compute non-Markovian open quantum systems*,
-   `GitHub <https://doi.org/10.5281/zenodo.4428316>`__ (2020).
+- **[OQuPy-paper]** G. E. Fux, P. Fowler-Wright, J.Beckles, E. P. Butler, P. R. Eastham, D. Gribben, J. Keeling, D. Kilda, P. Kirton, E. D. C. Lawrence, B. W. Lovett, E. O'Neill, A. Strathearn, R. de Wit, *OQuPy: A Python package to efficiently simulate non-Markovian open quantum systems with process tensors*, `arXiv:2406.16650 <https://doi.org/10.48550/arXiv.2406.16650>`__.
 
-Please consider citing
-----------------------
+and the code version you used
 
--  TEMPO algorithm: **[Strathearn2018]**, **[Strathearn2019]**
+- **[OQuPy-code-v0.5.0]** The TEMPO collaboration, *OQuPy: A Python package to efficiently simulate non-Markovian open quantum systems with process tensors*, `doi: 10.5281/zenodo.12517767 <https://doi.org/10.5281/zenodo.12517767>`__ (2024).
+
+
+Also, please consider citing:
+
+-  TEMPO algorithm: **[Strathearn2018]**, **[Strathearn2020]**
 -  Process tensor approach: **[Pollock2018]**, **[Jorgensen2019]**
 -  Optimization: **[Fux2021]**, **[Bulter2024]**
 -  Multiple environments: **[Gribben2022a]**

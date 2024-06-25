@@ -1,8 +1,7 @@
 
 # OQuPy: Open Quantum Systems in Python
 
-**A Python package to efficiently simulate non-Markovian open quantum systems
-with process tensors.**
+[**ArXiv:2406.16650 - A Python package to efficiently simulate non-Markovian open quantum systems with process tensors.**](https://doi.org/10.48550/arXiv.2406.16650)
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb)
 [![Tests status](https://github.com/tempoCollaboration/OQuPy/actions/workflows/python-package-tests.yml/badge.svg)](https://github.com/tempoCollaboration/OQuPy/actions/workflows/python-package-tests.yml)
@@ -12,6 +11,8 @@ with process tensors.**
 [![DOI](https://www.zenodo.org/badge/244404030.svg)](https://www.zenodo.org/badge/latestdoi/244404030)
 
 [![Unitary Fund](https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge)](http://unitary.fund)
+
+
 
 This open source project aims to facilitate versatile numerical tools to efficiently compute the dynamics of quantum systems that are possibly strongly coupled to structured environments. It facilitates the convenient application of several numerical methods that combine the conceptional advantages of the process tensor framework [1], with the numerical efficiency of tensor networks.
 

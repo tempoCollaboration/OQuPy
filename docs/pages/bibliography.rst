@@ -18,7 +18,7 @@ publications:
    tensor network structure of quantum processes to efficiently simulate
    non-Markovian path integrals*, `Phys. Rev. Lett. 123,
    240602 <https://doi.org/10.1103/PhysRevLett.123.240602>`__ (2019).
--  **[Strathearn2019]** Strathearn, *Modelling Non-Markovian Quantum
+-  **[Strathearn2020]** Strathearn, *Modelling Non-Markovian Quantum
    Systems Using Tensor Networks*, `Springer
    Theses <https://doi.org/10.1007/978-3-030-54975-6>`__ (2020).
 -  **[Fux2021]** Fux et al., *Efficient exploration of Hamiltonian
@@ -173,14 +173,22 @@ BibTeX:
      url = {https://doi.org/10.1103/PhysRevLett.123.240602}
    }
 
-   @misc{OQuPy,
-     author={{The TEMPO collaboration}},
-     title={{OQuPy: A Python 3 package to efficiently compute
-             non-Markovian open quantum systems.}},
-     year=2020,
-     publisher={GitHub},
-     doi={10.5281/zenodo.4428316}
-     url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
+   @misc{OQuPy-code-v0.5.0,
+      author={{The TEMPO collaboration}},
+      title={{OQuPy: A Python package to efficiently simulate non-Markovian open quantum systems with process tensors.}},
+      year=2024,
+      publisher={GitHub},
+      doi={10.5281/zenodo.12517767}
+      url={https://github.com/tempoCollaboration/OQuPy}
+   }
+
+   @misc{OQuPy-paper,
+      title={OQuPy: A Python package to efficiently simulate non-Markovian open quantum systems with process tensors}, 
+      author={Gerald E. Fux and Piper Fowler-Wright and Joel Beckles and Eoin P. Butler and Paul R. Eastham and Dominic Gribben and Jonathan Keeling and Dainius Kilda and Peter Kirton and Ewen D. C. Lawrence and Brendon W. Lovett and Eoin O'Neill and Aidan Strathearn and Roosmarijn de Wit},
+      year={2024},
+      eprint={2406.16650},
+      archivePrefix={arXiv},
+      doi = {https://doi.org/10.48550/arXiv.2406.16650}
    }
 
    @article{Pollock2018,
@@ -199,7 +207,7 @@ BibTeX:
      year = {2018}
    }
 
-   @article{Strathearn_2017,
+   @article{Strathearn2017,
        doi = {10.1088/1367-2630/aa8744},
        url = {https://doi.org/10.1088/1367-2630/aa8744},
        year = 2017,
@@ -230,7 +238,7 @@ BibTeX:
      year = {2018}
    }
 
-   @book{Strathearn2019,
+   @book{Strathearn2020,
      address = {Cham},
      author = {Strathearn, Aidan},
      doi = {10.1007/978-3-030-54975-6},

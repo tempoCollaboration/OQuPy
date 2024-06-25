@@ -8,7 +8,7 @@ The code in this project is based on ideas from the following publications:
   (2018).
 - **[Pollock2018]** Pollock et al., *Non-Markovian quantum processes: Complete framework and efficient characterization*, [Phys. Rev. A 97, 012127](https://doi.org/10.1103/PhysRevA.97.012127) (2018).
 - **[Jorgensen2019]** Jørgensen and Pollock, *Exploiting the causal tensor network structure of quantum processes to efficiently simulate non-Markovian path integrals*, [Phys. Rev. Lett. 123, 240602](https://doi.org/10.1103/PhysRevLett.123.240602) (2019).
-- **[Strathearn2019]** Strathearn, *Modelling Non-Markovian Quantum Systems Using Tensor Networks*, [Springer Theses](https://doi.org/10.1007/978-3-030-54975-6) (2020).
+- **[Strathearn2020]** Strathearn, *Modelling Non-Markovian Quantum Systems Using Tensor Networks*, [Springer Theses](https://doi.org/10.1007/978-3-030-54975-6) (2020).
 - **[Fux2021]** Fux et al., *Efficient exploration of Hamiltonian parameter space for optimal control of non-Markovian open quantum systems*, [Phys. Rev. Lett. 126, 200401](https://doi.org/10.1103/PhysRevLett.126.200401) (2021).
 - **[Gribben2022a]** Gribben et al., *Exact dynamics of non-additive environments in non-Markovian open quantum systems*, [PRX Quantum 3, 10321](https://doi.org/10.1103/PRXQuantum.3.010321) (2022).
 - **[Gribben2022b]** Gribben et al., *Using the Environment to Understand non-Markovian Open Quantum Systems*,  [Quantum, 6, 847](https://doi.org/10.22331/q-2022-10-25-847) (2022).
@@ -142,14 +142,22 @@ BibTeX:
   url = {https://doi.org/10.1103/PhysRevLett.123.240602}
 }
 
-@misc{OQuPy,
+@misc{OQuPy-code-v0.5.0,
   author={{The TEMPO collaboration}},
-  title={{OQuPy: A Python 3 package to efficiently compute
-          non-Markovian open quantum systems.}},
-  year=2020,
+  title={{OQuPy: A Python package to efficiently simulate non-Markovian open quantum systems with process tensors.}},
+  year=2024,
   publisher={GitHub},
-  doi={10.5281/zenodo.4428316}
-  url={https://github.com/tempoCollaboration/TimeEvolvingMPO}
+  doi={10.5281/zenodo.12517767}
+  url={https://github.com/tempoCollaboration/OQuPy}
+}
+
+@misc{OQuPy-paper,
+  title={OQuPy: A Python package to efficiently simulate non-Markovian open quantum systems with process tensors}, 
+  author={Gerald E. Fux and Piper Fowler-Wright and Joel Beckles and Eoin P. Butler and Paul R. Eastham and Dominic Gribben and Jonathan Keeling and Dainius Kilda and Peter Kirton and Ewen D. C. Lawrence and Brendon W. Lovett and Eoin O'Neill and Aidan Strathearn and Roosmarijn de Wit},
+  year={2024},
+  eprint={2406.16650},
+  archivePrefix={arXiv},
+  doi = {https://doi.org/10.48550/arXiv.2406.16650}
 }
 
 @article{Pollock2018,
@@ -168,7 +176,7 @@ BibTeX:
   year = {2018}
 }
 
-@article{Strathearn_2017,
+@article{Strathearn2017,
 	doi = {10.1088/1367-2630/aa8744},
 	url = {https://doi.org/10.1088/1367-2630/aa8744},
 	year = 2017,
@@ -199,7 +207,7 @@ BibTeX:
   year = {2018}
 }
 
-@book{Strathearn2019,
+@book{Strathearn2020,
   address = {Cham},
   author = {Strathearn, Aidan},
   doi = {10.1007/978-3-030-54975-6},
