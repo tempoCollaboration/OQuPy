@@ -95,8 +95,8 @@ oqupy.pt_tebd
     :members:
 
 
-oqupy.pt_tmpo
--------------
+oqupy.pt_tempo
+--------------
 
 .. automodule:: oqupy.pt_tempo
     :show-inheritance:
