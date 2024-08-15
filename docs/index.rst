@@ -33,7 +33,7 @@ Furthermore, OQuPy implements methods to ...
 
 - optimize control protocols for non-Markovian open quantum systems [8,9],
 - compute the dynamics of an non-Markovian environment [10], and
-- obtain the thermal state of a strongly couled quantum system [11].
+- obtain the thermal state of a strongly coupled quantum system [11].
 
 .. figure:: ./graphics/overview.png
    :alt: OQuPy - overview
