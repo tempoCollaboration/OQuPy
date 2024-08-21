@@ -1,5 +1,9 @@
 # Implementation of iTEBD-TEMPO
 # Author: Valentin Link (valentin.link@tu-dresden.de)
+# Original code from https://github.com/val-link/iTEBD-TEMPO.git
+# Modified by Paul Eastham (easthamp@tcd.ie) so that the iTEBD-TEMPO class uses the OQuPy BathCorrelations class 
+# to define the bath correlations rather than the bath correlation function itself. 
+
 
 import numpy as np
 from scipy.integrate import dblquad

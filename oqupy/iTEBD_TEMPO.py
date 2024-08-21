@@ -1,5 +1,6 @@
 # Implementation of iTEBD-TEMPO
 # Author: Valentin Link (valentin.link@tu-dresden.de)
+# Original iTEBD-TEMPO code from https://github.com/val-link/iTEBD-TEMPO.git by Link.
 
 import numpy as np
 from scipy.integrate import dblquad
