@@ -461,6 +461,12 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         #self._mpo_tensors = []
         #self._cap_tensors = []
         self._lam_tensors = []
+        self._mpo_tensor=np.transpose(tebd.f[:,:-1,:],[0,2,1]) # drop the extra component and reorder the rank 3 tensor to match OQuPy
+        self._first_mpo_tensor=ncon([tebd.v_l,self._mpo_tensor],[[1],[1,-1,-2]]) # construct first tensor in mpo
+        self._first_mpo_tensor.shape=tuple([1]+list(self._first_mpo_tensor.shape))
+        self._mpo_tensor = create_delta_lastindex(self._mpo_tensor) 
+        self._first_mpo_tensor = create_delta_lastindex(self._first_mpo_tensor)
+        self._cap_tensor=tebd.v_r
         super().__init__(
             hilbert_space_dimension,
             dt,
@@ -514,15 +520,11 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         """
         if step < 0:
             raise IndexError("Process tensor index out of bound. ")
-        tensor=np.transpose(self._tebd.f[:,:-1,:],[0,2,1]) # drop the extra component and reorder the rank 3 tensor from iTEBD to above
         if step == 0:
-            # if this is the first step incorporate v_l into the tensor and create one with bond dimension 1
-            tensor=np.transpose(self._tebd.f[:,:-1,:],[0,2,1])
-            tensor=ncon([self._tebd.v_l,tensor],[[1],[1,-1,-2]])
-            tensor.shape=tuple([1]+list(tensor.shape))
-        if len(tensor.shape) == 3:
-            # tensor = util.create_delta(tensor, [0, 1, 2, 2]) # this uses the old version
-            tensor = create_delta_lastindex(tensor) # uses specialized function defined above
+            tensor=self._first_mpo_tensor
+        else:
+            tensor=self._mpo_tensor
+        
         if transformed is False:
             return tensor
         if self._transform_in is not None:
@@ -540,7 +542,7 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         if step == 0:
             return np.array([1.0])
         else:
-            return self._tebd.v_r
+            return self._cap_tensor
 
     def get_bond_dimensions(self) -> ndarray:
         raise NotImplementedError
