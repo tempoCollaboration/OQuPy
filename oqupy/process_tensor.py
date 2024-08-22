@@ -523,8 +523,7 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         if step == 0:
             tensor=self._first_mpo_tensor
         else:
-            tensor=self._mpo_tensor
-        
+            tensor=self._mpo_tensor        
         if transformed is False:
             return tensor
         if self._transform_in is not None:
