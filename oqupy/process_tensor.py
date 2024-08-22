@@ -433,6 +433,15 @@ class SimpleProcessTensor(BaseProcessTensor):
             pt_file.set_cap_tensor(step, cap)
         pt_file.close()
 
+def create_delta_lastindex(
+        tensor: ndarray):
+    tensor_shape = tensor.shape
+    ret_shape=tensor.shape+(tensor.shape[-1],)
+    ret_ndarray=np.zeros(ret_shape,dtype=tensor.dtype)
+    for a in range(ret_shape[-1]):
+        ret_ndarray[:,:,a,a]=tensor[:,:,a]
+    return ret_ndarray
+
 class TTInvariantProcessTensor(BaseProcessTensor):
     """
     Class to use the time-translation invariant process tensors created by the iTEBD code
@@ -512,7 +521,8 @@ class TTInvariantProcessTensor(BaseProcessTensor):
             tensor=ncon([self._tebd.v_l,tensor],[[1],[1,-1,-2]])
             tensor.shape=tuple([1]+list(tensor.shape))
         if len(tensor.shape) == 3:
-            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            # tensor = util.create_delta(tensor, [0, 1, 2, 2]) # this uses the old version
+            tensor = create_delta_lastindex(tensor) # uses specialized function defined above
         if transformed is False:
             return tensor
         if self._transform_in is not None:
