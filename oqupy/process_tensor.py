@@ -35,6 +35,10 @@ from oqupy.config import NpDtype
 from oqupy import util
 from oqupy.version import __version__
 
+from oqupy.iTEBD_TEMPO_useoqupybath import iTEBD_TEMPO_oqupy
+from ncon import ncon
+
+
 class BaseProcessTensor(BaseAPIClass, ABC):
     """
     Abstract base class for process tensors in matrix product operator form
@@ -428,6 +432,109 @@ class SimpleProcessTensor(BaseProcessTensor):
         for step, cap in enumerate(self._cap_tensors):
             pt_file.set_cap_tensor(step, cap)
         pt_file.close()
+
+class TTInvariantProcessTensor(BaseProcessTensor):
+    """
+    Class to use the time-translation invariant process tensors created by the iTEBD code
+    """
+    def __init__(
+            self,
+            tebd: iTEBD_TEMPO_oqupy,
+            transform_in: Optional[ndarray] = None,
+            transform_out: Optional[ndarray] = None,
+            name: Optional[Text] = None,
+            description: Optional[Text] = None) -> None:
+        """Constructor of SimpleProcessTensor. """
+        self._initial_tensor = None
+        hilbert_space_dimension=tebd.s_dim
+        dt=tebd.delta
+        self._tebd=tebd
+        #self._mpo_tensors = []
+        #self._cap_tensors = []
+        self._lam_tensors = []
+        super().__init__(
+            hilbert_space_dimension,
+            dt,
+            transform_in,
+            transform_out,
+            name,
+            description)
+
+    def __len__(self) -> int:
+        """Length of process tensor. """
+        """This is not relevant for the TTI case but required by the abstract class"""
+        raise NotImplementedError
+        #return len(self._mpo_tensors)
+
+    @property
+    def max_step(self) -> Union[int, float]:
+        """Maximal number of time steps."""
+        return float('inf')
+
+    def set_initial_tensor(
+            self,
+            initial_tensor: Optional[ndarray] = None) -> None:
+        """
+        Set the (possibly correlated) initial system state.
+        """
+        if initial_tensor is None:
+            self._initial_tensor = None
+            self._initial_tensor = np.array(initial_tensor, dtype=NpDtype)
+
+    def get_initial_tensor(self) -> ndarray:
+        """
+        Get the (possibly correlated) initial system state.
+        """
+        return self._initial_tensor
+
+    def get_mpo_tensor(
+            self,
+            step: int,
+            transformed: Optional[bool] = True) -> ndarray:
+        """
+        Get the MPO tensor for time step `step`.
+
+        The axes correspond to the following legs:
+            [0] ... past bond leg,
+            [1] ... future bond leg,
+            [2] ... input (from system) leg,
+            [3] ... output (to system) leg.
+
+        Applies the transformation (stored in `.transform_in` and
+        `.transform_out`) when `transformed` is true.
+        """
+        if step < 0:
+            raise IndexError("Process tensor index out of bound. ")
+        tensor=np.transpose(self._tebd.f[:,:-1,:],[0,2,1]) # drop the extra component and reorder the rank 3 tensor from iTEBD to above
+        if step == 0:
+            # if this is the first step incorporate v_l into the tensor and create one with bond dimension 1
+            tensor=np.transpose(self._tebd.f[:,:-1,:],[0,2,1])
+            tensor=ncon([self._tebd.v_l,tensor],[[1],[1,-1,-2]])
+            tensor.shape=tuple([1]+list(tensor.shape))
+        if len(tensor.shape) == 3:
+            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+        if transformed is False:
+            return tensor
+        if self._transform_in is not None:
+            tensor = np.dot(np.moveaxis(tensor, -2, -1),
+                            self._transform_in.T)
+            tensor = np.moveaxis(tensor, -1, -2)
+        if self._transform_out is not None:
+            tensor = np.dot(tensor, self._transform_out)
+        return tensor
+
+    def get_cap_tensor(self, step: int) -> ndarray:
+        """
+        Get the cap tensor (vector) to terminate the PT-MPO at time step `step`.
+        """
+        if step == 0:
+            return np.array([1.0])
+        else:
+            return self._tebd.v_r
+
+    def get_bond_dimensions(self) -> ndarray:
+        raise NotImplementedError
+    
 
 
 HDF5None = [np.nan]
