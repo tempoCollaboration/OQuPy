@@ -135,11 +135,11 @@ class TTITempo():
             transform_in = None
             transform_out = None
         
-        MyiTEBD_TEMPO_oqupy = iTEBD_TEMPO_oqupy(np.diagonal(self._bath._coupling_operator), self._parameters.dt, 
+        myitebd = iTEBD_TEMPO_oqupy(np.diagonal(self._bath.coupling_operator), self._parameters.dt, 
                                                 self._bath.correlations, self._parameters.dkmax)
-        MyiTEBD_TEMPO_oqupy.compute_f(self._parameters.epsrel,self._rank)
+        myitebd.compute_f(self._parameters.epsrel,self._rank)
         
-        self._process_tensor = TTInvariantProcessTensor(MyiTEBD_TEMPO_oqupy,
+        self._process_tensor = TTInvariantProcessTensor(myitebd,
             transform_in=transform_in,
             transform_out=transform_out,
             name=self._name,
