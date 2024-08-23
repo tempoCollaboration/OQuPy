@@ -466,7 +466,25 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         self._first_mpo_tensor.shape=tuple([1]+list(self._first_mpo_tensor.shape))
         self._mpo_tensor = create_delta_lastindex(self._mpo_tensor) 
         self._first_mpo_tensor = create_delta_lastindex(self._first_mpo_tensor)
+
+        tensor=self._first_mpo_tensor
+        if transform_in is not None:
+            tensor = np.dot(np.moveaxis(tensor, -2, -1),transform_in.T)
+            tensor = np.moveaxis(tensor, -1, -2)
+        if transform_out is not None:
+            tensor = np.dot(tensor, transform_out)
+        self._first_mpo_tensor=tensor
+
+        tensor=self._mpo_tensor
+        if transform_in is not None:
+            tensor = np.dot(np.moveaxis(tensor, -2, -1),transform_in.T)
+            tensor = np.moveaxis(tensor, -1, -2)
+        if transform_out is not None:
+            tensor = np.dot(tensor, transform_out)
+        self._mpo_tensor=tensor
+
         self._cap_tensor=tebd.v_r
+
         super().__init__(
             hilbert_space_dimension,
             dt,
@@ -518,20 +536,16 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         Applies the transformation (stored in `.transform_in` and
         `.transform_out`) when `transformed` is true.
         """
+
+        assert transformed,"TTI Process tensor cannot be used with transformed=False"
+
         if step < 0:
             raise IndexError("Process tensor index out of bound. ")
         if step == 0:
             tensor=self._first_mpo_tensor
         else:
             tensor=self._mpo_tensor        
-        if transformed is False:
-            return tensor
-        if self._transform_in is not None:
-            tensor = np.dot(np.moveaxis(tensor, -2, -1),
-                            self._transform_in.T)
-            tensor = np.moveaxis(tensor, -1, -2)
-        if self._transform_out is not None:
-            tensor = np.dot(tensor, self._transform_out)
+        
         return tensor
 
     def get_cap_tensor(self, step: int) -> ndarray:
