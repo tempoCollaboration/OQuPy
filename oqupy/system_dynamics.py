@@ -17,22 +17,20 @@ from typing import List, Optional, Text, Tuple, Union
 import warnings
 
 from itertools import product
-import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
-from oqupy.system import TimeDependentSystemWithField
 
-from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.control import Control
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
-from oqupy.process_tensor import BaseProcessTensor
-from oqupy.system import BaseSystem, System, TimeDependentSystem
-from oqupy.system import ParameterizedSystem
-from oqupy.system import MeanFieldSystem
 from oqupy.operators import left_super, right_super
-from oqupy.util import check_convert, check_isinstance, check_true
-from oqupy.util import get_progress
+from oqupy.process_tensor import BaseProcessTensor
+from oqupy.system import BaseSystem, System, TimeDependentSystem, \
+    TimeDependentSystemWithField, ParameterizedSystem, MeanFieldSystem
+from oqupy.util import check_convert, check_isinstance, check_true, \
+    get_progress
 
+from oqupy.backends.numerical_backend import np
 
 Indices = Union[int, slice, List[Union[int, slice]]]
 
@@ -889,7 +887,7 @@ def compute_correlations_nt(
         lengths = len(ops_times_[i])
         times_length.append(lengths)
 
-    ret_correlations = np.empty(times_length, dtype=NpDtype)
+    ret_correlations = np.empty(times_length, dtype=np.dtype_complex)
     #This array will contain all correlations
     ret_correlations[:] = np.nan + 1.0j*np.nan
 

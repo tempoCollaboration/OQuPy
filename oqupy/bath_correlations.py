@@ -13,16 +13,17 @@
 Module for environment correlations.
 """
 
+from functools import lru_cache
 from typing import Callable, Optional, Text
 from typing import Any as ArrayLike
-from functools import lru_cache
 
-import numpy as np
 from scipy import integrate
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.util import check_true
+
+from oqupy.backends.numerical_backend import np
 
 #np.seterr(all='warn')
 # --- spectral density classes ------------------------------------------------

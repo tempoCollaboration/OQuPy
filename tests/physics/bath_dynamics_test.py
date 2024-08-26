@@ -16,8 +16,8 @@ import numpy as np
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
 from oqupy.bath_correlations import PowerLawSD
-from oqupy import TempoParameters, System, Bath, PtTempo
-from oqupy.config import NpDtype
+from oqupy.config import NumPyDtypeComplex
+from oqupy import Bath, PtTempo, System, TempoParameters
 
 def exact_correlation(t_1, t_2, w_1, w_2, dagg,
                g_1, g_2, temp):
@@ -51,7 +51,7 @@ def test():
     final_time = 2
     epsrel = 1e-7
     system_correlations = np.ones((int(final_time/dt),                  #system correlations
-                              int(final_time/dt)), dtype = NpDtype)     #are known exactly.
+                              int(final_time/dt)), dtype=NumPyDtypeComplex)     #are known exactly.
     correlations = PowerLawSD(alpha=alpha,
                               zeta=1.0,
                               cutoff=wc,
@@ -75,7 +75,7 @@ def test():
     tlist, occ_0 = corr.occupation(0)
 
     np.testing.assert_equal(occ_0,np.ones(len(tlist),
-                                        dtype=NpDtype) * (np.nan + 1.0j*np.nan))
+                                        dtype=NumPyDtypeComplex) * (np.nan + 1.0j*np.nan))
 
     w0 = 1
     coup = correlations.spectral_density(w0)

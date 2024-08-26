@@ -36,30 +36,25 @@ optimal control of non-Markovian open quantum systems*, Phys. Rev. Lett. 126,
 200401 (2021).
 """
 
-from typing import Dict, Optional, Text, Union
 from copy import copy
+from typing import Dict, Optional, Text, Union
 
-import numpy as np
 from numpy import ndarray
 
+from oqupy.backends.pt_tempo_backend import PtTempoBackend
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
-from oqupy.config import PT_DEFAULT_TOLERANCE
-from oqupy.config import PT_TEMPO_BACKEND_CONFIG
-from oqupy.process_tensor import BaseProcessTensor
-from oqupy.process_tensor import SimpleProcessTensor
-from oqupy.process_tensor import FileProcessTensor
-from oqupy.backends.pt_tempo_backend import PtTempoBackend
-from oqupy.tempo import TempoParameters
-from oqupy.tempo import guess_tempo_parameters
-from oqupy.tempo import influence_matrix
+from oqupy.config import PT_DEFAULT_TOLERANCE, PT_TEMPO_BACKEND_CONFIG
 from oqupy.operators import left_right_super
+from oqupy.process_tensor import BaseProcessTensor, \
+    SimpleProcessTensor, FileProcessTensor
+from oqupy.tempo import guess_tempo_parameters, influence_matrix, \
+    TempoParameters
 from oqupy.util import get_progress
 
+from oqupy.backends.numerical_backend import np
 
 PT_CLASS = {"simple": SimpleProcessTensor}
-
-
 
 class PtTempo(BaseAPIClass):
     """
@@ -251,7 +246,7 @@ class PtTempo(BaseAPIClass):
             deg_positions=tmp_deg_positions)
 
     @property
-    def dimension(self) -> np.ndarray:
+    def dimension(self) -> ndarray:
         """Hilbert space dimension. """
         return copy(self._dimension)
 

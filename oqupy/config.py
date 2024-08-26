@@ -13,11 +13,13 @@
 Module to define global configuration for the time_evovling_mpo package.
 """
 
-from numpy import float64, complex128
-
-# Numpy datatype
-NpDtype = complex128
-NpDtypeReal = float64
+# numerical backend
+import numpy as default_np
+import scipy.linalg as default_la
+NUMERICAL_BACKEND_NUMPY = default_np
+NUMERICAL_BACKEND_LINALG = default_la
+NumPyDtypeComplex = default_np.complex128
+NumPyDtypeFloat = default_np.float64
 
 # Separator string for __str__ functions
 SEPERATOR = "----------------------------------------------\n"

@@ -16,12 +16,12 @@ Module for MPSs and MPOs.
 from copy import deepcopy
 from typing import Any, List, Optional, Text, Tuple
 
-import numpy as np
 from numpy import ndarray
-from scipy import linalg
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype
+
+from oqupy.backends.numerical_backend import np, la
+
 SystemChain = Any # from oqupy.system import SystemChain
 
 class Gate:
@@ -59,7 +59,7 @@ class Gate:
 
         tmp_tensors = []
         for tensor in tensors:
-            tmp_tensor = np.array(tensor, dtype=NpDtype)
+            tmp_tensor = np.array(tensor, dtype=np.dtype_complex)
             tmp_tensors.append(tmp_tensor)
 
         for i, tensor in enumerate(tmp_tensors):
@@ -197,7 +197,7 @@ def compute_nn_gate(
         Nearest neighbor gate.
     """
     # exponentiate the liouvillian to become a propagator
-    propagator = linalg.expm(dt*liouvillian)
+    propagator = la.expm(dt*liouvillian)
     # split leg 0 and leg 1 each into left and right.
     propagator.shape = [hs_dim_l**2, # left output
                         hs_dim_r**2, # right output
@@ -206,7 +206,7 @@ def compute_nn_gate(
     temp = np.swapaxes(propagator, 1, 2)
     temp = temp.reshape([hs_dim_l**2 * hs_dim_l**2,
                             hs_dim_r**2 * hs_dim_r**2])
-    u_full, s_full, vh_full = linalg.svd(temp, full_matrices=False)
+    u_full, s_full, vh_full = la.svd(temp, full_matrices=False)
     chi = _truncation_index(s_full, epsrel)
     s = s_full[:chi]
     u=u_full[:,:chi]
@@ -390,7 +390,7 @@ class AugmentedMPS(BaseAPIClass):
 
         tmp_gammas = []
         for g in gammas:
-            tmp_gamma = np.array(g, dtype=NpDtype)
+            tmp_gamma = np.array(g, dtype=np.dtype_complex)
             shape = deepcopy(tmp_gamma.shape)
             rank = len(shape)
             if rank == 4:
@@ -416,9 +416,9 @@ class AugmentedMPS(BaseAPIClass):
         tmp_lambdas = []
         for bond_dim, l in zip(bond_dims, lambdas):
             if l is None:
-                tmp_lambda = np.ones(bond_dim, dtype=NpDtype)
+                tmp_lambda = np.ones(bond_dim, dtype=np.dtype_complex)
             else:
-                tmp_lambda = np.array(l, dtype=NpDtype)
+                tmp_lambda = np.array(l, dtype=np.dtype_complex)
                 shape = tmp_lambda.shape
                 rank = len(shape)
                 if rank == 2:

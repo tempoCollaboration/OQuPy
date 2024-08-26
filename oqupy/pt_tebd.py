@@ -21,21 +21,18 @@ spin chain strongly coupled to its environment*, arXiv:2201.05529 (2022).
 
 from typing import Dict, List, Optional, Text, Union
 
-import numpy as np
-
 from oqupy.backends.pt_tebd_backend import PtTebdBackend
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import PT_TEBD_DEFAULT_ORDER
-from oqupy.config import PT_TEBD_DEFAULT_EPSREL
+from oqupy.config import PT_TEBD_DEFAULT_EPSREL, PT_TEBD_DEFAULT_ORDER
 from oqupy.control import ChainControl
 from oqupy.dynamics import Dynamics
-from oqupy.mps_mpo import GateLayer, SiteGate
-from oqupy.mps_mpo import compute_tebd_propagator
-from oqupy.mps_mpo import AugmentedMPS
-from oqupy.process_tensor import BaseProcessTensor
-from oqupy.process_tensor import TrivialProcessTensor
+from oqupy.mps_mpo import compute_tebd_propagator, AugmentedMPS, \
+    GateLayer, SiteGate
+from oqupy.process_tensor import BaseProcessTensor, TrivialProcessTensor
 from oqupy.system import SystemChain
 from oqupy.util import get_progress
+
+from oqupy.backends.numerical_backend import np
 
 NoneType = type(None)
 

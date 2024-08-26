@@ -18,14 +18,14 @@ M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
 framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
 """
 
-from typing import Callable, List, Optional, Text, Tuple, Union
 from copy import deepcopy
+from typing import Callable, List, Optional, Text, Tuple, Union
 
-import numpy as np
 from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype
+
+from oqupy.backends.numerical_backend import np
 
 class Control(BaseAPIClass):
     """
@@ -252,7 +252,7 @@ class ChainControl(BaseAPIClass):
         assert isinstance(site, int)
         assert site < len(self)
         assert isinstance(step, int)
-        contr = np.array(control,  dtype=NpDtype)
+        contr = np.array(control,  dtype=np.dtype_complex)
         assert contr.shape == (self._hs_dims[site]**2, self._hs_dims[site]**2)
         if not post:
             self._single_site_controls_pre.append({

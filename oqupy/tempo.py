@@ -24,28 +24,29 @@ B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
 time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
 """
 
+from copy import copy
 import sys
 from typing import Callable, Dict, List, Optional, Text, Tuple, Union
 import warnings
-from copy import copy
 
-import numpy as np
 from numpy import ndarray
 
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE, MAX_SYS_SAMPLES
+from oqupy.config import DEFAULT_TOLERANCE, MAX_DKMAX, MAX_SYS_SAMPLES
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.bath_correlations import BaseCorrelations, CustomSD
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
-from oqupy.system import BaseSystem, System, TimeDependentSystem,\
+from oqupy.system import BaseSystem, System, TimeDependentSystem, \
     TimeDependentSystemWithField, MeanFieldSystem
 from oqupy.backends.tempo_backend import TempoBackend
 from oqupy.backends.tempo_backend import MeanFieldTempoBackend
 from oqupy.backends.tempo_backend import TIBaseBackend
-from oqupy.util import check_convert, check_isinstance, check_true,\
+from oqupy.util import check_convert, check_isinstance, check_true, \
         get_progress
+
+from oqupy.backends.numerical_backend import np
 
 class TempoParameters(BaseAPIClass):
     r"""
@@ -1334,9 +1335,9 @@ def _estimate_dt_dkmax_from_bath(bath, start_time, end_time, tolerance):
     return dt, dkmax
 
 def _analyse_correlation(
-        corr_func: Callable[[np.ndarray],np.ndarray],
-        times: np.ndarray,
-        corr_vals: np.ndarray):
+        corr_func: Callable[[ndarray],ndarray],
+        times: ndarray,
+        corr_vals: ndarray):
     """Check correlation function on a finer grid."""
     additional_times = (times[:-1] + times[1:])/2.0
     additional_corr_vals = corr_func(additional_times)

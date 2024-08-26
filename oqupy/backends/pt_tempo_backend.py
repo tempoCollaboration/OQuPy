@@ -15,15 +15,13 @@ Module for tensor network process tensor tempo backend.
 
 from typing import Callable, Dict, Optional, List
 
-import numpy as np
-from numpy import ndarray, zeros
-from numpy import max as numpy_max
+from numpy import ndarray
 
 from oqupy.backends import node_array as na
-from oqupy.config import NpDtype
 from oqupy.process_tensor import BaseProcessTensor
 from oqupy import util
 
+from oqupy.backends.numerical_backend import np
 
 class PtTempoBackend:
     """
@@ -113,8 +111,8 @@ class PtTempoBackend:
 
         if self._degeneracy_maps is not None:
             north_degeneracy_map, west_degeneracy_map = self._degeneracy_maps
-            tmp_north_deg_num_vals = numpy_max(north_degeneracy_map)+1
-            tmp_west_deg_num_vals = numpy_max(west_degeneracy_map)+1
+            tmp_north_deg_num_vals = np.max(north_degeneracy_map)+1
+            tmp_west_deg_num_vals = np.max(west_degeneracy_map)+1
 
         influences_mpo = []
         influences_mps = []
@@ -123,11 +121,11 @@ class PtTempoBackend:
                 infl = self._influence(i)
                 infl = infl / scale
                 if self._degeneracy_maps is not None:
-                    tmp_mpo = zeros((tmp_west_deg_num_vals,
+                    tmp_mpo = np.zeros((tmp_west_deg_num_vals,
                                      self._dimension**2,
                                      tmp_north_deg_num_vals),
                                     dtype=complex)
-                    tmp_mps = zeros((self._dimension**2,
+                    tmp_mps = np.zeros((self._dimension**2,
                                      tmp_north_deg_num_vals),
                                     dtype=complex)
                     for i1 in range(self._dimension**2):
@@ -154,8 +152,6 @@ class PtTempoBackend:
             influences_mpo.append(infl_mpo)
             influences_mps.append(infl_mps)
 
-
-
         self._mpo = na.NodeArray(influences_mpo,
                                  left=False,
                                  right=True,
@@ -180,7 +176,7 @@ class PtTempoBackend:
                             max_truncation_err=self._epsrel,
                             relative=True)
 
-        one = np.array([[1.0]], dtype=NpDtype)
+        one = np.array([[1.0]], dtype=np.dtype_complex)
         self._one_na = na.NodeArray([one],
                                    left=True,
                                    right=False,

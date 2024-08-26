@@ -12,21 +12,19 @@
 """
 Module for tempo and mean-field tempo backend.
 """
-import os
 from copy import copy, deepcopy
 from functools import lru_cache
+import os
 from typing import Callable, Dict, List, Optional, Tuple
 
-import numpy as np
-from numpy import ndarray, moveaxis, expand_dims, eye, exp, outer,\
-    diag, array, kron, swapaxes, reshape, amax, argmax, dot, zeros
-from numpy import max as numpy_max
-from scipy.linalg import svd, LinAlgError
+from numpy import ndarray
 
-from oqupy import operators as op
-from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.backends import node_array as na
+from oqupy.config import TEMPO_BACKEND_CONFIG
+from oqupy import operators as op
 from oqupy.util import create_delta
+
+from oqupy.backends.numerical_backend import np, la
 
 os.environ['NUMPY_EXPERIMENTAL_ARRAY_FUNCTION'] = '0'
 
@@ -74,14 +72,14 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         self._max_step = max_step if max_step is None else max_step
         self._kmax = max_step if max_mps_length is None else max_mps_length
         self._initial_data = \
-            eye(self._dim) if initial_data is None else initial_data
+            np.eye(self._dim) if initial_data is None else initial_data
         self._config = TEMPO_BACKEND_CONFIG if config is None else config
 
         self._h_ind, self._h_proj = self._unique(self._ops[0])
         self._v_ind, self._v_proj = self._unique(zip(*self._ops[1:]))
         self._v_dim, self._h_dim, = len(self._v_ind), len(self._h_ind)
 
-        self._cap = expand_dims(eye(self._dim), -1)
+        self._cap = np.expand_dims(np.eye(self._dim), -1)
         self._step = None
         self._mps = None
         self.data = [self._initial_data]
@@ -127,18 +125,19 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         if k == 0:
             c0 = self._coefficients(0)
             o0_2 = c0.real * self._ops[1] - 1j * c0.imag * self._ops[2]
-            tensor = exp(outer(o_2, o_1)) * np.dot(prop, prop).T \
-                * exp(o_1 * o0_2)
+            tensor = np.exp(np.outer(o_2, o_1)) * np.dot(prop, prop).T \
+                * np.exp(o_1 * o0_2)
             tensor = np.dot(
-                kron(self._v_proj, self._h_proj), diag(tensor.flatten()))
-            tensor = reshape(
+                np.kron(self._v_proj, self._h_proj), np.diag(tensor.flatten()))
+            tensor = np.reshape(
                 tensor, (self._v_dim, self._h_dim, self._dim, self._dim))
-            tensor = moveaxis(swapaxes(tensor, 2, 3), 0, 2)
+            tensor = np.moveaxis(np.swapaxes(tensor, 2, 3), 0, 2)
         else:
-            tensor = diag(exp(kron(o_2[self._v_ind], o_1[self._h_ind])))
-            tensor = reshape(
+            tensor = np.diag(np.exp(np.kron(o_2[self._v_ind], \
+                                            o_1[self._h_ind])))
+            tensor = np.reshape(
                 tensor, (self._v_dim, self._h_dim, self._v_dim, self._h_dim))
-            tensor = swapaxes(tensor, 0, 3)
+            tensor = np.swapaxes(tensor, 0, 3)
         return tensor
 
 
@@ -158,7 +157,7 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         tens = self._influence_tensor(len(self._mps) - 1 - k)
         if k == 0:
             # sum over mpo_w and create new leg with mpo_w=1
-            tens = expand_dims(tens.sum(0), 0)
+            tens = np.expand_dims(tens.sum(0), 0)
 
         mps_w, _, mps_e = self._mps[k].shape
         mpo_w, mpo_e, mpo_n, _ = tens.shape
@@ -176,10 +175,10 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         site."""
         west, north, east = self._mps[k].shape
         u, s, v_dag = self._scipy_svd(
-            reshape(self._mps[k], (west * north, east)), self._precision)
-        self._mps[k] = reshape(u, (west, north, len(s)))
+            np.reshape(self._mps[k], (west * north, east)), self._precision)
+        self._mps[k] = np.reshape(u, (west, north, len(s)))
         self._mps[k + 1] = np.dot(
-            (s * v_dag.T).T, swapaxes(self._mps[k + 1], 0, 1))
+            (s * v_dag.T).T, np.swapaxes(self._mps[k + 1], 0, 1))
         return len(s)
 
     def _truncate_left(self, k) -> int:
@@ -188,8 +187,8 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         self._mps[k] = self._mps[k].T
         east, north, west = self._mps[k].shape
         u, s, v_dag = self._scipy_svd(
-            reshape(self._mps[k], (east * north, west)), self._precision)
-        self._mps[k] = reshape(u, (east, north, len(s))).T
+            np.reshape(self._mps[k], (east * north, west)), self._precision)
+        self._mps[k] = np.reshape(u, (east, north, len(s))).T
         self._mps[k - 1] = np.dot(self._mps[k - 1], v_dag.T * s)
         return len(s)
 
@@ -205,11 +204,12 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
             o_1 = self._ops[0]
             o_2 = c_real * self._ops[1] - 1j * c_imag * self._ops[2]
             # shape ( e, n, s)
-            tensor = np.dot(self._initial_data, self._prop.T * exp(o_1 * o_2))
+            tensor = np.dot(self._initial_data, self._prop.T * \
+                            np.exp(o_1 * o_2))
             self.data.append(np.dot(tensor, self._prop.T))
             # contains whole timestep freeprop!
             tensor = np.dot(self._influence_tensor(0), tensor.T)
-            tensor = swapaxes(tensor.sum(0), 0, 2)
+            tensor = np.swapaxes(tensor.sum(0), 0, 2)
             self._mps = [tensor, self._cap]
             self.data.append(self.readout())
             self._step = 1
@@ -267,7 +267,7 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
             # remove first site, turn into matrix
             end = self._mps.pop(0).sum(1)
             # np.dot into new first site
-            self._mps[0] = np.dot(end, swapaxes(self._mps[0], 0, 1))
+            self._mps[0] = np.dot(end, np.swapaxes(self._mps[0], 0, 1))
 
         self._step += 1
         self.data.append(self.readout())
@@ -293,12 +293,12 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         """ static svd truncation method using scipy.linalg.svd"""
         try:
             u, singular_values, v_dagger = \
-                svd(theta, full_matrices=False, lapack_driver='gesvd')
-        except LinAlgError:
+                la.svd(theta, full_matrices=False, lapack_driver='gesvd')
+        except la.LinAlgError:
             print('svd except')
             u, singular_values, v_dagger = \
-                svd(theta, full_matrices=False, lapack_driver='gesdd')
-        chi = argmax(singular_values/amax(singular_values) < precision)
+                la.svd(theta, full_matrices=False, lapack_driver='gesdd')
+        chi = np.argmax(singular_values/np.amax(singular_values) < precision)
         if not chi:
             chi = len(singular_values)
         return u[:, 0:chi], singular_values[0:chi], v_dagger[0:chi, :]
@@ -307,8 +307,8 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
     def _unique(values):
         vals = list(values)
         inverse = [vals.index(e) for e in vals]
-        indices = array(sorted(set(inverse), key=inverse.index))
-        inverse = array([[int(i == j) for i in inverse] for j in indices])
+        indices = np.array(sorted(set(inverse), key=inverse.index))
+        inverse = np.array([[int(i == j) for i in inverse] for j in indices])
         return indices, inverse
 
 class BaseTempoBackend:
@@ -400,14 +400,14 @@ class BaseTempoBackend:
         if self._degeneracy_maps is not None:
             north_degeneracy_map, west_degeneracy_map =\
                     self._degeneracy_maps
-            tmp_north_deg_num_vals = numpy_max(north_degeneracy_map)+1
-            tmp_west_deg_num_vals = numpy_max(west_degeneracy_map)+1
+            tmp_north_deg_num_vals = np.max(north_degeneracy_map)+1
+            tmp_west_deg_num_vals = np.max(west_degeneracy_map)+1
 
         for i in range(dkmax_pre_compute):
             infl = self._influence(i)
             if i == 0:
                 if self._degeneracy_maps is not None:
-                    tmp=zeros((tmp_west_deg_num_vals,self._dim**2,
+                    tmp=np.zeros((tmp_west_deg_num_vals,self._dim**2,
                                tmp_north_deg_num_vals,self._dim**2),
                               dtype=complex)
                     for i1 in range(self._dim**2):
@@ -417,9 +417,9 @@ class BaseTempoBackend:
                     infl_four_legs = tmp
                 else:
                     infl_four_legs = create_delta(infl, [1, 0, 0, 1])
-                tmp = dot(moveaxis(infl_four_legs, 1, -1),
+                tmp = np.dot(np.moveaxis(infl_four_legs, 1, -1),
                         self._super_u_dagg)
-                tmp = moveaxis(tmp, -1, 1)
+                tmp = np.moveaxis(tmp, -1, 1)
                 tmp = np.dot(tmp, self._super_u.T)
                 infl_four_legs = tmp
             else:

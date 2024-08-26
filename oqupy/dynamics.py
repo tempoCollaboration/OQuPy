@@ -13,15 +13,15 @@
 Module on the discrete time evolution of a density matrix.
 """
 
-from typing import List, Optional, Text, Tuple
-from copy import copy
 from bisect import bisect
+from copy import copy
+from typing import List, Optional, Text, Tuple
 
-import numpy as np
 from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype, NpDtypeReal
+
+from oqupy.backends.numerical_backend import np
 
 class BaseDynamics(BaseAPIClass):
     """
@@ -63,12 +63,12 @@ class BaseDynamics(BaseAPIClass):
     @property
     def times(self) -> ndarray:
         """Times of the dynamics. """
-        return np.array(self._times, dtype=NpDtypeReal)
+        return np.array(self._times, dtype=np.dtype_float)
 
     @property
     def states(self) -> ndarray:
         """States of the dynamics. """
-        return np.array(self._states, dtype=NpDtype)
+        return np.array(self._states, dtype=np.dtype_complex)
 
     @property
     def shape(self) -> ndarray:
@@ -106,10 +106,10 @@ class BaseDynamics(BaseAPIClass):
         if len(self) == 0:
             return None, None
         if operator is None:
-            tmp_operator = np.identity(self._shape[0], dtype=NpDtype)
+            tmp_operator = np.identity(self._shape[0], dtype=np.dtype_complex)
         else:
             try:
-                tmp_operator = np.array(operator, dtype=NpDtype)
+                tmp_operator = np.array(operator, dtype=np.dtype_complex)
             except Exception as e:
                 raise AssertionError("Argument `operator` must be ndarray.") \
                     from e
@@ -269,12 +269,12 @@ class MeanFieldDynamics(BaseAPIClass):
     @property
     def times(self) -> ndarray:
         """Times of the dynamics. """
-        return np.array(self._times, dtype=NpDtypeReal)
+        return np.array(self._times, dtype=np.dtype_float)
 
     @property
     def fields(self) -> ndarray:
         """Fields of the dynamics. """
-        return np.array(self._fields, dtype=NpDtype)
+        return np.array(self._fields, dtype=np.dtype_complex)
 
     def field_expectations(self) -> Tuple[ndarray, ndarray]:
         r"""
@@ -289,8 +289,8 @@ class MeanFieldDynamics(BaseAPIClass):
         """
         if len(self) == 0:
             return None, None
-        return np.array(self._times, dtype=NpDtypeReal),\
-                np.array(self._fields, dtype=NpDtype)
+        return np.array(self._times, dtype=np.dtype_float), \
+                np.array(self._fields, dtype=np.dtype_complex)
 
     @property
     def system_dynamics(self) -> List[Dynamics]:
@@ -336,7 +336,7 @@ def _parse_time(time) -> float:
 
 def _parse_state(state, previous_shape) -> Tuple[ndarray, Tuple[int]]:
     try:
-        tmp_state = np.array(state, dtype=NpDtype)
+        tmp_state = np.array(state, dtype=np.dtype_complex)
     except Exception as e:
         raise AssertionError("Argument `state` must be ndarray.") from e
     tmp_shape = tmp_state.shape

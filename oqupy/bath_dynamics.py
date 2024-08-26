@@ -19,16 +19,16 @@ arXiv:2106.04212 [quant-ph] (2021).
 """
 
 from typing import Optional, Text, Tuple
-import numpy as np
+
 from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.process_tensor import BaseProcessTensor
 from oqupy.bath import Bath
+from oqupy.process_tensor import BaseProcessTensor
 from oqupy.system import BaseSystem
-from oqupy.config import NpDtype
 from oqupy.system_dynamics import compute_correlations
 
+from oqupy.backends.numerical_backend import np
 
 class TwoTimeBathCorrelations(BaseAPIClass):
     """
@@ -75,7 +75,7 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         self._initial_state = initial_state
 
         if system_correlations is None:
-            self._system_correlations = np.array([[]], dtype=NpDtype)
+            self._system_correlations = np.array([[]], dtype=np.dtype_complex)
         else:
             self._system_correlations = system_correlations
         self._temp = bath.correlations.temperature
@@ -181,8 +181,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         last_time = corr_mat_dim * dt
         tlist = np.arange(0, last_time+dt, dt)
         if freq == 0:
-            return tlist, np.ones(len(tlist),
-                                  dtype=NpDtype) * (np.nan + 1.0j*np.nan)
+            return tlist, np.ones(len(tlist), dtype=np.dtype_complex) * \
+                (np.nan + 1.0j*np.nan)
         self.generate_system_correlations(last_time, progress_type)
         _sys_correlations = self._system_correlations[:corr_mat_dim,
                                                       :corr_mat_dim]
@@ -352,8 +352,8 @@ class TwoTimeBathCorrelations(BaseAPIClass):
         ker_dim = int(np.round(time_2 / dt))
         # calculate index corresponding to t_1
         switch = int(np.round(time_1 / dt))
-        re_kernel = np.zeros((ker_dim, ker_dim), dtype = NpDtype)
-        im_kernel = np.zeros((ker_dim, ker_dim), dtype = NpDtype)
+        re_kernel = np.zeros((ker_dim, ker_dim), dtype = np.dtype_complex)
+        im_kernel = np.zeros((ker_dim, ker_dim), dtype = np.dtype_complex)
 
         tpp_index, tp_index = np.meshgrid(
             np.arange(ker_dim), np.arange(ker_dim),
