@@ -15,11 +15,9 @@ Shorthand for commonly used operators.
 
 from typing import Text
 
-import numpy as np
 from numpy import ndarray
 
-from oqupy.config import NpDtype
-
+from oqupy.backends.numerical_backend import np
 
 SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],
@@ -53,7 +51,7 @@ def identity(n: int) -> ndarray:
     identity : ndarray
         Identity matrix of dimension `n` x `n`.
     """
-    return np.identity(n, dtype=NpDtype)
+    return np.identity(n, dtype=np.dtype_complex)
 
 
 def sigma(name: Text) -> ndarray:
@@ -69,7 +67,7 @@ def sigma(name: Text) -> ndarray:
     sigma : ndarray
         Spin matrix of type `name`.
     """
-    return np.array(SIGMA[name], dtype=NpDtype)
+    return np.array(SIGMA[name], dtype=np.dtype_complex)
 
 
 def spin_dm(name: Text) -> ndarray:
@@ -86,7 +84,7 @@ def spin_dm(name: Text) -> ndarray:
     density_matrix : ndarray
         Spin density matrix.
     """
-    return np.array(SPIN_DM[name], dtype=NpDtype)
+    return np.array(SPIN_DM[name], dtype=np.dtype_complex)
 
 
 def create(n: int) -> ndarray:
@@ -120,7 +118,7 @@ def destroy(n: int) -> ndarray:
     create : ndarray
         Annihilation operator matrix of dimension `n` x `n`.
     """
-    return np.diag(np.sqrt(range(1, n), dtype=NpDtype), 1)
+    return np.diag(np.sqrt(range(1, n), dtype=np.dtype_complex), 1)
 
 # -- superoperators ----------------------------------------------------------
 
@@ -156,7 +154,7 @@ def preparation(
         density_matrix: ndarray) -> ndarray:
     """Construct the super operator that prepares the state. """
     dim = density_matrix.shape[0]
-    identity_matrix = np.identity(dim, dtype=NpDtype)
+    identity_matrix = np.identity(dim, dtype=np.dtype_complex)
     return np.outer(density_matrix.flatten(), identity_matrix.flatten())
 
 

@@ -13,21 +13,19 @@
 Module on physical information of the system.
 """
 
-from typing import Callable, List, Optional, Text, Tuple
-from inspect import getfullargspec
 from copy import copy
 from functools import lru_cache
+from inspect import getfullargspec
+from typing import Callable, List, Optional, Text, Tuple
 
-import numpy as np
 from numpy import ndarray
-from scipy.linalg import expm
 from scipy import integrate
 from numdifftools import Jacobian
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype
 from oqupy import operators as opr
 
+from oqupy.backends.numerical_backend import np, la
 
 class BaseSystem(BaseAPIClass):
     """Base class for systems. """
@@ -120,8 +118,8 @@ class System(BaseSystem):
 
     def get_propagators(self, dt, start_time, subdiv_limit, epsrel):
         """Prepare propagator functions for the system. """
-        first_step = expm(self.liouvillian()*dt/2.0)
-        second_step = expm(self.liouvillian()*dt/2.0)
+        first_step = la.expm(self.liouvillian()*dt/2.0)
+        second_step = la.expm(self.liouvillian()*dt/2.0)
         def propagators(step: int):
             """Create the system propagators (first and second half) for
             the time step `step`  """
@@ -130,8 +128,8 @@ class System(BaseSystem):
 
     def get_unitary_propagators(self, dt, start_time, subdiv_limit, epsrel):
         """Prepare propagator functions for the system. """
-        first_step = expm(-1j*self._hamiltonian*dt/2.0)
-        second_step = expm(-1j*self._hamiltonian*dt/2.0)
+        first_step = la.expm(-1j*self._hamiltonian*dt/2.0)
+        second_step = la.expm(-1j*self._hamiltonian*dt/2.0)
         def propagators(step: int):
             """Create the system propagators (first and second half) for
             the time step `step`  """
@@ -247,8 +245,8 @@ class TimeDependentSystem(BaseSystem):
                 """Create the system propagators (first and second half) for
                 the time step `step`  """
                 t = start_time + step * dt
-                first_step = expm(self.liouvillian(t+dt/4.0)*dt/2.0)
-                second_step = expm(self.liouvillian(t+dt*3.0/4.0)*dt/2.0)
+                first_step = la.expm(self.liouvillian(t+dt/4.0)*dt/2.0)
+                second_step = la.expm(self.liouvillian(t+dt*3.0/4.0)*dt/2.0)
                 return first_step, second_step
         else:
             # Integrate Liouvillian to make propagators for first- and
@@ -257,12 +255,12 @@ class TimeDependentSystem(BaseSystem):
                 """Create the system propagators (first and second half) for
                 the time step `step`  """
                 t = start_time + step * dt
-                first_step = expm(integrate.quad_vec(self.liouvillian,
+                first_step = la.expm(integrate.quad_vec(self.liouvillian,
                                                      a=t,
                                                      b=t+dt/2.0,
                                                      epsrel=epsrel,
                                                      limit=subdiv_limit)[0])
-                second_step = expm(integrate.quad_vec(self.liouvillian,
+                second_step = la.expm(integrate.quad_vec(self.liouvillian,
                                                       a=t+dt/2.0,
                                                       b=t+dt,
                                                       epsrel=epsrel,
@@ -440,9 +438,9 @@ class TimeDependentSystemWithField(BaseSystem):
             def propagators(step: int, field: complex,
                             field_derivative: complex):
                 t = start_time + step * dt
-                first_step = expm(self.liouvillian(t, t+dt/4.0,
+                first_step = la.expm(self.liouvillian(t, t+dt/4.0,
                     field, field_derivative)*dt/2.0)
-                second_step = expm(self.liouvillian(t, t+dt*3.0/4.0,
+                second_step = la.expm(self.liouvillian(t, t+dt*3.0/4.0,
                     field, field_derivative)*dt/2.0)
                 return first_step, second_step
         else:
@@ -453,12 +451,12 @@ class TimeDependentSystemWithField(BaseSystem):
                 t = start_time + step * dt
                 liouvillian = lambda tau: self.liouvillian(t, tau,
                         field, field_derivative)
-                first_step = expm(integrate.quad_vec(liouvillian,
+                first_step = la.expm(integrate.quad_vec(liouvillian,
                                                      a=t,
                                                      b=t+dt/2.0,
                                                      epsrel=epsrel,
                                                      limit=subdiv_limit)[0])
-                second_step = expm(integrate.quad_vec(liouvillian,
+                second_step = la.expm(integrate.quad_vec(liouvillian,
                                                       a=t+dt/2.0,
                                                       b=t+dt,
                                                       epsrel=epsrel,
@@ -564,8 +562,8 @@ class ParameterizedSystem(BaseSystem):
 
             pre_liou=self.liouvillian(*(list(parameters[2*step][:])))
             post_liou=self.liouvillian(*(list(parameters[2*step+1][:])))
-            first_step = expm(pre_liou*dt/2.0)
-            second_step = expm(post_liou*dt/2.0)
+            first_step = la.expm(pre_liou*dt/2.0)
+            second_step = la.expm(post_liou*dt/2.0)
 
             return first_step, second_step
         return propagators
@@ -579,7 +577,7 @@ class ParameterizedSystem(BaseSystem):
         """
 
         def prop(parameterlist):
-            return expm(self.liouvillian(*parameterlist)*dt/2.0)
+            return la.expm(self.liouvillian(*parameterlist)*dt/2.0)
 
         jacfunre=Jacobian(lambda x: prop(x).real)
         jacfunim=Jacobian(lambda x: prop(x).imag)
@@ -718,13 +716,13 @@ class SystemChain(BaseAPIClass):
         self._site_liouvillians = []
         for hs_dim in self._hs_dims:
             self._site_liouvillians.append(
-                np.zeros((hs_dim**2, hs_dim**2), dtype=NpDtype))
+                np.zeros((hs_dim**2, hs_dim**2), dtype=np.dtype_complex))
 
         self._nn_liouvillians = []
         for hs_dim_l, hs_dim_r in zip(self._hs_dims[:-1], self._hs_dims[1:]):
             self._nn_liouvillians.append(
                 np.zeros((hs_dim_l**2 * hs_dim_r**2, hs_dim_l**2 * hs_dim_r**2),
-                dtype=NpDtype))
+                dtype=np.dtype_complex))
 
         super().__init__(name, description)
 
@@ -770,7 +768,7 @@ class SystemChain(BaseAPIClass):
         assert isinstance(site, int)
         assert site >= 0
         assert site < len(self)
-        op = np.array(hamiltonian, dtype=NpDtype)
+        op = np.array(hamiltonian, dtype=np.dtype_complex)
         assert len(op.shape) == 2
         assert op.shape[0] == op.shape[1]
         assert self._hs_dims[site] == op.shape[0]
@@ -791,7 +789,8 @@ class SystemChain(BaseAPIClass):
         liouvillian: ndarray
             Liouvillian acting on the single site.
         """
-        self._site_liouvillians[site] += np.array(liouvillian, dtype=NpDtype)
+        self._site_liouvillians[site] += np.array(liouvillian, \
+                                                  dtype=np.dtype_complex)
 
     def add_site_dissipation(
             self,
@@ -820,7 +819,7 @@ class SystemChain(BaseAPIClass):
         gamma: float
             Optional multiplicative factor :math:`\gamma`.
         """
-        op = np.array(lindblad_operator, dtype=NpDtype)
+        op = np.array(lindblad_operator, dtype=np.dtype_complex)
         op_dagger = op.conjugate().T
         self._site_liouvillians[site] += \
             gamma * (opr.left_right_super(op, op_dagger) \
@@ -855,8 +854,8 @@ class SystemChain(BaseAPIClass):
         assert isinstance(site, int)
         assert site >= 0
         assert site < len(self) - 1
-        op_l = np.array(hamiltonian_l, dtype=NpDtype)
-        op_r = np.array(hamiltonian_r, dtype=NpDtype)
+        op_l = np.array(hamiltonian_l, dtype=np.dtype_complex)
+        op_r = np.array(hamiltonian_r, dtype=np.dtype_complex)
         assert len(op_l.shape) == 2
         assert len(op_r.shape) == 2
         assert op_l.shape[0] == op_l.shape[1]
@@ -881,7 +880,8 @@ class SystemChain(BaseAPIClass):
         liouvillian_l_r: ndarray
             Liouvillian acting on sites :math:`n` and :math:`n+1`.
         """
-        self._nn_liouvillians[site] += np.array(liouvillian_l_r, dtype=NpDtype)
+        self._nn_liouvillians[site] += np.array(liouvillian_l_r, \
+                                                dtype=np.dtype_complex)
 
     def add_nn_dissipation(
             self,
@@ -917,8 +917,8 @@ class SystemChain(BaseAPIClass):
         assert isinstance(site, int)
         assert site >= 0
         assert site < len(self) - 1
-        op_l = np.array(lindblad_operator_l, dtype=NpDtype)
-        op_r = np.array(lindblad_operator_r, dtype=NpDtype)
+        op_l = np.array(lindblad_operator_l, dtype=np.dtype_complex)
+        op_r = np.array(lindblad_operator_r, dtype=np.dtype_complex)
         assert len(op_l.shape) == 2
         assert len(op_r.shape) == 2
         assert op_l.shape[0] == op_l.shape[1]
@@ -970,8 +970,10 @@ class SystemChain(BaseAPIClass):
 def _check_hamiltonian(hamiltonian) -> ndarray:
     """Input checking for a single Hamiltonian. """
     try:
-        tmp_hamiltonian = np.array(hamiltonian, dtype=NpDtype)
-        tmp_hamiltonian.setflags(write=False)
+        tmp_hamiltonian = np.array(hamiltonian, dtype=np.dtype_complex)
+        # set immutable if default NumPy array
+        if isinstance(tmp_hamiltonian, ndarray):
+            tmp_hamiltonian.setflags(write=False)
     except Exception as e:
         raise AssertionError("Coupling operator must be numpy array") from e
     assert len(tmp_hamiltonian.shape) == 2, \
@@ -1035,7 +1037,7 @@ def _check_gammas_lindblad_operators(gammas, lindblad_operators) -> Tuple[
         tmp_lindblad_operators = []
         for lindblad_operator in lindblad_operators:
             tmp_lindblad_operators.append(
-                np.array(lindblad_operator, dtype=NpDtype))
+                np.array(lindblad_operator, dtype=np.dtype_complex))
     except Exception as e:
         raise AssertionError(
             "All elements of `lindblad_operators` must be numpy arrays.") \
@@ -1135,8 +1137,8 @@ def _imaginary_liouvillian(hamiltonian, gammas, lindblad_operators):
 def _create_density_matrix(dim, seed=1):
     r"""Create a repeatable (dim,dim) matrix that represents
     a valid density matrix :math:`rho`"""
-    rng = np.random.default_rng(seed)
-    a = rng.random((dim, dim)) + 1j*rng.random((dim,dim))
+    random_floats = np.get_random_floats(seed, (2, dim, dim))
+    a = random_floats[0] + 1j * random_floats[1]
     b = np.matmul(a, a.conj().T)
     rho = b / b.trace()
     return rho

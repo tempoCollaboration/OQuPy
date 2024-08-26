@@ -13,17 +13,18 @@
 Module for utilities.
 """
 
-import sys
 import copy as cp
-from typing import Any, List, Optional, Text
+from datetime import timedelta
+import sys
 from threading import Timer
 from time import time
-from datetime import timedelta
+from typing import Any, List, Optional, Text
 
-import numpy as np
 from numpy import ndarray
 
 from oqupy.config import PROGRESS_TYPE
+
+from oqupy.backends.numerical_backend import np
 
 # -- numpy utils --------------------------------------------------------------
 
@@ -51,7 +52,11 @@ def create_delta(
     while do_while_condition:
         tensor_indices = tuple(a)
         ret_indices = tuple(a[i] for i in index_scrambling)
-        ret_ndarray[ret_indices] = tensor[tensor_indices]
+        ret_ndarray = np.update(
+            array=ret_ndarray,
+            indices=ret_indices,
+            values=tensor[tensor_indices]
+        )
         do_while_condition = increase_list_of_index(a, tensor_shape)
 
     return ret_ndarray

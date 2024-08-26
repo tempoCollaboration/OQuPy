@@ -13,20 +13,23 @@
 Frontend for computing the gradient of some objective function w.r.t. some
 control parameters.
 """
+
 from typing import Callable, Dict, List, Optional, Text, Tuple, Union
 
-import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 
-from oqupy.system_dynamics import _compute_dynamics_input_parse, \
-    _apply_system_superoperator, _apply_derivative_pt_mpos, _get_pt_mpos, \
-    _get_pt_mpos_backprop, _get_caps, _apply_caps, _apply_pt_mpos
 from oqupy.control import Control
 from oqupy.dynamics import Dynamics
 from oqupy.process_tensor import BaseProcessTensor
+from oqupy.system_dynamics import _apply_caps, _apply_derivative_pt_mpos, \
+    _apply_pt_mpos, _apply_system_superoperator, \
+    _compute_dynamics_input_parse, _get_caps, \
+    _get_pt_mpos, _get_pt_mpos_backprop
 from oqupy.system import ParameterizedSystem
-from oqupy.util import get_progress, check_isinstance
+from oqupy.util import check_isinstance, get_progress
+
+from oqupy.backends.numerical_backend import np
 
 def state_gradient(
         system: ParameterizedSystem,
