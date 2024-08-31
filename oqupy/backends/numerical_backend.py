@@ -46,7 +46,7 @@ class Numpy:
     def update(self, array, indices:tuple, values) -> default_np.ndarray:
         """Option to update select indices of an array with given values."""
         if not isinstance(array, default_np.ndarray):
-            array = array.at[indices].set(values)
+            return array.at[indices].set(values)
         array[indices] = values
         return array
 

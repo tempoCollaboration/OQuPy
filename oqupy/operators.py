@@ -118,7 +118,7 @@ def destroy(n: int) -> ndarray:
     create : ndarray
         Annihilation operator matrix of dimension `n` x `n`.
     """
-    return np.diag(np.sqrt(range(1, n), dtype=np.dtype_complex), 1)
+    return np.diag(np.sqrt(np.arange(1, n, dtype=np.dtype_complex)), 1)
 
 # -- superoperators ----------------------------------------------------------
 

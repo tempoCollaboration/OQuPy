@@ -30,7 +30,7 @@ from numpy import ndarray
 import tensornetwork as tn
 
 from oqupy.base_api import BaseAPIClass
-from oqupy import util
+from oqupy.util import create_delta
 from oqupy.version import __version__
 
 from oqupy.backends.numerical_backend import np
@@ -345,7 +345,7 @@ class SimpleProcessTensor(BaseProcessTensor):
             raise IndexError("Process tensor index out of bound. ")
         tensor = self._mpo_tensors[step]
         if len(tensor.shape) == 3:
-            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            tensor = create_delta(tensor, [0, 1, 2, 2])
         if transformed is False:
             return tensor
         if self._transform_in is not None:
@@ -749,7 +749,7 @@ class FileProcessTensor(BaseProcessTensor):
                                      shape=self._mpo_tensors_shape)
         if transformed:
             if len(tensor.shape) == 3:
-                tensor = util.create_delta(tensor, [0, 1, 2, 2])
+                tensor = create_delta(tensor, [0, 1, 2, 2])
             if self._transform_in is not None:
                 tensor = np.dot(np.moveaxis(tensor, -2, -1),
                                 self._transform_in.T)

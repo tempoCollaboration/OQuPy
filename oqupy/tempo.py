@@ -1287,7 +1287,7 @@ def _tempo_physical_input_parse(
     hs_dim = system.dimension
 
     if initial_state is not None:  # initial state is None for Gibbs Tempo
-        check_isinstance(initial_state, ndarray, "initial_state")
+        check_isinstance(initial_state, np.ndarray, "initial_state")
         check_true(
             initial_state.shape == (hs_dim, hs_dim),
             "Initial sate must be a square matrix of " \
