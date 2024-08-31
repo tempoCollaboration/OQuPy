@@ -28,7 +28,77 @@ from oqupy.backends.numerical_backend import np
 
 # -- numpy utils --------------------------------------------------------------
 
+def create_deltas(
+        func_tensors: callable,
+        indices: List[int],
+        index_scrambling: List[int],
+        scale: float=1.0) -> List[ndarray]:
+    """Creates deltas in multiple tensors."""
+    # use a test tensor to obtain the indices
+    tensor = func_tensors(indices[0])
+    _shape = np.array(tensor.shape, dtype=int)
+    _idxs = np.array(index_scrambling, dtype=int)
+    _indices = get_indices(_shape, np.prod(_shape))
+    indices_in = tuple(_indices)
+    indices_out = tuple(_indices[_idxs])
+
+    # accumulate scrambled tensors and return list
+    # TODO: vectorize and make it JIT-compatibile
+    scrambled_tensors = []
+    for i in indices:
+        scrambled_tensors.append(np.update(
+            array=np.zeros(tuple(_shape[_idxs]), \
+                            dtype=tensor.dtype),
+            indices=indices_out,
+            values=func_tensors(i)[indices_in] / scale
+        ))
+    return scrambled_tensors
+
 def create_delta(
+        tensor: ndarray,
+        index_scrambling: List[int],
+        scale: float=1.0) -> ndarray:
+    """Creates deltas in a tensor."""
+    # converting to NumPy-array for future-proof implementation
+    # see [this issue](https://github.com/google/jax/issues/4564)
+    # the shape of the tensor has n_in elements whereas
+    # index_scrambling has n_out elements
+    _shape = np.array(tensor.shape, dtype=int)
+    _idxs = np.array(index_scrambling, dtype=int)
+
+    # obtain the indices from the `get_indices` function
+    _indices = get_indices(_shape, np.prod(_shape))
+    indices_in = tuple(_indices)
+    indices_out = tuple(_indices[_idxs])
+
+    # scramble output tensor with elements of input tensor
+    return np.update(
+        array=np.zeros(tuple(_shape[_idxs]), \
+                        dtype=tensor.dtype),
+        indices=indices_out,
+        values=tensor[indices_in] / scale
+    )
+
+def get_indices(shape: ndarray,
+                n_iters: int) -> ndarray:
+    """Obtain index matrix for scrambling."""
+    # obtain divisors for each axis with shape equal to the
+    # number of elements contained in preceding axes
+    # for example, a tensor with shape (4, 5, 3) will result in
+    # [15, 3, 1] to divide each axes and obtain the remainder
+    # modullo the dimension of each axis of the tensor
+    divisors = np.cumprod(np.concatenate([
+        shape[1:],
+        np.array([1], dtype=int)
+    ])[::-1])[::-1]
+    # prepare an iteration matrix of shape (n_in, n_iters)
+    # to index each element, for e.g., n_iters = 3 x 5 x 4
+    iteration_matrix = np.arange(0, n_iters).reshape(
+        (n_iters, 1)).repeat(shape.shape[0], 1)
+    # obtain the indices for each axes of input and output tensors
+    return ((iteration_matrix / divisors).astype(int) % shape).T
+
+def create_delta_old(
         tensor: ndarray,
         index_scrambling: List[int]) -> ndarray:
     """

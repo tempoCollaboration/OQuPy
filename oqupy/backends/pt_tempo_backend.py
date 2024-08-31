@@ -19,7 +19,7 @@ from numpy import ndarray
 
 from oqupy.backends import node_array as na
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy import util
+from oqupy.util import add_singleton, create_delta
 
 from oqupy.backends.numerical_backend import np
 
@@ -111,46 +111,60 @@ class PtTempoBackend:
 
         if self._degeneracy_maps is not None:
             north_degeneracy_map, west_degeneracy_map = self._degeneracy_maps
-            tmp_north_deg_num_vals = np.max(north_degeneracy_map)+1
-            tmp_west_deg_num_vals = np.max(west_degeneracy_map)+1
+            tmp_north_deg_num_vals = np.max(north_degeneracy_map) + 1
+            tmp_west_deg_num_vals = np.max(west_degeneracy_map) + 1
 
         influences_mpo = []
         influences_mps = []
-        for i in range(self._num_infl):
-            if i == 0:
-                infl = self._influence(i)
-                infl = infl / scale
-                if self._degeneracy_maps is not None:
-                    tmp_mpo = np.zeros((tmp_west_deg_num_vals,
-                                     self._dimension**2,
-                                     tmp_north_deg_num_vals),
-                                    dtype=complex)
-                    tmp_mps = np.zeros((self._dimension**2,
-                                     tmp_north_deg_num_vals),
-                                    dtype=complex)
-                    for i1 in range(self._dimension**2):
-                        tmp_mpo[west_degeneracy_map[i1]][i1]\
-                            [north_degeneracy_map[i1]] = \
-                            infl[north_degeneracy_map[i1]]
-                        tmp_mps[i1][north_degeneracy_map[i1]] = \
-                            infl[north_degeneracy_map[i1]]/ scale
-                    infl_mpo = tmp_mpo
-                    infl_mps = tmp_mps
-                else:
-                    infl_mpo = util.create_delta(infl, [1, 1, 0])
-                    infl_mps = infl.T / scale
-            elif i == self._num_infl-1:
-                infl = self._influence(i)
-                infl_mpo = util.add_singleton(infl, 1)
-                infl_mpo = util.add_singleton(infl_mpo, 3)
-                infl_mps = util.add_singleton(infl, 2)
-            else:
-                infl = self._influence(i)
-                infl_mpo = util.create_delta(infl, [0, 1, 1, 0])
-                infl_mps = util.create_delta(infl / scale, [0, 1, 0])
 
-            influences_mpo.append(infl_mpo)
-            influences_mps.append(infl_mps)
+        # this block takes care of `i == 0`
+        infl = self._influence(0)
+        infl = infl / scale
+        if self._degeneracy_maps is not None:
+            infl_mpo = np.zeros((tmp_west_deg_num_vals, self._dimension**2,
+                                 tmp_north_deg_num_vals), \
+                                    dtype=np.dtype_complex)
+            infl_mps = np.zeros((self._dimension**2,
+                                 tmp_north_deg_num_vals), \
+                                    dtype=np.dtype_complex)
+            # a little bit of optimization is done here by
+            # removing the `for` loop and updating slices
+            _idxs = np.array(list(range(self._dimension**2)))
+            indices = (west_degeneracy_map[_idxs], _idxs,
+                       north_degeneracy_map[_idxs])
+            influences_mpo.append(np.update(
+                array=infl_mpo,
+                indices=indices,
+                values=infl[indices[2]]
+            ))
+            influences_mps.append(np.update(
+                array=infl_mps,
+                indices=indices[1:],
+                values=infl[indices[2]] / scale
+            ))
+        else:
+            influences_mpo.append(create_delta(infl, [1, 1, 0]))
+            influences_mps.append(infl.T / scale)
+
+        # this block takes care of `i > 0` and `i < self._num_infl - 1`
+        # the inner `for` loop can be optimized for parallelization
+        if self._num_infl > 2:
+            indices = list(range(1, self._num_infl - 1))
+            # influences_mpo += create_deltas(self._influence, indices,
+            #                                 [0, 1, 1, 0])
+            # influences_mps += create_deltas(self._influence, indices,
+            #                                 [0, 1, 0], scale)
+            for index in indices:
+                infl = self._influence(index)
+                influences_mpo.append(create_delta(infl, [0, 1, 1, 0]))
+                influences_mps.append(create_delta(infl / scale, [0, 1, 0]))
+
+        # this block takes care of `i == self._num_infl - 1`
+        if self._num_infl > 1:
+            infl = self._influence(self._num_infl - 1)
+            infl_mpo = add_singleton(infl, 1)
+            influences_mpo.append(add_singleton(infl_mpo, 3))
+            influences_mps.append(add_singleton(infl, 2))
 
         self._mpo = na.NodeArray(influences_mpo,
                                  left=False,
@@ -235,8 +249,8 @@ class PtTempoBackend:
                 dk = int(0 - self._step)
                 infl = self._influence(dk)
                 if infl is not None:
-                    infl_mpo = util.add_singleton(infl, 1)
-                    infl_mpo = util.add_singleton(infl_mpo, 3)
+                    infl_mpo = add_singleton(infl, 1)
+                    infl_mpo = add_singleton(infl_mpo, 3)
                     last_mpo = na.NodeArray(
                             [infl_mpo],
                             left=True,
@@ -286,12 +300,12 @@ class PtTempoBackend:
         if step == 0:
             order = [self._mps.bond_edges[0],self._mps.array_edges[0][0]]
             first_t = self._mps.nodes[0].reorder_edges(order).get_tensor()
-            first_t = util.add_singleton(first_t, 0)
+            first_t = add_singleton(first_t, 0)
             tensor = first_t * self._dimension
         elif step == n-1:
             order = [self._mps.bond_edges[-1],self._mps.array_edges[-1][0]]
             last_t = self._mps.nodes[-1].reorder_edges(order).get_tensor()
-            last_t = util.add_singleton(last_t, 1)
+            last_t = add_singleton(last_t, 1)
             tensor = last_t * self._dimension
         else:
             order = [self._mps.bond_edges[step-1],
