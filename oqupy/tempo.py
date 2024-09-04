@@ -986,8 +986,8 @@ def influence_matrix(
         time_1 = float(dkmax) * dt
         if parameters.add_correlation_time is not None:
             time_2 = float(dkmax) * dt \
-                + np.min([float(-dk) * dt,
-                            1.0*dt + parameters.add_correlation_time])
+                + float(np.min(np.array([float(-dk) * dt, 1.0 * dt + \
+                                         parameters.add_correlation_time])))
         else:
             return None
         shape = "rectangle"

@@ -13,10 +13,9 @@
 Tests TEMPO and PT-TEMPO with superohmic spectral density.
 """
 
-import pytest
-import numpy as np
-
 import oqupy
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test E: Superohmic independent spin boson model --------------------------
@@ -77,7 +76,7 @@ def test_tensor_network_tempo_backend_E():
         start_time=t_start_E)
     tempo_E.compute(end_time=t_end_E)
     dyn_E = tempo_E.get_dynamics()
-    np.testing.assert_almost_equal(dyn_E.states[-1], rho_E, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_E.states[-1], rho_E, decimal=4)
 
 
 def test_tensor_network_pt_tempo_backend_E():
@@ -96,6 +95,6 @@ def test_tensor_network_pt_tempo_backend_E():
         system=system_E,
         process_tensor=pt,
         initial_state=initial_state_E)
-    np.testing.assert_almost_equal(dyn.states[-1], rho_E, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn.states[-1], rho_E, decimal=4)
 
 # -----------------------------------------------------------------------------

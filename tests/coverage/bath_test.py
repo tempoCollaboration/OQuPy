@@ -15,11 +15,10 @@ Tests for the time_evovling_mpo.bath module.
 
 import pytest
 
-import numpy as np
-
 from oqupy.bath import Bath
 from oqupy.bath_correlations import PowerLawSD
-from oqupy import operators
+
+from oqupy.backends.numerical_backend import default_np, np
 
 def test_bath():
     wc = 4.0
@@ -43,7 +42,7 @@ def test_bath():
 
     # see if the properties work
     str(bath_A)
-    np.testing.assert_equal(bath_A.coupling_operator, coupling_operator)
+    default_np.testing.assert_array_equal(bath_A.coupling_operator, coupling_operator)
     assert bath_A.dimension == 2
     assert bath_A.correlations.zeta == 1.0
     assert max(bath_A.west_degeneracy_map) == 2
@@ -76,8 +75,8 @@ def test_bath():
     # try 1 dimensional coupling degeneracies
     coupling_op = np.array([[1.0,0.0],[0.0,1.0]])
     bath_C = Bath(coupling_op, correlations)
-    assert np.array_equal(bath_C.west_degeneracy_map,[0,0,0,0])
-    assert np.array_equal(bath_C.north_degeneracy_map,[0,0,0,0])
+    default_np.testing.assert_array_equal(bath_C.west_degeneracy_map,[0,0,0,0])
+    default_np.testing.assert_array_equal(bath_C.north_degeneracy_map,[0,0,0,0])
 
 def test_bath_bad_input():
     wc = 4.0

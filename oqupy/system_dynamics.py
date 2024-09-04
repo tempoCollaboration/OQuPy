@@ -117,7 +117,7 @@ def compute_dynamics(
     #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
     #    edge  -1                      is the state leg
     initial_ndarray = initial_state.reshape(hs_dim**2)
-    initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+    initial_ndarray = initial_ndarray.reshape(tuple([1]*num_envs+[hs_dim**2]))
     current_node = tn.Node(initial_ndarray)
     current_edges = current_node[:]
 
@@ -342,7 +342,8 @@ def compute_dynamics_with_field(
                parsed_parameters_dict["hs_dim"],
                num_envs_list):
         initial_ndarray = initial_state.reshape(hs_dim**2)
-        initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+        initial_ndarray = initial_ndarray.reshape(tuple([1] * num_envs + \
+                                                        [hs_dim**2]))
         current_node = tn.Node(initial_ndarray)
         current_edges = current_node[:]
 
@@ -506,7 +507,7 @@ def _compute_dynamics_input_parse(
 
     if initial_state is None:
         raise ValueError("An initial state must be specified.")
-    check_isinstance(initial_state, ndarray, "initial_state")
+    check_isinstance(initial_state, np.ndarray, "initial_state")
     check_true(
         initial_state.shape == (hs_dim, hs_dim),
         "Initial sate must be a square matrix of " \
@@ -533,7 +534,7 @@ def _compute_dynamics_input_parse(
                     "All process tensors must have the same "\
                             "timestep length.")
         max_steps.append(pt.max_step)
-    max_step = np.min(max_steps+[np.inf])
+    max_step = np.min(np.array(max_steps + [np.inf]))
 
     if dt is None:
         raise ValueError(
@@ -642,7 +643,7 @@ def _apply_caps(current_node, current_edges, caps):
     """ToDo """
     node_dict, edge_dict = tn.copy([current_node])
     for current_edge, cap in zip(current_edges[:-1], caps):
-        cap_node = tn.Node(cap)
+        cap_node = tn.Node(np.array(cap))
         edge_dict[current_edge] ^ cap_node[0]
         node_dict[current_node] = node_dict[current_node] @ cap_node
     state_node = node_dict[current_node]
@@ -889,7 +890,11 @@ def compute_correlations_nt(
 
     ret_correlations = np.empty(times_length, dtype=np.dtype_complex)
     #This array will contain all correlations
-    ret_correlations[:] = np.nan + 1.0j*np.nan
+    ret_correlations = np.update(
+        array=ret_correlations,
+        indices=(slice(None), ),
+        values=np.nan + 1.0j * np.nan
+    )
 
 
     parameters = {
@@ -916,7 +921,7 @@ def compute_correlations_nt(
             #check time ordering
             ft = np.array(first_times)
             check = sorted(first_times)
-            if not np.allclose(ft, check):
+            if not np.allclose(ft, np.array(check)):
                 continue
             ft_max = ft.max()
             if (ft_max > last_times).any():
@@ -933,7 +938,11 @@ def compute_correlations_nt(
                                                     operators = operators,
                                                     ops_order = ops_order,
                                                     **parameters)
-            ret_correlations[sch_indices[i]] = corr
+            ret_correlations = np.update(
+                array=ret_correlations,
+                indices=sch_indices[i],
+                values=corr
+            )
         prog_bar.update(len(schedule))
     return ret_times, ret_correlations
 

@@ -18,7 +18,7 @@ import scipy.linalg as default_la
 
 import oqupy.config as oc
 
-class Numpy:
+class NumPy:
     """
     The NumPy backend employing
     dynamic switching through `oqupy.config`.
@@ -38,19 +38,28 @@ class Numpy:
         """Getter for the float datatype."""
         return oc.NumPyDtypeFloat
 
-    def __getattr__(self, name: str):
+    def __getattr__(self,
+                    name: str,
+                    ):
         """Return the backend's default attribute."""
         backend = object.__getattribute__(self, 'backend')
         return getattr(backend, name)
 
-    def update(self, array, indices:tuple, values) -> default_np.ndarray:
+    def update(self,
+               array,
+               indices:tuple,
+               values,
+               ) -> default_np.ndarray:
         """Option to update select indices of an array with given values."""
         if not isinstance(array, default_np.ndarray):
             return array.at[indices].set(values)
         array[indices] = values
         return array
 
-    def get_random_floats(self, seed, shape):
+    def get_random_floats(self,
+                          seed,
+                          shape,
+                          ):
         """Method to obtain random floats with a given seed and shape."""
         backend = object.__getattribute__(self, 'backend')
         random_floats = default_np.random.default_rng(seed).random(shape, \
@@ -73,5 +82,5 @@ class LinAlg:
         return getattr(backend, name)
 
 # initialize for import
-np = Numpy()
+np = NumPy()
 la = LinAlg()

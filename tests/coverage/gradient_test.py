@@ -14,14 +14,14 @@ Tests for the oqupy.gradient module.
 """
 
 import pytest
-import numpy as np
-from numpy import ndarray
 
 from typing import Dict
 
 import oqupy
 
 from oqupy.gradient import state_gradient
+
+from oqupy.backends.numerical_backend import np
 
 def test_state_gradient():
     start_time=0
@@ -103,7 +103,7 @@ def test_chain_rule():
     assert callable(propagators)
     assert callable(propagator_derivatives)
     # Check the tot_derivs is a numpy array
-    assert isinstance(tot_derivs,ndarray)
+    assert isinstance(tot_derivs, np.ndarray)
 
 
 def test_compute_gradient_and_dynamics():

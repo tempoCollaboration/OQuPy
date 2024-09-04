@@ -13,12 +13,9 @@
 Tests for the compute_gradient_and_dynamics and chain_rule functions.
 """
 
-import pytest
-import numpy as np
-
 import oqupy
-from oqupy import process_tensor
 
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test K: Spin-Boson model gradient (time-dep. sys., functional target state)
@@ -104,7 +101,7 @@ def test_tempo_gradient_backend_K():
         progress_type='silent'
     )
 
-    np.testing.assert_almost_equal(dyn.states[-1], rho_K, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn.states[-1], rho_K, decimal=4)
 
     get_props = system_K.get_propagators(dt,x0)
     get_prop_derivatives = system_K.get_propagator_derivatives(dt,x0)
@@ -115,4 +112,4 @@ def test_tempo_gradient_backend_K():
                                             num_steps=num_steps,
                                             num_parameters=1)
     
-    np.testing.assert_almost_equal(grad_params.real,grad_params_K,decimal=4)
+    default_np.testing.assert_array_almost_equal(grad_params.real,grad_params_K,decimal=4)

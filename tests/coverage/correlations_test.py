@@ -14,12 +14,11 @@ Tests for the time_evovling_mpo.correlations module.
 """
 
 import pytest
-import numpy as np
 
-from oqupy.bath_correlations import BaseCorrelations
-from oqupy.bath_correlations import CustomCorrelations
-from oqupy.bath_correlations import CustomSD
-from oqupy.bath_correlations import PowerLawSD
+from oqupy.bath_correlations import BaseCorrelations, CustomCorrelations, \
+    CustomSD, PowerLawSD
+
+from oqupy.backends.numerical_backend import default_np, np
 
 square_function = lambda w: 0.1 * w ** 2
 
@@ -96,11 +95,11 @@ def test_matsubara_custom_s_d():
         w = np.linspace(0, 8.0 * sd.cutoff, 10)
         y = sd.spectral_density(w)
         t = np.linspace(0, 4.0 / sd.cutoff, 10)
-        [sd.correlation(tt, matsubara=True) for tt in t]
-        [sd.eta_function(tt, matsubara=True) for tt in t]
+        [sd.correlation(float(tt), matsubara=True) for tt in t]
+        [sd.eta_function(float(tt), matsubara=True) for tt in t]
 
         assert type(sd.correlation(1, matsubara=True)) == float
-        np.testing.assert_almost_equal(
+        default_np.testing.assert_array_almost_equal(
             sd.correlation(0, matsubara=True),
             sd.correlation(1 / temperature, matsubara=True))
 
@@ -139,7 +138,7 @@ def test_matsubara_custom_s_d():
                                               matsubara=ma)
             # assert np.round(big_tri - (3 * small_tri + square + rect), 14) == 0
             stiched_big_tri = 3 * mid_tri + square + rect - 2*small_tri
-            np.testing.assert_almost_equal( stiched_big_tri, big_tri)
+            default_np.testing.assert_array_almost_equal(stiched_big_tri, big_tri)
 
 def test_matsubara_custom_s_d_bad_input():
     temperature = 0.0

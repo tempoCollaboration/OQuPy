@@ -16,10 +16,9 @@ Tests for PT-TEBD with Lindblad dissipators.
 import sys
 sys.path.insert(0,'.')
 
-import pytest
-import numpy as np
-
 import oqupy
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test F: Test Lindblad dissipation for PT-TEBD  ---------------------------
@@ -83,15 +82,15 @@ def test_pt_tebd_site_dissipation_H1():
 
     r = pt_tebd.compute(num_steps, progress_type="silent")
 
-    np.testing.assert_almost_equal(
+    default_np.testing.assert_array_almost_equal(
         r['dynamics'][0].states[-1],
         [[np.exp(-1),0],[0,1-np.exp(-1)]],
         decimal=4)
-    np.testing.assert_almost_equal(
+    default_np.testing.assert_array_almost_equal(
         r['dynamics'][1].states[-1],
         [[0,0],[0,1]],
         decimal=4)
-    np.testing.assert_almost_equal(
+    default_np.testing.assert_array_almost_equal(
         r['dynamics'][2].states[-1],
         [[1-np.exp(-1),0],[0,np.exp(-1)]],
         decimal=4)
