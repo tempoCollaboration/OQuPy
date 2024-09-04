@@ -199,10 +199,10 @@ def compute_nn_gate(
     # exponentiate the liouvillian to become a propagator
     propagator = la.expm(dt*liouvillian)
     # split leg 0 and leg 1 each into left and right.
-    propagator.shape = [hs_dim_l**2, # left output
-                        hs_dim_r**2, # right output
-                        hs_dim_l**2, # left input
-                        hs_dim_r**2] # right input
+    propagator = propagator.reshape([hs_dim_l**2,   # left output
+                                     hs_dim_r**2,   # right output
+                                     hs_dim_l**2,   # left input
+                                     hs_dim_r**2])  # right input
     temp = np.swapaxes(propagator, 1, 2)
     temp = temp.reshape([hs_dim_l**2 * hs_dim_l**2,
                             hs_dim_r**2 * hs_dim_r**2])
@@ -396,11 +396,14 @@ class AugmentedMPS(BaseAPIClass):
             if rank == 4:
                 tmp_gamma = np.swapaxes(tmp_gamma,2,3)
             elif rank == 3:
-                tmp_gamma.shape = (shape[0], shape[1], 1, shape[2])
+                tmp_gamma = tmp_gamma.reshape((shape[0], shape[1], \
+                                               1, shape[2]))
             elif rank == 2:
-                tmp_gamma.shape = (1, shape[0]*shape[1], 1, 1)
+                tmp_gamma = tmp_gamma.reshape((1, shape[0] * shape[1], \
+                                               1, 1))
             elif rank == 1:
-                tmp_gamma.shape = (1, shape[0], 1, 1)
+                tmp_gamma = tmp_gamma.reshape((1, shape[0], \
+                                               1, 1))
             else:
                 raise ValueError()
             tmp_gammas.append(tmp_gamma)

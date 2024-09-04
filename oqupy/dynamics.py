@@ -52,9 +52,9 @@ class BaseDynamics(BaseAPIClass):
         ret.append("  length        = {} timesteps \n".format(len(self)))
         if len(self) > 0:
             ret.append("  min time      = {} \n".format(
-                np.min(self._times)))
+                np.min(self.times)))
             ret.append("  max time      = {} \n".format(
-                np.max(self._times)))
+                np.max(self.times)))
         return "".join(ret)
 
     def __len__(self) -> int:
@@ -181,7 +181,7 @@ class Dynamics(BaseDynamics):
     @property
     def shape(self):
         """The shape of the states. """
-        return np.copy(self._shape)
+        return copy(self._shape)
 
 class MeanFieldDynamics(BaseAPIClass):
     """

@@ -434,8 +434,6 @@ class BaseTempoBackend:
         # the inner `for` loop can be optimized for parallelization
         if dkmax_pre_compute > 1:
             indices = list(range(1, dkmax_pre_compute))
-            # influences += create_deltas(self._influence, indices,
-            #                             [1, 0, 0, 1])
             for index in indices:
                 infl = self._influence(index)
                 influences.append(create_delta(infl, [1, 0, 0, 1]))

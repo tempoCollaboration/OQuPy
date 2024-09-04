@@ -14,9 +14,10 @@ Tests for the time_evovling_mpo.dynamics module.
 """
 
 import pytest
-import numpy as np
 
 from oqupy.dynamics import BaseDynamics, Dynamics, MeanFieldDynamics
+
+from oqupy.backends.numerical_backend import default_np, np
 
 
 times = [0.0, 0.1]
@@ -30,8 +31,8 @@ def test_base_dynamics():
     dyn_A = BaseDynamics()
     str(dyn_A)
     len(dyn_A)
-    assert type(dyn_A.times) == np.ndarray
-    assert type(dyn_A.states) == np.ndarray
+    assert isinstance(dyn_A.times, np.ndarray)
+    assert isinstance(dyn_A.states, np.ndarray)
     assert dyn_A.shape is None
     t, expec = dyn_A.expectations()
     assert t is None
@@ -44,9 +45,9 @@ def test_dynamics():
     dyn_B = Dynamics(times, states)
     str(dyn_B)
     assert len(dyn_B) == len(times)
-    np.testing.assert_almost_equal(times, dyn_B.times)
-    np.testing.assert_almost_equal(states, dyn_B.states)
-    np.testing.assert_almost_equal(states[0].shape, dyn_B.shape)
+    default_np.testing.assert_array_almost_equal(times, dyn_B.times)
+    default_np.testing.assert_array_almost_equal(states, dyn_B.states)
+    default_np.testing.assert_array_almost_equal(states[0].shape, dyn_B.shape)
     dyn_B.add(other_time, other_state)
 
 def test_dynamics_bad_input():
@@ -62,12 +63,12 @@ def test_dynamics_bad_input():
     with pytest.raises(AssertionError):
         dyn_A.add(other_time, "bla")
     with pytest.raises(AssertionError):
-        dyn_A.add(other_time, np.random.rand(3,3))
+        dyn_A.add(other_time, np.get_random_floats(0, (3,3)))
     dyn_B = Dynamics()
     with pytest.raises(AssertionError):
-        dyn_A.add(other_time, np.random.rand(2,2,2))
+        dyn_A.add(other_time, np.get_random_floats(1, (2,2,2)))
     with pytest.raises(AssertionError):
-        dyn_A.add(other_time, np.random.rand(3,2))
+        dyn_A.add(other_time, np.get_random_floats(2, (3,2)))
 
 def test_dynamics_expectations():
     dyn_A = Dynamics()
@@ -76,14 +77,14 @@ def test_dynamics_expectations():
     assert x is None
     dyn = Dynamics(times, states)
     t, tr = dyn.expectations()
-    np.testing.assert_almost_equal(t, dyn.times)
-    np.testing.assert_almost_equal(tr, [1.0, 1.0])
+    default_np.testing.assert_array_almost_equal(t, dyn.times)
+    default_np.testing.assert_array_almost_equal(tr, [1.0, 1.0])
     t, y = dyn.expectations([[0,-1j],[1j,0]],real=True)
-    np.testing.assert_almost_equal(t, dyn.times)
-    np.testing.assert_almost_equal(y, [0, 0.2])
+    default_np.testing.assert_array_almost_equal(t, dyn.times)
+    default_np.testing.assert_array_almost_equal(y, [0, 0.2])
     t, lower = dyn.expectations([[0,0],[1,0]])
-    np.testing.assert_almost_equal(t, dyn.times)
-    np.testing.assert_almost_equal(lower, [0, -0.1j])
+    default_np.testing.assert_array_almost_equal(t, dyn.times)
+    default_np.testing.assert_array_almost_equal(lower, [0, -0.1j])
     with pytest.raises(AssertionError):
         dyn.expectations("bla")
 
@@ -97,14 +98,14 @@ def test_mean_field_dynamics():
                                      [states[1], states[1]]],
                                     fields)
     assert len(dyn_B) == len(times)
-    np.testing.assert_almost_equal(fields, dyn_B.fields)
+    default_np.testing.assert_array_almost_equal(fields, dyn_B.fields)
     dyn_B.add(times[-1] + other_time, [other_state, 2*other_state], other_field)
     assert isinstance(dyn_B.system_dynamics[0], Dynamics)
     sysB1, sysB2 = dyn_B.system_dynamics
-    np.testing.assert_almost_equal(sysB1.times, dyn_B.times)
-    np.testing.assert_almost_equal(sysB2.times, dyn_B.times)
+    default_np.testing.assert_array_almost_equal(sysB1.times, dyn_B.times)
+    default_np.testing.assert_array_almost_equal(sysB2.times, dyn_B.times)
     assert len(dyn_B) == len(sysB1)
-    np.testing.assert_almost_equal(sysB1.states[-1], 0.5 * sysB2.states[-1])
+    default_np.testing.assert_array_almost_equal(sysB1.states[-1], 0.5 * sysB2.states[-1])
     combined_fields = [fields[0], fields[1], other_field]
     # bad input
     with pytest.raises(AssertionError):
@@ -120,8 +121,8 @@ def test_mean_field_dynamics():
     assert t is None
     assert alpha is None
     t, alpha = dyn_B.field_expectations()
-    np.testing.assert_almost_equal(t, dyn_B.times)
-    np.testing.assert_almost_equal(alpha, dyn_B.fields)
-    np.testing.assert_almost_equal(alpha, combined_fields)
+    default_np.testing.assert_array_almost_equal(t, dyn_B.times)
+    default_np.testing.assert_array_almost_equal(alpha, dyn_B.fields)
+    default_np.testing.assert_array_almost_equal(alpha, combined_fields)
     with pytest.raises(TypeError):
         dyn_B.field_expectations("bla")

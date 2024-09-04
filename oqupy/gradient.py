@@ -76,7 +76,7 @@ def state_gradient(
         'gradient' : derivatives of Z with respect to the parameters
         'dynamics' : the dynamics of the system
     """
-    check_isinstance(parameters, ndarray, 'parameters')
+    check_isinstance(parameters, np.ndarray, 'parameters')
 
     num_steps = len(process_tensors[0])
     dt = process_tensors[0].dt
@@ -154,14 +154,20 @@ def _chain_rule(
         prog_bar.update(i)
 
         for j in range(0,num_parameters):
-            total_derivs[2*i][j] = combine_derivs(
-                            adjoint_tensor[i],
-                            first_half_prop_derivs[j].T,
-                            second_half_prop.T)
-            total_derivs[2*i+1][j] = combine_derivs(
-                adjoint_tensor[i],
-                first_half_prop.T,
-                second_half_prop_derivs[j].T)
+            total_derivs = np.update(
+                array=total_derivs,
+                indices=(2 * i, j),
+                values=combine_derivs(adjoint_tensor[i],
+                                      first_half_prop_derivs[j].T,
+                                      second_half_prop.T)
+            )
+            total_derivs = np.update(
+                array=total_derivs,
+                indices=(2 * i + 1, j),
+                values=combine_derivs(adjoint_tensor[i],
+                                      first_half_prop.T,
+                                      second_half_prop_derivs[j].T)
+            )
 
     prog_bar.update(num_steps)
     prog_bar.exit()
@@ -265,7 +271,7 @@ def compute_gradient_and_dynamics(
     #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
     #    edge  -1                      is the state leg
     initial_ndarray = initial_state.reshape(hs_dim**2)
-    initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+    initial_ndarray = initial_ndarray.reshape(tuple([1]*num_envs+[hs_dim**2]))
     current_node = tn.Node(initial_ndarray)
     current_edges = current_node[:]
 
@@ -356,7 +362,7 @@ def compute_gradient_and_dynamics(
 
     target_ndarray = target_derivative
     target_ndarray = target_ndarray.reshape(hs_dim**2)
-    target_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
+    target_ndarray = target_ndarray.reshape(tuple([1]*num_envs+[hs_dim**2]))
     current_node = tn.Node(target_ndarray)
     current_edges = current_node[:]
 

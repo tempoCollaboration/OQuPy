@@ -525,7 +525,8 @@ class ParameterizedSystem(BaseSystem):
         """Create a ParameterizedSystem object."""
         # input check for Hamiltonian.
         number_of_parameters = len(getfullargspec(hamiltonian).args)
-        self._hamiltonian = np.vectorize(hamiltonian)
+        self._hamiltonian = np.vectorize(hamiltonian, \
+            signature=','.join(['()'] * number_of_parameters) + '->(m,m)')
         trial_hamiltonian = hamiltonian(*(list([0.5]*number_of_parameters)))
         _check_hamiltonian(trial_hamiltonian)
         dimension = trial_hamiltonian.shape[0]
@@ -583,7 +584,9 @@ class ParameterizedSystem(BaseSystem):
         jacfunim=Jacobian(lambda x: prop(x).imag)
 
         def jacfun(x):
-            jac=jacfunre(x)+1.0j*jacfunim(x)
+            # `npdifftools` returns a vanilla NumPy array
+            # TODO: use JAX-based differentiation modules
+            jac=np.array(jacfunre(x) + 1.0j * jacfunim(x))
 
             return [jac[:,i,:] for i in range(self._number_of_parameters)]
 
@@ -987,7 +990,8 @@ def _check_tdependent_hamiltonian(hamiltonian) -> Callable[[float],
         ndarray]:
     """Input checking for a time-dependent Hamiltonian. """
     try:
-        tmp_hamiltonian = np.vectorize(hamiltonian)
+        tmp_hamiltonian = np.vectorize(hamiltonian, \
+            signature='()->(m,m)')
         _check_hamiltonian(tmp_hamiltonian(1.0))
     except Exception as e:
         raise AssertionError(
@@ -998,7 +1002,8 @@ def _check_tdependent_hamiltonian(hamiltonian) -> Callable[[float],
 def _check_tfielddependent_hamiltonian(hamiltonian) -> Callable[[float,
     complex], ndarray]:
     try:
-        tmp_hamiltonian = np.vectorize(hamiltonian)
+        tmp_hamiltonian = np.vectorize(hamiltonian, \
+            signature='(),()->(m,m)')
         _check_hamiltonian(tmp_hamiltonian(1.0, 1.0+1.0j))
     except Exception as e:
         raise AssertionError(
@@ -1057,7 +1062,8 @@ def _check_tdependent_gammas_lindblad_operators(
         tmp_gammas = []
         for gamma in gammas:
             float(gamma(1.0))
-            tmp_gamma = np.vectorize(gamma)
+            tmp_gamma = np.vectorize(gamma, \
+                signature='()->()')
             tmp_gammas.append(tmp_gamma)
     except Exception as e:
         raise AssertionError(
@@ -1066,7 +1072,8 @@ def _check_tdependent_gammas_lindblad_operators(
     try:
         tmp_lindblad_operators = []
         for lindblad_operator in lindblad_operators:
-            tmp_lindblad_operator = np.vectorize(lindblad_operator)
+            tmp_lindblad_operator = np.vectorize(lindblad_operator, \
+                signature='()->(m,m)')
             np.array(tmp_lindblad_operator(1.0))
             tmp_lindblad_operators.append(tmp_lindblad_operator)
     except Exception as e:

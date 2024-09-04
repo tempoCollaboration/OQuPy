@@ -1,9 +1,10 @@
-import numpy as np
-import oqupy
-
 """
 Test dynamics with multiple identical mean-field systems are consistent.
 """
+
+import oqupy
+
+from oqupy.backends.numerical_backend import np
 
 number_of_systems = 3
 dt = 0.001

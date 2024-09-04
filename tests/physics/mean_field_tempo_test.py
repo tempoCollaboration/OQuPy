@@ -14,10 +14,11 @@
 """
 Tests for MeanFieldTempo.
 """
-import numpy as np
 
 import oqupy
 from oqupy import operators
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -- Test G: Dicke model --
 
@@ -67,8 +68,8 @@ def test_tempo_backend_G():
         start_time=0.0)
     tempo_G.compute(end_time=t_end_G)
     dyn_G = tempo_G.get_dynamics()
-    np.testing.assert_almost_equal(dyn_G.fields[-1], field_G, decimal=4)
-    np.testing.assert_almost_equal(
+    default_np.testing.assert_array_almost_equal(dyn_G.fields[-1], field_G, decimal=4)
+    default_np.testing.assert_array_almost_equal(
             dyn_G.system_dynamics[0].states[-1], rho_G, decimal=4)
 
 def test_tensor_network_pt_tempo_backend_A():
@@ -83,8 +84,8 @@ def test_tensor_network_pt_tempo_backend_A():
         initial_field=initial_field_G,
         process_tensor_list=[pt],
         initial_state_list=[initial_state_G])
-    np.testing.assert_almost_equal(dyn.fields[-1], field_G, decimal=4)
-    np.testing.assert_almost_equal(
+    default_np.testing.assert_array_almost_equal(dyn.fields[-1], field_G, decimal=4)
+    default_np.testing.assert_array_almost_equal(
             dyn.system_dynamics[0].states[-1], rho_G, decimal=4)
 
 # -----------------------------------------------------------------------------

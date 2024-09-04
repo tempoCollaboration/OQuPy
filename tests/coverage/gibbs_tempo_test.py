@@ -12,13 +12,15 @@
 """
 Tests for the Tempo module.
 """
+
 import pytest
-import numpy as np
+from numpy import ndarray
 
 import oqupy
 
 import oqupy.tempo as tempo
 
+from oqupy.backends.numerical_backend import default_np, np
 
 
 def test_gibbs_tempo():
@@ -64,31 +66,34 @@ def test_gibbs_tempo():
     state2 = state2 / state2.trace()
     assert (state1 == state2).all()
     assert state1.shape == (2, 2)
-    np.testing.assert_almost_equal(state1.trace(),1)
+    default_np.testing.assert_almost_equal(state1.trace(),1)
 
 # -- operators for testing purposes --
-def spin_z(n: int) -> np.ndarray:
+def spin_z(n: int) -> ndarray:
     sz = [n / 2]
     while len(sz) < n + 1:
         sz.append(sz[-1] - 1)
-    sz = np.diag(sz)
+    sz = np.diag(np.array(sz))
     return sz
 
-def spin_ladder_up(n: int) -> np.ndarray:
+def spin_ladder_up(n: int) -> ndarray:
     sp = np.zeros((n + 1, n + 1))
     for jj in range(len(sp) - 1):
-        sp[jj][jj + 1] = 0.5 * np.sqrt(
-            0.5 * n * (0.5 * n + 1)
-            - (0.5 * n - jj) * (0.5 * n - jj - 1))
+        sp = np.update(
+            array=sp,
+            indices=(jj, jj + 1),
+            values=0.5 * np.sqrt(0.5 * n * (0.5 * n + 1) - \
+                                 (0.5 * n - jj) * (0.5 * n - jj - 1))
+        )
     return sp
 
-def spin_ladder_down(n: int) -> np.ndarray:
+def spin_ladder_down(n: int) -> ndarray:
     return spin_ladder_up(n).T
 
-def spin_x(n: int) -> np.ndarray:
+def spin_x(n: int) -> ndarray:
     return spin_ladder_up(n) + spin_ladder_down(n)
 
-def spin_y(n: int) -> np.ndarray:
+def spin_y(n: int) -> ndarray:
     return 1j*(spin_ladder_up(n) - spin_ladder_down(n))
 
 def spin_operators(n: int) -> list:

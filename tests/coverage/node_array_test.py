@@ -17,19 +17,15 @@ Tests for the oqupy.backends.node_array module.
 """
 import pytest
 
-import numpy as np
-import tensornetwork as tn
-
 import oqupy.backends.node_array as node_array
-
+from oqupy.backends.numerical_backend import np
 
 def test_node_array():
-    np.random.seed(0)
-    a = np.random.rand(3,4,9,5)
-    b = np.random.rand(5,5,9,6)
-    c = np.random.rand(6,5,9,2)
-    d = np.random.rand(2,3,9)
-    d2 = np.random.rand(2,3,9,3)
+    a = np.get_random_floats(0, (3,4,9,5))
+    b = np.get_random_floats(0, (5,5,9,6))
+    c = np.get_random_floats(0, (6,5,9,2))
+    d = np.get_random_floats(0, (2,3,9))
+    d2 = np.get_random_floats(0, (2,3,9,3))
     na = node_array.NodeArray([a,b,c,d], right=False, name="my node array")
     na2 = node_array.NodeArray([a,b,c,d2], name="my node array")
     str(na)
@@ -48,12 +44,12 @@ def test_node_array():
     dd2.get_verbose_string()
 
     #Apply matrix (left/right)
-    m = np.random.rand(3,7)
+    m = np.get_random_floats(0, (3,7))
     na.apply_matrix(m,left=True)
     na2.apply_matrix(m,left=False)
 
     # Apply vector (left/right)
-    v = np.random.rand(7)
+    v = np.get_random_floats(0, (7))
     na.apply_vector(v, left=True)
     na2.apply_vector(v, left=False)
 
@@ -61,12 +57,11 @@ def test_node_array():
     assert na.rank == None
 
 def test_node_array_join_split():
-    np.random.seed(0)
-    a = np.random.rand(3,4,9,5)
-    b = np.random.rand(5,5,9,6)
-    c = np.random.rand(6,5,9,2)
-    d = np.random.rand(2,3,9)
-    x = np.random.rand(2,9,3)
+    a = np.get_random_floats(0, (3,4,9,5))
+    b = np.get_random_floats(0, (5,5,9,6))
+    c = np.get_random_floats(0, (6,5,9,2))
+    d = np.get_random_floats(0, (2,3,9))
+    x = np.get_random_floats(0, (2,9,3))
 
     na0 = node_array.NodeArray([x], left=False, name="array 0")
     na1 = node_array.NodeArray([a,b], name="array 1")
@@ -80,11 +75,10 @@ def test_node_array_join_split():
         na_A, na_B = node_array.split(na_012, 5)
 
 def test_node_array_svd():
-    np.random.seed(0)
-    a = np.random.rand(3,4,9,5)
-    b = np.random.rand(5,5,9,6)
-    c = np.random.rand(6,5,9,2)
-    d = np.random.rand(2,3,9)
+    a = np.get_random_floats(0, (3,4,9,5))
+    b = np.get_random_floats(0, (5,5,9,6))
+    c = np.get_random_floats(0, (6,5,9,2))
+    d = np.get_random_floats(0, (2,3,9))
     na = node_array.NodeArray([a,b,c,d], right=False, name="my node array")
 
     na.svd_sweep(1, 3, max_singular_values=4)
@@ -98,20 +92,19 @@ def test_node_array_svd():
         na.svd_sweep(1, 5, max_singular_values=4)
 
 def test_node_array_contractions():
-    np.random.seed(0)
-    mps = node_array.NodeArray([np.random.rand(3,2,3),
-                                np.random.rand(3,3,3),
-                                np.random.rand(3,4,3)],
+    mps = node_array.NodeArray([np.get_random_floats(0, (3,2,3)),
+                                np.get_random_floats(0, (3,3,3)),
+                                np.get_random_floats(0, (3,4,3))],
                                name="MPS")
-    mpo1 = node_array.NodeArray([np.random.rand(2,5,4),
-                                 np.random.rand(4,3,5,4),
-                                 np.random.rand(4,4,5)],
+    mpo1 = node_array.NodeArray([np.get_random_floats(0, (2,5,4)),
+                                 np.get_random_floats(0, (4,3,5,4)),
+                                 np.get_random_floats(0, (4,4,5))],
                                 left=False,
                                 right=False,
                                 name="MPO1")
-    mpo2 = node_array.NodeArray([np.random.rand(5,5,3),
-                                 np.random.rand(3,5,5,3),
-                                 np.random.rand(3,5,5)],
+    mpo2 = node_array.NodeArray([np.get_random_floats(0, (5,5,3)),
+                                 np.get_random_floats(0, (3,5,5,3)),
+                                 np.get_random_floats(0, (3,5,5))],
                                 left=False,
                                 right=False,
                                 name="MPO2")
@@ -123,9 +116,9 @@ def test_node_array_contractions():
 
     # ### 2nd example
 
-    mps = node_array.NodeArray([np.random.rand(4,3),
-                                np.random.rand(3,4,3),
-                                np.random.rand(3,4)],
+    mps = node_array.NodeArray([np.get_random_floats(0, (4,3)),
+                                np.get_random_floats(0, (3,4,3)),
+                                np.get_random_floats(0, (3,4))],
                                left=False,
                                right=False,
                                name="MPS")
@@ -134,41 +127,41 @@ def test_node_array_contractions():
     mps3 = mps.copy()
     mps4 = mps.copy()
     mps5 = mps.copy()
-    mpsTwo = node_array.NodeArray([np.random.rand(4,3),
-                                 np.random.rand(3,4)],
+    mpsTwo = node_array.NodeArray([np.get_random_floats(0, (4,3)),
+                                 np.get_random_floats(0, (3,4))],
                                 left=False,
                                 right=False,
                                 name="MPS")
-    mpsL = node_array.NodeArray([np.random.rand(3,4,3),
-                                 np.random.rand(3,4)],
+    mpsL = node_array.NodeArray([np.get_random_floats(0, (3,4,3)),
+                                 np.get_random_floats(0, (3,4))],
                                 left=True,
                                 right=False,
                                 name="MPS")
-    mpsR = node_array.NodeArray([np.random.rand(4,3),
-                                 np.random.rand(3,4,3)],
+    mpsR = node_array.NodeArray([np.get_random_floats(0, (4,3)),
+                                 np.get_random_floats(0, (3,4,3))],
                                 left=False,
                                 right=True,
                                 name="MPS")
-    mpo1 = node_array.NodeArray([np.random.rand(3,4,4,3),
-                                 np.random.rand(3,4,4)],
+    mpo1 = node_array.NodeArray([np.get_random_floats(0, (3,4,4,3)),
+                                 np.get_random_floats(0, (3,4,4))],
                                 left=True,
                                 right=False,
                                 name="MPO1")
     mpo5 = mpo1.copy()
-    mpo2 = node_array.NodeArray([np.random.rand(4,4,3),
-                                 np.random.rand(3,4,4,3)],
+    mpo2 = node_array.NodeArray([np.get_random_floats(0, (4,4,3)),
+                                 np.get_random_floats(0, (3,4,4,3))],
                                 left=False,
                                 right=True,
                                 name="MPO2")
-    arr1 = node_array.NodeArray([np.random.rand(4,2,2,3),
-                                 np.random.rand(3,4,2,2,3),
-                                 np.random.rand(3,4,2,2,3)],
+    arr1 = node_array.NodeArray([np.get_random_floats(0, (4,2,2,3)),
+                                 np.get_random_floats(0, (3,4,2,2,3)),
+                                 np.get_random_floats(0, (3,4,2,2,3))],
                                 left=False,
                                 right=True,
                                 name="array1")
-    arr2 = node_array.NodeArray([np.random.rand(3,2,4,2,3),
-                                 np.random.rand(3,2,4,2,3),
-                                 np.random.rand(3,2,4,2)],
+    arr2 = node_array.NodeArray([np.get_random_floats(0, (3,2,4,2,3)),
+                                 np.get_random_floats(0, (3,2,4,2,3)),
+                                 np.get_random_floats(0, (3,2,4,2))],
                                 left=True,
                                 right=False,
                                 name="array2")

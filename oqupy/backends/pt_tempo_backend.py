@@ -150,10 +150,6 @@ class PtTempoBackend:
         # the inner `for` loop can be optimized for parallelization
         if self._num_infl > 2:
             indices = list(range(1, self._num_infl - 1))
-            # influences_mpo += create_deltas(self._influence, indices,
-            #                                 [0, 1, 1, 0])
-            # influences_mps += create_deltas(self._influence, indices,
-            #                                 [0, 1, 0], scale)
             for index in indices:
                 infl = self._influence(index)
                 influences_mpo.append(create_delta(infl, [0, 1, 1, 0]))

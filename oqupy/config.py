@@ -18,8 +18,8 @@ import numpy as default_np
 import scipy.linalg as default_la
 NUMERICAL_BACKEND_NUMPY = default_np
 NUMERICAL_BACKEND_LINALG = default_la
-NumPyDtypeComplex = default_np.complex128
-NumPyDtypeFloat = default_np.float64
+NumPyDtypeComplex = default_np.complex128   # earlier NpDtype
+NumPyDtypeFloat = default_np.float64        # earlier NpDtypeReal
 
 # Separator string for __str__ functions
 SEPERATOR = "----------------------------------------------\n"

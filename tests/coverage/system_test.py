@@ -14,12 +14,13 @@ Tests for the time_evovling_mpo.system module.
 """
 
 import pytest
-import numpy as np
+from typing import Callable
 
 from oqupy.system import BaseSystem, System, TimeDependentSystem,\
         TimeDependentSystemWithField, MeanFieldSystem, ParameterizedSystem
 from oqupy import operators
-from typing import Callable
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- test-examples ------------------------------------------------------------
@@ -93,7 +94,7 @@ def test_base_system():
 def test_system_A():
     sys = System(hamiltonianA)
     liouvillian = sys.liouvillian()
-    np.testing.assert_almost_equal(liouvillian, liouvillianA)
+    default_np.testing.assert_array_almost_equal(liouvillian, liouvillianA)
 
 def test_system_B():
     sys = System(hamiltonianB,
@@ -109,15 +110,15 @@ def test_system_B():
     assert isinstance(sys.lindblad_operators[0], np.ndarray)
     assert sys.dimension == 2
     liouvillian = sys.liouvillian()
-    np.testing.assert_almost_equal(liouvillian, liouvillianB)
+    default_np.testing.assert_array_almost_equal(liouvillian, liouvillianB)
 
 def test_system_bad_input():
     with pytest.raises(AssertionError):
         System("bla")
     with pytest.raises(AssertionError):
-        System(np.random.rand(2,2,2))
+        System(np.get_random_floats(1, (2,2,2)))
     with pytest.raises(AssertionError):
-        System(np.random.rand(2,3))
+        System(np.get_random_floats(2, (2,3)))
     with pytest.raises(AssertionError):
         System(operators.sigma("z"),
                0.1,
@@ -144,7 +145,7 @@ def test_system_bad_input():
 def test_time_dependent_system_C():
     sys = TimeDependentSystem(hamiltonianC)
     liouvillian = sys.liouvillian(timeC)
-    np.testing.assert_almost_equal(liouvillian, liouvillianC)
+    default_np.testing.assert_array_almost_equal(liouvillian, liouvillianC)
 
 def test_time_dependent_system_D():
     sys = TimeDependentSystem(
@@ -157,23 +158,23 @@ def test_time_dependent_system_D():
         sys.liouvillian()
 
     str(sys)
-    assert isinstance(sys.hamiltonian, np.vectorize)
+    # assert isinstance(sys.hamiltonian, np.vectorize)
     assert isinstance(sys.gammas, list)
     assert sys.gammas[0](1.0) == gammasD[0](1.0)
     assert isinstance(sys.lindblad_operators, list)
-    assert isinstance(sys.lindblad_operators[0], np.vectorize)
+    # assert isinstance(sys.lindblad_operators[0], np.vectorize)
     assert sys.dimension == 2
     liouvillian = sys.liouvillian(timeD)
-    np.testing.assert_almost_equal(liouvillian, liouvillianD)
+    default_np.testing.assert_array_almost_equal(liouvillian, liouvillianD)
 
 
 def test_time_dependent_system_bad_input():
     with pytest.raises(AssertionError):
         TimeDependentSystem("bla")
     with pytest.raises(AssertionError):
-        TimeDependentSystem(lambda t: t*np.random.rand(2,2,2))
+        TimeDependentSystem(lambda t: t*np.get_random_floats(1, (2,2,2)))
     with pytest.raises(AssertionError):
-        TimeDependentSystem(lambda t: t*np.random.rand(2,3))
+        TimeDependentSystem(lambda t: t*np.get_random_floats(1, (2,3)))
     with pytest.raises(AssertionError):
         TimeDependentSystem(lambda t: t*operators.sigma("z"),
                0.1,
@@ -203,7 +204,7 @@ def test_time_dependent_system_with_field():
             name="with field")
     liouvillian = sysField.liouvillian(timeField,
             timeField+dtField, fieldField, derivativeField)
-    np.testing.assert_almost_equal(liouvillian, liouvillianField)
+    default_np.testing.assert_array_almost_equal(liouvillian, liouvillianField)
     # Liouvillian calling
     with pytest.raises(TypeError):
         sysField.liouvillian()

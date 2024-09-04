@@ -14,9 +14,10 @@ Tests for the time_evovling_mpo.pt_tempo module.
 """
 
 import pytest
-import numpy as np
 
 import oqupy
+
+from oqupy.backends.numerical_backend import np
 
 def test_compute_dynamics_with_field():
     start_time = 1
@@ -54,7 +55,7 @@ def test_compute_dynamics_with_field():
     assert isinstance(mean_field_dynamics, oqupy.dynamics. MeanFieldDynamics)
     assert len(mean_field_dynamics.times) == 1 + num_steps
     assert np.isclose(np.min(mean_field_dynamics.times), start_time)
-    assert type(mean_field_dynamics.fields[1]) == oqupy.config.NumPyDtypeComplex
+    assert mean_field_dynamics.fields[1].dtype == oqupy.config.NumPyDtypeComplex
     assert np.isclose(mean_field_dynamics.fields[0], initial_field)
     # check correct type of dynamics returned
     assert isinstance(mean_field_dynamics, oqupy.dynamics.MeanFieldDynamics)
@@ -63,7 +64,7 @@ def test_compute_dynamics_with_field():
     # check start_time used correctly
     assert np.isclose(np.min(mean_field_dynamics.times), start_time)
     # check complex type
-    assert type(mean_field_dynamics.fields[1]) == oqupy.config.NumPyDtypeComplex
+    assert mean_field_dynamics.fields[1].dtype == oqupy.config.NumPyDtypeComplex
     # check initial field recorded correctly
     assert np.isclose(mean_field_dynamics.fields[0], initial_field)
 
@@ -248,7 +249,7 @@ def test_compute_correlations_nt():
     for i in range (len(ops_times)):
         assert len(cor[0][i]) == cor[1].shape[i]
     assert len(operators) == len(ops_times) == len(time_order)
-    assert type(cor[1][0][0][0][0]) == oqupy.config.NumPyDtypeComplex
+    assert cor[1][0][0][0][0].dtype == oqupy.config.NumPyDtypeComplex
 
     # input checks
     # no process tensor
@@ -367,4 +368,4 @@ def test_compute_correlations_nt_B():
                                       start_time = start_time,
                                       progress_type = "bar")
     assert np.isnan(cor[1][0][0])
-    assert type(cor[1][0][1]) == oqupy.config.NumPyDtypeComplex
+    assert cor[1][0][1].dtype == oqupy.config.NumPyDtypeComplex

@@ -12,12 +12,13 @@
 """
 Tests for the oqupy.bath_dynamics module.
 """
-import numpy as np
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
 from oqupy.bath_correlations import PowerLawSD
 from oqupy.config import NumPyDtypeComplex
 from oqupy import Bath, PtTempo, System, TempoParameters
+
+from oqupy.backends.numerical_backend import default_np, np
 
 def exact_correlation(t_1, t_2, w_1, w_2, dagg,
                g_1, g_2, temp):
@@ -70,11 +71,11 @@ def test():
     #Test properties
     assert corr.system == system
     assert corr.bath == bath
-    np.testing.assert_equal(corr.initial_state, initial_state)
+    default_np.testing.assert_array_equal(corr.initial_state, initial_state)
 
     tlist, occ_0 = corr.occupation(0)
 
-    np.testing.assert_equal(occ_0,np.ones(len(tlist),
+    default_np.testing.assert_array_equal(occ_0,np.ones(len(tlist),
                                         dtype=NumPyDtypeComplex) * (np.nan + 1.0j*np.nan))
 
     w0 = 1
@@ -107,10 +108,9 @@ def test():
                                                  temperature))
         int_phase = np.exp(-1j * ((2 * dagg[0] - 1) * w02 * tlist[sel:] + \
                                   (2 * dagg[1] - 1) * w0 * tlist[sel]))
-        assert np.allclose(corrs,exact_corrs)
-        assert np.allclose(int_corrs,exact_corrs * int_phase)
+        default_np.testing.assert_array_almost_equal(corrs, exact_corrs)
+        default_np.testing.assert_array_almost_equal(int_corrs, np.array(exact_corrs) * int_phase)
     corr2 = TwoTimeBathCorrelations(system, bath, pt,
                                     initial_state=initial_state)
     corr2.generate_system_correlations(1)
-    assert np.allclose(corr2._system_correlations[0,:],
-                       np.ones(int(len(tlist)/2)))
+    assert np.allclose(corr2._system_correlations[0,:], np.ones(int(len(tlist)/2)))
