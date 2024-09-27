@@ -78,6 +78,7 @@ disable=raw-checker-failed,
         consider-using-enumerate,         # GEFux: added by hand
         consider-using-f-string,          # GEFux: added for development
         too-many-arguments,               # piperfw: added for development
+        too-many-positional-arguments,    # piperfw: added 2024-09-27
         possibly-used-before-assignment,  # GEFux: added by hand
         unnecessary-lambda-assignment     # GEFux: added by hand
 
