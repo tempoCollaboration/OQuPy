@@ -25,7 +25,7 @@ OQuPy includes numerically exact methods (i.e. employing only numerically well c
 Furthermore, OQuPy implements methods to ...
 - optimize control protocols for non-Markovian open quantum systems [8,9],
 - compute the dynamics of an non-Markovian environment [10], and
-- obtain the thermal state of a strongly couled quantum system [11].
+- obtain the thermal state of a strongly coupled quantum system [11].
 
 ![OQuPy - overview](docs/graphics/overview.png)
 
@@ -35,12 +35,12 @@ Furthermore, OQuPy implements methods to ...
   (2018).
 - **[4]** Jørgensen and Pollock, [Phys. Rev. Lett. 123, 240602](https://doi.org/10.1103/PhysRevLett.123.240602) (2019).
 - **[5]** Gribben et al., [PRX Quantum 3, 10321](https://doi.org/10.1103/PRXQuantum.3.010321) (2022).
-- **[6]** Fux et al., [Phys. Rev. Research 5, 033078 ](https://doi.org/10.1103/PhysRevResearch.5.033078}) (2023).
+- **[6]** Fux et al., [Phys. Rev. Research 5, 033078 ](https://doi.org/10.1103/PhysRevResearch.5.033078) (2023).
 - **[7]** Fowler-Wright et al., [Phys. Rev. Lett. 129, 173001](https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
 - **[8]** Fux et al., [Phys. Rev. Lett. 126, 200401](https://doi.org/10.1103/PhysRevLett.126.200401) (2021).
-- **[9]** Butler et al., [Phys. Rev. Lett. 132, 060401 ](https://doi.org/10.1103/PhysRevLett.132.060401}) (2024).
+- **[9]** Butler et al., [Phys. Rev. Lett. 132, 060401 ](https://doi.org/10.1103/PhysRevLett.132.060401) (2024).
 - **[10]** Gribben et al., [Quantum, 6, 847](https://doi.org/10.22331/q-2022-10-25-847) (2022).
-- **[11]** Chiu et al., [Phys. Rev. A 106, 012204](https://doi.org/10.1103/PhysRevA.106.012204}) (2022).
+- **[11]** Chiu et al., [Phys. Rev. A 106, 012204](https://doi.org/10.1103/PhysRevA.106.012204) (2022).
 
 
 -------------------------------------------------------------------------------

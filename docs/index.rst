@@ -49,18 +49,18 @@ Furthermore, OQuPy implements methods to ...
 -  **[5]** Gribben et al., `PRX Quantum 3,
    10321 <https://doi.org/10.1103/PRXQuantum.3.010321>`__ (2022).
 -  **[6]** Fux et al., `Phys. Rev. Research 5,
-   033078 <https://doi.org/10.1103/PhysRevResearch.5.033078%7D>`__
+   033078 <https://doi.org/10.1103/PhysRevResearch.5.033078>`__
    (2023).
 -  **[7]** Fowler-Wright et al., `Phys. Rev. Lett. 129,
    173001 <https://doi.org/10.1103/PhysRevLett.129.173001>`__ (2022).
 -  **[8]** Fux et al., `Phys. Rev. Lett. 126,
    200401 <https://doi.org/10.1103/PhysRevLett.126.200401>`__ (2021).
 -  **[9]** Butler et al., `Phys. Rev. Lett. 132,
-   060401 <https://doi.org/10.1103/PhysRevLett.132.060401%7D>`__ (2024).
+   060401 <https://doi.org/10.1103/PhysRevLett.132.060401>`__ (2024).
 -  **[10]** Gribben et al., `Quantum, 6,
    847 <https://doi.org/10.22331/q-2022-10-25-847>`__ (2022).
 -  **[11]** Chiu et al., `Phys. Rev. A 106,
-   012204 <https://doi.org/10.1103/PhysRevA.106.012204%7D>`__ (2022).
+   012204 <https://doi.org/10.1103/PhysRevA.106.012204>`__ (2022).
 
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
