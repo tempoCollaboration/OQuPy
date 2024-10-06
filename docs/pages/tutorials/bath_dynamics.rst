@@ -34,7 +34,9 @@ Example - Heat transfer in a biased spin-boson model
 ----------------------------------------------------
 
 Let’s try and recreate a line cut of Figure 2 from [Gribben2022b]
-(`arXiv:2106.04212 <https://arxiv.org/abs/2106.04212>`__). This tells us
+(`Quantum, 6, 847 (2022)
+<https://doi.org/10.22331/q-2022-10-25-847>`__ /
+`arXiv:2106.04212 <https://arxiv.org/abs/2106.04212>`__). This tells us
 how much heat has been emitted into or absorbed from the bath by the
 system and how this transfer is distributed over the bath modes.
 
@@ -128,7 +130,7 @@ matrix elements evolve.
 
 .. code:: ipython3
 
-    dyns = oqupy.contractions.compute_dynamics(
+    dyns = oqupy.compute_dynamics(
         system=system,
         initial_state=initial_state,
         process_tensor=pt)
@@ -167,8 +169,7 @@ behaves as well.
 3. Bath dynamics
 ~~~~~~~~~~~~~~~~
 
-In [Gribben2022b]
-(`arXiv:2106.04212 <https://arxiv.org/abs/2106.04212>`__) we can see
+In [Gribben2022b] we can see
 that for linearly coupled Gaussian environments the bath dynamics can be
 calculated through relatively simple transformations of system
 correlation functions. For example the change in energy of mode
