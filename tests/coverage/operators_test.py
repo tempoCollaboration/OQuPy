@@ -13,10 +13,9 @@
 Tests for the time_evovling_mpo.operators module.
 """
 
-import pytest
-import numpy as np
-
 from oqupy import operators
+
+from oqupy.backends.numerical_backend import default_np, np
 
 SIGMA = {"id":[[1, 0], [0, 1]],
          "x":[[0, 1], [1, 0]],
@@ -39,32 +38,33 @@ SPIN_DM = {"up":[[1, 0], [0, 0]],
 def test_identity():
     for n in {1,2,7}:
         result = operators.identity(n)
-        np.testing.assert_almost_equal(result,np.identity(n))
+        default_np.testing.assert_array_almost_equal(result,np.identity(n))
 
 def test_operators_sigma():
     for name in SIGMA:
         result = operators.sigma(name)
-        np.testing.assert_equal(result,SIGMA[name])
+        default_np.testing.assert_array_equal(result,SIGMA[name])
 
 def test_operators_spin_dm():
     for name in SPIN_DM:
         result = operators.spin_dm(name)
-        np.testing.assert_equal(result,SPIN_DM[name])
+        default_np.testing.assert_array_equal(result,SPIN_DM[name])
 
 def test_operators_create_destroy():
     for n in {1,2,7}:
         adag = operators.create(n)
         a = operators.destroy(n)
         result = adag@a
-        np.testing.assert_almost_equal(result,np.diag(range(n)))
+        default_np.testing.assert_array_almost_equal(result,np.diag(np.array(range(n), dtype=np.dtype_complex)))
 
 # -- testing super operators --------------------------------------------------
 
 N = 3
 
-a = np.random.rand(N,N) + 1j * np.random.rand(N,N)
-b = np.random.rand(N,N) + 1j * np.random.rand(N,N)
-x = np.random.rand(N,N) + 1j * np.random.rand(N,N)
+random_floats = np.get_random_floats(1234, (6, N, N))
+a = random_floats[0] + 1j * random_floats[1]
+b = random_floats[2] + 1j * random_floats[3]
+x = random_floats[4] + 1j * random_floats[5]
 
 a_dagger = a.conjugate().T
 b_dagger = a.conjugate().T
@@ -77,24 +77,24 @@ x_dagger_vector = x_dagger.flatten()
 def test_commutator():
     sol = a@x - x@a
     res = operators.commutator(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+    default_np.testing.assert_array_almost_equal(res.reshape(N,N),sol)
 
 def test_acommutator():
     sol = a@x + x@a
     res = operators.acommutator(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+    default_np.testing.assert_array_almost_equal(res.reshape(N,N),sol)
 
 def test_left_super():
     sol = a@x
     res = operators.left_super(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+    default_np.testing.assert_array_almost_equal(res.reshape(N,N),sol)
 
 def test_right_super():
     sol = x@a
     res = operators.right_super(a)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+    default_np.testing.assert_array_almost_equal(res.reshape(N,N),sol)
 
 def test_left_right_super():
     sol = a@x@b
     res = operators.left_right_super(a,b)@x_vector
-    np.testing.assert_almost_equal(res.reshape(N,N),sol)
+    default_np.testing.assert_array_almost_equal(res.reshape(N,N),sol)

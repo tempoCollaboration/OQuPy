@@ -15,11 +15,9 @@ Tests multi-time system correlations.
 import sys
 sys.path.insert(0,'.')
 
-import pytest
-import numpy as np
-
 import oqupy
 
+from oqupy.backends.numerical_backend import np
 
 # -----------------------------------------------------------------------------
 # -- Test: Multi-time correlations for independent boson model  ---------------
@@ -67,7 +65,7 @@ system = oqupy.System(0.5 * (eps + reorg) * sigma_z)
 g_t=[]
 t_corr0=np.arange(0.,end_time+dt,dt)
 for i in range(len(t_corr0)):
-    g=correlations.correlation_2d_integral(delta=t_corr0[i],
+    g=correlations.correlation_2d_integral(delta=float(t_corr0[i]),
                                            time_1=0.,shape="upper-triangle")
     g_t.append(g)
 

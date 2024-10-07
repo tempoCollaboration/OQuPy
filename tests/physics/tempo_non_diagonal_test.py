@@ -13,10 +13,9 @@
 Tests for TEMPO and PT-TEMPO with non-diagonal coupling operators.
 """
 
-import pytest
-import numpy as np
-
 import oqupy
+
+from oqupy.backends.numerical_backend import np
 
 # -----------------------------------------------------------------------------
 # -- Test B: non-diagonal coupling --------------------------------------------

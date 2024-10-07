@@ -13,10 +13,9 @@
 Tests for TEMPO and PT-TEMPO with finite temperature and Lindblad dissipators.
 """
 
-import pytest
-import numpy as np
-
 import oqupy
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------
@@ -75,7 +74,7 @@ def test_tensor_network_tempo_backend_D():
     tempo_D.compute(end_time=1.0)
     dyn_D = tempo_D.get_dynamics()
     print(dyn_D.states[-1])
-    np.testing.assert_almost_equal(dyn_D.states[-1], rho_D, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_D.states[-1], rho_D, decimal=4)
 
 
 def test_tensor_network_pt_tempo_backend_D():
@@ -94,5 +93,5 @@ def test_tensor_network_pt_tempo_backend_D():
         process_tensor=pt,
         initial_state=initial_state_D)
     print(dyn.states[-1])
-    np.testing.assert_almost_equal(dyn.states[-1], rho_D, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn.states[-1], rho_D, decimal=4)
 # -----------------------------------------------------------------------------

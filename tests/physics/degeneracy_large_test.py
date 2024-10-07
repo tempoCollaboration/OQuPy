@@ -14,10 +14,10 @@ Tests for the degeneracy checking with TEMPO.
 """
 
 import pytest
-import numpy as np
 
 import oqupy
-from oqupy import process_tensor
+
+from oqupy.backends.numerical_backend import default_np, np
 
 
 # -----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ s_x = np.array([[0.0,1.0,0.0],
 h_sys_C = (j_value/2) * s_z @ s_z + h * s_x
 
 # Ohmic spectral density with exponential cutoff
-coupling_operator_C = np.diag([1,1,2])
+coupling_operator_C = np.diag(np.array([1,1,2], dtype=np.dtype_complex))
 alpha_C = 0.3
 cutoff_C = 5.0
 temperature_C = 0.2
@@ -83,6 +83,5 @@ def test_large_degeneracy_compare():
     tempo_non_unique.compute(end_time=t_end_C)
     dyn_unique = tempo_unique.get_dynamics()
     dyn_non_unique = tempo_non_unique.get_dynamics()
-    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
-                                   decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_unique.states, dyn_non_unique.states, decimal=4)
 # -----------------------------------------------------------------------------

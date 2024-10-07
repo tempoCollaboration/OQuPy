@@ -25,15 +25,15 @@ import tempfile
 from typing import Optional, Text, Union
 import warnings
 
-import numpy as np
+import h5py
 from numpy import ndarray
 import tensornetwork as tn
-import h5py
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import NpDtype
-from oqupy import util
+from oqupy.util import create_delta
 from oqupy.version import __version__
+
+from oqupy.backends.numerical_backend import np
 
 class BaseProcessTensor(BaseAPIClass, ABC):
     """
@@ -52,12 +52,12 @@ class BaseProcessTensor(BaseAPIClass, ABC):
         self._hs_dim = hilbert_space_dimension
         self._dt = dt
         self._rho_dim = self._hs_dim**2
-        self._trace = (np.identity(self._hs_dim, dtype=NpDtype) \
+        self._trace = (np.identity(self._hs_dim, dtype=np.dtype_complex) \
                        / np.sqrt(float(self._hs_dim))).flatten()
         self._trace_square = self._trace**2
 
         if transform_in is not None:
-            tmp_transform_in = np.array(transform_in, dtype=NpDtype)
+            tmp_transform_in = np.array(transform_in, dtype=np.dtype_complex)
             assert len(tmp_transform_in.shape) == 2
             assert tmp_transform_in.shape[0] == self._rho_dim
             self._in_dim = tmp_transform_in.shape[1]
@@ -69,7 +69,7 @@ class BaseProcessTensor(BaseAPIClass, ABC):
             self._trace_in = self._trace
 
         if transform_out is not None:
-            tmp_transform_out = np.array(transform_out, dtype=NpDtype)
+            tmp_transform_out = np.array(transform_out, dtype=np.dtype_complex)
             assert len(tmp_transform_out.shape) == 2
             assert tmp_transform_out.shape[1] == self._rho_dim
             self._out_dim = tmp_transform_out.shape[0]
@@ -240,7 +240,7 @@ class TrivialProcessTensor(BaseProcessTensor):
         """
         Get the cap tensor (vector) to terminate the PT-MPO at time step `step`.
         """
-        return np.array([1.0], dtype=NpDtype)
+        return np.array([1.0], dtype=np.dtype_complex)
 
     def get_bond_dimensions(self) -> ndarray:
         """Return the bond dimensions of the MPS form of the process tensor."""
@@ -283,7 +283,8 @@ class SimpleProcessTensor(BaseProcessTensor):
         """
         if initial_tensor is None:
             self._initial_tensor = None
-            self._initial_tensor = np.array(initial_tensor, dtype=NpDtype)
+            self._initial_tensor = np.array(initial_tensor, \
+                                            dtype=np.dtype_complex)
 
     def set_mpo_tensor(
             self,
@@ -303,7 +304,7 @@ class SimpleProcessTensor(BaseProcessTensor):
         length = len(self._mpo_tensors)
         if step >= length:
             self._mpo_tensors.extend([None] * (step - length + 1))
-        self._mpo_tensors[step] = np.array(tensor, dtype=NpDtype)
+        self._mpo_tensors[step] = np.array(tensor, dtype=np.dtype_complex)
 
     def set_cap_tensor(
             self,
@@ -315,7 +316,7 @@ class SimpleProcessTensor(BaseProcessTensor):
         length = len(self._cap_tensors)
         if step >= length:
             self._cap_tensors.extend([None] * (step - length + 1))
-        self._cap_tensors[step] = np.array(tensor, dtype=NpDtype)
+        self._cap_tensors[step] = np.array(tensor, dtype=np.dtype_complex)
 
     def get_initial_tensor(self) -> ndarray:
         """
@@ -344,7 +345,7 @@ class SimpleProcessTensor(BaseProcessTensor):
             raise IndexError("Process tensor index out of bound. ")
         tensor = self._mpo_tensors[step]
         if len(tensor.shape) == 3:
-            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            tensor = create_delta(tensor, [0, 1, 2, 2])
         if transformed is False:
             return tensor
         if self._transform_in is not None:
@@ -383,7 +384,7 @@ class SimpleProcessTensor(BaseProcessTensor):
         """
         length = len(self)
 
-        caps = [np.array([1.0], dtype=NpDtype)]
+        caps = [np.array([1.0], dtype=np.dtype_complex)]
         last_cap = tn.Node(caps[-1])
 
         for step in reversed(range(length)):
@@ -748,7 +749,7 @@ class FileProcessTensor(BaseProcessTensor):
                                      shape=self._mpo_tensors_shape)
         if transformed:
             if len(tensor.shape) == 3:
-                tensor = util.create_delta(tensor, [0, 1, 2, 2])
+                tensor = create_delta(tensor, [0, 1, 2, 2])
             if self._transform_in is not None:
                 tensor = np.dot(np.moveaxis(tensor, -2, -1),
                                 self._transform_in.T)
@@ -783,7 +784,7 @@ class FileProcessTensor(BaseProcessTensor):
         """
         length = len(self)
 
-        cap = np.array([1.0], dtype=NpDtype)
+        cap = np.array([1.0], dtype=np.dtype_complex)
         self.set_cap_tensor(length, cap)
         last_cap = tn.Node(cap)
 

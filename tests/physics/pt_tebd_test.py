@@ -15,10 +15,9 @@ Tests for PT-TEBD.
 import sys
 sys.path.insert(0,'.')
 
-import pytest
-import numpy as np
-
 import oqupy
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test F: XYZ Spin chain without and with bath  ----------------------------
@@ -121,7 +120,7 @@ def test_pt_tebd_backend_F1():
     for site in dynamics_sites:
         pt_tebd_rho = r['dynamics'][site].states[-1]
         correct_rho = correct_F1_rhos[site]
-        np.testing.assert_almost_equal(pt_tebd_rho, correct_rho, decimal=4)
+        default_np.testing.assert_array_almost_equal(pt_tebd_rho, correct_rho, decimal=4)
 
 # -----------------------------------------------------------------------------
 
@@ -139,6 +138,6 @@ def test_pt_tebd_backend_F2():
     for site in dynamics_sites:
         pt_tebd_rho = r['dynamics'][site].states[-1]
         correct_rho = correct_F2_rhos[site]
-        np.testing.assert_almost_equal(pt_tebd_rho, correct_rho, decimal=4)
+        default_np.testing.assert_array_almost_equal(pt_tebd_rho, correct_rho, decimal=4)
 
 # -----------------------------------------------------------------------------

@@ -14,9 +14,10 @@ Tests for the TempoParameters module.
 """
 
 import pytest
-import numpy as np
 
 import oqupy as tempo
+
+from oqupy.backends.numerical_backend import np
 
 def test_tempo_parameters():
     tempo_param = tempo.TempoParameters(

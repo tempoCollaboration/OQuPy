@@ -13,14 +13,13 @@
 Tests for the time_evovling_mpo.pt_tebd module.
 """
 
-import pytest
-
-import numpy as np
 import oqupy
+
+from oqupy.backends.numerical_backend import np
 
 up_dm = oqupy.operators.spin_dm("z+")
 system_chain = oqupy.SystemChain(hilbert_space_dimensions=[2,3])
-initial_augmented_mps = oqupy.AugmentedMPS([up_dm, np.diag([1,0,0])])
+initial_augmented_mps = oqupy.AugmentedMPS([up_dm, np.diag(np.array([1,0,0]))])
 pt_tebd_params = oqupy.PtTebdParameters(dt=0.2, order=2, epsrel=1.0e-4)
 
 def test_get_augmented_mps():

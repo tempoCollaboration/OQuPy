@@ -23,13 +23,13 @@ spin chain strongly coupled to its environment*, arXiv:2201.05529 (2022).
 import concurrent
 from typing import Dict, List, Tuple
 
-import numpy as np
 from numpy import ndarray
 import tensornetwork as tn
 
-from oqupy.config import NpDtype
+from oqupy.mps_mpo import GateLayer, NnGate, SiteGate
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.mps_mpo import GateLayer, SiteGate, NnGate
+
+from oqupy.backends.numerical_backend import np
 
 NoneType = type(None)
 
@@ -96,10 +96,12 @@ class PtTebdBackend:
 
         left_dim = gammas[0].shape[0]
         right_dim = gammas[-1].shape[3]
-        self._lambdas.append(tn.Node(np.identity(left_dim, dtype=NpDtype)))
+        self._lambdas.append(tn.Node(np.identity(left_dim, \
+                                                 dtype=np.dtype_complex)))
         for lam in lambdas:
             self._lambdas.append(tn.Node(np.diag(lam)))
-        self._lambdas.append(tn.Node(np.identity(right_dim, dtype=NpDtype)))
+        self._lambdas.append(tn.Node(np.identity(right_dim, \
+                                                 dtype=np.dtype_complex)))
 
         self._left_e = self._lambdas[0][0]
         self._right_e = self._lambdas[-1][1]
@@ -310,7 +312,7 @@ class PtTebdBackend:
             phys_edge_dim = self._bath_trace_gammas[site].get_dimension(1)
             hs_dim = _isqrt(phys_edge_dim)
             trace_cap = tn.Node(
-                np.identity(hs_dim, dtype=NpDtype).reshape(hs_dim**2))
+                np.identity(hs_dim, dtype=np.dtype_complex).reshape(hs_dim**2))
 
             phys_edge ^ trace_cap[0]
             full_trace_gamma = node_dict[self._bath_trace_gammas[site]] \
@@ -325,7 +327,7 @@ class PtTebdBackend:
         nodes = self._full_trace_gammas + self._lambdas
         node_dict, edge_dict = tn.copy(nodes)
 
-        temp_left = tn.Node(np.array([1.0], dtype=NpDtype))
+        temp_left = tn.Node(np.array([1.0], dtype=np.dtype_complex))
         temp_left[0] ^ edge_dict[self._left_e]
         total_left_trace =  temp_left @ node_dict[self._lambdas[0]]
         self._total_left_traces = [total_left_trace.copy()]
@@ -336,7 +338,7 @@ class PtTebdBackend:
             tr_gam[1] ^ lam[0]
             total_left_trace = total_left_trace @ tr_gam @ lam
             if site == self._n - 1:
-                temp_right = tn.Node(np.array([1.0], dtype=NpDtype))
+                temp_right = tn.Node(np.array([1.0], dtype=np.dtype_complex))
                 total_left_trace[0] ^ temp_right[0]
                 self._total_trace = (total_left_trace @ temp_right).get_tensor()
             else:
@@ -345,7 +347,7 @@ class PtTebdBackend:
         nodes = self._full_trace_gammas + self._lambdas
         node_dict, edge_dict = tn.copy(nodes)
 
-        temp_right = tn.Node(np.array([1.0], dtype=NpDtype))
+        temp_right = tn.Node(np.array([1.0], dtype=np.dtype_complex))
         edge_dict[self._right_e] ^ temp_right[0]
         total_right_trace =  node_dict[self._lambdas[-1]] @ temp_right
         self._total_right_traces = [total_right_trace.copy()]

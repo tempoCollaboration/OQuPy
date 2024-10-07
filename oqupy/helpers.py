@@ -13,13 +13,13 @@
 Handy helper functions.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+import matplotlib.pyplot as plt
 
 from oqupy.bath_correlations import BaseCorrelations
 from oqupy.tempo import TempoParameters
 
+from oqupy.backends.numerical_backend import np
 
 def plot_correlations_with_parameters(
         correlations: BaseCorrelations,

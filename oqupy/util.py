@@ -13,48 +13,64 @@
 Module for utilities.
 """
 
+from copy import copy
+from datetime import timedelta
 import sys
-import copy as cp
-from typing import Any, List, Optional, Text
 from threading import Timer
 from time import time
-from datetime import timedelta
+from typing import Any, List, Optional, Text
 
-import numpy as np
 from numpy import ndarray
 
 from oqupy.config import PROGRESS_TYPE
+
+from oqupy.backends.numerical_backend import np
 
 # -- numpy utils --------------------------------------------------------------
 
 def create_delta(
         tensor: ndarray,
-        index_scrambling: List[int]) -> ndarray:
-    """
-    Creates deltas in numpy tensor.
+        index_scrambling: List[int]
+    ) -> ndarray:
+    """Creates deltas in a tensor."""
+    # converting to NumPy-array for future-proof implementation
+    # see [this issue](https://github.com/google/jax/issues/4564)
+    # the shape of the tensor has n_in elements whereas
+    # index_scrambling has n_out elements
+    _shape = np.array(tensor.shape, dtype=int)
+    _idxs = np.array(index_scrambling, dtype=int)
 
-    .. warning::
-        This is a computationally inefficient method to perform the task.
+    # obtain the selection indices for each axis
+    _indices = get_indices(_shape, np.prod(_shape))
 
-    .. todo::
-        Make it better.
+    # scramble output tensor with elements of input tensor
+    return np.update(
+        array=np.zeros(tuple(_shape[_idxs]),
+                       dtype=tensor.dtype),
+        indices=tuple(_indices[_idxs]),
+        values=tensor[tuple(_indices)]
+    )
 
-    """
-    tensor_shape = tensor.shape
-    a = [0]*len(tensor_shape)
-
-    ret_shape = tuple(list(tensor_shape)[i] for i in index_scrambling)
-    ret_ndarray = np.zeros(ret_shape, dtype=tensor.dtype)
-
-    # emulating a do-while loop
-    do_while_condition = True
-    while do_while_condition:
-        tensor_indices = tuple(a)
-        ret_indices = tuple(a[i] for i in index_scrambling)
-        ret_ndarray[ret_indices] = tensor[tensor_indices]
-        do_while_condition = increase_list_of_index(a, tensor_shape)
-
-    return ret_ndarray
+def get_indices(
+        shape: ndarray,
+        n_iters: int,
+    ) -> ndarray:
+    """Obtain index matrix for scrambling."""
+    # obtain divisors for each axis as values equal to the
+    # number of elements contained upto the preceeding axes
+    # for e.g., shape [4, 5, 3] will result in [15, 3, 1]
+    divisors = np.cumprod(np.concatenate([
+        shape[1:],
+        np.array([1], dtype=int)
+    ])[::-1])[::-1]
+    # prepare an iteration matrix of shape (n_iters, n_in)
+    # to index each axis, for e.g., n_iters = 3 x 5 x 4
+    iteration_matrix = np.arange(0, n_iters).reshape(
+        (n_iters, 1)).repeat(shape.shape[0], 1)
+    # divide each element with the divisors obtained above
+    # and obtain the remainder modullo the size of each axis
+    # return the index matrix with shape (n_in, n_iters)
+    return ((iteration_matrix / divisors).astype(int) % shape).T
 
 def increase_list_of_index(
         a: List,
@@ -71,17 +87,13 @@ def increase_list_of_index(
 
 def add_singleton(
         tensor: ndarray,
-        index: Optional[int] = -1,
-        copy: Optional[bool] = True) -> ndarray:
+        index: Optional[int] = -1) -> ndarray:
     """Add a singleton to a numpy tensor. """
-    if copy:
-        ten = cp.copy(tensor)
-    else:
-        ten = tensor
-    shape_list = list(ten.shape)
+    # TODO: Check if the array is being copied twice
+    tensor = copy(tensor)
+    shape_list = list(tensor.shape)
     shape_list.insert(index, 1)
-    ten.shape = tuple(shape_list)
-    return ten
+    return tensor.reshape(shape_list)
 
 def is_diagonal_matrix(tensor: ndarray):
     """Check if matrix is diagonal """

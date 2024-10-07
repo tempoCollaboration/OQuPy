@@ -14,9 +14,10 @@ Tests for GibbsTEMPO.
 """
 
 import pytest
-import numpy as np
 
 import oqupy
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 
@@ -98,14 +99,14 @@ def test_gibbs_backend_A():
         gibbs_params)
     tempo_A.compute()
     gibbs_A = tempo_A.get_state()
-    np.testing.assert_almost_equal(gibbs_A, indep_sbm(alpha_A), decimal=8)
+    default_np.testing.assert_array_almost_equal(gibbs_A, indep_sbm(alpha_A), decimal=8)
 
 def test_gibbs_backend_B():
     gibbs_B = oqupy.gibbs_tempo_compute(
         system_B,
         bath_B,
         gibbs_params)
-    np.testing.assert_almost_equal(gibbs_B, indep_sbm(alpha_B), decimal=8)
+    default_np.testing.assert_array_almost_equal(gibbs_B, indep_sbm(alpha_B), decimal=8)
 
 @pytest.mark.skip(reason="See GitHub Issue#???")
 def test_gibbs_backend_C():
@@ -113,6 +114,6 @@ def test_gibbs_backend_C():
         system_C,
         bath_C,
         gibbs_params)
-    np.testing.assert_almost_equal(gibbs_C, transf(indep_sbm(alpha_C)), decimal=8)
+    default_np.testing.assert_array_almost_equal(gibbs_C, transf(indep_sbm(alpha_C)), decimal=8)
 
 # -----------------------------------------------------------------------------

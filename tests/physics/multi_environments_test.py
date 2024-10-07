@@ -13,10 +13,9 @@
 Test for multiple environments.
 """
 
-import numpy as np
-
 import oqupy
 
+from oqupy.backends.numerical_backend import default_np, np
 
 # -- prepare process tensors -------------------------------------------------
 
@@ -65,7 +64,7 @@ def test_multi_env_dynamics():
     dyns2 = oqupy.compute_dynamics(system,
                                    process_tensor=[pt2],
                                    initial_state=initial_state)
-    np.testing.assert_almost_equal(dyns.states,dyns2.states,decimal=5)
+    default_np.testing.assert_array_almost_equal(dyns.states,dyns2.states,decimal=5)
 
 
 def test_multi_env_gradient():
@@ -89,4 +88,4 @@ def test_multi_env_gradient():
                                 dt=dt,
                                 parameters=parameter_list)
     
-    np.testing.assert_almost_equal(gradsA[0],gradsB[0],decimal=5)
+    default_np.testing.assert_array_almost_equal(gradsA[0],gradsB[0],decimal=5)

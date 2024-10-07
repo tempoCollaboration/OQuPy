@@ -14,11 +14,10 @@ Tests for the time_evovling_mpo.pt_tempo module.
 """
 
 import pytest
-import numpy as np
 
 import oqupy
-from oqupy.system_dynamics import compute_correlations_nt
 
+from oqupy.backends.numerical_backend import np
 
 def test_compute_dynamics_with_field():
     start_time = 1
@@ -56,7 +55,7 @@ def test_compute_dynamics_with_field():
     assert isinstance(mean_field_dynamics, oqupy.dynamics. MeanFieldDynamics)
     assert len(mean_field_dynamics.times) == 1 + num_steps
     assert np.isclose(np.min(mean_field_dynamics.times), start_time)
-    assert type(mean_field_dynamics.fields[1]) == oqupy.config.NpDtype
+    assert mean_field_dynamics.fields[1].dtype == oqupy.config.NumPyDtypeComplex
     assert np.isclose(mean_field_dynamics.fields[0], initial_field)
     # check correct type of dynamics returned
     assert isinstance(mean_field_dynamics, oqupy.dynamics.MeanFieldDynamics)
@@ -65,7 +64,7 @@ def test_compute_dynamics_with_field():
     # check start_time used correctly
     assert np.isclose(np.min(mean_field_dynamics.times), start_time)
     # check complex type
-    assert type(mean_field_dynamics.fields[1]) == oqupy.config.NpDtype
+    assert mean_field_dynamics.fields[1].dtype == oqupy.config.NumPyDtypeComplex
     # check initial field recorded correctly
     assert np.isclose(mean_field_dynamics.fields[0], initial_field)
 
@@ -236,7 +235,7 @@ def test_compute_correlations_nt():
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
 
-    cor = compute_correlations_nt(system = system,
+    cor = oqupy.compute_correlations_nt(system = system,
                                       process_tensor=process_tensor,
                                       operators = operators,
                                       ops_times=ops_times,
@@ -250,12 +249,12 @@ def test_compute_correlations_nt():
     for i in range (len(ops_times)):
         assert len(cor[0][i]) == cor[1].shape[i]
     assert len(operators) == len(ops_times) == len(time_order)
-    assert type(cor[1][0][0][0][0]) == oqupy.config.NpDtype
+    assert cor[1][0][0][0][0].dtype == oqupy.config.NumPyDtypeComplex
 
     # input checks
     # no process tensor
     with pytest.raises(AssertionError):
-        compute_correlations_nt(system = system,
+        oqupy.compute_correlations_nt(system = system,
                                           process_tensor=None,
                                           operators = operators,
                                           ops_times=ops_times,
@@ -266,7 +265,7 @@ def test_compute_correlations_nt():
                                           progress_type = "bar")
     # time arguments and no. of operators don't match
     with pytest.raises(AssertionError):
-        compute_correlations_nt(system = system,
+        oqupy.compute_correlations_nt(system = system,
                                           process_tensor=process_tensor,
                                           operators = [sigma_x,
                                                         sigma_x, sigma_x],
@@ -278,7 +277,7 @@ def test_compute_correlations_nt():
                                           progress_type = "bar")
     # time argument exceeds process tensor length
     with pytest.raises(IndexError):
-        compute_correlations_nt(system = system,
+        oqupy.compute_correlations_nt(system = system,
                                           process_tensor=process_tensor,
                                           operators = operators,
                                           ops_times=[0*dt, 1*dt, 2*dt, 12*dt],
@@ -288,7 +287,7 @@ def test_compute_correlations_nt():
                                           start_time = start_time,
                                           progress_type = "bar")
     #no specified time step
-    cor=compute_correlations_nt(system = system,
+    cor=oqupy.compute_correlations_nt(system = system,
                                           process_tensor=process_tensor,
                                           operators = operators,
                                           ops_times=ops_times,
@@ -300,7 +299,7 @@ def test_compute_correlations_nt():
     assert cor[0][0][1]-cor[0][0][0] == process_tensor.dt
     #time out of bound
     with pytest.raises(IndexError):
-        cor=compute_correlations_nt(system = system,
+        cor=oqupy.compute_correlations_nt(system = system,
                                           process_tensor=process_tensor,
                                           operators = operators,
                                           ops_times=[0, 1, 2, 12],
@@ -311,7 +310,7 @@ def test_compute_correlations_nt():
                                           progress_type = "bar")
     #Wrong time argument type
     with pytest.raises(TypeError):
-        cor=compute_correlations_nt(system = system,
+        cor=oqupy.compute_correlations_nt(system = system,
                                           process_tensor=process_tensor,
                                           operators = operators,
                                           ops_times=["blah", 1.*dt, 2.*dt,
@@ -347,7 +346,7 @@ def test_compute_correlations_nt_B():
                                             end_time= dt * 10,
                                             parameters=tempo_parameters)
 
-    cor = compute_correlations_nt(system = system,
+    cor = oqupy.compute_correlations_nt(system = system,
                                       process_tensor=process_tensor,
                                       operators = operators,
                                       ops_times=ops_times,
@@ -359,7 +358,7 @@ def test_compute_correlations_nt_B():
     assert np.isnan(cor[1][0][0])
 
     ops_times = [5*dt, (4*dt, 6*dt)]
-    cor = compute_correlations_nt(system = system,
+    cor = oqupy.compute_correlations_nt(system = system,
                                       process_tensor=process_tensor,
                                       operators = operators,
                                       ops_times=ops_times,
@@ -369,6 +368,4 @@ def test_compute_correlations_nt_B():
                                       start_time = start_time,
                                       progress_type = "bar")
     assert np.isnan(cor[1][0][0])
-    assert type(cor[1][0][1]) == oqupy.config.NpDtype
-
-
+    assert cor[1][0][1].dtype == oqupy.config.NumPyDtypeComplex

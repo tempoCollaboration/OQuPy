@@ -15,11 +15,11 @@ Module containing a NodeArray extension to the TensorNetwork package.
 
 from typing import Any, List, Optional, Text, Tuple, Union
 
-import numpy as np
 import tensornetwork as tn
 from tensornetwork import Node
 from tensornetwork.backends.base_backend import BaseBackend
 
+from oqupy.backends.numerical_backend import np
 
 class NodeArray:
     """NodeArray class. """

@@ -12,18 +12,18 @@
 """
 Module on physical information on the bath and its coupling to the system.
 """
-from typing import Optional, Text
-from copy import copy
 
-import numpy as np
+from copy import copy
+from typing import Optional, Text
+
 from numpy import ndarray
 
-from oqupy.config import NpDtype
-from oqupy.config import DEFAULT_TOLERANCE_DEGENERACY
 from oqupy.bath_correlations import BaseCorrelations
 from oqupy.base_api import BaseAPIClass
+from oqupy.config import DEFAULT_TOLERANCE_DEGENERACY
 from oqupy.operators import commutator, acommutator
 
+from oqupy.backends.numerical_backend import np
 
 class Bath(BaseAPIClass):
     """
@@ -50,8 +50,11 @@ class Bath(BaseAPIClass):
         """Creates a Bath object. """
         # input check for coupling_operator.
         try:
-            tmp_coupling_operator = np.array(coupling_operator, dtype=NpDtype)
-            tmp_coupling_operator.setflags(write=False)
+            tmp_coupling_operator = np.array(coupling_operator, \
+                                             dtype=np.dtype_complex)
+            # set immutable if default NumPy array
+            if isinstance(tmp_coupling_operator, ndarray):
+                tmp_coupling_operator.setflags(write=False)
         except Exception as e:
             raise AssertionError("Coupling operator must be numpy array") \
                 from e
@@ -105,17 +108,17 @@ class Bath(BaseAPIClass):
         return "".join(ret)
 
     @property
-    def coupling_operator(self) -> np.ndarray:
+    def coupling_operator(self) -> ndarray:
         """The diagonalised system operator to which the bath couples. """
         return self._coupling_operator.copy()
 
     @property
-    def unitary_transform(self) -> np.ndarray:
+    def unitary_transform(self) -> ndarray:
         """The unitary that makes the coupling operator diagonal. """
         return self._unitary.copy()
 
     @property
-    def dimension(self) -> np.ndarray:
+    def dimension(self) -> ndarray:
         """Hilbert space dimension of the coupling operator. """
         return copy(self._dimension)
 
@@ -125,19 +128,19 @@ class Bath(BaseAPIClass):
         return copy(self._correlations)
 
     @property
-    def coupling_acomm(self) -> np.ndarray:
+    def coupling_acomm(self) -> ndarray:
         """Diagonal elements of the anti-commutator of the coupling
         operator. """
         return self._coupling_acomm.copy()
 
     @property
-    def coupling_comm(self) -> np.ndarray:
+    def coupling_comm(self) -> ndarray:
         """Diagonal elements of the commutator of the coupling
         operator. """
         return self._coupling_comm.copy()
 
     @property
-    def north_degeneracy_map(self) -> np.ndarray:
+    def north_degeneracy_map(self) -> ndarray:
         """Map to minimal set of indices for influence tensors in
         north-south direction according to simultaneous degeneracies in
         sums & differences of eigenvalues of coupling operator (minimal
@@ -146,7 +149,7 @@ class Bath(BaseAPIClass):
         return copy(self._north_degeneracy_map)
 
     @property
-    def west_degeneracy_map(self) -> np.ndarray:
+    def west_degeneracy_map(self) -> ndarray:
         """Map to minimal set of indices for influence tensors in
         west-east direction according to degeneracies in sums of
         eigenvalues of coupling operator (minimal dimension is number
@@ -160,5 +163,5 @@ def _row_degeneracy(matrix):
     indices mapping full space to non-degenerate rows (repeated
     indices indicate row degeneracy in the original matrix)."""
     mat = np.array(matrix).round(decimals=DEFAULT_TOLERANCE_DEGENERACY)
-    return_map = np.unique(mat.T,return_inverse=True,axis=0)[1]
+    return_map = np.unique(mat.T,return_inverse=True,axis=0)[1].flatten()
     return return_map

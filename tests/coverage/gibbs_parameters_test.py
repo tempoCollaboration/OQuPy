@@ -14,8 +14,6 @@ Tests for the TempoParameters module.
 """
 
 import pytest
-import numpy as np
-
 
 from oqupy import tempo
 

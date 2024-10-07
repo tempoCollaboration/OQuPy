@@ -14,9 +14,10 @@ Tests for the Tempo module.
 """
 
 import pytest
-import numpy as np
 
 import oqupy
+
+from oqupy.backends.numerical_backend import np
 
 def test_tempo():
     start_time = -0.3

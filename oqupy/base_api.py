@@ -17,7 +17,6 @@ from typing import Optional, Text
 
 from oqupy.config import SEPERATOR
 
-
 class BaseAPIClass:
     """
     Base class for API objects

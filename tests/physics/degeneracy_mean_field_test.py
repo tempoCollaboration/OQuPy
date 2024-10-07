@@ -13,10 +13,9 @@
 Tests degeneracy checking with mean field TEMPO.
 """
 
-import pytest
-import numpy as np
-
 import oqupy
+
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------
@@ -226,7 +225,7 @@ def test_degeneracy_exact():
         unique=True)
     tempo_A.compute(end_time=t_end_A)
     dyn_A = tempo_A.get_dynamics()
-    np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
 
 def test_degeneracy_compare():
     tempo_params_B = oqupy.TempoParameters(
@@ -251,8 +250,7 @@ def test_degeneracy_compare():
     tempo_non_unique.compute(end_time=t_end_B)
     dyn_unique = tempo_unique.get_dynamics()
     dyn_non_unique = tempo_non_unique.get_dynamics()
-    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
-                                   decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_unique.states, dyn_non_unique.states, decimal=4)
 
 def test_degeneracy_1d():
     tempo_params_C = oqupy.TempoParameters(
@@ -277,8 +275,7 @@ def test_degeneracy_1d():
     tempo_non_unique.compute(end_time=t_end_C)
     dyn_unique = tempo_unique.get_dynamics()
     dyn_non_unique = tempo_non_unique.get_dynamics()
-    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
-                                   decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_unique.states, dyn_non_unique.states, decimal=4)
 
 def test_mean_field_degeneracy_compare():
     tempo_params_D = oqupy.TempoParameters(
@@ -307,10 +304,8 @@ def test_mean_field_degeneracy_compare():
     _, field_unique = dyn1.field_expectations()
     dyn_non_unique = dyn2.system_dynamics[0]
     _, field_non_unique = dyn2.field_expectations()
-    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
-                                   decimal=4)
-    np.testing.assert_almost_equal(field_unique, field_non_unique,
-                                   decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_unique.states, dyn_non_unique.states, decimal=4)
+    default_np.testing.assert_array_almost_equal(field_unique, field_non_unique, decimal=4)
     
 def test_pt_tempo_degeneracy_compare():
     tempo_params_E = oqupy.TempoParameters(
@@ -336,6 +331,5 @@ def test_pt_tempo_degeneracy_compare():
     dyn_non_unique = oqupy.compute_dynamics(system=system_E, 
                            initial_state=initial_state_E,
                            process_tensor=pt_non_unique)
-    np.testing.assert_almost_equal(dyn_unique.states, dyn_non_unique.states,
-                                   decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_unique.states, dyn_non_unique.states, decimal=4)
 # -----------------------------------------------------------------------------

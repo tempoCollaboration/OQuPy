@@ -13,11 +13,9 @@
 Tests for TEMPO and PT-TEMPO.
 """
 
-import pytest
-import numpy as np
-
 import oqupy
 
+from oqupy.backends.numerical_backend import default_np, np
 
 # -----------------------------------------------------------------------------
 # -- Test A: Spin boson model -------------------------------------------------
@@ -74,7 +72,7 @@ def test_tempo_backend_A():
         start_time=0.0)
     tempo_A.compute(end_time=t_end_A)
     dyn_A = tempo_A.get_dynamics()
-    np.testing.assert_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn_A.states[-1], rho_A, decimal=4)
 
 def test_tensor_network_pt_tempo_backend_A():
     tempo_params_A = oqupy.TempoParameters(
@@ -91,6 +89,6 @@ def test_tensor_network_pt_tempo_backend_A():
         system=system_A,
         process_tensor=pt,
         initial_state=initial_state_A)
-    np.testing.assert_almost_equal(dyn.states[-1], rho_A, decimal=4)
+    default_np.testing.assert_array_almost_equal(dyn.states[-1], rho_A, decimal=4)
 
 # -----------------------------------------------------------------------------
