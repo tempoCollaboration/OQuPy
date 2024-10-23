@@ -72,19 +72,6 @@ def get_indices(
     # return the index matrix with shape (n_in, n_iters)
     return ((iteration_matrix / divisors).astype(int) % shape).T
 
-def increase_list_of_index(
-        a: List,
-        shape: List,
-        index: Optional[int] = -1) -> bool:
-    """Circle through a list of indices. """
-    a[index] += 1
-    if a[index] >= shape[index]:
-        if index == -len(shape):
-            return False
-        a[index] = 0
-        return increase_list_of_index(a, shape, index-1)
-    return True
-
 def add_singleton(
         tensor: ndarray,
         index: Optional[int] = -1) -> ndarray:

@@ -29,7 +29,7 @@ from oqupy.backends.numerical_backend import np, la
 
 os.environ['NUMPY_EXPERIMENTAL_ARRAY_FUNCTION'] = '0'
 
-class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
+class TIBaseBackend: # TODO: translate this numpy code into tensornetwork
     """
     Backend class for TEMPO.
 
@@ -195,7 +195,7 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
 
 
     def initialise(self, step=None, mps=None) -> Tuple[int, ndarray]:
-        """ ToDo """
+        """ TODO """
         if mps is not None:
             self._mps = mps
             self._step = step
@@ -216,7 +216,7 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
             self._step = 1
         return self._step, self.data[-1]
 
-    def compute_step(self) -> Tuple[int, ndarray]: # ToDo: make readout optional
+    def compute_step(self) -> Tuple[int, ndarray]: # TODO: make readout optional
         """
         Takes a step in the TEMPO tensor network computation.
 
@@ -264,7 +264,7 @@ class TIBaseBackend: # ToDo: translate this numpy code into tensornetwork
         # turn east leg at last site into north leg at new last site
         self._mps.append(self._cap)
 
-        if len(self._mps) > self._kmax + 1:  # ToDo: check this
+        if len(self._mps) > self._kmax + 1:  # TODO: check this
             # remove first site, turn into matrix
             end = self._mps.pop(0).sum(1)
             # np.dot into new first site
@@ -378,7 +378,7 @@ class BaseTempoBackend:
         return self._step
 
     def initialize_mps_mpo(self):
-        """ToDo"""
+        """TODO"""
         self._initial_state = copy(self._initial_state).reshape(-1)
 
         self._super_u = op.left_right_super(
@@ -588,7 +588,7 @@ class BaseTempoBackend:
 
 class TempoBackend(BaseTempoBackend):
     """
-    ToDo
+    TODO
     """
 
     def __init__(
@@ -620,7 +620,7 @@ class TempoBackend(BaseTempoBackend):
 
     def initialize(self) -> Tuple[int, ndarray]:
         """
-        ToDo
+        TODO
         """
         self._step = 0
         self.initialize_mps_mpo()
@@ -629,7 +629,7 @@ class TempoBackend(BaseTempoBackend):
 
     def compute_step(self) -> Tuple[int, ndarray]:
         """
-        ToDo
+        TODO
         """
         self._step += 1
         prop_1, prop_2 = self._propagators(self._step - 1)

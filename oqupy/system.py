@@ -555,7 +555,7 @@ class ParameterizedSystem(BaseSystem):
             dt: float,
             parameters: ndarray) -> Callable[[int], Tuple[ndarray,ndarray]]:
         """
-        ToDo
+        TODO
         """
         def propagators(step: int):
             """Create the system propagators (first and second half) for
@@ -597,7 +597,7 @@ class ParameterizedSystem(BaseSystem):
             dt: float,
             parameters: ndarray) -> Callable[[int],Tuple[ndarray,ndarray]]:
         """
-        ToDo
+        TODO
         """
         if self._propagator_derivatives is not None:
             def propagator_derivatives_a(step: int):
