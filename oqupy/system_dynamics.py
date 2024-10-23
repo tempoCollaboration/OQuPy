@@ -559,7 +559,7 @@ def _compute_dynamics_input_parse(
 
 
 def _get_caps(process_tensors: List[BaseProcessTensor], step: int):
-    """ToDo """
+    """TODO """
     caps = []
     for i in range(len(process_tensors)):
         try:
@@ -576,7 +576,7 @@ def _get_caps(process_tensors: List[BaseProcessTensor], step: int):
 
 
 def _get_pt_mpos(process_tensors: List[BaseProcessTensor], step: int):
-    """ToDo """
+    """TODO """
     pt_mpos = []
     for i in range(len(process_tensors)):
         pt_mpo = process_tensors[i].get_mpo_tensor(step)
@@ -628,7 +628,7 @@ def _get_pt_mpos_backprop(mpo_list:ndarray, step: int):
 
 
 def _apply_system_superoperator(current_node, current_edges, sup_op):
-    """ToDo """
+    """TODO """
     if sup_op is None:
         return current_node, current_edges
     sup_op_node = tn.Node(sup_op.T)
@@ -640,7 +640,7 @@ def _apply_system_superoperator(current_node, current_edges, sup_op):
 
 
 def _apply_caps(current_node, current_edges, caps):
-    """ToDo """
+    """TODO """
     node_dict, edge_dict = tn.copy([current_node])
     for current_edge, cap in zip(current_edges[:-1], caps):
         cap_node = tn.Node(np.array(cap))

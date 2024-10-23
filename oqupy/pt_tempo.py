@@ -150,7 +150,7 @@ class PtTempo(BaseAPIClass):
         self._init_pt_tempo_backend()
 
     def _init_simple_process_tensor(self):
-        """ToDo. """
+        """TODO. """
         unitary = self._bath.unitary_transform
         if not np.allclose(unitary, np.identity(self._dimension)):
             transform_in = left_right_super(unitary.conjugate().T,
@@ -169,7 +169,7 @@ class PtTempo(BaseAPIClass):
             description=self.description)
 
     def _init_file_process_tensor(self, filename, overwrite):
-        """ToDo. """
+        """TODO. """
         unitary = self._bath.unitary_transform
         if not np.allclose(unitary, np.identity(self._dimension)):
             transform_in = left_right_super(unitary.conjugate().T,

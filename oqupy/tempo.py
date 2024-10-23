@@ -579,7 +579,7 @@ class GibbsTempo(BaseAPIClass):
 
 
         unitary_transform = self._bath.unitary_transform
-        # ToDo: Unitary transform is not used. Check that GibbsTempo also works
+        # TODO: Unitary transform is not used. Check that GibbsTempo also works
         #       with non-diagonal coupling operators!!!
         if not np.allclose(unitary_transform,np.identity(self.dimension)):
             raise NotImplementedError(

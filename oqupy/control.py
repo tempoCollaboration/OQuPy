@@ -112,7 +112,7 @@ class Control(BaseAPIClass):
             control_fct: Callable[[ndarray, float], ndarray],
             post: Optional[bool] = False) -> None:
         """
-        ToDo
+        TODO
         """
         raise NotImplementedError()
 

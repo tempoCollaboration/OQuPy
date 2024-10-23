@@ -288,7 +288,7 @@ class PtTempoBackend:
         return self._step < self._num_steps
 
     def get_mpo_tensor(self, step: int) -> ndarray:
-        """ToDo. """
+        """TODO. """
         n = len(self._mps.nodes)
         assert n == self._num_steps
         assert step < n
