@@ -1,6 +1,7 @@
 # Development
 
 The following features are under active development:
+The current development branch "dev/jax" implements
 
 * [Experimental Support for GPUs/TPUs](#experimental-support-for-gpustpus)
 
