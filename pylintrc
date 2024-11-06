@@ -79,6 +79,7 @@ disable=raw-checker-failed,
         consider-using-f-string,          # GEFux: added for development
         too-many-arguments,               # piperfw: added for development
         too-many-positional-arguments,    # piperfw: added 2024-09-27
+        import-outside-toplevel,          # sampreet: added 2024-10-24 for JAX
         possibly-used-before-assignment,  # GEFux: added by hand
         unnecessary-lambda-assignment     # GEFux: added by hand
 

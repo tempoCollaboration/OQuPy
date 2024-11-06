@@ -178,7 +178,6 @@ class :class:`oqupy.pt_tebd.PtTebd`
     dictionary.
 
 
-
 Results
 -------
 
@@ -207,3 +206,6 @@ module :mod:`oqupy.operators`
 function :func:`oqupy.helpers.plot_correlations_with_parameters`
   A helper function to plot an auto-correlation function and the sampling
   points given by a set of parameters for a TEMPO computation.
+
+function :func:`oqupy.backends.enable_jax_features`
+  Option to use JAX to support multiple device backends (CPUs/GPUs/TPUs).

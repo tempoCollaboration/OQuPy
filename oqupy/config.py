@@ -15,9 +15,8 @@ Module to define global configuration for the time_evovling_mpo package.
 
 # numerical backend
 import numpy as default_np
-import scipy.linalg as default_la
-NUMERICAL_BACKEND_NUMPY = default_np
-NUMERICAL_BACKEND_LINALG = default_la
+BACKEND_ENV_VAR = 'OQUPY_BACKEND'
+DEFAULT_BACKEND = 'numpy'
 NumPyDtypeComplex = default_np.complex128   # earlier NpDtype
 NumPyDtypeFloat = default_np.float64        # earlier NpDtypeReal
 
