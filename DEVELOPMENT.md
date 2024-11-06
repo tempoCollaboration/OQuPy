@@ -21,8 +21,8 @@ without explicitly importing JAX-based libraries.
 
 To enable experimental features switch to the `dev/jax` branch and use
 ```python
-from oqupy.backends import enable_gpu_features
-enable_gpu_features()
+from oqupy.backends import enable_jax_features
+enable_jax_features()
 ```
 
 ### Contributing Guidelines
