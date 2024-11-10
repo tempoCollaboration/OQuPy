@@ -8,8 +8,8 @@ sys.path.insert(0, '.')
 import oqupy
 from oqupy.backends import enable_jax_features
 # import NumPy from numerical_backend
-from oqupy.backends.numerical_backend import np
-enable_jax_features()
+#from oqupy.backends.numerical_backend import np
+#enable_jax_features()
 
 import matplotlib.pyplot as plt
 sigma_x = oqupy.operators.sigma("x")
@@ -39,5 +39,5 @@ print(s_z)
 plt.plot(t, s_z, label=r'$\alpha=0.3$')
 plt.xlabel(r'$t\,\Omega$')
 plt.ylabel(r'$\langle\sigma_z\rangle$')
-#plt.savefig('simple_dynamics.png')
-plt.show()
+plt.savefig('simple_dynamics_jax.png')
+#plt.show()
