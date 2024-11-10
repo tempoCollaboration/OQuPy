@@ -24,6 +24,8 @@ To enable experimental features switch to the `dev/jax` branch and use
 from oqupy.backends import enable_jax_features
 enable_jax_features()
 ```
+Alternatively, the `OQUPY_BACKEND` environmental variable may be set to `jax` to
+initialize the jax backend by default.
 
 ### Contributing Guidelines
 
