@@ -1,6 +1,6 @@
 # Development
 
-The following feautres are under active development:
+The following features are under active development:
 
 * [Experimental Support for GPUs/TPUs](#experimental-support-for-gpustpus)
 
