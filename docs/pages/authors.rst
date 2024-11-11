@@ -4,7 +4,7 @@ Authors & Acknowledgements
 -  Lead developer since 2020: `Gerald E.
    Fux <https://github.com/gefux>`__ (gerald.e.fux@gmail.com)
 -  Co-lead developer since 2022: `Piper
-   Fowler-Wright <https://github.com/piperfw>`__ (pfw1@st-andrews.ac.uk)
+   Fowler-Wright <https://github.com/piperfw>`__ (piperfw@gmail.com)
 
 Major code contributions
 ------------------------
