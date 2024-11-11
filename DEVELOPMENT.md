@@ -1,7 +1,11 @@
 # Development
 
+<<<<<<< HEAD
 The following features are under active development:
 The current development branch "dev/jax" implements
+=======
+The following feautres are under active development:
+>>>>>>> 50997c1 (manual sync main)
 
 * [Experimental Support for GPUs/TPUs](#experimental-support-for-gpustpus)
 
