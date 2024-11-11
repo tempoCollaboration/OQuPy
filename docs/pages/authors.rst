@@ -9,6 +9,11 @@ Authors & Acknowledgements
 Major code contributions
 ------------------------
 
+**Experimental features**
+
+- `Sampreet Kalita <https://github.com/Sampreet>`__: JAX numerical backend for
+  GPU/TPU support
+
 **Version 0.5.0**
 
 - `Aidan Strathearn <https://github.com/aidanstrathearn>`__: Gibbs state TEMPO [Chiu2022]. 
