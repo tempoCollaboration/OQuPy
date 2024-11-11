@@ -29,6 +29,9 @@ The current setup uses:
 * [tox](https://tox.readthedocs.io) ... for testing with different environments.
 * [travis](https://travis-ci.com) ... for continuous integration.
 
+We are actively incorporating additional features to OQuPy,
+details of which can be found in [DEVELOPMENT.md](./DEVELOPMENT.md).
+
 ## How to contribute to the code or documentation
 Please use the
 [Issues](https://github.com/tempoCollaboration/OQuPy/issues) and

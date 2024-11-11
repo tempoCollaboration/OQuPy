@@ -112,6 +112,7 @@ Furthermore, OQuPy implements methods to ...
    :caption: Development
 
    pages/contributing
+   pages/jax_features
    pages/authors
    pages/how_to_cite
    pages/sharing
