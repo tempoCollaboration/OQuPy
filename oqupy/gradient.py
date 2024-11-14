@@ -33,6 +33,7 @@ def state_gradient(
         initial_state: ndarray,
         target_derivative: Union[Callable, ndarray],
         process_tensors: List[BaseProcessTensor],
+        num_steps,
         parameters: ndarray,
         start_time: Optional[float] = 0.0,
         progress_type: Optional[Text] = None) -> Dict:
@@ -75,7 +76,7 @@ def state_gradient(
     """
     check_isinstance(parameters, ndarray, 'parameters')
 
-    num_steps = len(process_tensors[0])
+    #num_steps = len(process_tensors[0])
     dt = process_tensors[0].dt
     num_parameters = parameters.shape[1]
 
