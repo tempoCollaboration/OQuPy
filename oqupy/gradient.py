@@ -33,9 +33,9 @@ def state_gradient(
         initial_state: ndarray,
         target_derivative: Union[Callable, ndarray],
         process_tensors: List[BaseProcessTensor],
-        num_steps,
         parameters: ndarray,
         start_time: Optional[float] = 0.0,
+        num_steps: Optional[int]=None,
         progress_type: Optional[Text] = None) -> Dict:
     """
     Compute system dynamics and gradient of an objective function Z with
@@ -76,7 +76,6 @@ def state_gradient(
     """
     check_isinstance(parameters, ndarray, 'parameters')
 
-    #num_steps = len(process_tensors[0])
     dt = process_tensors[0].dt
     num_parameters = parameters.shape[1]
 
@@ -99,7 +98,7 @@ def state_gradient(
         adjoint_tensor=grad_prop,
         dprop_dparam=get_prop_derivatives,
         propagators=get_half_props,
-        num_steps=num_steps,
+        num_steps=grad_prop.__len__(),
         num_parameters=num_parameters,
         progress_type=progress_type)
 
@@ -243,6 +242,9 @@ def compute_gradient_and_dynamics(
 
     num_envs = len(process_tensors)
 
+    if num_steps is None:
+        num_steps=len(process_tensors[0])
+
     # -- prepare propagators --
     propagators = system.get_propagators(dt, parameters)
 
@@ -262,6 +264,7 @@ def compute_gradient_and_dynamics(
     #  Initial state including the bond legs to the environments with:
     #    edges 0, 1, .., num_envs-1    are the bond legs of the environments
     #    edge  -1                      is the state leg
+
     initial_ndarray = initial_state.reshape(hs_dim**2)
     initial_ndarray.shape = tuple([1]*num_envs+[hs_dim**2])
     current_node = tn.Node(initial_ndarray)
