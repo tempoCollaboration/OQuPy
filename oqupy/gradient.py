@@ -98,7 +98,7 @@ def state_gradient(
         adjoint_tensor=grad_prop,
         dprop_dparam=get_prop_derivatives,
         propagators=get_half_props,
-        num_steps=grad_prop.__len__(),
+        num_steps=len(grad_prop),
         num_parameters=num_parameters,
         progress_type=progress_type)
 
