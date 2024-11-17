@@ -348,7 +348,8 @@ class SimpleProcessTensor(BaseProcessTensor):
             raise IndexError("Process tensor index out of bound. ")
         tensor = self._mpo_tensors[step]
         if len(tensor.shape) == 3:
-            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            #tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            tensor = create_delta_lastindex(tensor)
         if transformed is False:
             return tensor
         if self._transform_in is not None:
