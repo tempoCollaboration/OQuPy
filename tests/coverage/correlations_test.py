@@ -158,7 +158,9 @@ def test_matsubara_custom_s_d_bad_input():
                                                   delta=0.1,
                                                   shape=shape,
                                                   matsubara=True)
-
+    correlations = CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", temperature=1.0, alt_integrator=True)
+    with pytest.raises(ValueError):
+        correlations.correlation_2d_integral(time_1=2, delta=0.1, shape='upper-triangle', matsubara=True, alt_integrator=True)
 
 
 
@@ -177,6 +179,12 @@ def test_custom_s_d_bad_input():
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
                  temperature=0.0, alt_integrator="bla")
+    with pytest.raises(AssertionError):
+        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
+                 temperature=0.0, num_oscillations=-1.0)
+    with pytest.raises(AssertionError):
+        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
+                temperature=0.0, num_oscillations=lambda t: "a")
     with pytest.raises(ValueError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="hard", \
                  temperature=-2.0)

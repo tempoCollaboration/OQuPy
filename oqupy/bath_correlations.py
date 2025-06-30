@@ -390,6 +390,21 @@ class CustomSD(BaseCorrelations):
         Whether or not to use a sine/cosine weighted version of the
         integrals that could be better suited if you're encountering
         numerical difficulties, especially for long memory times.
+        The integral computed in `eta_function` is cut in two: one
+        handling the divergent part near 0 using the default integrator
+        and the other taking care of the fast oscillations at angular
+        frequency :math:`\tau` using an appropriate integration scheme.
+        The cutoff point can be modified with `num_oscillations`.
+    num_oscillations: int, float, callable
+        When using `alt_integrator`, specifies how many oscillations to keep
+        for the non-weighted part of the integral of `eta_function`. This should
+        be either an integer or specified as a function of :math:`\tau`. To help
+        choose: the higher this number is, the more the default integrator will
+        struggle to integrate the non-weighted part. The lower it is, the more
+        the weighted integrators will struggle to integrate the near divergent
+        part close to 0. A constant value is a good choice for most use cases.
+        Otherwise, it is possible to input a function to target possible issues
+        at specific memory times :math:`\tau`.
     name: str
         An optional name for the correlations.
     description: str
@@ -403,6 +418,8 @@ class CustomSD(BaseCorrelations):
             cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
             alt_integrator: Optional[bool] = False,
+            num_oscillations: Optional[
+                Union[int, float, Callable[[float], float]]] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a CustomFunctionSD (spectral density) object. """
@@ -441,6 +458,24 @@ class CustomSD(BaseCorrelations):
         # input check for alt_integrator
         assert isinstance(alt_integrator, bool)
         self._alt_integrator = alt_integrator
+
+        # create the first_cutoff function and input check for num_oscillations
+        if num_oscillations is None:
+            num_oscillations = 3
+        if isinstance(num_oscillations, (int, float)) and num_oscillations > 0:
+            tmp_n = num_oscillations
+            # This form is a step version of the first cutoff which prevents
+            # useless computations of _truncated_eta
+            self.first_cutoff = lambda t: 2*np.pi*tmp_n/(1+1/tmp_n)**np.floor(
+                    np.log(t)/np.log(1+1/tmp_n))
+        else:
+            try:
+                float(num_oscillations(1.0))
+            except Exception as e:
+                raise AssertionError("num_oscillations must be a positive" \
+                    "float, int or a function returning floats or ints.") from e
+            self.first_cutoff = lambda t: max(min(2*np.pi*num_oscillations(t)/t,
+                                                  self.cutoff), 0.0)
 
         self._cutoff_function = \
             lambda omega: CUTOFF_DICT[self.cutoff_type](omega, self.cutoff)
@@ -608,7 +643,7 @@ class CustomSD(BaseCorrelations):
             matsubara: Optional[bool] = False) -> ArrayLike:
         r"""
         :math:`\eta` function associated to the spectral density at the
-        given temperature :math:`T`
+        given temperature :math:`T` as given in [Strathearn2017]
 
         .. math::
 
@@ -685,7 +720,7 @@ class CustomSD(BaseCorrelations):
                         inte = self._spectral_density(w) / w ** 2
                     return inte
 
-            omega_tilde = self.cutoff/int(self.cutoff*tau/10+2)
+            omega_tilde = self.first_cutoff(tau)
 
             integral = _complex_integral(integrand,
                                          a=0.0,
@@ -738,7 +773,7 @@ class CustomSD(BaseCorrelations):
             shape: Optional[Text] = 'square',
             epsrel: Optional[float] = INTEGRATE_EPSREL,
             subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-            alt_integrator: Optional[bool] = False,
+            alt_integrator: Optional[Union[bool, None]] = None,
             matsubara: Optional[bool] = False) -> complex:
         r"""
         2D integrals of the correlation function
@@ -851,6 +886,21 @@ class PowerLawSD(CustomSD):
         Whether or not to use a sine/cosine weighted version of the
         integrals that could be better suited if you're encountering
         numerical difficulties, especially for long memory times.
+        The integral computed in `eta_function` is cut in two: one
+        handling the divergent part near 0 using the default integrator
+        and the other taking care of the fast oscillations at angular
+        frequency :math:`\tau` using an appropriate integration scheme.
+        The cutoff point can be modified with `num_oscillations`.
+    num_oscillations: int, float, callable
+        When using `alt_integrator`, specifies how many oscillations to keep
+        for the non-weighted part of the integral of `eta_function`. This should
+        be either an integer or specified as a function of :math:`\tau`. To help
+        choose: the higher this number is, the more the default integrator will
+        struggle to integrate the non-weighted part. The lower it is, the more
+        the weighted integrators will struggle to integrate the near divergent
+        part close to 0. A constant value is a good choice for most use cases.
+        Otherwise, it is possible to input a function to target possible issues
+        at specific memory times :math:`\tau`.
     name: str
         An optional name for the correlations.
     description: str
@@ -865,6 +915,8 @@ class PowerLawSD(CustomSD):
             cutoff_type: Text = 'exponential',
             temperature: Optional[float] = 0.0,
             alt_integrator: Optional[bool] = False,
+            num_oscillations: Optional[
+                Union[int, float, Callable[[float], float]]] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a StandardSD (spectral density) object. """
