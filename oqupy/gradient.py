@@ -36,7 +36,8 @@ def state_gradient(
         parameters: ndarray,
         start_time: Optional[float] = 0.0,
         num_steps: Optional[int]=None,
-        progress_type: Optional[Text] = None) -> Dict:
+        progress_type: Optional[Text] = None,
+        only_dynamics: Optional[bool] = False) -> Dict:
     """
     Compute system dynamics and gradient of an objective function Z with
     respect to a parameterized System for a given set of control
@@ -88,26 +89,34 @@ def state_gradient(
         start_time=start_time,
         dt=dt,
         num_steps=num_steps,
-        progress_type=progress_type)
+        progress_type=progress_type,
+        only_dynamics=only_dynamics)
 
+    if only_dynamics:
+        return_dict = { 
+            'final_state':dynamics.states[-1],
+            'gradprop':None,
+            'gradient':None,
+            'dynamics':dynamics
+        }
+    else:
+        get_half_props= system.get_propagators(dt,parameters)
+        get_prop_derivatives = system.get_propagator_derivatives(dt,parameters)
 
-    get_half_props= system.get_propagators(dt,parameters)
-    get_prop_derivatives = system.get_propagator_derivatives(dt,parameters)
+        final_derivs = _chain_rule(
+            adjoint_tensor=grad_prop,
+            dprop_dparam=get_prop_derivatives,
+            propagators=get_half_props,
+            num_steps=len(grad_prop),
+            num_parameters=num_parameters,
+            progress_type=progress_type)
 
-    final_derivs = _chain_rule(
-        adjoint_tensor=grad_prop,
-        dprop_dparam=get_prop_derivatives,
-        propagators=get_half_props,
-        num_steps=len(grad_prop),
-        num_parameters=num_parameters,
-        progress_type=progress_type)
-
-    return_dict = {
-        'final_state':dynamics.states[-1],
-        'gradprop':grad_prop,
-        'gradient':final_derivs,
-        'dynamics':dynamics
-    }
+        return_dict = {
+            'final_state':dynamics.states[-1],
+            'gradprop':grad_prop,
+            'gradient':final_derivs,
+            'dynamics':dynamics
+        }
 
     return return_dict
 
@@ -177,7 +186,8 @@ def compute_gradient_and_dynamics(
         num_steps: Optional[int] = None,
         control: Optional[Control] = None,
         record_all: Optional[bool] = True,
-        progress_type: Optional[Text] = None) -> Tuple[List, Dynamics]:
+        progress_type: Optional[Text] = None,
+        only_dynamics: Optional[bool] = False) -> Tuple[List, Dynamics]:
     """
     Compute some objective function and calculate its gradient w.r.t.
     some control parameters, accounting for interaction with an environment
@@ -211,7 +221,9 @@ def compute_gradient_and_dynamics(
     progress_type: str (default = None)
         The progress report type during the computation. Types are:
         {``silent``, ``simple``, ``bar``}. If `None` then
-        the default progress type is used.
+        the default progress type is used.#
+    only_dynamics: bool (default = False)
+        Set to true to compute only the dynamics, target_derivative is not used in this case.
 
     Returns:
     --------
@@ -336,6 +348,9 @@ def compute_gradient_and_dynamics(
         times = [start_time + len(states)*dt]
 
     dynamics = Dynamics(times=list(times),states=states)
+
+    if only_dynamics:
+        return None,dynamics
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # ~~~~~ Backpropagation ~~~~~~
