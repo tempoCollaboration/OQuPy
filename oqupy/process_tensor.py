@@ -445,7 +445,9 @@ def create_delta_lastindex(
 
 class TTInvariantProcessTensor(BaseProcessTensor):
     """
-    Class to use the time-translation invariant process tensors created by the iTEBD code
+    Class to use the time-translation invariant process tensors created by the iTEBD code.
+    Added the possibility of setting an (artificial) 'length' variable, to make this behave like
+    the normal process tensor class. 
     """
     def __init__(
             self,
@@ -467,6 +469,7 @@ class TTInvariantProcessTensor(BaseProcessTensor):
         self._first_mpo_tensor.shape=tuple([1]+list(self._first_mpo_tensor.shape))
         self._mpo_tensor = create_delta_lastindex(self._mpo_tensor) 
         self._first_mpo_tensor = create_delta_lastindex(self._first_mpo_tensor)
+        self._len=None 
 
         tensor=self._first_mpo_tensor
         if transform_in is not None:
@@ -494,10 +497,16 @@ class TTInvariantProcessTensor(BaseProcessTensor):
             name,
             description)
 
+    def set_length(self,length):
+        self._len=length
+
     def __len__(self) -> int:
         """Length of process tensor. """
         """This is not relevant for the TTI case but required by the abstract class"""
-        raise NotImplementedError
+        if self._len is not None:
+            return self._len
+        else:
+            raise NotImplementedError
         #return len(self._mpo_tensors)
 
     @property
