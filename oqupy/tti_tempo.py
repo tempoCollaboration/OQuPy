@@ -10,30 +10,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module for the process tensor time evolving matrix product operator algorithm
-(PT-TEMPO). This module is based on [Strathearn2018], [Pollock2018],
-[Jorgensen2019], and [Fux2021].
+Module for the time translational invariant time evolving matrix product
+operator algorithm (TTI-TEMPO). This module is based on [Link2024].
 
-**[Strathearn2018]**
-A. Strathearn, P. Kirton, D. Kilda, J. Keeling and
-B. W. Lovett,  *Efficient non-Markovian quantum dynamics using
-time-evolving matrix product operators*, Nat. Commun. 9, 3322 (2018).
+**[Link2024]**
+V. Link, H. Tu, and W. T. Strunz, *Open Quantum System Dynamics from Infinite
+Tensor Network Contraction*, `Phys. Rev. Lett. 132, 200403
+<https://doi.org/10.1103/PhysRevLett.132.200403>`__ (2024).
 
-**[Pollock2018]**
-F.  A.  Pollock,  C.  Rodriguez-Rosario,  T.  Frauenheim,
-M. Paternostro, and K. Modi, *Non-Markovian quantumprocesses: Complete
-framework and efficient characterization*, Phys. Rev. A 97, 012127 (2018).
-
-**[Jorgensen2019]**
-M. R. Jørgensen and F. A. Pollock, *Exploiting the causal tensor network
-structure of quantum processes to efficiently simulate non-markovian path
-integrals*, Phys. Rev. Lett. 123, 240602 (2019)
-
-**[Fux2021]**
-G. E. Fux, E. Butler, P. R. Eastham, B. W. Lovett, and
-J. Keeling, *Efficient exploration of Hamiltonian parameter space for
-optimal control of non-Markovian open quantum systems*, Phys. Rev. Lett. 126,
-200401 (2021).
+Original code isin /oqupy/backends/itebd_tempo.py taken from 
+https://github.com/val-link/iTEBD-TEMPO.git
+# Implementation of iTEBD-TEMPO
+# Author: Valentin Link (valentin.link@tu-dresden.de)
+# Original code from https://github.com/val-link/iTEBD-TEMPO.git
+# Modified by Paul Eastham (easthamp@tcd.ie) so that the iTEBD-TEMPO class uses the OQuPy BathCorrelations class 
+# to define the bath correlations rather than the bath correlation function itself. 
+# Please cite the corresponding publication: https://doi.org/10.1103/PhysRevLett.132.200403.
 """
 
 from typing import Dict, Optional, Text, Union
@@ -56,7 +48,7 @@ from oqupy.tempo import influence_matrix
 from oqupy.operators import left_right_super
 from oqupy.util import get_progress
 
-from oqupy.iTEBD_TEMPO_useoqupybath import iTEBD_TEMPO_oqupy
+from oqupy.backends.itebd_tempo import iTEBD_TEMPO_oqupy
 from oqupy.process_tensor import TTInvariantProcessTensor
 
 class TTITempo():

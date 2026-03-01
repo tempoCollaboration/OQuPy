@@ -35,7 +35,7 @@ from oqupy.config import NpDtype
 from oqupy import util
 from oqupy.version import __version__
 
-from oqupy.iTEBD_TEMPO_useoqupybath import iTEBD_TEMPO_oqupy
+from oqupy.backends.itebd_tempo import iTEBD_TEMPO_oqupy
 from ncon import ncon
 
 
