@@ -10,11 +10,10 @@ from scipy.integrate import dblquad
 from scipy.linalg import expm, norm, svd
 from scipy.sparse.linalg import eigs
 from typing import Callable, Optional
-from tqdm import tqdm
 from ncon import ncon  # ncon performs better than np.einsum
 
 from oqupy.bath_correlations import BaseCorrelations
-
+from oqupy.util import get_progress
 
 
 def iTEBD_apply_gate(gate: np.ndarray, A: np.ndarray, sAB: np.ndarray, B: np.ndarray, sBA: np.ndarray, rank: int, rtol: float, ctol: Optional[float] = 1e-13):
@@ -141,31 +140,36 @@ class iTEBD_TEMPO_oqupy():
         sBA = np.ones((1))
         rank_is_one = True
 
-        for k in tqdm(range(1, self.n_c + 1), desc='building influence functional'):
-            i_tens = np.exp(-self.eta[self.n_c - k].real * np.outer(self.s_diff, self.s_diff) - 1j * self.eta[self.n_c - k].imag * np.outer(self.s_sum, self.s_diff))
+        progress = get_progress(None)
+        title = "--> TTI-TEMPO building:"
+        with progress(self.n_c, title) as prog_bar:
+            for k in range(1, self.n_c +1):
+                i_tens = np.exp(-self.eta[self.n_c - k].real * np.outer(self.s_diff, self.s_diff) - 1j * self.eta[self.n_c - k].imag * np.outer(self.s_sum, self.s_diff))
 
-            if k == self.n_c:
-                gate = np.einsum('a,ij,jb,j->jabi', np.ones((1)), self.kron_delta, self.kron_delta, np.diagonal(i_tens))
-            else:
-                gate = np.einsum('ij,ab,aj->jabi', self.kron_delta, self.kron_delta, i_tens)
-
-            if k % 2 == 0:
-                B, sBA, A, sAB = iTEBD_apply_gate(gate, B, sBA, A, sAB, rank, rtol=rtol)
-            else:
-                A, sAB, B, sBA = iTEBD_apply_gate(gate, A, sAB, B, sBA, rank, rtol=rtol)
-
-            if rank_is_one:
-                if np.alltrue([sAB.shape[0] == 1, sAB.shape[-1] == 1, sBA.shape[0] == 1, sBA.shape[-1] == 1]):
-                    # reset to initial mps if rank is still one
-                    sAB = np.ones((1))
-                    sBA = np.ones((1))
-                    A = np.ones((1, self.nu_dim, 1))
-                    B = np.ones((1, self.nu_dim, 1))
+                if k == self.n_c:
+                    gate = np.einsum('a,ij,jb,j->jabi', np.ones((1)), self.kron_delta, self.kron_delta, np.diagonal(i_tens))
                 else:
-                    rank_is_one = False
-                    self.n_c_eff = self.n_c - k + 1
-                    if k == 1:
-                        print('Warning: the memory cutoff n_c may be too small for the given rtol value. The algorithm may become unstable and inaccurate. It is recommended to increase n_c until this message does no longer appear.')
+                    gate = np.einsum('ij,ab,aj->jabi', self.kron_delta, self.kron_delta, i_tens)
+
+                if k % 2 == 0:
+                    B, sBA, A, sAB = iTEBD_apply_gate(gate, B, sBA, A, sAB, rank, rtol=rtol)
+                else:
+                    A, sAB, B, sBA = iTEBD_apply_gate(gate, A, sAB, B, sBA, rank, rtol=rtol)
+
+                if rank_is_one:
+                    if np.alltrue([sAB.shape[0] == 1, sAB.shape[-1] == 1, sBA.shape[0] == 1, sBA.shape[-1] == 1]):
+                        # reset to initial mps if rank is still one
+                        sAB = np.ones((1))
+                        sBA = np.ones((1))
+                        A = np.ones((1, self.nu_dim, 1))
+                        B = np.ones((1, self.nu_dim, 1))
+                    else:
+                        rank_is_one = False
+                        self.n_c_eff = self.n_c - k + 1
+                        if k == 1:
+                            print('Warning: the memory cutoff n_c may be too small for the given rtol value. The algorithm may become unstable and inaccurate. It is recommended to increase n_c until this message does no longer appear.')
+                prog_bar.update(k)
+
         self.f = np.squeeze(ncon([np.diag(sAB), B, np.diag(sBA), A], [[-1, 1], [1, -2, 2], [2, 3], [3, -3, -4]]))
 
         if sAB.shape[0] == 1:
@@ -178,7 +182,6 @@ class iTEBD_TEMPO_oqupy():
         self.v_r = v_r[:, 0]
         self.v_l = v_l[:, 0] / (v_l[:, 0] @ v_r[:, 0])
 
-        print('rank ', self.f.shape[0])
         return
 
     def get(self, i_path: np.ndarray) -> complex:
@@ -231,9 +234,14 @@ class iTEBD_TEMPO_oqupy():
         evol_tens = ncon([self.f[:, :-1, :], u], [[-1, 2, -3], [-2, 2, -4]])
         state = ncon([self.v_l, rho_0.flatten()], [[-2], [-3]])
 
-        for i in tqdm(range(n), desc='time evolution running'):
-            state = ncon([state, evol_tens], [[1, 2], [1, 2, -2, -3]])
-            rho_t[i + 1] = ncon([self.v_r, state], [[1], [1, -1]]).reshape(rho_0.shape)
+        progress = get_progress(None)
+        title = "--> TTI-TEMPO evolution:"
+        with progress(n, title) as prog_bar:
+            for i in range(n):
+                state = ncon([state, evol_tens], [[1, 2], [1, 2, -2, -3]])
+                rho_t[i + 1] = ncon([self.v_r, state], [[1], [1, -1]]).reshape(rho_0.shape)
+                prog_bar.update(i+1)
+  
         return rho_t
 
     def steadystate(self, h_s: np.ndarray) -> np.ndarray:
