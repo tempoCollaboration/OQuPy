@@ -20,6 +20,7 @@ Also, please consider citing:
 -  Chains (PT-TEBD): **[Fux2023]**
 -  Mean-Field TEMPO: **[FowlerWright2022]**
 -  Gibbs TEMPO: **[Chiu2022]**
+-  Time translational invariant TEMPO: **[Link2024]**
 
 BibTeX
 ------

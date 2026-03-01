@@ -3,7 +3,7 @@
 # Original code from https://github.com/val-link/iTEBD-TEMPO.git
 # Modified by Paul Eastham (easthamp@tcd.ie) so that the iTEBD-TEMPO class uses the OQuPy BathCorrelations class 
 # to define the bath correlations rather than the bath correlation function itself. 
-
+# Please cite the corresponding publication: https://doi.org/10.1103/PhysRevLett.132.200403.
 
 import numpy as np
 from scipy.integrate import dblquad
