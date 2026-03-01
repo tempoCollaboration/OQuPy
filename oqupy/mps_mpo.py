@@ -394,7 +394,7 @@ class AugmentedMPS(BaseAPIClass):
             shape = deepcopy(tmp_gamma.shape)
             rank = len(shape)
             if rank == 4:
-                tmp_gamma = np.swapaxes(tmp_gamma,2,3)
+                pass
             elif rank == 3:
                 tmp_gamma.shape = (shape[0], shape[1], 1, shape[2])
             elif rank == 2:
