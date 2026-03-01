@@ -1,9 +1,23 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Implementation of iTEBD-TEMPO
 # Author: Valentin Link (valentin.link@tu-dresden.de)
 # Original code from https://github.com/val-link/iTEBD-TEMPO.git
-# Modified by Paul Eastham (easthamp@tcd.ie) so that the iTEBD-TEMPO class uses the OQuPy BathCorrelations class 
-# to define the bath correlations rather than the bath correlation function itself. 
-# Please cite the corresponding publication: https://doi.org/10.1103/PhysRevLett.132.200403.
+# Modified by Paul Eastham (easthamp@tcd.ie) so that the iTEBD-TEMPO class uses
+# the OQuPy BathCorrelations class to define the bath correlations rather than
+# the bath correlation function itself.
+# Please cite the corresponding publication:
+#   https://doi.org/10.1103/PhysRevLett.132.200403.
 
 import numpy as np
 from scipy.integrate import dblquad
