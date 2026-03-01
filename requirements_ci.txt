@@ -1,6 +1,6 @@
 pytest>=8.1.0
 pytest-cov
-pylint>=3.1.0
+pylint>=4.0.0
 sphinx
 sphinx_rtd_theme
 ipython

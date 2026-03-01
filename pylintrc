@@ -32,7 +32,7 @@ persistent=yes
 
 # When enabled, pylint would attempt to guess common misconfiguration and emit
 # user-friendly hints instead of false-positive error messages
-suggestion-mode=yes
+# suggestion-mode=yes
 
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
@@ -80,7 +80,8 @@ disable=raw-checker-failed,
         too-many-arguments,               # piperfw: added for development
         too-many-positional-arguments,    # piperfw: added 2024-09-27
         possibly-used-before-assignment,  # GEFux: added by hand
-        unnecessary-lambda-assignment     # GEFux: added by hand
+        unnecessary-lambda-assignment,    # GEFux: added by hand
+        invalid-name                      # GEFux: added by hand
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
