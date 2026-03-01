@@ -18,7 +18,6 @@ import sys
 
 from setuptools import find_packages
 from setuptools import setup
-import pkg_resources
 
 here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, here)
