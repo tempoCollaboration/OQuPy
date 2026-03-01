@@ -45,6 +45,9 @@ publications:
    Operations with Non-Markovian Decoherence: The Tortoise or the
    Hare?*, `Phys. Rev. Lett. 132,
    060401 <https://doi.org/10.1103/PhysRevLett.132.060401%7D>`__ (2024).
+-  **[Link2024]** Link et al., *Open Quantum System Dynamics from Infinite
+   Tensor Network Contraction*, `Phys. Rev. Lett. 132,
+   200403 <https://doi.org/10.1103/PhysRevLett.132.200403>`__ (2024).
 
 .. _bibtex:
 
@@ -171,6 +174,21 @@ BibTeX:
      publisher = {American Physical Society},
      doi = {10.1103/PhysRevLett.123.240602},
      url = {https://doi.org/10.1103/PhysRevLett.123.240602}
+   }
+
+   @article{Link2024,
+      title = {Open Quantum System Dynamics from Infinite Tensor Network Contraction},
+      author = {Link, Valentin and Tu, Hong-Hao and Strunz, Walter T.},
+      journal = {Phys. Rev. Lett.},
+      volume = {132},
+      issue = {20},
+      pages = {200403},
+      numpages = {7},
+      year = {2024},
+      month = {May},
+      publisher = {American Physical Society},
+      doi = {10.1103/PhysRevLett.132.200403},
+      url = {https://link.aps.org/doi/10.1103/PhysRevLett.132.200403}
    }
 
    @misc{OQuPy-code-v0.5.0,

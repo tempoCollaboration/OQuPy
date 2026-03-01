@@ -23,6 +23,10 @@ end_time = 2.5
 num_steps = 50
 dt = end_time / num_steps
 
+# this is the length of the PT to compute, which may be longer than the time above, to which the dynamics is considered 
+
+pt_end_time = 5.0
+
 # -- bath --
 alpha =  0.126 
 omega_cutoff = 3.04 
@@ -59,7 +63,7 @@ pt_tempo_parameters = oqupy.TempoParameters(
 process_tensor = oqupy.pt_tempo_compute(
     bath=bath,
     start_time=0.0,
-    end_time=end_time,
+    end_time=pt_end_time,
     parameters=pt_tempo_parameters)
 
 # --- Define parameterized system ----------------------------------------------
@@ -83,7 +87,8 @@ fidelity_dict = state_gradient(
         initial_state=initial_state,
         target_derivative=target_derivative,
         process_tensors=[process_tensor],
-        parameters=parameters)
+        parameters=parameters,
+        num_steps=num_steps)
 
 final_state = fidelity_dict['dynamics'].states[-1]
 v_final_state = np.reshape(final_state,hs_dim**2)
@@ -126,6 +131,7 @@ def infidandgrad(paras):
         target_derivative=target_derivative,
         process_tensors=[process_tensor],
         parameters=reshapedparas,
+        num_steps=num_steps,
         progress_type='silent')
     
     fs=gradient_dict['final_state']
@@ -182,7 +188,8 @@ optimized_dynamics = state_gradient(
         initial_state=initial_state,
         target_derivative=target_derivative,
         process_tensors=[process_tensor],
-        parameters=reshapedparas)
+        parameters=reshapedparas,
+        num_steps=num_steps)
 
 fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1) 
 fig.suptitle("Optimisation results")
