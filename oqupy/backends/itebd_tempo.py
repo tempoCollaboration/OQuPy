@@ -30,7 +30,7 @@ from oqupy.bath_correlations import BaseCorrelations
 from oqupy.util import get_progress
 
 
-def iTEBD_apply_gate(gate: np.ndarray, A: np.ndarray, sAB: np.ndarray, B: np.ndarray, sBA: np.ndarray, rank: int, rtol: float, ctol: Optional[float] = 1e-13):
+def iTEBD_apply_gate(gate: np.ndarray, endbool, A: np.ndarray, sAB: np.ndarray, B: np.ndarray, sBA: np.ndarray, rank: int, rtol: float, ctol: Optional[float] = 1e-13):
     """
     single iTEBD step, scheme adapted from https://www.tensors.net/mps
     :param gate: TEBD gate for A-B link
@@ -56,7 +56,11 @@ def iTEBD_apply_gate(gate: np.ndarray, A: np.ndarray, sAB: np.ndarray, B: np.nda
     d2 = gate.shape[-1]
     rank_BA = sBA.shape[0]
 
-    u, s_vals, v = svd(ncon([np.diag(sBA), A, np.diag(sAB), B, np.diag(sBA), gate], [[-1, 1], [1, 5, 2], [2, 4], [4, 6, 3], [3, -4], [5, -2, 6, -3]]).reshape([d1 * rank_BA, d2 * rank_BA]), full_matrices=False)
+    if endbool:
+        d1 = 1
+        u, s_vals, v = svd(np.einsum('a,acd,d,dcg,g,i,c->aicg', sBA, A, sAB, B, sBA, np.ones((1)), np.diagonal(gate)).reshape([d1 * rank_BA, d2 * rank_BA]), full_matrices=False)
+    else:
+        u, s_vals, v = svd(np.einsum('a,acd,d,dfg,g,fc->afcg', sBA, A, sAB, B, sBA, gate).reshape([d1 * rank_BA, d2 * rank_BA]), full_matrices=False)
 
     # truncate singular values
     if rtol is None:
@@ -78,37 +82,6 @@ def iTEBD_apply_gate(gate: np.ndarray, A: np.ndarray, sAB: np.ndarray, B: np.nda
     return A, sAB, B, sBA
 
 
-class BathCorrelation():
-    """ A class to store the bath correlation function. """
-
-    def __init__(self, oqupybc: BaseCorrelations):
-        """
-        :param bcf: The bath correlation function.
-        """
-
-        self.oqupybc=oqupybc
-
-    def compute_eta(self, n: int, delta: float) -> np.ndarray:
-        """
-        Computes the discretized bath correlation function (eta) for n time steps delta.
-        :param n: Number of time steps.
-        :param delta: Time step.
-        :return: Discretized bath correlation function.
-        """
-
-        eta = np.zeros(n, dtype=np.complex128)
-        eta[0] = self.oqupybc.correlation_2d_integral(delta,0.0,shape='upper-triangle')
-        #eta[0] += dblquad(lambda s, t: np.real(self.bcf(t - s)), 0, delta, lambda t: 0, lambda t: t)[0]
-        #eta[0] += dblquad(lambda s, t: np.imag(self.bcf(t - s)), 0, delta, lambda t: 0, lambda t: t)[0] * 1j
-
-        for k in range(1, n):
-            eta[k] = self.oqupybc.correlation_2d_integral(delta,k*delta)
-            #eta[k] += dblquad(lambda s, t: np.real(self.bcf(t - s)), k * delta, (k + 1) * delta, 0, delta)[0]
-            #eta[k] += dblquad(lambda s, t: np.imag(self.bcf(t - s)), k * delta, (k + 1) * delta, 0, delta)[0] * 1j
-
-        return eta
-
-
 class iTEBD_TEMPO_oqupy():
     """ A class to compute and approximate the influence functional unsing iTEBD-TEMPO and compute dynamics. """
 
@@ -125,9 +98,9 @@ class iTEBD_TEMPO_oqupy():
         self.s_vals = s_vals
         self.s_dim = self.s_vals.size
         self.nu_dim = self.s_vals.size ** 2 + 1
-        self.bcf = BathCorrelation(bath_correlations)
+        self.bcf = bath_correlations
         self.delta = delta
-        self.eta = self.bcf.compute_eta(self.n_c, delta)
+        self.eta = self.compute_eta(self.n_c, delta)
         self.s_diff = np.empty((self.nu_dim - 1), dtype=np.complex128)
         self.s_sum = np.empty((self.nu_dim - 1), dtype=np.complex128)
         for nu in range(self.nu_dim - 1):
@@ -139,6 +112,22 @@ class iTEBD_TEMPO_oqupy():
         self.kron_delta = np.identity(self.nu_dim)
         self.f = None
         return
+
+    def compute_eta(self, n: int, delta: float) -> np.ndarray:
+        """
+        Computes the discretized bath correlation function (eta) for n time steps delta.
+        :param n: Number of time steps.
+        :param delta: Time step.
+        :return: Discretized bath correlation function.
+        """
+
+        eta = np.zeros(n, dtype=np.complex128)
+        eta[0] = self.bcf.correlation_2d_integral(delta, 0.0, shape='upper-triangle')
+
+        for k in range(1, n):
+            eta[k] = self.bcf.correlation_2d_integral(delta, k*delta)
+
+        return eta
 
     def compute_f(self, rtol: float, rank: Optional[int] = np.inf):
         """
@@ -160,15 +149,10 @@ class iTEBD_TEMPO_oqupy():
             for k in range(1, self.n_c +1):
                 i_tens = np.exp(-self.eta[self.n_c - k].real * np.outer(self.s_diff, self.s_diff) - 1j * self.eta[self.n_c - k].imag * np.outer(self.s_sum, self.s_diff))
 
-                if k == self.n_c:
-                    gate = np.einsum('a,ij,jb,j->jabi', np.ones((1)), self.kron_delta, self.kron_delta, np.diagonal(i_tens))
-                else:
-                    gate = np.einsum('ij,ab,aj->jabi', self.kron_delta, self.kron_delta, i_tens)
-
                 if k % 2 == 0:
-                    B, sBA, A, sAB = iTEBD_apply_gate(gate, B, sBA, A, sAB, rank, rtol=rtol)
+                    B, sBA, A, sAB = iTEBD_apply_gate(i_tens, (k == self.n_c), B, sBA, A, sAB, rank, rtol=rtol)
                 else:
-                    A, sAB, B, sBA = iTEBD_apply_gate(gate, A, sAB, B, sBA, rank, rtol=rtol)
+                    A, sAB, B, sBA = iTEBD_apply_gate(i_tens, (k == self.n_c), A, sAB, B, sBA, rank, rtol=rtol)
 
                 if rank_is_one:
                     if np.alltrue([sAB.shape[0] == 1, sAB.shape[-1] == 1, sBA.shape[0] == 1, sBA.shape[-1] == 1]):
@@ -184,7 +168,7 @@ class iTEBD_TEMPO_oqupy():
                             print('Warning: the memory cutoff n_c may be too small for the given rtol value. The algorithm may become unstable and inaccurate. It is recommended to increase n_c until this message does no longer appear.')
                 prog_bar.update(k)
 
-        self.f = np.squeeze(ncon([np.diag(sAB), B, np.diag(sBA), A], [[-1, 1], [1, -2, 2], [2, 3], [3, -3, -4]]))
+        self.f = np.squeeze(np.einsum('i,ikl,l,lop->ikop', sAB, B, sBA, A))
 
         if sAB.shape[0] == 1:
             # handle trivial f
