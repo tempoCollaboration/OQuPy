@@ -35,8 +35,7 @@ from oqupy.config import NpDtype
 from oqupy import util
 from oqupy.version import __version__
 
-from oqupy.backends.itebd_tempo import iTEBD_TEMPO_oqupy
-from ncon import ncon
+NoneType = type(None)
 
 
 class BaseProcessTensor(BaseAPIClass, ABC):
@@ -279,6 +278,26 @@ class SimpleProcessTensor(BaseProcessTensor):
         """Length of process tensor. """
         return len(self._mpo_tensors)
 
+    @property
+    def repeating_cell(self) -> Union[tuple[int, int], NoneType]:
+        """
+        Repeating unit cell of a time translational invariant process tensor.
+        """
+        return None
+
+    def effective_step(self,
+                       step: int) -> None:
+        """
+        Get the effective step for the _mpo_tensors and _cap_tensors lists
+        when there's a repeating cell.
+        """
+        if self.repeating_cell is None:
+            k = step
+        else:
+            n, l = self.repeating_cell[0], self.repeating_cell[1]
+            k = step if step < n else n + ((step-n) % l)
+        return k
+
     def set_initial_tensor(
             self,
             initial_tensor: Optional[ndarray] = None) -> None:
@@ -343,13 +362,13 @@ class SimpleProcessTensor(BaseProcessTensor):
         Applies the transformation (stored in `.transform_in` and
         `.transform_out`) when `transformed` is true.
         """
+        step = self.effective_step(step)
         length = len(self._mpo_tensors)
         if step >= length or step < 0:
             raise IndexError("Process tensor index out of bound. ")
         tensor = self._mpo_tensors[step]
         if len(tensor.shape) == 3:
-            #tensor = util.create_delta(tensor, [0, 1, 2, 2])
-            tensor = create_delta_lastindex(tensor)
+            tensor = util.create_delta_lastindex(tensor)
         if transformed is False:
             return tensor
         if self._transform_in is not None:
@@ -364,6 +383,7 @@ class SimpleProcessTensor(BaseProcessTensor):
         """
         Get the cap tensor (vector) to terminate the PT-MPO at time step `step`.
         """
+        step = self.effective_step(step)
         length = len(self._cap_tensors)
         if step >= length or step < 0:
             return None
@@ -381,6 +401,37 @@ class SimpleProcessTensor(BaseProcessTensor):
                 bond_dims.append(mpo.shape[0])
         bond_dims.append(self._mpo_tensors[-1].shape[1])
         return np.array(bond_dims)
+
+    def export(self, filename: Text, overwrite: bool = False):
+        """Export the process tensor as a FileProcessTensor."""
+        if overwrite:
+            mode = "overwrite"
+        else:
+            mode = "write"
+
+        pt_file = FileProcessTensor(
+            mode=mode,
+            filename=filename,
+            hilbert_space_dimension=self._hs_dim,
+            dt=self._dt,
+            transform_in=self._transform_in,
+            transform_out=self._transform_out,
+            name=self.name,
+            description=self.description)
+
+        pt_file.set_initial_tensor(self._initial_tensor)
+        for step, mpo in enumerate(self._mpo_tensors):
+            pt_file.set_mpo_tensor(step, mpo)
+        for step, cap in enumerate(self._cap_tensors):
+            pt_file.set_cap_tensor(step, cap)
+        pt_file.close()
+
+class SimpleProcessTensorFinite(SimpleProcessTensor):
+    """Finite Process Tensor"""    
+
+    @property
+    def repeating_cell(self) -> NoneType:
+        return None
 
     def compute_caps(self) -> None:
         """
@@ -410,166 +461,22 @@ class SimpleProcessTensor(BaseProcessTensor):
             last_cap = new_cap
         self._cap_tensors = caps
 
-    def export(self, filename: Text, overwrite: bool = False):
-        """Export the process tensor as a FileProcessTensor."""
-        if overwrite:
-            mode = "overwrite"
-        else:
-            mode = "write"
 
-        pt_file = FileProcessTensor(
-            mode=mode,
-            filename=filename,
-            hilbert_space_dimension=self._hs_dim,
-            dt=self._dt,
-            transform_in=self._transform_in,
-            transform_out=self._transform_out,
-            name=self.name,
-            description=self.description)
-
-        pt_file.set_initial_tensor(self._initial_tensor)
-        for step, mpo in enumerate(self._mpo_tensors):
-            pt_file.set_mpo_tensor(step, mpo)
-        for step, cap in enumerate(self._cap_tensors):
-            pt_file.set_cap_tensor(step, cap)
-        pt_file.close()
-
-def create_delta_lastindex(
-        tensor: ndarray):
-    tensor_shape = tensor.shape
-    ret_shape=tensor.shape+(tensor.shape[-1],)
-    ret_ndarray=np.zeros(ret_shape,dtype=tensor.dtype)
-    for a in range(ret_shape[-1]):
-        ret_ndarray[:,:,a,a]=tensor[:,:,a]
-    return ret_ndarray
-
-class TTInvariantProcessTensor(BaseProcessTensor):
+class SimpleProcessTensorInfinite(SimpleProcessTensor):
     """
-    Class to use the time-translation invariant process tensors created by the iTEBD code.
-    Added the possibility of setting an (artificial) 'length' variable, to make this behave like
-    the normal process tensor class. 
+    Simple infinite process tensor in matrix product operator form with
+    a repeating unit cell.
     """
-    def __init__(
-            self,
-            tebd: iTEBD_TEMPO_oqupy,
-            transform_in: Optional[ndarray] = None,
-            transform_out: Optional[ndarray] = None,
-            name: Optional[Text] = None,
-            description: Optional[Text] = None) -> None:
-        """Constructor of SimpleProcessTensor. """
-        self._initial_tensor = None
-        hilbert_space_dimension=tebd.s_dim
-        dt=tebd.delta
-        self._tebd=tebd
-        #self._mpo_tensors = []
-        #self._cap_tensors = []
-        self._lam_tensors = []
-        self._mpo_tensor=np.transpose(tebd.f[:,:-1,:],[0,2,1]) # drop the extra component and reorder the rank 3 tensor to match OQuPy
-        self._first_mpo_tensor=ncon([tebd.v_l,self._mpo_tensor],[[1],[1,-1,-2]]) # construct first tensor in mpo
-        self._first_mpo_tensor.shape=tuple([1]+list(self._first_mpo_tensor.shape))
-        self._mpo_tensor = create_delta_lastindex(self._mpo_tensor) 
-        self._first_mpo_tensor = create_delta_lastindex(self._first_mpo_tensor)
-        self._len=None 
-
-        tensor=self._first_mpo_tensor
-        if transform_in is not None:
-            tensor = np.dot(np.moveaxis(tensor, -2, -1),transform_in.T)
-            tensor = np.moveaxis(tensor, -1, -2)
-        if transform_out is not None:
-            tensor = np.dot(tensor, transform_out)
-        self._first_mpo_tensor=tensor
-
-        tensor=self._mpo_tensor
-        if transform_in is not None:
-            tensor = np.dot(np.moveaxis(tensor, -2, -1),transform_in.T)
-            tensor = np.moveaxis(tensor, -1, -2)
-        if transform_out is not None:
-            tensor = np.dot(tensor, transform_out)
-        self._mpo_tensor=tensor
-
-        self._cap_tensor=tebd.v_r
-
-        super().__init__(
-            hilbert_space_dimension,
-            dt,
-            transform_in,
-            transform_out,
-            name,
-            description)
-
-    def set_length(self,length):
-        self._len=length
-
-    def __len__(self) -> int:
-        """Length of process tensor. """
-        """This is not relevant for the TTI case but required by the abstract class"""
-        if self._len is not None:
-            return self._len
-        else:
-            raise NotImplementedError
-        #return len(self._mpo_tensors)
 
     @property
     def max_step(self) -> Union[int, float]:
         """Maximal number of time steps."""
         return float('inf')
 
-    def set_initial_tensor(
-            self,
-            initial_tensor: Optional[ndarray] = None) -> None:
-        """
-        Set the (possibly correlated) initial system state.
-        """
-        if initial_tensor is None:
-            self._initial_tensor = None
-            self._initial_tensor = np.array(initial_tensor, dtype=NpDtype)
-
-    def get_initial_tensor(self) -> ndarray:
-        """
-        Get the (possibly correlated) initial system state.
-        """
-        return self._initial_tensor
-
-    def get_mpo_tensor(
-            self,
-            step: int,
-            transformed: Optional[bool] = True) -> ndarray:
-        """
-        Get the MPO tensor for time step `step`.
-
-        The axes correspond to the following legs:
-            [0] ... past bond leg,
-            [1] ... future bond leg,
-            [2] ... input (from system) leg,
-            [3] ... output (to system) leg.
-
-        Applies the transformation (stored in `.transform_in` and
-        `.transform_out`) when `transformed` is true.
-        """
-
-        assert transformed,"TTI Process tensor cannot be used with transformed=False"
-
-        if step < 0:
-            raise IndexError("Process tensor index out of bound. ")
-        if step == 0:
-            tensor=self._first_mpo_tensor
-        else:
-            tensor=self._mpo_tensor        
-        
-        return tensor
-
-    def get_cap_tensor(self, step: int) -> ndarray:
-        """
-        Get the cap tensor (vector) to terminate the PT-MPO at time step `step`.
-        """
-        if step == 0:
-            return np.array([1.0])
-        else:
-            return self._cap_tensor
-
-    def get_bond_dimensions(self) -> ndarray:
-        raise NotImplementedError
-    
+    @property
+    def repeating_cell(self) -> tuple[int, int]:
+        """Repeating unit cell of an infinite process tensor."""
+        return (1, 1)
 
 
 HDF5None = [np.nan]
@@ -978,19 +885,23 @@ def import_process_tensor(
     process_tensor_type: Text
         Type of process tensor object to create.
         May be 'file' to create `FileProcessTensor`,
-        or 'simple', to create a `SimpleProcessTensor`.
+        or 'simple', to create a generic `SimpleProcessTensor`,
+        or 'simple-finite', to create a `SimpleProcessTensorFinite`,
+        or 'simple-infinite' to create a `SimpleProcessTensorInfinite`.
 
     Returns
     -------
     process_tensor: BaseProcessTensor
         The process tensor object with the data from the .hdf5 file.
     """
+    map_dict = {"simple": SimpleProcessTensor,
+                "simple-finite": SimpleProcessTensorFinite,
+                "simple-infinite": SimpleProcessTensorInfinite}
     pt_file = FileProcessTensor(mode="read", filename=filename)
-
     if process_tensor_type is None or process_tensor_type == "file":
         pt = pt_file
-    elif process_tensor_type == "simple":
-        pt = SimpleProcessTensor(
+    elif process_tensor_type in map_dict:
+        pt = map_dict[process_tensor_type](
             hilbert_space_dimension=pt_file.hilbert_space_dimension,
             dt=pt_file.dt,
             transform_in=pt_file.transform_in,

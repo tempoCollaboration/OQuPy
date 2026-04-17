@@ -47,7 +47,7 @@ from oqupy.bath import Bath
 from oqupy.config import PT_DEFAULT_TOLERANCE
 from oqupy.config import PT_TEMPO_BACKEND_CONFIG
 from oqupy.process_tensor import BaseProcessTensor
-from oqupy.process_tensor import SimpleProcessTensor
+from oqupy.process_tensor import SimpleProcessTensorFinite
 from oqupy.process_tensor import FileProcessTensor
 from oqupy.backends.pt_tempo_backend import PtTempoBackend
 from oqupy.tempo import TempoParameters
@@ -57,7 +57,7 @@ from oqupy.operators import left_right_super
 from oqupy.util import get_progress
 
 
-PT_CLASS = {"simple": SimpleProcessTensor}
+PT_CLASS = {"simple": SimpleProcessTensorFinite}
 
 
 
@@ -165,7 +165,7 @@ class PtTempo(BaseAPIClass):
         else:
             transform_in = None
             transform_out = None
-        self._process_tensor = SimpleProcessTensor(
+        self._process_tensor = SimpleProcessTensorFinite(
             hilbert_space_dimension=self._dimension,
             dt=self._parameters.dt,
             transform_in=transform_in,

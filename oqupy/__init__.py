@@ -81,7 +81,11 @@ __all__ = [
     'PtTebdParameters',
     'PtTempo',
     'pt_tempo_compute',
+    'TTITempo',
+    'tti_tempo_compute',
     'SimpleProcessTensor',
+    'SimpleProcessTensorFinite',
+    'SimpleProcessTensorInfinite',
     'state_gradient',
     'System',
     'SystemChain',
@@ -127,6 +131,8 @@ from oqupy import operators
 from oqupy.process_tensor import import_process_tensor
 from oqupy.process_tensor import TrivialProcessTensor
 from oqupy.process_tensor import SimpleProcessTensor
+from oqupy.process_tensor import SimpleProcessTensorFinite
+from oqupy.process_tensor import SimpleProcessTensorInfinite
 from oqupy.process_tensor import FileProcessTensor
 
 from oqupy.pt_tebd import PtTebd
@@ -141,6 +147,9 @@ from oqupy.system import ParameterizedSystem
 
 from oqupy.pt_tempo import PtTempo
 from oqupy.pt_tempo import pt_tempo_compute
+
+from oqupy.tti_tempo import TTITempo
+from oqupy.tti_tempo import tti_tempo_compute
 
 from oqupy.tempo import Tempo
 from oqupy.tempo import TempoParameters

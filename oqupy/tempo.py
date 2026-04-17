@@ -47,6 +47,8 @@ from oqupy.backends.tempo_backend import TIBaseBackend
 from oqupy.util import check_convert, check_isinstance, check_true,\
         get_progress
 
+NoneType = type(None)
+
 class TempoParameters(BaseAPIClass):
     r"""
     Parameters for the TEMPO computation.
@@ -63,6 +65,10 @@ class TempoParameters(BaseAPIClass):
         in the underlying tensor network algorithm). - It must be small enough
         such that the numerical compression (using tensor network algorithms)
         does not truncate relevant correlations.
+    rank: int (default = np.inf)
+        The maximal rank in the singular value truncation (done in the
+        underlying tensor network algorithm). The relative error in the
+        singular value truncation might end up higher than `epsrel`.
     tcut: float (default = None)
         Length of time :math:`t_\mathrm{cut}` included in the non-Markovian
         memory. - This should be large enough to capture all non-Markovian
@@ -94,6 +100,7 @@ class TempoParameters(BaseAPIClass):
             self,
             dt: float,
             epsrel: float,
+            rank: Optional[Union[int, float, NoneType]] = np.inf,
             tcut: Optional[float] = None,
             dkmax: Optional[int] = None,
             add_correlation_time: Optional[float] = None,
@@ -118,6 +125,17 @@ class TempoParameters(BaseAPIClass):
         if tmp_epsrel <= 0.0:
             raise ValueError("Argument 'epsrel' must be positive.")
         self._epsrel = tmp_epsrel
+
+        try:
+            if rank == np.inf or rank is None:
+                tmp_rank = np.inf
+            else:
+                tmp_rank = int(rank)
+        except Exception as e:
+            raise TypeError("Argument 'rank' must be an integer.") from e
+        if tmp_rank <= 0:
+            raise ValueError("Argument 'rank' must be strictly positive.")
+        self._rank = tmp_rank
 
         self._tcut, self._dkmax = _parameter_memory_input_parse(
                 tcut, dkmax, dt)
@@ -167,6 +185,7 @@ class TempoParameters(BaseAPIClass):
         ret.append("  tcut [dkmax]         = {} [{}] \n".format(
             self.tcut, self.dkmax))
         ret.append("  epsrel               = {} \n".format(self.epsrel))
+        ret.append("  rank               = {} \n".format(self.rank))
         ret.append("  add_correlation_time = {} \n".format(
             self.add_correlation_time))
         return "".join(ret)
@@ -182,6 +201,11 @@ class TempoParameters(BaseAPIClass):
         return self._epsrel
 
     # epsrel is error tolerance for both correlation omega integration and svds
+
+    @property
+    def rank(self) -> float:
+        """The maximal rank in the singular value truncation."""
+        return self._rank
 
     @property
     def tcut(self) -> float:
@@ -999,8 +1023,10 @@ def influence_matrix(
         delta=dt,
         time_1=time_1,
         time_2=time_2,
-        shape=shape,
-        epsrel=parameters.epsrel)
+        shape=shape)
+       # epsrel=parameters.epsrel)
+#/!\ SVD truncation epsrel doesn't necessarily match the integration epsrel
+
     op_p = coupling_acomm
     op_m = coupling_comm
 

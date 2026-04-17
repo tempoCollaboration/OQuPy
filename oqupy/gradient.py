@@ -93,7 +93,7 @@ def state_gradient(
         only_dynamics=only_dynamics)
 
     if only_dynamics:
-        return_dict = { 
+        return_dict = {
             'final_state':dynamics.states[-1],
             'gradprop':None,
             'gradient':None,
@@ -223,7 +223,8 @@ def compute_gradient_and_dynamics(
         {``silent``, ``simple``, ``bar``}. If `None` then
         the default progress type is used.#
     only_dynamics: bool (default = False)
-        Set to true to compute only the dynamics, target_derivative is not used in this case.
+        Set to true to compute only the dynamics, target_derivative is not
+        used in this case.
 
     Returns:
     --------

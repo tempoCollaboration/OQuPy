@@ -17,43 +17,27 @@ operator algorithm (TTI-TEMPO). This module is based on [Link2024].
 V. Link, H. Tu, and W. T. Strunz, *Open Quantum System Dynamics from Infinite
 Tensor Network Contraction*, `Phys. Rev. Lett. 132, 200403
 <https://doi.org/10.1103/PhysRevLett.132.200403>`__ (2024).
-
-Original code isin /oqupy/backends/itebd_tempo.py taken from 
-https://github.com/val-link/iTEBD-TEMPO.git
-# Implementation of iTEBD-TEMPO
-# Author: Valentin Link (valentin.link@tu-dresden.de)
-# Original code from https://github.com/val-link/iTEBD-TEMPO.git
-# Modified by Paul Eastham (easthamp@tcd.ie) so that the iTEBD-TEMPO class uses the OQuPy BathCorrelations class 
-# to define the bath correlations rather than the bath correlation function itself. 
-# Please cite the corresponding publication: https://doi.org/10.1103/PhysRevLett.132.200403.
 """
 
 from typing import Dict, Optional, Text, Union
-from copy import copy
 
 import numpy as np
-from numpy import ndarray
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.bath import Bath
-from oqupy.config import PT_DEFAULT_TOLERANCE
-from oqupy.config import PT_TEMPO_BACKEND_CONFIG
-from oqupy.process_tensor import BaseProcessTensor
-from oqupy.process_tensor import SimpleProcessTensor
+from oqupy.config import TTI_TEMPO_BACKEND_CONFIG
+from oqupy.process_tensor import BaseProcessTensor, SimpleProcessTensorInfinite
 from oqupy.process_tensor import FileProcessTensor
-from oqupy.backends.pt_tempo_backend import PtTempoBackend
+from oqupy.backends.tti_tempo_backend import TTITempoBackend
 from oqupy.tempo import TempoParameters
-from oqupy.tempo import guess_tempo_parameters
 from oqupy.tempo import influence_matrix
 from oqupy.operators import left_right_super
 from oqupy.util import get_progress
 
-from oqupy.backends.itebd_tempo import iTEBD_TEMPO_oqupy
-from oqupy.process_tensor import TTInvariantProcessTensor
 
-class TTITempo():
+class TTITempo(BaseAPIClass):
     """
-    Class to facilitate a PT-TEMPO computation with time-translation invariant process tensor
+    Class to facilitate a TTI-TEMPO computations.
 
     Parameters
     ----------
@@ -63,11 +47,6 @@ class TTITempo():
         The parameters for the PT-TEMPO computation.
     start_time: float
         The start time.
-    unique: bool (default = False),
-        Whether to use degeneracy checking. If True reduces dimension of
-        bath tensors in case of degeneracies in sums ('west') and
-        sums,differences ('north') of the bath coupling operator.
-        See bath:north_degeneracy_map, bath:west_degeneracy_map.
     backend_config: dict (default = None)
         The configuration of the backend. If `backend_config` is
         ``None`` then the default backend configuration is used.
@@ -81,17 +60,19 @@ class TTITempo():
             bath: Bath,
             start_time: float,
             parameters: TempoParameters,
-            rank: Optional[int] = np.inf,
+            process_tensor_file: Optional[Union[Text, bool]] = None,
+            overwrite: Optional[bool] = False,
+            backend_config: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
-        """Create a PtTempo object. """
+        """Create a TTITempo object. """
         assert isinstance(bath, Bath), \
             "Argument 'bath' must be an instance of Bath."
         self._bath = bath
         self._dimension = self._bath.dimension
         self._correlations = self._bath.correlations
 
-        # super().__init__(name, description)
+        super().__init__(name, description)
 
         try:
             tmp_start_time = float(start_time)
@@ -103,19 +84,28 @@ class TTITempo():
             "Argument 'parameters' must be an instance of TempoParameters."
         self._parameters = parameters
 
-        self._rank=rank # Passed to the iTEBD code as the maximum rank.
-        
-        self._name=name
-        self._description=description
+        self._process_tensor = None
+        if process_tensor_file or isinstance(process_tensor_file, Text):
+            if isinstance(process_tensor_file, Text):
+                filename = process_tensor_file
+            else:
+                filename = None
+            self._init_file_process_tensor(filename, overwrite)
+        else:
+            self._init_infinite_process_tensor()
 
-        self._init_tti_process_tensor()
+        if backend_config is None:
+            self._backend_config = TTI_TEMPO_BACKEND_CONFIG
+        else:
+            self._backend_config = TTI_TEMPO_BACKEND_CONFIG | backend_config
 
-        self._coupling_comm = self._bath._coupling_comm
-        self._coupling_acomm = self._bath._coupling_acomm
+        self._coupling_comm = np.pad(self._bath._coupling_comm, [(0, 1)])
+        self._coupling_acomm = np.pad(self._bath._coupling_acomm, [(0, 1)])
 
         self._backend_instance = None
+        self._init_tti_tempo_backend()
 
-    def _init_tti_process_tensor(self):
+    def _init_infinite_process_tensor(self):
         """ToDo. """
         unitary = self._bath.unitary_transform
         if not np.allclose(unitary, np.identity(self._dimension)):
@@ -126,19 +116,149 @@ class TTITempo():
         else:
             transform_in = None
             transform_out = None
-        
-        myitebd = iTEBD_TEMPO_oqupy(np.diagonal(self._bath.coupling_operator), self._parameters.dt, 
-                                                self._bath.correlations, self._parameters.dkmax)
-        myitebd.compute_f(self._parameters.epsrel,self._rank)
-        
-        self._process_tensor = TTInvariantProcessTensor(myitebd,
+
+        self._process_tensor = SimpleProcessTensorInfinite(
+            hilbert_space_dimension=self._dimension,
+            dt=self._parameters.dt,
             transform_in=transform_in,
             transform_out=transform_out,
-            name=self._name,
-            description=self._description)
-        
-    def get_process_tensor(self):
+            name=self.name,
+            description=self.description)
+
+    def _init_file_process_tensor(self, filename, overwrite):
+        """ToDo. """
+        unitary = self._bath.unitary_transform
+        if not np.allclose(unitary, np.identity(self._dimension)):
+            transform_in = left_right_super(unitary.conjugate().T,
+                                            unitary).T
+            transform_out = left_right_super(unitary,
+                                             unitary.conjugate().T).T
+        else:
+            transform_in = None
+            transform_out = None
+
+        if overwrite:
+            mode = "overwrite"
+        else:
+            mode = "write"
+        self._process_tensor = FileProcessTensor(
+            mode=mode,
+            filename=filename,
+            hilbert_space_dimension=self._dimension,
+            dt=self._parameters.dt,
+            transform_in=transform_in,
+            transform_out=transform_out,
+            name=self.name,
+            description=self.description)
+
+    def _init_tti_tempo_backend(self):
+        """Create and initialize the tti-tempo backend."""
+        self._backend_instance = TTITempoBackend(
+                dimension=self._dimension,
+                influence=self._influence,
+                process_tensor=self._process_tensor,
+                dkmax=self._parameters.dkmax,
+                epsrel=self._parameters.epsrel,
+                rank=self._parameters.rank,
+                config=self._backend_config)
+
+    def _influence(self, dk):
+        return influence_matrix(
+            dk,
+            parameters=self._parameters,
+            correlations=self._correlations,
+            coupling_acomm=self._coupling_acomm,
+            coupling_comm=self._coupling_comm)
+
+    def compute(self, progress_type: Optional[Text] = None) -> None:
+        """
+        Propagate (or continue to propagate) the TEMPO tensor network to
+        time `end_time`.
+
+        Parameters
+        ----------
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``silent``, ``simple``, ``bar``}. If `None` then
+            the default progress type is used.
+        """
+        if self._backend_instance.step is None:
+            self._backend_instance.initialize()
+
+        progress = get_progress(progress_type)
+        title = "--> TTI-TEMPO computation:"
+        with progress(self._backend_instance.num_steps, title) as prog_bar:
+            while self._backend_instance.compute_step():
+                prog_bar.update(self._backend_instance.step)
+
+    def get_process_tensor(
+            self,
+            progress_type: Optional[Text] = None) -> BaseProcessTensor:
+        """
+        Returns a the computed process tensor. It performs the computation if
+        it hasn't been already done.
+
+        Parameters
+        ----------
+        progress_type: str (default = None)
+            The progress report type during the computation. Types are:
+            {``silent``, ``simple``, ``bar``}. If `None` then
+            the default progress type is used.
+
+        Returns
+        -------
+        process_tensor: SimpleProcessTensorInfinite
+            The computed process tensor.
+        """
+        if self._backend_instance.step is None or \
+            self._backend_instance.step < self._backend_instance.num_steps:
+            self.compute(progress_type=progress_type)
+
+        if len(self._process_tensor) < sum(
+                self._backend_instance.repeating_cell):
+            self._backend_instance.update_process_tensor()
+
         return self._process_tensor
-    
 
 
+def tti_tempo_compute(
+        bath: Bath,
+        start_time: float,
+        parameters: TempoParameters = None,
+        progress_type: Optional[Text] = None,
+        process_tensor_file: Optional[Union[Text, bool]] = None,
+        overwrite: Optional[bool] = False,
+        backend_config: Optional[Dict] = None,
+        name: Optional[Text] = None,
+        description: Optional[Text] = None) -> BaseProcessTensor:
+    """
+    Shortcut for creating a process tensor by performing a TTI-TEMPO
+    computation.
+
+    Parameters
+    ----------
+    bath: Bath
+        The Bath (includes the coupling operator to the system).
+    start_time: float
+        The start time.
+    parameters: TempoParameters
+        The parameters for the TTI-TEMPO computation.
+    progress_type: str (default = None)
+        The progress report type during the computation. Types are:
+        {``'silent'``, ``'simple'``, ``'bar'``}.  If `None` then
+        the default progress type is used.
+    name: str (default = None)
+        An optional name for the tempo object.
+    description: str (default = None)
+        An optional description of the tempo object.
+    """
+    ptt = TTITempo(bath,
+                  start_time,
+                  parameters,
+                  process_tensor_file,
+                  overwrite,
+                  backend_config,
+                  name,
+                  description)
+    ptt.compute(progress_type=progress_type)
+    return ptt.get_process_tensor()
