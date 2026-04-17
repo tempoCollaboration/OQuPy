@@ -1113,11 +1113,6 @@ def _parse_times(times, max_step, dt, start_time):
             raise IndexError("Specified time is out of bound.")
         ret_times = np.array([times])
     elif isinstance(times, (slice, list)):
-#         try:
-#             ret_times = np.arange(max_step + 1)[times]
-#         except Exception as e:
-#             raise IndexError("Specified times are invalid or out of bound.") \
-#                 from e
         try:
             if isinstance(times, slice):
                 max_time = max(i for i in [times.stop, times.start]
