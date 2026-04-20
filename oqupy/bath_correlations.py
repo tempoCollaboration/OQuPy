@@ -13,15 +13,16 @@
 Module for environment correlations.
 """
 
-from typing import Callable, Optional, Union, Text
+from typing import Callable, Optional, Union, Text, Dict
 from typing import Any as ArrayLike
 from functools import lru_cache
+import warnings
 
 import numpy as np
 from scipy import integrate
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT, INTEGRATION_PARAMS
 from oqupy.util import check_true
 
 #np.seterr(all='warn')
@@ -386,29 +387,39 @@ class CustomSD(BaseCorrelations):
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
-    alt_integrator: bool
-        Whether or not to use a sine/cosine weighted version of the
-        integrals that could be better suited if you're encountering
-        numerical difficulties, especially for long memory times.
-        The integral computed in `eta_function` is cut in two: one
-        handling the divergent part near 0 using the default integrator
-        and the other taking care of the fast oscillations at angular
-        frequency :math:`\tau` using an appropriate integration scheme.
-        The cutoff point can be modified with `num_oscillations`.
-    num_oscillations: int, float, callable
-        When using `alt_integrator`, specifies how many oscillations to keep
-        for the non-weighted part of the integral of `eta_function`. This should
-        be either an integer or specified as a function of :math:`\tau`. To help
-        choose: the higher this number is, the more the default integrator will
-        struggle to integrate the non-weighted part. The lower it is, the more
-        the weighted integrators will struggle to integrate the near divergent
-        part close to 0. A constant value is a good choice for most use cases.
-        Otherwise, it is possible to input a function to target possible issues
-        at specific memory times :math:`\tau`.
     name: str
         An optional name for the correlations.
     description: str
         An optional description of the correlations.
+    integration_params: dict
+        Optional dictionary to pass integration parameters. Possible
+        parameters include:
+
+        - **epsrel** (*float*) -- Relative error tolerance.
+        - **subdiv_limit** (*int*) -- Maximal number of interval subdivisions
+          for numerical integration.
+        - **alt_integrator** (*bool*) -- Whether to use an alternative
+          integration scheme leveraging sine/cosine weighted versions of
+          `scipy.integrate.quad` to handle rapid oscillations. This may improve
+          numerical accuracy and stability, especially for long memory times.
+
+          The integral computed in :func:`eta_function` is cut in two: one
+          handling the divergent part near 0 using the default integrator
+          and the other taking care of the fast oscillations at angular
+          frequency :math:`\tau` using an appropriate integration scheme.
+          The cutoff point can be modified with ``num_oscillations``. This
+          isn't compatible with imaginary time computations. 
+        - **num_oscillations** (*int, float, callable*) -- When
+          ``alt_integrator`` is ``True``, specifies how many oscillations to
+          keep for the non-weighted part of the integral of
+          :func:`eta_function`. This should be either an integer or specified
+          as a function of :math:`\tau`. To help choose: the higher this number
+          is, the more the default integrator will struggle to integrate the
+          non-weighted part. The lower it is, the more the weighted integrators
+          will struggle to integrate the near divergent part close to 0. A
+          constant value is a good choice for most use cases. Otherwise, it is
+          possible to input a function to target possible issues at specific
+          memory times :math:`\tau`.
     """
 
     def __init__(
@@ -417,11 +428,9 @@ class CustomSD(BaseCorrelations):
             cutoff: float,
             cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
-            alt_integrator: Optional[bool] = False,
-            num_oscillations: Optional[
-                Union[int, float, Callable[[float], float]]] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None) -> None:
+            description: Optional[Text] = None,
+            integration_params: Optional[Dict] = None) -> None:
         """Create a CustomFunctionSD (spectral density) object. """
 
         # check input: j_function
@@ -454,20 +463,29 @@ class CustomSD(BaseCorrelations):
             raise ValueError("Temperature must be >= 0.0 (but is {})".format(
                 tmp_temperature))
         self.temperature = tmp_temperature
+        if integration_params is None:
+            integration_params = INTEGRATION_PARAMS
+        elif isinstance(integration_params, dict):
+            integration_params = INTEGRATION_PARAMS | integration_params
+        else:
+            raise AssertionError("integration_params should be "\
+                        "a dictionary")
 
         # input check for alt_integrator
+        alt_integrator = integration_params["alt_integrator"]
+        num_oscillations = integration_params["num_oscillations"]
         assert isinstance(alt_integrator, bool)
+        if alt_integrator is False and num_oscillations is not None:
+            warnings.warn("num_oscillations will be discarded since "\
+                          "alt_integrator is False", UserWarning)
         self._alt_integrator = alt_integrator
-
         # create the first_cutoff function and input check for num_oscillations
-        if num_oscillations is None:
-            num_oscillations = 3
         if isinstance(num_oscillations, (int, float)) and num_oscillations > 0:
-            tmp_n = num_oscillations
             # This form is a step version of the first cutoff which prevents
             # useless computations of _truncated_eta
-            self.first_cutoff = lambda t: 2*np.pi*tmp_n/(1+1/tmp_n)**np.floor(
-                    np.log(t)/np.log(1+1/tmp_n))
+            self.first_cutoff = lambda t: 2*np.pi*num_oscillations/(1
+                                +1/num_oscillations)**np.floor(np.log(t)/
+                                np.log(1+1/num_oscillations))
         else:
             try:
                 float(num_oscillations(1.0))
@@ -583,6 +601,56 @@ class CustomSD(BaseCorrelations):
             integral = integral.real
         return integral
 
+    def _eta_function_alt(self,
+                          tau: float,
+                          integrand: Callable,
+                          epsrel: float,
+                          subdiv_limit: int) -> complex:
+        """Computes `eta_function` when `alt_integrator` is set to True."""
+        im_integrand = lambda w: - self._spectral_density(w) / w ** 2
+        if self.temperature == 0.0:
+            re_integrand = lambda w: self._spectral_density(w) / w ** 2
+        else:
+            def re_integrand(w):
+                # this is to stop overflow
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:
+                    inte = self._spectral_density(w) / w ** 2 \
+                        * 1/np.tanh(w / (2*self.temperature))
+                else:
+                    inte = self._spectral_density(w) / w ** 2
+                return inte
+
+        omega_tilde = self.first_cutoff(tau)
+
+        # compute tau independant parts of the full eta integral
+        re_constant, im_constant = self._truncated_eta(a=omega_tilde,
+                                                       epsrel=epsrel,
+                                                       limit=subdiv_limit)
+        # first cut of integral on [0, omega_tilde] (non-weighted integral)
+        integral = _complex_integral(integrand,
+                                     a=0.0,
+                                     b=omega_tilde,
+                                     epsrel=epsrel,
+                                     limit=subdiv_limit)
+
+        # second cut of integral on [omega_tilde, omega_c] (weighted integral)
+        integral += _weighted_integral(re_integrand, im_integrand,
+                                     w=tau,
+                                     a=omega_tilde,
+                                     b=self.cutoff,
+                                     epsrel=epsrel,
+                                     limit=subdiv_limit)
+
+        if self.cutoff_type != "hard":
+            # last cut of integral on [omega_c, infinity] (weighted integral)
+            integral += _weighted_integral(re_integrand, im_integrand,
+                                          w=tau,
+                                          a=self.cutoff,
+                                          b=np.inf,
+                                          epsrel=epsrel,
+                                          limit=subdiv_limit)
+        return - (integral + 1.j*tau*im_constant - re_constant)
+
     @lru_cache(maxsize=2 ** 10, typed=False)
     def _truncated_eta(self,
                 a: float,
@@ -664,11 +732,12 @@ class CustomSD(BaseCorrelations):
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
         alt_integrator: Union[bool, None]
-            Whether or not to use a sine/cosine weighted version of the
-            integrals that could be better suited if you're encountering
-            numerical difficulties, especially for long memory times. If the
-            value is `None`, the value of `alt_integrator` set during
-            initialization of the `CustomSD` object is used instead.
+            Whether to use an alternative integration scheme leveraging
+            sine/cosine weighted versions of scipy.integrate.quad to handle
+            rapid oscillations. See ``alt_integrator`` in :class:`CustomSD`.
+            If the value is ``None``, the value of ``alt_integrator`` set
+            during initialization of the :class:`CustomSD` object is used
+            instead.
         Returns
         -------
         correlation : ndarray
@@ -707,46 +776,10 @@ class CustomSD(BaseCorrelations):
 
         # Alternative computation with weighted integrators
         if alt_integrator and tau*self.cutoff > 1.:
-            im_integrand = lambda w: - self._spectral_density(w) / w ** 2
-            if self.temperature == 0.0:
-                re_integrand = lambda w: self._spectral_density(w) / w ** 2
-            else:
-                def re_integrand(w):
-                    # this is to stop overflow
-                    if np.exp(-w / self.temperature) > np.finfo(float).eps:
-                        inte = self._spectral_density(w) / w ** 2 \
-                            * 1/np.tanh(w / (2*self.temperature))
-                    else:
-                        inte = self._spectral_density(w) / w ** 2
-                    return inte
-
-            omega_tilde = self.first_cutoff(tau)
-
-            integral = _complex_integral(integrand,
-                                         a=0.0,
-                                         b=omega_tilde,
-                                         epsrel=epsrel,
-                                         limit=subdiv_limit)
-
-            integral += _weighted_integral(re_integrand, im_integrand,
-                                         w=tau,
-                                         a=omega_tilde,
-                                         b=self.cutoff,
-                                         epsrel=epsrel,
-                                         limit=subdiv_limit)
-
-            if self.cutoff_type != "hard":
-                integral += _weighted_integral(re_integrand, im_integrand,
-                                              w=tau,
-                                              a=self.cutoff,
-                                              b=np.inf,
-                                              epsrel=epsrel,
-                                              limit=subdiv_limit)
-
-            re_constant, im_constant = self._truncated_eta(a=omega_tilde,
-                                                           epsrel=epsrel,
-                                                           limit=subdiv_limit)
-            return - (integral + 1.j*tau*im_constant - re_constant)
+            return self._eta_function_alt(tau=tau,
+                                          integrand=integrand,
+                                          epsrel=epsrel,
+                                          subdiv_limit=subdiv_limit)
 
         # Default computation of eta_function when alt_integrator is False
         integral = _complex_integral(integrand,
@@ -882,25 +915,9 @@ class PowerLawSD(CustomSD):
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
-    alt_integrator: bool
-        Whether or not to use a sine/cosine weighted version of the
-        integrals that could be better suited if you're encountering
-        numerical difficulties, especially for long memory times.
-        The integral computed in `eta_function` is cut in two: one
-        handling the divergent part near 0 using the default integrator
-        and the other taking care of the fast oscillations at angular
-        frequency :math:`\tau` using an appropriate integration scheme.
-        The cutoff point can be modified with `num_oscillations`.
-    num_oscillations: int, float, callable
-        When using `alt_integrator`, specifies how many oscillations to keep
-        for the non-weighted part of the integral of `eta_function`. This should
-        be either an integer or specified as a function of :math:`\tau`. To help
-        choose: the higher this number is, the more the default integrator will
-        struggle to integrate the non-weighted part. The lower it is, the more
-        the weighted integrators will struggle to integrate the near divergent
-        part close to 0. A constant value is a good choice for most use cases.
-        Otherwise, it is possible to input a function to target possible issues
-        at specific memory times :math:`\tau`.
+    integration_params: dict
+        Optional dictionary to pass integration parameters. See
+        ``integration_params`` in :class:`CustomSD`.
     name: str
         An optional name for the correlations.
     description: str
@@ -914,9 +931,7 @@ class PowerLawSD(CustomSD):
             cutoff: float,
             cutoff_type: Text = 'exponential',
             temperature: Optional[float] = 0.0,
-            alt_integrator: Optional[bool] = False,
-            num_oscillations: Optional[
-                Union[int, float, Callable[[float], float]]] = None,
+            integration_params: Optional[Dict] = None,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a StandardSD (spectral density) object. """
@@ -950,7 +965,7 @@ class PowerLawSD(CustomSD):
                          cutoff=cutoff,
                          cutoff_type=cutoff_type,
                          temperature=temperature,
-                         alt_integrator=alt_integrator,
+                         integration_params=integration_params,
                          name=name,
                          description=description)
 

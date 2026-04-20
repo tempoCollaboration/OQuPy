@@ -321,6 +321,24 @@ computation time over a timescale ``end_time-start_time``, so make sure
 to set these to reflect those you actually intend to use in
 calculations.
 
+Long memory lengths
+~~~~~~~~~~~~~~~~~~~
+
+When defining the bath parameters with a spectral density (for example with a ``CustomSD`` or ``PowerLawSD``), large values of ``tcut`` can lead to numerical instabilities in the computation of the influence matrix. Indeed, the coefficients of the influence matrix are computed through discrete time differences of the ``eta_function`` given by:
+
+.. math::
+        \eta(\tau) = \int_0^{\infty} \frac{J(\omega)}{\omega^2} \
+                   \left[ ( \cos(\omega \tau) - 1 ) \
+                          \coth\left( \frac{\omega}{2 T}\right) \
+                          - i ( \sin(\omega \tau) - \omega \tau ) \right] \
+                          \mathrm{d}\omega.
+
+with memory-time ``tau`` :math:`\tau`. ``tcut`` is the highest value used for ``tau`` in this expression. Thus, high memory lengths lead to highly oscillating terms in this integral due to the :math:`\cos(\tau\omega)` and  :math:`\sin(\tau\omega)` terms. The default integrator used for this integral can struggle to give converged results in these cases. However, it is possible to specify whether to use a weighted integrator instead which is better suited for these oscillatory behaviours with ``alt_integrator`` in ``CustomSD`` (or any of its subclasses).
+
+In more detail, this keyword changes the computation by splitting the integral in two: it uses the default integrator for the divergent part near 0 and the weighted sine or cosine versions of ``scipy.integrate.quad`` after. By default, the point where the integral is split is chosen automatically by setting a maximum number of oscillations for the first integral. It is possible to change the default number of oscillations through the ``num_oscillations`` parameter. It either takes an integer, float or a function of ``tau`` which should return the maxium number of oscillations for each ``tau``. The results are often quite accurate with the default values, but rough guidelines for modifying it are to decrease the number of oscillations if the integrator struggles with the first integral (too oscillatory for the default integrator), and increase it if it struggles with the second integral (too divergent for the cos/sin weighted versions).
+
+
+
 ----------------------
 Choosing dt and epsrel
 ----------------------

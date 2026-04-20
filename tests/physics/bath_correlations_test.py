@@ -64,7 +64,7 @@ def test():
                                  cutoff=omega_cutoff,
                                  cutoff_type="exponential",
                                  temperature=temperature,
-                                 alt_integrator=alt_integrator)
+                                 integration_params={"alt_integrator": alt_integrator})
             with warnings.catch_warnings():
                 warnings.simplefilter(action="error",
                                       category=IntegrationWarning)

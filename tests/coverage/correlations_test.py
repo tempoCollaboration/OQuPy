@@ -158,7 +158,7 @@ def test_matsubara_custom_s_d_bad_input():
                                                   delta=0.1,
                                                   shape=shape,
                                                   matsubara=True)
-    correlations = CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", temperature=1.0, alt_integrator=True)
+    correlations = CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", temperature=1.0, integration_params={"alt_integrator": True})
     with pytest.raises(ValueError):
         correlations.correlation_2d_integral(time_1=2, delta=0.1, shape='upper-triangle', matsubara=True, alt_integrator=True)
 
@@ -178,13 +178,17 @@ def test_custom_s_d_bad_input():
                  temperature="bla")
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                 temperature=0.0, alt_integrator="bla")
+                temperature=0.0, integration_params={"alt_integrator": "bla"})
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                 temperature=0.0, num_oscillations=-1.0)
+                temperature=0.0, integration_params={"num_oscillations": -1.0})
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                temperature=0.0, num_oscillations=lambda t: "a")
+                temperature=0.0, integration_params={"num_oscillations":
+                                                     lambda t: "a"})
+    with pytest.raises(AssertionError):
+        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
+                temperature=0.0, integration_params=5)
     with pytest.raises(ValueError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="hard", \
                  temperature=-2.0)
@@ -202,7 +206,7 @@ def test_power_law_s_d():
         y = sd.spectral_density(w)
         t = np.linspace(0, 4.0 / sd.cutoff, 10)
         [sd.correlation(tt) for tt in t]
-        [sd.correlation(tt) for tt in t]
+        [sd.eta_function(tt) for tt in t]
         for shape in ["square", "upper-triangle"]:
             sd.correlation_2d_integral(time_1=0.25,
                                        delta=0.05,

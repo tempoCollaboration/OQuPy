@@ -73,3 +73,11 @@ PT_TEBD_DEFAULT_EPSREL = 1.0e-5
 
 # default tolerance for degeneracy checking (how many decimals to round to)
 DEFAULT_TOLERANCE_DEGENERACY = 12
+
+
+# -- BATH_CORRELATIONS -------------------------------------------------------
+
+INTEGRATION_PARAMS = {"epsrel": INTEGRATE_EPSREL,
+                      "subdiv_limit": SUBDIV_LIMIT,
+                      "alt_integrator": False,
+                      "num_oscillations": 3}
