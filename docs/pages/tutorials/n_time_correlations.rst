@@ -43,7 +43,7 @@ and plot the results:
     sys.path.insert(0,'..')
     
     import oqupy
-    from oqupy.contractions import compute_correlations_nt
+    from oqupy.system_dynamics import compute_correlations_nt
     import numpy as np
     import matplotlib.pyplot as plt
     from scipy.fft import fftfreq, fftshift, fft2
