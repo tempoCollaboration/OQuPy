@@ -63,7 +63,6 @@ def test_custom_correlations_bad_input():
 def test_custom_s_d():
     for cutoff_type in ["hard", "exponential", "gaussian"]:
         for temperature in [0.0, 2.0]:
-            for alt_integrator in [True, False, None]:
                 sd = CustomSD(square_function,
                               cutoff=2.0,
                               temperature=temperature,
@@ -76,12 +75,10 @@ def test_custom_s_d():
                 for shape in ["square", "upper-triangle"]:
                     sd.correlation_2d_integral(time_1=0.25,
                                                delta=0.05,
-                                               shape=shape,
-                                               alt_integrator=alt_integrator)
+                                               shape=shape)
                     sd.correlation_2d_integral(time_1=0.5,
                                                delta=0.05,
-                                               shape=shape,
-                                               alt_integrator=alt_integrator)
+                                               shape=shape)
 
 
 def test_matsubara_custom_s_d():
@@ -158,10 +155,6 @@ def test_matsubara_custom_s_d_bad_input():
                                                   delta=0.1,
                                                   shape=shape,
                                                   matsubara=True)
-    correlations = CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", temperature=1.0, integration_params={"alt_integrator": True})
-    with pytest.raises(ValueError):
-        correlations.correlation_2d_integral(time_1=2, delta=0.1, shape='upper-triangle', matsubara=True, alt_integrator=True)
-
 
 
 def test_custom_s_d_bad_input():
@@ -176,16 +169,6 @@ def test_custom_s_d_bad_input():
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
                  temperature="bla")
-    with pytest.raises(AssertionError):
-        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                temperature=0.0, integration_params={"alt_integrator": "bla"})
-    with pytest.raises(AssertionError):
-        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                temperature=0.0, integration_params={"num_oscillations": -1.0})
-    with pytest.raises(AssertionError):
-        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                temperature=0.0, integration_params={"num_oscillations":
-                                                     lambda t: "a"})
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
                 temperature=0.0, integration_params=5)

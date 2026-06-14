@@ -51,6 +51,10 @@ correlations_A = oqupy.PowerLawSD(alpha=alpha_A,
                                   cutoff_type="exponential",
                                   temperature=temperature_A,
                                   name="ohmic")
+
+correlations_A.eta_function(0)
+correlations_A.eta_function(200)
+
 bath_A = oqupy.Bath(coupling_operator_A,
                     correlations_A,
                     name="phonon bath")

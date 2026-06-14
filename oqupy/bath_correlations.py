@@ -13,19 +13,19 @@
 Module for environment correlations.
 """
 
-from typing import Callable, Optional, Union, Text, Dict
+from typing import Callable, Optional, Text, Dict
 from typing import Any as ArrayLike
 from functools import lru_cache
-import warnings
 
 import numpy as np
 from scipy import integrate
 
 from oqupy.base_api import BaseAPIClass
-from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT, INTEGRATION_PARAMS
+from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.config import INTEGRATION_PARAMS
 from oqupy.util import check_true
 
-#np.seterr(all='warn')
+
 # --- spectral density classes ------------------------------------------------
 
 class BaseCorrelations(BaseAPIClass):
@@ -310,30 +310,6 @@ CUTOFF_DICT = {
 
 # --- the spectral density classes --------------------------------------------
 
-def _weighted_integral(
-        re_integrand: Callable[[float], float],
-        im_integrand: Callable[[float], float],
-        w: float,
-        a: Optional[float] = 0.0,
-        b: Optional[float] = 1.0,
-        epsrel: Optional[float] = INTEGRATE_EPSREL,
-        limit: Optional[int] = SUBDIV_LIMIT) -> complex:
-    re_int = integrate.quad(re_integrand,
-                            a=a,
-                            b=b,
-                            epsrel=epsrel,
-                            limit=limit,
-                            weight='cos',
-                            wvar=w)[0]
-    im_int = integrate.quad(im_integrand,
-                            a=a,
-                            b=b,
-                            epsrel=epsrel,
-                            limit=limit,
-                            weight='sin',
-                            wvar=w)[0]
-    return re_int + 1j * im_int
-
 def _complex_integral(
         integrand: Callable[[float], complex],
         a: Optional[float] = 0.0,
@@ -387,39 +363,18 @@ class CustomSD(BaseCorrelations):
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
+    integration_params: dict
+        Optional dictionary to pass integration parameters. Possible
+        parameters include:
+        - **epsrel** (*float*) -- Relative error tolerance.
+        - **subdiv_limit** (*int*) -- Maximal number of interval subdivisions
+          for numerical integration.
+        - **omega_tau_theshold** (*float*) -- Threshold for using a weighted
+          quadrature when computing the :math:`\eta(\tau)` integral.
     name: str
         An optional name for the correlations.
     description: str
         An optional description of the correlations.
-    integration_params: dict
-        Optional dictionary to pass integration parameters. Possible
-        parameters include:
-
-        - **epsrel** (*float*) -- Relative error tolerance.
-        - **subdiv_limit** (*int*) -- Maximal number of interval subdivisions
-          for numerical integration.
-        - **alt_integrator** (*bool*) -- Whether to use an alternative
-          integration scheme leveraging sine/cosine weighted versions of
-          `scipy.integrate.quad` to handle rapid oscillations. This may improve
-          numerical accuracy and stability, especially for long memory times.
-
-          The integral computed in :func:`eta_function` is cut in two: one
-          handling the divergent part near 0 using the default integrator
-          and the other taking care of the fast oscillations at angular
-          frequency :math:`\tau` using an appropriate integration scheme.
-          The cutoff point can be modified with ``num_oscillations``. This
-          isn't compatible with imaginary time computations. 
-        - **num_oscillations** (*int, float, callable*) -- When
-          ``alt_integrator`` is ``True``, specifies how many oscillations to
-          keep for the non-weighted part of the integral of
-          :func:`eta_function`. This should be either an integer or specified
-          as a function of :math:`\tau`. To help choose: the higher this number
-          is, the more the default integrator will struggle to integrate the
-          non-weighted part. The lower it is, the more the weighted integrators
-          will struggle to integrate the near divergent part close to 0. A
-          constant value is a good choice for most use cases. Otherwise, it is
-          possible to input a function to target possible issues at specific
-          memory times :math:`\tau`.
     """
 
     def __init__(
@@ -428,9 +383,9 @@ class CustomSD(BaseCorrelations):
             cutoff: float,
             cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
+            integration_params: Optional[Dict] = None,
             name: Optional[Text] = None,
-            description: Optional[Text] = None,
-            integration_params: Optional[Dict] = None) -> None:
+            description: Optional[Text] = None) -> None:
         """Create a CustomFunctionSD (spectral density) object. """
 
         # check input: j_function
@@ -463,37 +418,15 @@ class CustomSD(BaseCorrelations):
             raise ValueError("Temperature must be >= 0.0 (but is {})".format(
                 tmp_temperature))
         self.temperature = tmp_temperature
+
+        # input check for integration params.
         if integration_params is None:
             integration_params = INTEGRATION_PARAMS
         elif isinstance(integration_params, dict):
             integration_params = INTEGRATION_PARAMS | integration_params
         else:
-            raise AssertionError("integration_params should be "\
-                        "a dictionary")
-
-        # input check for alt_integrator
-        alt_integrator = integration_params["alt_integrator"]
-        num_oscillations = integration_params["num_oscillations"]
-        assert isinstance(alt_integrator, bool)
-        if alt_integrator is False and num_oscillations is not None:
-            warnings.warn("num_oscillations will be discarded since "\
-                          "alt_integrator is False", UserWarning)
-        self._alt_integrator = alt_integrator
-        # create the first_cutoff function and input check for num_oscillations
-        if isinstance(num_oscillations, (int, float)) and num_oscillations > 0:
-            # This form is a step version of the first cutoff which prevents
-            # useless computations of _truncated_eta
-            self.first_cutoff = lambda t: 2*np.pi*num_oscillations/(1
-                                +1/num_oscillations)**np.floor(np.log(t)/
-                                np.log(1+1/num_oscillations))
-        else:
-            try:
-                float(num_oscillations(1.0))
-            except Exception as e:
-                raise AssertionError("num_oscillations must be a positive" \
-                    "float, int or a function returning floats or ints.") from e
-            self.first_cutoff = lambda t: max(min(2*np.pi*num_oscillations(t)/t,
-                                                  self.cutoff), 0.0)
+            raise AssertionError("integration_params should be a dictionary")
+        self.integration_params = integration_params
 
         self._cutoff_function = \
             lambda omega: CUTOFF_DICT[self.cutoff_type](omega, self.cutoff)
@@ -532,8 +465,8 @@ class CustomSD(BaseCorrelations):
     def correlation(
             self,
             tau: ArrayLike,
-            epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
+            epsrel: Optional[float] = None,
+            subdiv_limit: Optional[int] = None,
             matsubara: Optional[bool] = False) -> ArrayLike:
         r"""
         Auto-correlation function associated to the spectral density at the
@@ -562,6 +495,11 @@ class CustomSD(BaseCorrelations):
         correlation : ndarray
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
+        if epsrel is None:
+            epsrel = self.integration_params["epsrel"]
+        if subdiv_limit is None:
+            subdiv_limit = self.integration_params["subdiv_limit"]
+
         # real and imaginary part of the integrand
         if matsubara:
             tau = -1j * tau
@@ -601,113 +539,14 @@ class CustomSD(BaseCorrelations):
             integral = integral.real
         return integral
 
-    def _eta_function_alt(self,
-                          tau: float,
-                          integrand: Callable,
-                          epsrel: float,
-                          subdiv_limit: int) -> complex:
-        """Computes `eta_function` when `alt_integrator` is set to True."""
-        im_integrand = lambda w: - self._spectral_density(w) / w ** 2
-        if self.temperature == 0.0:
-            re_integrand = lambda w: self._spectral_density(w) / w ** 2
-        else:
-            def re_integrand(w):
-                # this is to stop overflow
-                if np.exp(-w / self.temperature) > np.finfo(float).eps:
-                    inte = self._spectral_density(w) / w ** 2 \
-                        * 1/np.tanh(w / (2*self.temperature))
-                else:
-                    inte = self._spectral_density(w) / w ** 2
-                return inte
-
-        omega_tilde = self.first_cutoff(tau)
-
-        # compute tau independant parts of the full eta integral
-        re_constant, im_constant = self._truncated_eta(a=omega_tilde,
-                                                       epsrel=epsrel,
-                                                       limit=subdiv_limit)
-        # first cut of integral on [0, omega_tilde] (non-weighted integral)
-        integral = _complex_integral(integrand,
-                                     a=0.0,
-                                     b=omega_tilde,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)
-
-        # second cut of integral on [omega_tilde, omega_c] (weighted integral)
-        integral += _weighted_integral(re_integrand, im_integrand,
-                                     w=tau,
-                                     a=omega_tilde,
-                                     b=self.cutoff,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)
-
-        if self.cutoff_type != "hard":
-            # last cut of integral on [omega_c, infinity] (weighted integral)
-            integral += _weighted_integral(re_integrand, im_integrand,
-                                          w=tau,
-                                          a=self.cutoff,
-                                          b=np.inf,
-                                          epsrel=epsrel,
-                                          limit=subdiv_limit)
-        return - (integral + 1.j*tau*im_constant - re_constant)
-
-    @lru_cache(maxsize=2 ** 10, typed=False)
-    def _truncated_eta(self,
-                a: float,
-                epsrel: float,
-                limit: int) ->  complex:
-        """Computes the parts of `eta_function` that are tau independant when
-        `alt_integrator` is set to True.
-        """
-        if self.temperature == 0.0:
-            def re_integrand(w):
-                return self._spectral_density(w) / w ** 2
-        else:
-            def re_integrand(w):
-                # this is to stop overflow
-                if np.exp(-w / self.temperature) > np.finfo(float).eps:
-                    inte = self._spectral_density(w) / w ** 2 \
-                        * 1/np.tanh(w / (2*self.temperature))
-                else:
-                    inte = self._spectral_density(w) / w ** 2
-                return inte
-
-        def im_integrand(w):
-            return self._spectral_density(w)/w
-
-        im_constant = integrate.quad(im_integrand,
-                                     a=a,
-                                     b=self.cutoff,
-                                     epsrel=epsrel,
-                                     limit=limit)[0]
-
-        re_constant = integrate.quad(re_integrand,
-                                         a=a,
-                                         b=self.cutoff,
-                                         epsrel=epsrel,
-                                         limit=limit)[0]
-
-        if self.cutoff_type != "hard":
-            im_constant += integrate.quad(im_integrand,
-                                          a=self.cutoff,
-                                          b=np.inf,
-                                          epsrel=epsrel,
-                                          limit=limit)[0]
-
-            re_constant += integrate.quad(re_integrand,
-                                          a=self.cutoff,
-                                          b=np.inf,
-                                          epsrel=epsrel,
-                                          limit=limit)[0]
-        return re_constant, im_constant
 
     @lru_cache(maxsize=2 ** 10, typed=False)
     def eta_function(
             self,
             tau: ArrayLike,
-            epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-            alt_integrator: Optional[Union[bool, None]] = None,
+            epsrel: Optional[float] = None,
+            subdiv_limit: Optional[int] = None,
+            omega_tau_threshold: Optional[float] = None,
             matsubara: Optional[bool] = False) -> ArrayLike:
         r"""
         :math:`\eta` function associated to the spectral density at the
@@ -715,7 +554,7 @@ class CustomSD(BaseCorrelations):
 
         .. math::
 
-            \eta(\tau) = \int_0^{\infty} \frac{J(\omega)}{\omega^2} \
+            \eta(\tau) = - \int_0^{\infty} \frac{J(\omega)}{\omega^2} \
                        \left[ ( \cos(\omega \tau) - 1 ) \
                               \coth\left( \frac{\omega}{2 T}\right) \
                               - i ( \sin(\omega \tau) - \omega \tau ) \right] \
@@ -731,32 +570,43 @@ class CustomSD(BaseCorrelations):
             Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
-        alt_integrator: Union[bool, None]
-            Whether to use an alternative integration scheme leveraging
-            sine/cosine weighted versions of scipy.integrate.quad to handle
-            rapid oscillations. See ``alt_integrator`` in :class:`CustomSD`.
-            If the value is ``None``, the value of ``alt_integrator`` set
-            during initialization of the :class:`CustomSD` object is used
-            instead.
+        omega_tau_threshold: float
+            Threshold for using a weighted quadrature when computing the
+            :math:`\eta(\tau)` integral.
+        matsubara: bool
+            Compute :math:`\eta(-i \tau)` instead.
+
         Returns
         -------
         correlation : ndarray
             The function :math:`\eta(\tau)` at time :math:`\tau`.
         """
-        if alt_integrator is None:
-            alt_integrator = self._alt_integrator
-        check_true(not (matsubara is True and alt_integrator is True),
-                   "Can't use weighted integrator with matsubara")
-        check_true(isinstance(alt_integrator, bool),
-                   "alt_integrator has to be either True, False or None")
-        # real and imaginary part of the integrand
+        if epsrel is None:
+            epsrel = self.integration_params["epsrel"]
+        if subdiv_limit is None:
+            subdiv_limit = self.integration_params["subdiv_limit"]
+        if omega_tau_threshold is None:
+            omega_tau_threshold = self.integration_params["omega_tau_threshold"]
+
         if matsubara:
-            tau = -1j * tau
-        # convention is tau.imag < 0
+            return self._eta_function_matsubara(tau, epsrel, subdiv_limit)
+        return self._eta_function(
+            tau, epsrel, subdiv_limit, omega_tau_threshold)
+
+
+    def _eta_function(
+            self,
+            tau: ArrayLike,
+            epsrel: float,
+            subdiv_limit: int,
+            omega_tau_threshold: float) -> ArrayLike:
+
+        omega_cutoff = self.cutoff
+        kwargs = {'epsrel': epsrel, 'limit': subdiv_limit}
+
+        # integrand = J(w)/w**2 [ (cos(wt)-1) coth(w/(2T)) - i (sin(wt)-wt) ]
+
         if self.temperature == 0.0:
-            check_true(
-                matsubara is False,
-                'Matsubara correlations only defined for temperature > 0')
             def integrand(w):
                 return self._spectral_density(w) / w ** 2 * (
                     (np.exp(-1j * w * tau) - 1) + 1j * w * tau)
@@ -774,28 +624,110 @@ class CustomSD(BaseCorrelations):
                         * (np.exp(-1j * w * tau) - 1 + 1j * w * tau)
                 return inte
 
-        # Alternative computation with weighted integrators
-        if alt_integrator and tau*self.cutoff > 1.:
-            return self._eta_function_alt(tau=tau,
-                                          integrand=integrand,
-                                          epsrel=epsrel,
-                                          subdiv_limit=subdiv_limit)
+        # If tau is small, ...
+        if tau * omega_cutoff < 1.0:
+            integral = _complex_integral(
+                integrand, a=0, b=omega_cutoff, **kwargs)
+            if self.cutoff_type!="hard":
+                integral += _complex_integral(
+                    integrand, a=omega_cutoff, b=np.inf, **kwargs)
+            return -integral
 
-        # Default computation of eta_function when alt_integrator is False
-        integral = _complex_integral(integrand,
-                                     a=0.0,
-                                     b=self.cutoff,
-                                     epsrel=epsrel,
-                                     limit=subdiv_limit)
+        # ... else, let's rewrite the integrand as ...
+        #
+        #   integrand = A(w) cos(wt) - A(w) - i B(w) sin(wt) + i C(w) t
+        #
+        #           A = + J(w)/w**2 coth(w/(2T))
+        #           B = + J(w)/w**2
+        #           C = + J(w)/w
+
+        if self.temperature == 0.0:
+            def intA(w):
+                return self._spectral_density(w) / w ** 2
+        else:
+            def intA(w):
+                # this is to stop overflow
+                if np.exp(-w / self.temperature) > np.finfo(float).eps:
+                    inte = self._spectral_density(w) / w ** 2 \
+                        * 1/np.tanh(w / (2*self.temperature))
+                else:
+                    inte = self._spectral_density(w) / w ** 2
+                return inte
+
+        def intB(w):
+            return self._spectral_density(w) / w ** 2
+
+        def intC(w):
+            return self._spectral_density(w) / w
+
+
+        # == compute the integral in two steps ==
+        #   1. omega from 0 to omega_tilde
+        #   2. omega from omega_tilde to omega_bound
+        omega_tilde = min(
+            [omega_tau_threshold / (tau + np.finfo(float).eps), self.cutoff])
+        omega_bound = self.cutoff if self.cutoff_type=="hard" else np.inf
+
+        # -- step 1 --
+
+        integral = _complex_integral(
+            integrand, a=0.0, b=omega_tilde, **kwargs)
+
+        # -- step 2 --
+
+        # + A(w) cos(wt)
+        integral += integrate.quad(
+            intA, a=omega_tilde, b=omega_bound, weight='cos', wvar=tau,
+            **kwargs)[0]
+        # - A(w)
+        integral -= integrate.quad(
+            intA, a=omega_tilde, b=omega_bound, **kwargs)[0]
+        # - i B(w) sin(wt)
+        integral -= 1.0j * integrate.quad(
+            intB, a=omega_tilde, b=omega_bound, weight='sin', wvar=tau,
+            **kwargs)[0]
+        # + i C(w) t
+        integral += 1.0j * tau * integrate.quad(
+            intC, a=omega_tilde, b=omega_bound, **kwargs)[0]
+
+        return -integral
+
+    def _eta_function_matsubara(
+            self,
+            tau: ArrayLike,
+            epsrel: float,
+            subdiv_limit: int) -> ArrayLike:
+        check_true(self.temperature > 0.0,
+                'Matsubara correlations only defined for temperature > 0')
+
+        def integrand(w):
+            # this is to stop overflow
+            if np.exp(-w / self.temperature) > np.finfo(float).eps:
+                inte = self._spectral_density(w) / w ** 2 \
+                    * (((np.exp(-w * tau) \
+                            + np.exp(-(w / self.temperature - w * tau ))) \
+                        - np.exp(- w / self.temperature) - 1) \
+                    / (1 - np.exp(-w / self.temperature)) + w * tau)
+            else:
+                inte = self._spectral_density(w) / w ** 2 \
+                    * (np.exp(- w * tau) - 1 +  w * tau)
+            return inte
+
+        integral = integrate.quad(
+            integrand,
+            a=0.0,
+            b=self.cutoff,
+            epsrel=epsrel,
+            limit=subdiv_limit)[0]
 
         if self.cutoff_type != "hard":
-            integral += _complex_integral(integrand,
-                                          a=self.cutoff,
-                                          b=np.inf,
-                                          epsrel=epsrel,
-                                          limit=subdiv_limit)
-        if matsubara:
-            integral = integral.real
+            integral += integrate.quad(
+                integrand,
+                a=self.cutoff,
+                b=np.inf,
+                epsrel=epsrel,
+                limit=subdiv_limit)[0]
+
         return -integral
 
     def correlation_2d_integral(
@@ -804,9 +736,9 @@ class CustomSD(BaseCorrelations):
             time_1: float,
             time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
-            epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-            alt_integrator: Optional[Union[bool, None]] = None,
+            epsrel: Optional[float] = None,
+            subdiv_limit: Optional[int] = None,
+            omega_tau_threshold: Optional[float] = None,
             matsubara: Optional[bool] = False) -> complex:
         r"""
         2D integrals of the correlation function
@@ -841,10 +773,9 @@ class CustomSD(BaseCorrelations):
             Relative error tolerance.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
-        alt_integrator: Union[bool, None]
-            Whether or not to use a sine/cosine weighted version of the
-            integrals that could be better suited if you're encountering
-            numerical difficulties, especially for long times.
+        omega_tau_threshold: float
+            Threshold for using a weighted quadrature when computing the
+            :math:`\eta(\tau)` integral.
 
         Returns
         -------
@@ -852,10 +783,17 @@ class CustomSD(BaseCorrelations):
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
+        if epsrel is None:
+            epsrel = self.integration_params["epsrel"]
+        if subdiv_limit is None:
+            subdiv_limit = self.integration_params["subdiv_limit"]
+        if omega_tau_threshold is None:
+            omega_tau_threshold = self.integration_params["omega_tau_threshold"]
+
         kwargs = {
             'epsrel': epsrel,
             'subdiv_limit': subdiv_limit,
-            'alt_integrator': alt_integrator,
+            'omega_tau_threshold': omega_tau_threshold,
             'matsubara': matsubara}
 
         if shape == 'upper-triangle':

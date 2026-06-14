@@ -13,7 +13,7 @@
 Module to define global configuration for the time_evovling_mpo package.
 """
 
-from numpy import float64, complex128
+from numpy import float64, complex128, pi
 
 # Numpy datatype
 NpDtype = complex128
@@ -27,6 +27,9 @@ INTEGRATE_EPSREL = 2**(-26)
 
 # maximal number of subdivision for adaptive np.integrate.quad()
 SUBDIV_LIMIT = 256
+
+# threshold for using an weighted quadratuer for the eta(tau) integral.
+OMEGA_TAU_THRESHOLD = 2 * pi * 3.0
 
 # 'silent', 'simple' or 'bar' as a default to show the progress of computations
 PROGRESS_TYPE = 'bar'
@@ -79,5 +82,4 @@ DEFAULT_TOLERANCE_DEGENERACY = 12
 
 INTEGRATION_PARAMS = {"epsrel": INTEGRATE_EPSREL,
                       "subdiv_limit": SUBDIV_LIMIT,
-                      "alt_integrator": False,
-                      "num_oscillations": 3}
+                      "omega_tau_threshold": OMEGA_TAU_THRESHOLD}

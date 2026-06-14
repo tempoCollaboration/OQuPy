@@ -41,13 +41,16 @@ def exact_2d_correlations(alpha, omega_cutoff, temperature, k, dt, shape):
         correl = eta_func(k+1)-eta_func(k)
     return 2*alpha*correl
 
-def test():
-    kranges = [np.arange(1, 5), np.arange(395, 400)]
+def test_exact_2d_correlations():
+    kranges = [
+        np.arange(1, 5),
+        np.arange(35, 40),
+        np.arange(395, 400),
+        np.arange(3995, 4000)]
 
     omega_cutoff = 3.0
-    temperature = 0.0
     alpha = 5e-2
-    dt = 0.4
+    dt = 0.04
 
     for shape, temperature, krange in product(["square", "upper-triangle"],
                                               [0.0, 2.0],
@@ -58,33 +61,31 @@ def test():
                                                  krange,
                                                  dt,
                                                  shape)
-        for alt_integrator in [False, True]:
-            correls = PowerLawSD(alpha=alpha,
-                                 zeta=1.0,
-                                 cutoff=omega_cutoff,
-                                 cutoff_type="exponential",
-                                 temperature=temperature,
-                                 integration_params={"alt_integrator": alt_integrator})
-            with warnings.catch_warnings():
-                warnings.simplefilter(action="error",
-                                      category=IntegrationWarning)
+        correls = PowerLawSD(alpha=alpha,
+                                zeta=1.0,
+                                cutoff=omega_cutoff,
+                                cutoff_type="exponential",
+                                temperature=temperature)
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="error",
+                                    category=IntegrationWarning)
+            try:
+                correls_2d = [
+                    correls.correlation_2d_integral(dt, k*dt, shape=shape)
+                        for k in krange]
+            except IntegrationWarning:
+                pass
+            else:
                 try:
-                    correls_2d = [correls.correlation_2d_integral(dt, k*dt, shape=shape)
-                                  for k in krange]
-                except IntegrationWarning:
-                    pass
-                else:
-                    try:
-                        np.testing.assert_allclose(exact_correls_2d,
-                                                   correls_2d,
-                                                   rtol=1e-3, atol=1e-6)
-                    except AssertionError:
-                        pytest.fail("correlation_2d_integral should "\
-                                "either give precise results or at least "\
-                                "warn the user that there could be some "\
-                                f"numerical error, failed: shape={shape}, "\
-                                f"temperature={temperature}, ",
-                                f"ks={krange}, "\
-                                f"alt_integrator={alt_integrator}")
+                    np.testing.assert_allclose(exact_correls_2d,
+                                                correls_2d,
+                                                rtol=1e-3, atol=1e-6)
+                except AssertionError:
+                    pytest.fail("correlation_2d_integral should "\
+                            "either give precise results or at least "\
+                            "warn the user that there could be some "\
+                            f"numerical error, failed: shape={shape}, "\
+                            f"temperature={temperature}, "\
+                            f"ks={krange}.")
 
 
