@@ -521,7 +521,8 @@ def _compute_dynamics_input_parse(
            "One of the elements in `process_tensor` is not of type " \
                + "`{BaseProcessTensor.__name__}`.")
         if pt.get_initial_tensor() is not None:
-            raise NotImplementedError()
+            warnings.warn("Initial correlated states are not yet "\
+                    "implemented, ignoring the initial correlations.")
         check_true(
             hs_dim == pt.hilbert_space_dimension,
             "All process tensor must have the same Hilbert "\
@@ -795,6 +796,7 @@ def compute_correlations_nt(
         ops_times: List[Union[Indices, float, Tuple[float, float]]],
         ops_order: List[Text],
         initial_state: Optional[ndarray] = None,
+        num_steps: Optional[int] = None,
         start_time: Optional[float] = 0.0,
         dt: Optional[float] = None,
         progress_type: Text = None,
@@ -828,6 +830,8 @@ def compute_correlations_nt(
         Initial system state.
     start_time: float (default = 0.0)
         Initial time.
+    num_steps: int
+        Optional number of time steps to be computed.
     dt: float (default = None)
         Time step size.
     progress_type: str (default = None)
@@ -875,8 +879,16 @@ def compute_correlations_nt(
 
 #Input parsing; ensures that specified times that are not an integer multiple
 #of dt are assigned the closest integer multiple.------------------------------
+    max_step = process_tensor.max_step
 
-    max_step = len(process_tensor)
+    if num_steps is None:
+        max_step = process_tensor.max_step
+        check_true(
+            max_step < np.inf,
+            "Variable `num_steps` must be specified because all "\
+                    "process tensors involved are infinite.")
+    else:
+        max_step = num_steps
 
     ops_times_=[]
     ret_times=[] #These are the times returned by the function
@@ -1102,7 +1114,16 @@ def _parse_times(times, max_step, dt, start_time):
         ret_times = np.array([times])
     elif isinstance(times, (slice, list)):
         try:
-            ret_times = np.arange(max_step + 1)[times]
+            if isinstance(times, slice):
+                max_time = max(i for i in [times.stop, times.start]
+                               if i is not None)
+                ret_times = range(max_time+1)[times]
+            else:
+                ret_times = times
+            ret_times = np.fromiter(ret_times, dtype=np.int64,
+                                    count=len(ret_times))
+            if ((ret_times < 0) | (ret_times > max_step)).any():
+                raise IndexError
         except Exception as e:
             raise IndexError("Specified times are invalid or out of bound.") \
                 from e
@@ -1122,8 +1143,11 @@ def _parse_times(times, max_step, dt, start_time):
         if index_end < 0 or index_end > max_step:
             raise IndexError("Specified end time is out of bound.")
         direction = 1 if index_start <= index_end else -1
-        ret_times = np.arange(
-                max_step + 1)[index_start:index_end+direction:direction]
+        trange = range(max(index_start, index_end)+1)
+        ret_times = trange[index_start:index_end+direction:direction]
+        ret_times = np.fromiter(ret_times, dtype=np.int64, count=len(ret_times))
+        if ((ret_times < 0) | (ret_times > max_step)).any():
+            raise IndexError
     else:
         raise TypeError("Parameters `times_a` and `times_b` must be either " \
             + "int, slice, list, or tuple.")

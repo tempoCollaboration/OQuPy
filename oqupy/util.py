@@ -56,6 +56,17 @@ def create_delta(
 
     return ret_ndarray
 
+def create_delta_lastindex(
+        tensor: ndarray) -> ndarray:
+    """
+    Creates a delta at the last index.
+    """
+    ret_shape=tensor.shape+(tensor.shape[-1],)
+    ret_ndarray=np.zeros(ret_shape,dtype=tensor.dtype)
+    for a in range(ret_shape[-1]):
+        ret_ndarray[:,:,a,a]=tensor[:,:,a]
+    return ret_ndarray
+
 def increase_list_of_index(
         a: List,
         shape: List,

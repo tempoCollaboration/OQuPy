@@ -35,6 +35,9 @@ from oqupy.config import NpDtype
 from oqupy import util
 from oqupy.version import __version__
 
+NoneType = type(None)
+
+
 class BaseProcessTensor(BaseAPIClass, ABC):
     """
     Abstract base class for process tensors in matrix product operator form
@@ -275,6 +278,26 @@ class SimpleProcessTensor(BaseProcessTensor):
         """Length of process tensor. """
         return len(self._mpo_tensors)
 
+    @property
+    def repeating_cell(self) -> Union[tuple[int, int], NoneType]:
+        """
+        Repeating unit cell of a time translational invariant process tensor.
+        """
+        return None
+
+    def effective_step(self,
+                       step: int) -> None:
+        """
+        Get the effective step for the _mpo_tensors and _cap_tensors lists
+        when there's a repeating cell.
+        """
+        if self.repeating_cell is None:
+            k = step
+        else:
+            n, l = self.repeating_cell[0], self.repeating_cell[1]
+            k = step if step < n else n + ((step-n) % l)
+        return k
+
     def set_initial_tensor(
             self,
             initial_tensor: Optional[ndarray] = None) -> None:
@@ -339,12 +362,13 @@ class SimpleProcessTensor(BaseProcessTensor):
         Applies the transformation (stored in `.transform_in` and
         `.transform_out`) when `transformed` is true.
         """
+        step = self.effective_step(step)
         length = len(self._mpo_tensors)
         if step >= length or step < 0:
             raise IndexError("Process tensor index out of bound. ")
         tensor = self._mpo_tensors[step]
         if len(tensor.shape) == 3:
-            tensor = util.create_delta(tensor, [0, 1, 2, 2])
+            tensor = util.create_delta_lastindex(tensor)
         if transformed is False:
             return tensor
         if self._transform_in is not None:
@@ -359,6 +383,7 @@ class SimpleProcessTensor(BaseProcessTensor):
         """
         Get the cap tensor (vector) to terminate the PT-MPO at time step `step`.
         """
+        step = self.effective_step(step)
         length = len(self._cap_tensors)
         if step >= length or step < 0:
             return None
@@ -376,6 +401,37 @@ class SimpleProcessTensor(BaseProcessTensor):
                 bond_dims.append(mpo.shape[0])
         bond_dims.append(self._mpo_tensors[-1].shape[1])
         return np.array(bond_dims)
+
+    def export(self, filename: Text, overwrite: bool = False):
+        """Export the process tensor as a FileProcessTensor."""
+        if overwrite:
+            mode = "overwrite"
+        else:
+            mode = "write"
+
+        pt_file = FileProcessTensor(
+            mode=mode,
+            filename=filename,
+            hilbert_space_dimension=self._hs_dim,
+            dt=self._dt,
+            transform_in=self._transform_in,
+            transform_out=self._transform_out,
+            name=self.name,
+            description=self.description)
+
+        pt_file.set_initial_tensor(self._initial_tensor)
+        for step, mpo in enumerate(self._mpo_tensors):
+            pt_file.set_mpo_tensor(step, mpo)
+        for step, cap in enumerate(self._cap_tensors):
+            pt_file.set_cap_tensor(step, cap)
+        pt_file.close()
+
+class SimpleProcessTensorFinite(SimpleProcessTensor):
+    """Finite Process Tensor"""    
+
+    @property
+    def repeating_cell(self) -> NoneType:
+        return None
 
     def compute_caps(self) -> None:
         """
@@ -405,29 +461,22 @@ class SimpleProcessTensor(BaseProcessTensor):
             last_cap = new_cap
         self._cap_tensors = caps
 
-    def export(self, filename: Text, overwrite: bool = False):
-        """Export the process tensor as a FileProcessTensor."""
-        if overwrite:
-            mode = "overwrite"
-        else:
-            mode = "write"
 
-        pt_file = FileProcessTensor(
-            mode=mode,
-            filename=filename,
-            hilbert_space_dimension=self._hs_dim,
-            dt=self._dt,
-            transform_in=self._transform_in,
-            transform_out=self._transform_out,
-            name=self.name,
-            description=self.description)
+class SimpleProcessTensorInfinite(SimpleProcessTensor):
+    """
+    Simple infinite process tensor in matrix product operator form with
+    a repeating unit cell.
+    """
 
-        pt_file.set_initial_tensor(self._initial_tensor)
-        for step, mpo in enumerate(self._mpo_tensors):
-            pt_file.set_mpo_tensor(step, mpo)
-        for step, cap in enumerate(self._cap_tensors):
-            pt_file.set_cap_tensor(step, cap)
-        pt_file.close()
+    @property
+    def max_step(self) -> Union[int, float]:
+        """Maximal number of time steps."""
+        return float('inf')
+
+    @property
+    def repeating_cell(self) -> tuple[int, int]:
+        """Repeating unit cell of an infinite process tensor."""
+        return (1, 1)
 
 
 HDF5None = [np.nan]
@@ -836,19 +885,23 @@ def import_process_tensor(
     process_tensor_type: Text
         Type of process tensor object to create.
         May be 'file' to create `FileProcessTensor`,
-        or 'simple', to create a `SimpleProcessTensor`.
+        or 'simple', to create a generic `SimpleProcessTensor`,
+        or 'simple-finite', to create a `SimpleProcessTensorFinite`,
+        or 'simple-infinite' to create a `SimpleProcessTensorInfinite`.
 
     Returns
     -------
     process_tensor: BaseProcessTensor
         The process tensor object with the data from the .hdf5 file.
     """
+    map_dict = {"simple": SimpleProcessTensor,
+                "simple-finite": SimpleProcessTensorFinite,
+                "simple-infinite": SimpleProcessTensorInfinite}
     pt_file = FileProcessTensor(mode="read", filename=filename)
-
     if process_tensor_type is None or process_tensor_type == "file":
         pt = pt_file
-    elif process_tensor_type == "simple":
-        pt = SimpleProcessTensor(
+    elif process_tensor_type in map_dict:
+        pt = map_dict[process_tensor_type](
             hilbert_space_dimension=pt_file.hilbert_space_dimension,
             dt=pt_file.dt,
             transform_in=pt_file.transform_in,

@@ -61,7 +61,8 @@ Furthermore, OQuPy implements methods to ...
    847 <https://doi.org/10.22331/q-2022-10-25-847>`__ (2022).
 -  **[11]** Chiu et al., `Phys. Rev. A 106,
    012204 <https://doi.org/10.1103/PhysRevA.106.012204>`__ (2022).
-
+-  **[12]** Link et al., `Phys. Rev. Lett. 132,
+   200403 <https://doi.org/10.1103/PhysRevLett.132.200403>`__ (2024).
 
 .. |binder-tutorial| image:: https://mybinder.org/badge_logo.svg
  :target: https://mybinder.org/v2/gh/tempoCollaboration/OQuPy/main?filepath=tutorials%2Fquickstart.ipynb

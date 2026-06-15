@@ -16,7 +16,8 @@ The code in this project is based on ideas from the following publications:
 - **[FowlerWright2022]** Fowler-Wright et al., *Efficient Many-Body Non-Markovian Dynamics of Organic Polaritons*, [Phys. Rev. Lett. 129, 173001](https://doi.org/10.1103/PhysRevLett.129.173001) (2022).
 - **[Fux2023]** Fux et al., *Tensor network simulation of chains of non-Markovian open quantum systems*, [Phys. Rev. Research 5, 033078 ](https://doi.org/10.1103/PhysRevResearch.5.033078}) (2023).
 - **[Butler2024]** Butler et al., *Optimizing Performance of Quantum Operations with Non-Markovian Decoherence: The Tortoise or the Hare?*, [Phys. Rev. Lett. 132, 060401 ](https://doi.org/10.1103/PhysRevLett.132.060401}) (2024).
-
+- **[Link2024]** Link et al., *Open Quantum System Dynamics from Infinite Tensor Network Contraction*, `Phys. Rev. Lett. 132,
+   200403 <https://doi.org/10.1103/PhysRevLett.132.200403>`__ (2024).
 
 BibTeX:
 -------
@@ -140,6 +141,21 @@ BibTeX:
   publisher = {American Physical Society},
   doi = {10.1103/PhysRevLett.123.240602},
   url = {https://doi.org/10.1103/PhysRevLett.123.240602}
+}
+
+@article{Link2024,
+  title = {Open Quantum System Dynamics from Infinite Tensor Network Contraction},
+  author = {Link, Valentin and Tu, Hong-Hao and Strunz, Walter T.},
+  journal = {Phys. Rev. Lett.},
+  volume = {132},
+  issue = {20},
+  pages = {200403},
+  numpages = {7},
+  year = {2024},
+  month = {May},
+  publisher = {American Physical Society},
+  doi = {10.1103/PhysRevLett.132.200403},
+  url = {https://link.aps.org/doi/10.1103/PhysRevLett.132.200403}
 }
 
 @misc{OQuPy-code-v0.5.0,

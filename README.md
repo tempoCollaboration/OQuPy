@@ -41,7 +41,7 @@ Furthermore, OQuPy implements methods to ...
 - **[9]** Butler et al., [Phys. Rev. Lett. 132, 060401 ](https://doi.org/10.1103/PhysRevLett.132.060401) (2024).
 - **[10]** Gribben et al., [Quantum, 6, 847](https://doi.org/10.22331/q-2022-10-25-847) (2022).
 - **[11]** Chiu et al., [Phys. Rev. A 106, 012204](https://doi.org/10.1103/PhysRevA.106.012204) (2022).
-
+- **[12]** Link et al., [Phys. Rev. Lett. 132, 200403](https://doi.org/10.1103/PhysRevLett.132.200403) (2024).
 
 -------------------------------------------------------------------------------
 

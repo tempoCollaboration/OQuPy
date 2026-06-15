@@ -68,6 +68,12 @@ PT_TEBD_DEFAULT_ORDER = 2
 PT_TEBD_DEFAULT_EPSREL = 1.0e-5
 
 
+# -- TTI_TEMPO ---------------------------------------------------------------
+
+# Default TTI-TEMPO backend configuration
+TTI_TEMPO_BACKEND_CONFIG = {"itol": 1e-13}
+
+
 # -- BATH --------------------------------------------------------------------
 
 
