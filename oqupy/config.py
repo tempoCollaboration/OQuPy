@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Module to define global configuration for the time_evovling_mpo package.
+Module to define global configuration for the oqupy package.
 """
 
 from numpy import float64, complex128, pi
@@ -27,9 +27,6 @@ INTEGRATE_EPSREL = 2**(-26)
 
 # maximal number of subdivision for adaptive np.integrate.quad()
 SUBDIV_LIMIT = 256
-
-# threshold for using an weighted quadratuer for the eta(tau) integral.
-OMEGA_TAU_THRESHOLD = 2 * pi * 3.0
 
 # 'silent', 'simple' or 'bar' as a default to show the progress of computations
 PROGRESS_TYPE = 'bar'
@@ -49,6 +46,12 @@ MAX_SYS_SAMPLES = 5000
 
 # default tolerances for tempo parameter guessing function
 DEFAULT_TOLERANCE = 3.9e-3
+
+# default subdiv_limit for integrating a time-dependent Liouvillian
+LIOUVILLIAN_SUBDIV_LIMIT = SUBDIV_LIMIT
+
+# default epsrel for integrating a time-dependent Liouvillian
+LIOUVILLIAN_EPSREL = INTEGRATE_EPSREL
 
 # -- PT_TEMPO -----------------------------------------------------------------
 
@@ -80,6 +83,11 @@ DEFAULT_TOLERANCE_DEGENERACY = 12
 
 # -- BATH_CORRELATIONS -------------------------------------------------------
 
-INTEGRATION_PARAMS = {"epsrel": INTEGRATE_EPSREL,
-                      "subdiv_limit": SUBDIV_LIMIT,
-                      "omega_tau_threshold": OMEGA_TAU_THRESHOLD}
+# default subdiv_limit for integrating bath correlations
+BATH_SUBDIV_LIMIT = SUBDIV_LIMIT
+
+# default epsrel for integrating bath correlations
+BATH_EPSREL = INTEGRATE_EPSREL
+
+# threshold for using an weighted quadratuer for the eta(tau) integral
+OMEGA_TAU_THRESHOLD = 2 * pi * 3.0

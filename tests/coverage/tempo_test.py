@@ -162,16 +162,16 @@ def test_tempo_parameters():
                                       dkmax=10,
                                       epsrel=2.0e-05,
                                       add_correlation_time=-1.0)
-    with pytest.raises(TypeError): # invalid subdiv_limit
+    with pytest.raises(TypeError): # invalid liouvillian_subdiv_limit
         param = oqupy.TempoParameters(dt=0.1,
                                       dkmax=10,
                                       epsrel=2.0e-05,
-                                      subdiv_limit='a')
-    with pytest.raises(ValueError): # invalid subdiv_limit
+                                      liouvillian_subdiv_limit='a')
+    with pytest.raises(ValueError): # invalid liouvillian_subdiv_limit
         param = oqupy.TempoParameters(dt=0.1,
                                       dkmax=10,
                                       epsrel=2.0e-05,
-                                      subdiv_limit=-1.0)
+                                      liouvillian_subdiv_limit=-1.0)
     with pytest.raises(TypeError): # invalid liouvillian_epsrel
         param = oqupy.TempoParameters(dt=0.1,
                                       dkmax=10,
@@ -186,7 +186,7 @@ def test_tempo_parameters():
     param = oqupy.TempoParameters(dt=0.1,
                                   dkmax=10,
                                   epsrel=2.0e-05,
-                                  subdiv_limit=None)
+                                  liouvillian_subdiv_limit=None)
     print(param)
     # Must be true on creation
     assert np.isclose(param.tcut, param.dkmax * param.dt)

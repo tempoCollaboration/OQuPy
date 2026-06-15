@@ -13,7 +13,7 @@
 Module for environment correlations.
 """
 
-from typing import Callable, Optional, Text, Dict
+from typing import Callable, Optional, Text
 from typing import Any as ArrayLike
 from functools import lru_cache
 
@@ -22,7 +22,7 @@ from scipy import integrate
 
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
-from oqupy.config import INTEGRATION_PARAMS
+from oqupy.config import BATH_EPSREL, BATH_SUBDIV_LIMIT, OMEGA_TAU_THRESHOLD
 from oqupy.util import check_true
 
 
@@ -34,8 +34,8 @@ class BaseCorrelations(BaseAPIClass):
     def correlation(
             self,
             tau: ArrayLike,
-            epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> ArrayLike:
+            epsrel: Optional[float] = BATH_EPSREL,
+            subdiv_limit: Optional[int] = BATH_SUBDIV_LIMIT) -> ArrayLike:
         r"""
         Auto-correlation function.
 
@@ -50,16 +50,16 @@ class BaseCorrelations(BaseAPIClass):
 
         Parameters
         ----------
-        tau : ndarray
+        tau: ndarray
             Time difference :math:`\tau`
-        epsrel : float
-            Relative error tolerance.
+        epsrel: float
+            Relative error tolerance for numerical integration.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
         Returns
         -------
-        correlation : ndarray
+        correlation: ndarray
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         raise NotImplementedError(
@@ -71,8 +71,8 @@ class BaseCorrelations(BaseAPIClass):
             time_1: float,
             time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
-            epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> complex:
+            epsrel: Optional[float] = BATH_EPSREL,
+            subdiv_limit: Optional[int] = BATH_SUBDIV_LIMIT) -> complex:
         r"""
         2D integrals of the correlation function
 
@@ -92,24 +92,24 @@ class BaseCorrelations(BaseAPIClass):
 
         Parameters
         ----------
-        delta : float
+        delta: float
             Length of integration intervals.
-        time_1 : float
+        time_1: float
             Lower bound of integration interval of :math:`dt'`.
-        time_2 : float
+        time_2: float
             Upper bound of integration interval of :math:`dt'` for `shape` =
             ``'rectangle'``.
-        shape : str (default = ``'square'``)
+        shape: str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'rectangle'``}
-        epsrel : float
-            Relative error tolerance.
+        epsrel: float
+            Relative error tolerance for numerical integration.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
         Returns
         -------
-        integral : float
+        integral: float
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
@@ -133,7 +133,7 @@ class CustomCorrelations(BaseCorrelations):
 
     Parameters
     ----------
-    correlation_function : callable
+    correlation_function: callable
         The correlation function :math:`C`.
     name: str
         An optional name for the correlations.
@@ -144,6 +144,8 @@ class CustomCorrelations(BaseCorrelations):
     def __init__(
             self,
             correlation_function: Callable[[float], float],
+            epsrel: Optional[float] = BATH_EPSREL,
+            subdiv_limit: Optional[int] = BATH_SUBDIV_LIMIT,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Creates a CustomCorrelations object. """
@@ -156,6 +158,9 @@ class CustomCorrelations(BaseCorrelations):
             raise AssertionError("Correlation function must be vectorizable " \
                                  + "and must return float.") from e
         self.correlation_function = tmp_correlation_function
+
+        self.epsrel = epsrel
+        self.subdiv_limit = subdiv_limit
 
         super().__init__(name, description)
 
@@ -183,17 +188,18 @@ class CustomCorrelations(BaseCorrelations):
 
         Parameters
         ----------
-        tau : ndarray
+        tau: ndarray
             Time difference :math:`\tau`
-        epsrel : float
-            Relative error tolerance (has no effect here).
-        subdiv_limit : int
+        epsrel: float
+            Relative error tolerance for numerical integration
+            (has no effect here).
+        subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration
             (has no effect here).
 
         Returns
         -------
-        correlation : ndarray
+        correlation: ndarray
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         return self.correlation_function(tau)
@@ -205,8 +211,8 @@ class CustomCorrelations(BaseCorrelations):
             time_1: float,
             time_2: Optional[float] = None,
             shape: Optional[Text] = 'square',
-            epsrel: Optional[float] = INTEGRATE_EPSREL,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT) -> complex:
+            epsrel: Optional[float] = None,
+            subdiv_limit: Optional[int] = None) -> complex:
         r"""
         2D integrals of the correlation function
 
@@ -226,27 +232,32 @@ class CustomCorrelations(BaseCorrelations):
 
         Parameters
         ----------
-        delta : float
+        delta: float
             Length of integration intervals.
-        time_1 : float
+        time_1: float
             Lower bound of integration interval of :math:`dt'`.
-        time_2 : float
+        time_2: float
             Upper bound of integration interval of :math:`dt'` for `shape` =
             ``'rectangle'``.
-        shape : str (default = ``'square'``)
+        shape: str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'rectangle'``}
-        epsrel : float
-            Relative error tolerance.
+        epsrel: float
+            Relative error tolerance for numerical integration.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
         Returns
         -------
-        integral : float
+        integral: float
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
+        if epsrel is None:
+            epsrel = self.epsrel
+        if subdiv_limit is None:
+            subdiv_limit = self.subdiv_limit
+
         c_real = lambda y, x: np.real(self.correlation(x - y))
         c_imag = lambda y, x: np.imag(self.correlation(x - y))
 
@@ -354,23 +365,22 @@ class CustomSD(BaseCorrelations):
 
     Parameters
     ----------
-    j_function : callable
+    j_function: callable
         The spectral density :math:`j` without the cutoff.
-    cutoff : float
+    cutoff: float
         The cutoff frequency :math:`\omega_c`.
-    cutoff_type : str (default = ``'exponential'``)
+    cutoff_type: str (default = ``'exponential'``)
         The cutoff type. Types are: {``'hard'``, ``'exponential'``,
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
-    integration_params: dict
-        Optional dictionary to pass integration parameters. Possible
-        parameters include:
-        - **epsrel** (*float*) -- Relative error tolerance.
-        - **subdiv_limit** (*int*) -- Maximal number of interval subdivisions
-          for numerical integration.
-        - **omega_tau_theshold** (*float*) -- Threshold for using a weighted
-          quadrature when computing the :math:`\eta(\tau)` integral.
+    epsrel: float
+        Relative error tolerance for numerical integration.
+    subdiv_limit: int
+        Maximal number of interval subdivisions for numerical integration.
+    omega_tau_threshold: float
+        Threshold for using a weighted quadrature when computing the
+        :math:`\eta(\tau)` integral.
     name: str
         An optional name for the correlations.
     description: str
@@ -383,7 +393,9 @@ class CustomSD(BaseCorrelations):
             cutoff: float,
             cutoff_type: Optional[Text] = 'exponential',
             temperature: Optional[float] = 0.0,
-            integration_params: Optional[Dict] = None,
+            epsrel: Optional[float] = BATH_EPSREL,
+            subdiv_limit: Optional[int] = BATH_SUBDIV_LIMIT,
+            omega_tau_threshold: Optional[float] = OMEGA_TAU_THRESHOLD,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a CustomFunctionSD (spectral density) object. """
@@ -419,14 +431,10 @@ class CustomSD(BaseCorrelations):
                 tmp_temperature))
         self.temperature = tmp_temperature
 
-        # input check for integration params.
-        if integration_params is None:
-            integration_params = INTEGRATION_PARAMS
-        elif isinstance(integration_params, dict):
-            integration_params = INTEGRATION_PARAMS | integration_params
-        else:
-            raise AssertionError("integration_params should be a dictionary")
-        self.integration_params = integration_params
+        # integration parameters
+        self.epsrel = epsrel
+        self.subdiv_limit = subdiv_limit
+        self.omega_tau_threshold = omega_tau_threshold
 
         self._cutoff_function = \
             lambda omega: CUTOFF_DICT[self.cutoff_type](omega, self.cutoff)
@@ -450,13 +458,13 @@ class CustomSD(BaseCorrelations):
 
         Parameters
         ----------
-        omega : ndarray
+        omega: ndarray
             The frequency :math:`\omega` for which we want to know the
             spectral density.
 
         Returns
         -------
-        spectral_density : ndarray
+        spectral_density: ndarray
             The resulting spectral density :math:`J(\omega)` at the frequency
             :math:`\omega`.
         """
@@ -483,22 +491,22 @@ class CustomSD(BaseCorrelations):
 
         Parameters
         ----------
-        tau : ndarray
+        tau: ndarray
             Time difference :math:`\tau`
-        epsrel : float
-            Relative error tolerance.
+        epsrel: float
+            Relative error tolerance for numerical integration.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
 
         Returns
         -------
-        correlation : ndarray
+        correlation: ndarray
             The auto-correlation function :math:`C(\tau)` at time :math:`\tau`.
         """
         if epsrel is None:
-            epsrel = self.integration_params["epsrel"]
+            epsrel = self.epsrel
         if subdiv_limit is None:
-            subdiv_limit = self.integration_params["subdiv_limit"]
+            subdiv_limit = self.subdiv_limit
 
         # real and imaginary part of the integrand
         if matsubara:
@@ -564,10 +572,10 @@ class CustomSD(BaseCorrelations):
 
         Parameters
         ----------
-        tau : ndarray
+        tau: ndarray
             Time difference :math:`\tau`
-        epsrel : float
-            Relative error tolerance.
+        epsrel: float
+            Relative error tolerance for numerical integration.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
         omega_tau_threshold: float
@@ -578,15 +586,15 @@ class CustomSD(BaseCorrelations):
 
         Returns
         -------
-        correlation : ndarray
+        correlation: ndarray
             The function :math:`\eta(\tau)` at time :math:`\tau`.
         """
         if epsrel is None:
-            epsrel = self.integration_params["epsrel"]
+            epsrel = self.epsrel
         if subdiv_limit is None:
-            subdiv_limit = self.integration_params["subdiv_limit"]
+            subdiv_limit = self.subdiv_limit
         if omega_tau_threshold is None:
-            omega_tau_threshold = self.integration_params["omega_tau_threshold"]
+            omega_tau_threshold = self.omega_tau_threshold
 
         if matsubara:
             return self._eta_function_matsubara(tau, epsrel, subdiv_limit)
@@ -604,7 +612,11 @@ class CustomSD(BaseCorrelations):
         omega_cutoff = self.cutoff
         kwargs = {'epsrel': epsrel, 'limit': subdiv_limit}
 
-        # integrand = J(w)/w**2 [ (cos(wt)-1) coth(w/(2T)) - i (sin(wt)-wt) ]
+        #
+        # The integrand is:
+        #
+        #   integrand = J(w)/w**2 [ (cos(wt)-1) coth(w/(2T)) - i (sin(wt)-wt) ]
+        #
 
         if self.temperature == 0.0:
             def integrand(w):
@@ -624,7 +636,10 @@ class CustomSD(BaseCorrelations):
                         * (np.exp(-1j * w * tau) - 1 + 1j * w * tau)
                 return inte
 
-        # If tau is small, ...
+        #
+        #  If tau is small, we use the default quadrature.
+        #
+
         if tau * omega_cutoff < 1.0:
             integral = _complex_integral(
                 integrand, a=0, b=omega_cutoff, **kwargs)
@@ -633,13 +648,15 @@ class CustomSD(BaseCorrelations):
                     integrand, a=omega_cutoff, b=np.inf, **kwargs)
             return -integral
 
-        # ... else, let's rewrite the integrand as ...
+        #
+        # If tau is not small, we rewrite the integrand as ...
         #
         #   integrand = A(w) cos(wt) - A(w) - i B(w) sin(wt) + i C(w) t
         #
         #           A = + J(w)/w**2 coth(w/(2T))
         #           B = + J(w)/w**2
         #           C = + J(w)/w
+        #
 
         if self.temperature == 0.0:
             def intA(w):
@@ -660,10 +677,13 @@ class CustomSD(BaseCorrelations):
         def intC(w):
             return self._spectral_density(w) / w
 
-
-        # == compute the integral in two steps ==
+        #
+        # ... then, we compute the integral in two steps ...
+        #
         #   1. omega from 0 to omega_tilde
         #   2. omega from omega_tilde to omega_bound
+        #
+
         omega_tilde = min(
             [omega_tau_threshold / (tau + np.finfo(float).eps), self.cutoff])
         omega_bound = self.cutoff if self.cutoff_type=="hard" else np.inf
@@ -759,18 +779,18 @@ class CustomSD(BaseCorrelations):
 
         Parameters
         ----------
-        delta : float
+        delta: float
             Length of integration intervals.
-        time_1 : float
+        time_1: float
             Lower bound of integration interval of :math:`dt'`.
-        time_2 : float
+        time_2: float
             Upper bound of integration interval of :math:`dt'` for `shape` =
             ``'rectangle'``.
-        shape : str (default = ``'square'``)
+        shape: str (default = ``'square'``)
             The shape of the 2D integral. Shapes are: {``'square'``,
             ``'upper-triangle'``, ``'rectangle'``}
-        epsrel : float
-            Relative error tolerance.
+        epsrel: float
+            Relative error tolerance for numerical integration.
         subdiv_limit: int
             Maximal number of interval subdivisions for numerical integration.
         omega_tau_threshold: float
@@ -779,16 +799,16 @@ class CustomSD(BaseCorrelations):
 
         Returns
         -------
-        integral : float
+        integral: float
             The numerical value for the two dimensional integral
             :math:`\eta_\mathrm{shape}`.
         """
         if epsrel is None:
-            epsrel = self.integration_params["epsrel"]
+            epsrel = self.epsrel
         if subdiv_limit is None:
-            subdiv_limit = self.integration_params["subdiv_limit"]
+            subdiv_limit = self.subdiv_limit
         if omega_tau_threshold is None:
-            omega_tau_threshold = self.integration_params["omega_tau_threshold"]
+            omega_tau_threshold = self.omega_tau_threshold
 
         kwargs = {
             'epsrel': epsrel,
@@ -840,22 +860,26 @@ class PowerLawSD(CustomSD):
 
     Parameters
     ----------
-    alpha : float
+    alpha: float
         The coupling strength :math:`\alpha`.
-    zeta : float
+    zeta: float
         The exponent :math:`\zeta` (corresponds to the dimensionality of the
         environment). The environment is called *ohmic* if :math:`\zeta=1`,
         *superohmic* if :math:`\zeta>1` and *subohmic* if :math:`\zeta<1`
-    cutoff : float
+    cutoff: float
         The cutoff frequency :math:`\omega_c`.
-    cutoff_type : str (default = ``'exponential'``)
+    cutoff_type: str (default = ``'exponential'``)
         The cutoff type. Types are: {``'hard'``, ``'exponential'``,
         ``'gaussian'``}
     temperature: float
         The environment's temperature.
-    integration_params: dict
-        Optional dictionary to pass integration parameters. See
-        ``integration_params`` in :class:`CustomSD`.
+    epsrel: float
+        Relative error tolerance for numerical integration.
+    subdiv_limit: int
+        Maximal number of interval subdivisions for numerical integration.
+    omega_tau_threshold: float
+        Threshold for using a weighted quadrature when computing the
+        :math:`\eta(\tau)` integral.
     name: str
         An optional name for the correlations.
     description: str
@@ -869,7 +893,9 @@ class PowerLawSD(CustomSD):
             cutoff: float,
             cutoff_type: Text = 'exponential',
             temperature: Optional[float] = 0.0,
-            integration_params: Optional[Dict] = None,
+            epsrel: Optional[float] = BATH_EPSREL,
+            subdiv_limit: Optional[int] = BATH_SUBDIV_LIMIT,
+            omega_tau_threshold: Optional[float] = OMEGA_TAU_THRESHOLD,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a StandardSD (spectral density) object. """
@@ -903,7 +929,9 @@ class PowerLawSD(CustomSD):
                          cutoff=cutoff,
                          cutoff_type=cutoff_type,
                          temperature=temperature,
-                         integration_params=integration_params,
+                         epsrel=epsrel,
+                         subdiv_limit=subdiv_limit,
+                         omega_tau_threshold=omega_tau_threshold,
                          name=name,
                          description=description)
 

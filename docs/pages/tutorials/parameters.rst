@@ -12,27 +12,34 @@ computation and establishing convergence of results
    or
 -  read through the text below and code along.
 
---------
 Contents
 --------
 
--  `Introduction - numerical exactness and computational parameters`_
--  `Choosing tcut`_
+-  `Introduction <#Introduction>`__
+-  `Choosing tcut <#Choosing-tcut>`__
 
-   *  `Example - memory effects in a spin boson model`_
-   *  `Discussion - environment correlations`_
--  `Choosing dt and epsrel`_
+   -  `Example - memory effects in a spin boson
+      model <#Example---memory-effects-in-a-spin-boson-model>`__
+   -  `Discussion - environment
+      correlations <#Discussion---environment-correlations>`__
 
-   *  `Example - convergence for a spin boson model`_
-   *  `Resolving fast system dynamics`_
--  `Further considerations`_
+-  `Choosing dt and epsrel <#Choosing-dt-and-epsrel>`__
 
-   *  `Additional TempoParameters arguments`_
-   *  `Bath coupling degeneracies`_
-   *  `Mean-field systems`_
--  `PT-TEMPO`_
+   -  `Example - convergence for a spin boson
+      model <#Example---convergence-for-a-spin-boson-model>`__
+   -  `Resolving fast system
+      dynamics <#Resolving-fast-system-dynamics>`__
 
-   *  `The dkmax anomaly`_
+-  `Further considerations <#Further-considerations>`__
+
+   -  `Additional TempoParameters
+      arguments <#Additional-TempoParameters-arguments>`__
+   -  `Additional spectral density
+      arguments <#Additional-spectral-density-arguments>`__
+   -  `Bath coupling degeneracies <#Bath-coupling-degeneracies>`__
+   -  `Mean-field systems <#Mean-field-systems>`__
+
+-  `PT-TEMPO <#PT-TEMPO>`__
 
 The following packages will be required
 
@@ -60,9 +67,11 @@ The OQuPy version should be ``>=0.5.0``
     '0.5.0'
 
 
----------------------------------------------------------------
-Introduction - numerical exactness and computational parameters
----------------------------------------------------------------
+
+Introduction
+------------
+
+**numerical exactness and computational parameters**
 
 The TEMPO and PT-TEMPO methods are numerically exact meaning no
 approximations are required in their derivation. Instead error only
@@ -106,12 +115,11 @@ to run in a local jupyter notebook session. Example results for all
 calculations are embedded in the notebook already, so this is not
 strictly required.
 
--------------
 Choosing tcut
 -------------
 
 Example - memory effects in a spin boson model
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We firstly define a spin-boson model similar to that in the Quickstart
 tutorial, but with a finite temperature environment and a small
@@ -251,7 +259,7 @@ PT-TEMPO) computation scales **linearly** with the number of steps
 included in the memory cutoff.
 
 A word of warning
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 ``guess_tempo_parameters`` provides a reasonable starting point for many
 cases, but it is only a guess. You should always verify results using a
@@ -269,7 +277,7 @@ to add calls to calculate :math:`\langle \sigma_x \rangle`,
 still good for the above example).
 
 Discussion - environment correlations
--------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 So what influences the required ``tcut``? The physically relevant
 timescale is that for the decay of correlations in the environment.
@@ -321,13 +329,11 @@ computation time over a timescale ``end_time-start_time``, so make sure
 to set these to reflect those you actually intend to use in
 calculations.
 
-
-----------------------
 Choosing dt and epsrel
 ----------------------
 
 Example - convergence for a spin boson model
---------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Continuing with the previous example, we now investigate changing ``dt``
 at our chosen ``tcut=2.5``.
@@ -509,7 +515,7 @@ length - dictates the parameters. We now look at what influence the
 system can have.
 
 Resolving fast system dynamics
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the above you may have noticed that the results at ``dt=0.125``,
 while converged, were slightly undersampled. This becomes more
@@ -655,7 +661,7 @@ being missed, namely when the Hamiltonian or Lindblad operators/rates
 are (rapidly) *time-dependent.*
 
 What sets dt, really?
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 The main error associated with ``dt`` is that from the Trotter splitting
 of the system propagators. In a simple (non-symmetrised) splitting, a
@@ -675,29 +681,74 @@ Trotter error, even when both ``system`` and ``bath`` objects are
 specified - another reason to be cautious when using the estimate
 produced by this function.
 
-----------------------
 Further considerations
 ----------------------
 
 Additional TempoParameters arguments
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For completeness, there are a few other parameters that can be passed to
-the ``TempoParameters`` constructor: - ``subdiv_limit`` and
-``liouvillian_epsrel``. These control the maximum number of subdivisions
-and relative error tolerance when integrating a time-dependent system
-Liouvillian to construct the system propagators. It is unlikely you will
-need to change them from their default values (``265``, ``2**(-26)``) -
-``add_correlation_time``. This allows one to include correlations
-*beyond* ``tcut`` in the final bath tensor at ``dkmax`` (i.e., have your
-finite memory cutoff cake and eat it). Doing so may provide better
-approximations in cases where ``tcut`` is limited due to computational
-difficultly. See
-`[Strathearn2017] <http://dx.doi.org/10.1088/1367-2630/aa8744>`__ for
-details.
+the ``TempoParameters`` constructor:
+
+-  ``add_correlation_time``. This allows one to include correlations
+   *beyond* ``tcut`` in the final bath tensor at ``dkmax`` (i.e., have
+   your finite memory cutoff cake and eat it). Doing so may provide
+   better approximations in cases where ``tcut`` is limited due to
+   computational difficultly. See
+   `[Strathearn2017] <http://dx.doi.org/10.1088/1367-2630/aa8744>`__ for
+   details.
+-  ``liouvillian_epsrel`` and ``liouvillian_subdiv_limit``. These
+   control relative error tolerance and the maximum number of
+   subdivisions when integrating a time-dependent system Liouvillian to
+   construct the system propagators\*. It is unlikely you will need to
+   change them from their default values (``2**(-26)``, ``265``)
+
+Additional spectral density arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When defining the bath parameters with a spectral density (for example
+with a ``CustomSD`` or ``PowerLawSD``), large values of ``tcut`` can
+lead to numerical instabilities in the computation of the influence
+matrix. Indeed, the coefficients of the influence matrix are computed
+through discrete time differences of the ``eta_function()`` given by:
+
+.. math::
+
+    \eta(\tau) = - \int_0^{\infty} \frac{J(\omega)}{\omega^2} \
+       \left[ ( \cos(\omega \tau) - 1 ) \coth\left( \frac{\omega}{2 T}\right) \
+              - i ( \sin(\omega \tau) - \omega \tau ) \right] \mathrm{d}\omega. 
+
+with memory-time ``tau`` :math:`\tau`. ``tcut`` is the highest value
+used for ``tau`` in this expression. Thus, high memory lengths lead to
+highly oscillating terms in this integral due to the
+:math:`\cos(\tau\omega)` and :math:`\sin(\tau\omega)` terms. The
+``CustomSD`` class (and any of its subclasses, like ``PowerLawSD``)
+deals with this by splitting the integral in two: it uses the default
+integrator for the divergent part near 0 and the weighted sine and
+cosine versions of ``scipy.integrate.quad`` after.
+
+In the ``CustomSD`` and ``PowerLawSD`` constructor we can specify three
+optional parameters to tweek this process:
+
+-  ``epsrel`` and ``subdiv_limit`` control the relative error tolerance
+   and the maximum number of subdivisions for the numerical integration,
+   and
+-  ``omega_tau_threshold`` sets the boundary :math:`\tilde{\omega}`
+   between the default quadrature and the weighted sine and cosine
+   quadratures to
+   :math:`\tilde{\omega}`\ =\ ``min(omega_tau_threshold/tau, cutoff)``.
+
+Unless your spectral density behaves very diferently from what we’d
+expect, you will not need to change these from their default values
+(``2**(-26)``, ``256``, ``2*pi*3.0``). If you *do* need to adjust
+``omega_tau_threshold`` you should decrease it if the integrator
+struggles with the first part of the integral (too oscillatory for the
+default integrator), and increase it if the integrator struggles with
+the second part of the integral (too divergent for the cos/sin weighted
+versions).
 
 Bath coupling degeneracies
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The bath tensors in the TEMPO network are nominally
 :math:`d^2\times d^2` matrices, where :math:`d` is the system Hilbert
@@ -713,7 +764,7 @@ significant loss of accuracy, although this has not been extensively
 tested (new in ``v0.5.0``).
 
 Mean-field systems
-------------------
+~~~~~~~~~~~~~~~~~~
 
 For calculating mean-field dynamics, there is an additional requirement
 on ``dt`` being small enough so not as to introduce error when
@@ -730,7 +781,6 @@ when evaluating the system Hamiltonian. This may give a poor estimation
 for situations where the field variable is not of order :math:`1` in the
 dynamics.
 
---------
 PT-TEMPO
 --------
 
@@ -763,7 +813,7 @@ to a PT-TEMPO computation, with the following caveats:
    for further discussion.
 
 The dkmax anomaly
------------------
+~~~~~~~~~~~~~~~~~
 
 We consider constructing a process tensor of 250 timesteps for the
 harmonic environment discussed in the `Mean-Field

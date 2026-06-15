@@ -35,7 +35,7 @@ from numpy import ndarray
 from oqupy.bath import Bath
 from oqupy.base_api import BaseAPIClass
 from oqupy.config import MAX_DKMAX, DEFAULT_TOLERANCE, MAX_SYS_SAMPLES
-from oqupy.config import INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.config import LIOUVILLIAN_EPSREL, LIOUVILLIAN_SUBDIV_LIMIT
 from oqupy.config import TEMPO_BACKEND_CONFIG
 from oqupy.bath_correlations import BaseCorrelations, CustomSD
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
@@ -77,14 +77,14 @@ class TempoParameters(BaseAPIClass):
     add_correlation_time: float
         Additional correlation time to include in the last influence
         functional as explained in [Strathearn2017].
-    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+    liouvillian_epsrel: float (default = config.LIOUVILLIAN_INTEGRATE_EPSREL)
+        The relative error tolerance for the adaptive algorithm
+        when integrating a time-dependent Liouvillian.
+    liouvillian_subdiv_limit: int (default = config.LIOUVILLIAN_SUBDIV_LIMIT)
         The maximum number of subdivisions used during the adaptive
         algorithm when integrating a time-dependent Liouvillian. If
         None then the Liouvillian is not integrated but sampled twice
         to construct the system propagators at a timestep.
-    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
-        The relative error tolerance for the adaptive algorithm
-        when integrating a time-dependent Liouvillian.
     name: str (default = None)
         An optional name for the tempo parameters object.
     description: str (default = None)
@@ -97,8 +97,8 @@ class TempoParameters(BaseAPIClass):
             tcut: Optional[float] = None,
             dkmax: Optional[int] = None,
             add_correlation_time: Optional[float] = None,
-            subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-            liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
+            liouvillian_epsrel: Optional[float] = LIOUVILLIAN_EPSREL,
+            liouvillian_subdiv_limit: Optional[int] = LIOUVILLIAN_SUBDIV_LIMIT,
             name: Optional[Text] = None,
             description: Optional[Text] = None) -> None:
         """Create a TempoParameters object."""
@@ -136,19 +136,6 @@ class TempoParameters(BaseAPIClass):
         self._add_correlation_time = tmp_tau
 
         try:
-            if subdiv_limit is None:
-                tmp_subdiv_limit = None
-            else:
-                tmp_subdiv_limit = int(subdiv_limit)
-        except Exception as e:
-            raise TypeError("Argument 'subdiv_limit' must be int or "\
-                    "None.") from e
-        if tmp_subdiv_limit is not None and tmp_subdiv_limit < 0:
-            raise ValueError(
-            "Argument 'subdiv_limit' must be non-negative or None.")
-        self._subdiv_limit = tmp_subdiv_limit
-
-        try:
             tmp_liouvillian_epsrel = float(liouvillian_epsrel)
         except Exception as e:
             raise TypeError("Argument 'liouvillian_epsrel' must be "\
@@ -159,6 +146,20 @@ class TempoParameters(BaseAPIClass):
         self._liouvillian_epsrel = tmp_liouvillian_epsrel
 
         super().__init__(name, description)
+
+        try:
+            if liouvillian_subdiv_limit is None:
+                tmp_lsl = None
+            else:
+                tmp_lsl = int(liouvillian_subdiv_limit)
+        except Exception as e:
+            raise TypeError("Argument 'liouvillian_subdiv_limit' must be int "\
+                    "or None.") from e
+        if tmp_lsl is not None and tmp_lsl < 0:
+            raise ValueError(
+            "Argument 'liouvillian_subdiv_limit' must be non-negative or None.")
+        self._liouvillian_subdiv_limit = tmp_lsl
+
 
     def __str__(self) -> Text:
         ret = []
@@ -181,8 +182,6 @@ class TempoParameters(BaseAPIClass):
         """The maximal relative error in the singular value truncation."""
         return self._epsrel
 
-    # epsrel is error tolerance for both correlation omega integration and svds
-
     @property
     def tcut(self) -> float:
         """Length of non-Markovian memory"""
@@ -202,19 +201,17 @@ class TempoParameters(BaseAPIClass):
         return self._add_correlation_time
 
     @property
-    def subdiv_limit(self) -> int:
-        """The maximum number of subdivisions used during the adaptive
-        algorithm when integrating a time-dependent Liouvillian."""
-        return self._subdiv_limit
-
-    @property
     def liouvillian_epsrel(self) -> float:
         """The relative error tolerance for integrating a time-dependent
         system Liouvillian. """
         return self._liouvillian_epsrel
 
-    # lio epsrel for dynamics time integrals only
-#
+    @property
+    def liouvillian_subdiv_limit(self) -> int:
+        """The maximum number of subdivisions used during the adaptive
+        algorithm when integrating a time-dependent Liouvillian."""
+        return self._liouvillian_subdiv_limit
+
 class GibbsParameters(BaseAPIClass):
     r"""
     Parameters for the GibbsTEMPO computation.
@@ -406,7 +403,7 @@ class Tempo(BaseAPIClass):
         propagators = self._system.get_propagators(
                 self._parameters.dt,
                 self._start_time,
-                self._parameters.subdiv_limit,
+                self._parameters.liouvillian_subdiv_limit,
                 self._parameters.liouvillian_epsrel)
         if self._unique:
             sum_north = np.ones(np.max(self._bath.north_degeneracy_map)+1,
@@ -790,7 +787,7 @@ class MeanFieldTempo(BaseAPIClass):
         propagators_list = [system.get_propagators(
                 self._parameters.dt,
                 self._start_time,
-                self._parameters.subdiv_limit,
+                self._parameters.liouvillian_subdiv_limit,
                 self._parameters.liouvillian_epsrel)
             for system in self._parsed_parameters_dict["system"]]
         compute_field = self._compute_field
@@ -999,8 +996,7 @@ def influence_matrix(
         delta=dt,
         time_1=time_1,
         time_2=time_2,
-        shape=shape,
-        epsrel=parameters.epsrel)
+        shape=shape)
     op_p = coupling_acomm
     op_m = coupling_comm
 

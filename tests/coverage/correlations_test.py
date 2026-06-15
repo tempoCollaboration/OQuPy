@@ -169,9 +169,6 @@ def test_custom_s_d_bad_input():
     with pytest.raises(AssertionError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
                  temperature="bla")
-    with pytest.raises(AssertionError):
-        CustomSD(square_function, cutoff=2.0, cutoff_type="gaussian", \
-                temperature=0.0, integration_params=5)
     with pytest.raises(ValueError):
         CustomSD(square_function, cutoff=2.0, cutoff_type="hard", \
                  temperature=-2.0)
