@@ -22,7 +22,7 @@ from numpy import ndarray
 import tensornetwork as tn
 from oqupy.system import TimeDependentSystemWithField
 
-from oqupy.config import NpDtype, INTEGRATE_EPSREL, SUBDIV_LIMIT
+from oqupy.config import NpDtype, LIOUVILLIAN_EPSREL, LIOUVILLIAN_SUBDIV_LIMIT
 from oqupy.control import Control
 from oqupy.dynamics import Dynamics, MeanFieldDynamics
 from oqupy.process_tensor import BaseProcessTensor
@@ -48,8 +48,8 @@ def compute_dynamics(
                                        BaseProcessTensor]] = None,
         control: Optional[Control] = None,
         record_all: Optional[bool] = True,
-        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-        liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
+        liouvillian_subdiv_limit: Optional[int] = LIOUVILLIAN_SUBDIV_LIMIT,
+        liouvillian_epsrel: Optional[float] = LIOUVILLIAN_EPSREL,
         progress_type: Optional[Text] = None) -> Dynamics:
     """
     Compute the system dynamics for a given system Hamiltonian, accounting
@@ -74,12 +74,12 @@ def compute_dynamics(
         Optional control operations.
     record_all: bool
         If `false` function only computes the final state.
-    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+    liouvillian_subdiv_limit: int (default = config.LIOUVILLIAN_SUBDIV_LIMIT)
         The maximum number of subdivisions used during the adaptive
         algorithm when integrating the system Liouvillian. If None
         then the Liouvillian is not integrated but sampled twice to
         to construct the system propagators at each timestep.
-    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
+    liouvillian_epsrel: float (default = config.LIOUVILLIAN_EPSREL)
         The relative error tolerance for the adaptive algorithm
         when integrating the system Liouvillian.
     progress_type: str (default = None)
@@ -103,8 +103,9 @@ def compute_dynamics(
     num_envs = len(process_tensors)
 
     # -- prepare propagators --
-    propagators = system.get_propagators(dt, start_time, subdiv_limit,
-                                       liouvillian_epsrel)
+    propagators = system.get_propagators(dt, start_time,
+                                         liouvillian_subdiv_limit,
+                                         liouvillian_epsrel)
 
     # -- prepare controls --
     def controls(step: int):
@@ -192,8 +193,8 @@ def compute_dynamics_with_field(
         start_time: Optional[float] = 0.0,
         control_list: Optional[List[Control]] = None,
         record_all: Optional[bool] = True,
-        subdiv_limit: Optional[int] = SUBDIV_LIMIT,
-        liouvillian_epsrel: Optional[float] = INTEGRATE_EPSREL,
+        liouvillian_subdiv_limit: Optional[int] = LIOUVILLIAN_SUBDIV_LIMIT,
+        liouvillian_epsrel: Optional[float] = LIOUVILLIAN_EPSREL,
         progress_type: Optional[Text] = None) -> MeanFieldDynamics:
     """
     Compute each system and field dynamics for a MeanFieldSystem
@@ -223,12 +224,12 @@ def compute_dynamics_with_field(
         Optional list of control operations.
     record_all: bool
         If `false` function only computes the final state.
-    subdiv_limit: int (default = config.SUBDIV_LIMIT)
+    liouvillian_subdiv_limit: int (default = config.LIOUVILLIAN_SUBDIV_LIMIT)
         The maximum number of subdivisions used during the adaptive
         algorithm when integrating the system Liouvillian. If None
         then the Liouvillian is not integrated but sampled twice to
         to construct the system propagators at each timestep.
-    liouvillian_epsrel: float (default = config.INTEGRATE_EPSREL)
+    liouvillian_epsrel: float (default = config.LIOUVILLIAN_EPSREL)
         The relative error tolerance for the adaptive algorithm
         when integrating the system Liouvillian.
     progress_type: str (default = None)
@@ -311,8 +312,9 @@ def compute_dynamics_with_field(
     num_envs_list = [len(process_tensors) for process_tensors
                      in parsed_parameters_dict["process_tensors"]]
 
-    propagators_list = [system.get_propagators(dt, start_time, subdiv_limit,
-                                         liouvillian_epsrel)
+    propagators_list = [system.get_propagators(dt, start_time,
+                                               liouvillian_subdiv_limit,
+                                               liouvillian_epsrel)
                         for system in parsed_parameters_dict["system"]]
 
     # -- prepare compute field --

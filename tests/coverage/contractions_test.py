@@ -69,7 +69,7 @@ def test_compute_dynamics_with_field():
     # check initial field recorded correctly
     assert np.isclose(mean_field_dynamics.fields[0], initial_field)
 
-    # Test subdiv_limit == None
+    # Test liouvillian_subdiv_limit == None
     mean_field_dynamics2 = oqupy.compute_dynamics_with_field(
             mean_field_system,
             initial_field,
@@ -77,7 +77,7 @@ def test_compute_dynamics_with_field():
             dt = 0.2,
             num_steps = num_steps,
             start_time = start_time,
-            subdiv_limit = None
+            liouvillian_subdiv_limit = None
             )
 
     # input checks
