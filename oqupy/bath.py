@@ -71,7 +71,7 @@ class Bath(BaseAPIClass):
             self._coupling_operator = tmp_coupling_operator
             self._unitary = np.identity(self._dimension)
         else:
-            w, v = np.linalg.eig(tmp_coupling_operator)
+            w, v = np.linalg.eigh(tmp_coupling_operator)
             self._coupling_operator = np.diag(w)
             self._unitary = v
             assert np.allclose(tmp_coupling_operator, \
