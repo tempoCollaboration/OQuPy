@@ -19,7 +19,6 @@ import numpy as np
 
 from oqupy.bath import Bath
 from oqupy.bath_correlations import PowerLawSD
-from oqupy import operators
 
 def test_bath():
     wc = 4.0
@@ -78,6 +77,26 @@ def test_bath():
     bath_C = Bath(coupling_op, correlations)
     assert np.array_equal(bath_C.west_degeneracy_map,[0,0,0,0])
     assert np.array_equal(bath_C.north_degeneracy_map,[0,0,0,0])
+
+# Checks that the diagonalisation of the bath also works for degenerate
+# coupling operators (see issue #165)
+def test_bath_degenerate_coupling_op():
+    degenerat_coupling_op = np.array(
+        [[0.+0.j, 1.+0.j, 1.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
+        [1.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
+        [1.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],
+        [0.+0.j, 1.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+        [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 1.+0.j, 0.+0.j],
+        [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+        [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
+        [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j, 1.+0.j, 1.+0.j, 0.+0.j]])
+    correlations = PowerLawSD(
+        alpha=0.02,
+        zeta=1,
+        cutoff=0.5,
+        cutoff_type="exponential",
+        temperature=0.5)
+    Bath(degenerat_coupling_op, correlations) # this failed before PR #166
 
 def test_bath_bad_input():
     wc = 4.0
