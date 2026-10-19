@@ -91,6 +91,14 @@ def test_tempo_bad_input():
                                   parameters=tempo_param_A,
                                   initial_state="bla",
                                   start_time=start_time)
+    with pytest.raises(
+            ValueError,
+            match="Initial state must not be the zero matrix"):
+        oqupy.Tempo(system=system,
+                    bath=bath,
+                    parameters=tempo_param_A,
+                    initial_state=np.zeros((2, 2)),
+                    start_time=start_time)
     with pytest.raises(TypeError):
         tempo_sys_A = oqupy.Tempo(system=system,
                                   bath=bath,
