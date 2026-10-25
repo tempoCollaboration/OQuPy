@@ -259,7 +259,7 @@ class NodeArray:
                 u_edges.extend(self.array_edges[i])
                 v_edges = [self.bond_edges[i]]
 
-                u, s, vh, trun_vals = tn.split_node_full_svd(
+                u, s, vh, trun_vals = _parse_split_node_full_svd(
                     node=self.nodes[i],
                     left_edges=u_edges,
                     right_edges=v_edges,
@@ -282,7 +282,7 @@ class NodeArray:
                     u_edges.append(self.bond_edges[i])
                 v_edges = [self.bond_edges[i-1]]
 
-                u, s, vh, trun_vals = tn.split_node_full_svd(
+                u, s, vh, trun_vals = _parse_split_node_full_svd(
                     node=self.nodes[i],
                     left_edges=u_edges,
                     right_edges=v_edges,
@@ -538,7 +538,7 @@ class NodeArray:
                 v_edges = [self.bond_edges[ia + inner_bond],
                            b.bond_edges[ib + inner_bond]]
 
-                u, s, vh, trun_vals = tn.split_node_full_svd(
+                u, s, vh, trun_vals = _parse_split_node_full_svd(
                     node=contracted_node,
                     left_edges=u_edges,
                     right_edges=v_edges,
@@ -664,3 +664,14 @@ def _parse_left_right_index(
             "Length of array must match index span"
 
     return _left_index, _right_index
+
+def _parse_split_node_full_svd(node, left_edges, right_edges, **kwargs):
+    """Reject zero tensors before calling tn.split_node_full_svd"""
+    if not np.any(node.tensor):
+        raise ValueError(
+            "State has collapsed to zero and cannot be compressed.")
+    return tn.split_node_full_svd(
+        node=node,
+        left_edges=left_edges,
+        right_edges=right_edges,
+        **kwargs)

@@ -122,6 +122,21 @@ def test_tempo_bad_input():
     with pytest.raises(TypeError):
         tempo_sys_A.compute(end_time="bla", progress_type="bar")
 
+def test_tempo_state_underflow():
+    system = oqupy.System(0.5 * oqupy.operators.sigma("x"))
+    correlations = oqupy.PowerLawSD(alpha=0.1, zeta=1, cutoff=5.0)
+    bath = oqupy.Bath(0.5 * oqupy.operators.sigma("z"), correlations)
+    parameters = oqupy.TempoParameters(dt=0.1, dkmax=10, epsrel=10**(-7))
+    # non-zero, so it passes input validation, but underflows during the run
+    initial_state = 1e-300 * np.array([[0, 0], [0, 1]], dtype=complex)
+    tempo = oqupy.Tempo(system=system,
+                        bath=bath,
+                        parameters=parameters,
+                        initial_state=initial_state,
+                        start_time=0.0)
+    with pytest.raises(ValueError, match="collapsed to zero"):
+        tempo.compute(end_time=0.5, progress_type="silent")
+
 def test_tempo_parameters():
     with pytest.raises(AssertionError): # tcut and dkmax
         param = oqupy.TempoParameters(dt=0.1,
