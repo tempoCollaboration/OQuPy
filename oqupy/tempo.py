@@ -1287,6 +1287,9 @@ def _tempo_physical_input_parse(
             initial_state.shape == (hs_dim, hs_dim),
             "Initial sate must be a square matrix of " \
                 + f"dimension {hs_dim}x{hs_dim}.")
+        check_true(
+            np.any(initial_state),
+            "Initial state must not be the zero matrix.")
 
     check_isinstance(bath, Bath, 'bath')
 
