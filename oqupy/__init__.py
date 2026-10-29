@@ -51,6 +51,12 @@ from oqupy.version import __version__
 
 # all API functionallity is in __all__
 __all__ = [
+    'Ace',
+    'AceMode',
+    'AceParameters',
+    'ace_compute',
+    'import_ace_process_tensor',
+    'discretize_spectral_density',
     'AugmentedMPS',
     'Bath',
     'ChainControl',
@@ -91,10 +97,16 @@ __all__ = [
     'TimeDependentSystemWithField',
     'TrivialProcessTensor',
     'TwoTimeBathCorrelations',
-    ]
-
+]
 # -- Modules in alphabetical order --------------------------------------------
 
+
+from oqupy.ace import Ace
+from oqupy.ace import AceParameters
+from oqupy.ace import ace_compute
+from oqupy.ace import import_ace_process_tensor
+
+from oqupy.ace_bath import AceMode
 from oqupy.bath import Bath
 
 from oqupy.bath_dynamics import TwoTimeBathCorrelations
@@ -103,6 +115,8 @@ from oqupy.system_dynamics import compute_correlations
 from oqupy.system_dynamics import compute_correlations_nt
 from oqupy.system_dynamics import compute_dynamics
 from oqupy.system_dynamics import compute_dynamics_with_field
+from oqupy.spectral_discretization import discretize_spectral_density
+
 
 from oqupy.control import Control
 from oqupy.control import ChainControl
